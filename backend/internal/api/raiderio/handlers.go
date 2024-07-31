@@ -1,4 +1,4 @@
-package api
+package raiderio
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 )
 
 type Handler struct {
-	RaiderIOClient *raiderio.Client
+	Client *raiderio.Client
 }
 
-func NewHandler(rioClient *raiderio.Client) *Handler {
+func NewHandler() *Handler {
 	return &Handler{
-		RaiderIOClient: rioClient,
+		Client: raiderio.NewCLient(),
 	}
 }
 
@@ -34,7 +34,7 @@ func (h *Handler) GetCharacterProfile(c *gin.Context) {
 
 	fields := parseFields(fieldsQuery)
 
-	profile, err := h.RaiderIOClient.GetCharacterProfile(region, realm, name, fields)
+	profile, err := h.Client.GetCharacterProfile(region, realm, name, fields)
 	if err != nil {
 		log.Printf("Error getting character profile: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character profile"})
@@ -90,7 +90,7 @@ func (h *Handler) GetCharacterMythicPlusScores(c *gin.Context) {
 		fields[i] = fmt.Sprintf("mythic_plus_scores_by_season:%s", season)
 	}
 
-	profile, err := h.RaiderIOClient.GetCharacterProfile(region, realm, name, fields)
+	profile, err := h.Client.GetCharacterProfile(region, realm, name, fields)
 	if err != nil {
 		log.Printf("Error getting mythic plus scores: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve mythic plus scores", "details": err.Error()})
@@ -116,7 +116,7 @@ func (h Handler) GetCharacterRaidProgression(c *gin.Context) {
 
 	fields := []string{"raid_progression"}
 
-	profile, err := h.RaiderIOClient.GetCharacterProfile(region, realm, name, fields)
+	profile, err := h.Client.GetCharacterProfile(region, realm, name, fields)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -2,21 +2,38 @@ package main
 
 import (
 	"log"
-	api "wowperf/internal/api/raiderio"
-	"wowperf/internal/services/raiderio"
+	"wowperf/internal/api/blizzard"
+	"wowperf/internal/api/raiderio"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	rioClient := raiderio.NewCLient()
-	handler := api.NewHandler(rioClient)
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+		return
+	}
+
+	rioHandler := raiderio.NewHandler()
+	blizardhandler, err := blizzard.NewHandler()
+	if err != nil {
+		log.Fatalf("Failed to initialize blizzard client: %v", err)
+	}
 
 	r := gin.Default()
 
-	r.GET("/characters", handler.GetCharacterProfile)
-	r.GET("/characters/mythic-plus-scores", handler.GetCharacterMythicPlusScores)
-	r.GET("/characters/raid-progression", handler.GetCharacterRaidProgression)
+	// Raider.io API
+	r.GET("/characters", rioHandler.GetCharacterProfile)
+	r.GET("/characters/mythic-plus-scores", rioHandler.GetCharacterMythicPlusScores)
+	r.GET("/characters/raid-progression", rioHandler.GetCharacterRaidProgression)
+
+	// Blizzard API
+	r.GET("/blizzard/characters/:realmSlug/:characterName", blizardhandler.GetCharacterProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", blizardhandler.GetCharacterMythicKeystoneProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", blizardhandler.GetCharacterEquipment)
 
 	log.Fatal(r.Run(":8080"))
 }
