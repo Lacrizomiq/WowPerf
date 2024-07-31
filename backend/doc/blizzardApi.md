@@ -13,6 +13,7 @@ The access token is used to authenticate requests to the Blizzard API. The token
 Retrieves a character's profile information, including name, realm, and class.
 
 **Endpoint**: `/blizzard/characters/{realmSlug}/{characterName}`
+`/blizzard/characters/{realmSlug}/{characterName}?region={region}&namespace={namespace}&locale={locale}`
 
 **Parameters**:
 
@@ -26,10 +27,122 @@ Retrieves a character's profile information, including name, realm, and class.
 
 ```json
 {
-  "name": "Example Character",
+  "_links": {
+    "self": {
+      "href": "string"
+    }
+  },
+  "achievement_points": "number",
+  "achievements": {
+    "href": "string"
+  },
+  "achievements_statistics": {
+    "href": "string"
+  },
+  "active_spec": {
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string"
+  },
+  "active_title": {
+    "display_string": "string",
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string"
+  },
+  "appearance": {
+    "href": "string"
+  },
+  "average_item_level": "number",
+  "character_class": {
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string"
+  },
+  "collections": {
+    "href": "string"
+  },
+  "covenant_progress": {
+    "chosen_covenant": {
+      "id": "number",
+      "key": {
+        "href": "string"
+      },
+      "name": "string"
+    },
+    "renown_level": "number",
+    "soulbinds": {
+      "href": "string"
+    }
+  },
+  "encounters": {
+    "href": "string"
+  },
+  "equipment": {
+    "href": "string"
+  },
+  "equipped_item_level": "number",
+  "experience": "number",
+  "faction": {
+    "name": "string",
+    "type": "string"
+  },
+  "gender": {
+    "name": "string",
+    "type": "string"
+  },
+  "id": "number",
+  "last_login_timestamp": "number",
+  "level": "number",
+  "media": {
+    "href": "string"
+  },
+  "mythic_keystone_profile": {
+    "href": "string"
+  },
+  "name": "string",
+  "name_search": "string",
+  "professions": {
+    "href": "string"
+  },
+  "pvp_summary": {
+    "href": "string"
+  },
+  "quests": {
+    "href": "string"
+  },
+  "race": {
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string"
+  },
   "realm": {
-    "name": "Example Realm",
-    "slug": "example-realm"
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string",
+    "slug": "string"
+  },
+  "reputations": {
+    "href": "string"
+  },
+  "specializations": {
+    "href": "string"
+  },
+  "statistics": {
+    "href": "string"
+  },
+  "titles": {
+    "href": "string"
   }
 }
 ```
@@ -39,6 +152,7 @@ Retrieves a character's profile information, including name, realm, and class.
 Retrieves a character's mythic keystone profile information, including seasons, tiers, and keystone upgrades.
 
 **Endpoint**: `/blizzard/characters/{realmSlug}/{characterName}/mythic-keystone-profile`
+`/blizzard/characters/{realmSlug}/{characterName}/mythic-keystone-profile?region={region}&namespace={namespace}&locale={locale}`
 
 **Parameters**:
 
@@ -52,16 +166,51 @@ Retrieves a character's mythic keystone profile information, including seasons, 
 
 ```json
 {
-  "overall": {
-    "season": 1,
-    "tier": 1,
-    "keystoneUpgrades": 0
+  "_links": {
+    "self": {
+      "href": "string"
+    }
   },
-  "tier1": {
-    "season": 1,
-    "tier": 1,
-    "keystoneUpgrades": 0
-  }
+  "character": {
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string",
+    "realm": {
+      "id": "number",
+      "key": {
+        "href": "string"
+      },
+      "name": "string",
+      "slug": "string"
+    }
+  },
+  "current_mythic_rating": {
+    "color": {
+      "a": "number",
+      "b": "number",
+      "g": "number",
+      "r": "number"
+    },
+    "rating": "number"
+  },
+  "current_period": {
+    "period": {
+      "id": "number",
+      "key": {
+        "href": "string"
+      }
+    }
+  },
+  "seasons": [
+    {
+      "id": "number",
+      "key": {
+        "href": "string"
+      }
+    }
+  ]
 }
 ```
 
@@ -70,6 +219,7 @@ Retrieves a character's mythic keystone profile information, including seasons, 
 Retrieves a character's equipment information, including items, gems, and mounts.
 
 **Endpoint**: `/blizzard/characters/{realmSlug}/{characterName}/equipment`
+`blizzard/characters/{realmSlug}/{characterName}/equipment?region={region}&namespace={namespace}&locale={locale}`
 
 **Parameters**:
 

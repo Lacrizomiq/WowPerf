@@ -25,14 +25,6 @@ type Client struct {
 	token      *oauth2.Token
 }
 
-type CharacterProfile struct {
-	Name  string `json:"name"`
-	Realm struct {
-		Name string `json:"name"`
-		Slug string `json:"slug"`
-	} `json:"realm"`
-}
-
 func NewClient() (*Client, error) {
 	clientID := os.Getenv("BLIZZARD_CLIENT_ID")
 	clientSecret := os.Getenv("BLIZZARD_CLIENT_SECRET")
@@ -112,7 +104,7 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 	return body, nil
 }
 
-func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace, locale string) (*CharacterProfile, error) {
+func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s", region, realmSlug, characterName)
 	body, err := c.makeRequest(endpoint, namespace, locale)
@@ -120,12 +112,12 @@ func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace
 		return nil, err
 	}
 
-	var profile CharacterProfile
-	if err := json.Unmarshal(body, &profile); err != nil {
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return &profile, nil
+	return result, nil
 }
 
 func (c *Client) GetCharacterMythicKeystoneProfile(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
