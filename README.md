@@ -1,7 +1,9 @@
 # WowPerf
 
 WowPerf is a web application that allows users to track their performance in World of Warcraft.
+
 It uses the [Raider.io API](https://raider.io/) to fetch character data, calculates mythic plus scores, raid progression and more.
+
 It also uses the [World of Warcraft API](https://worldofwarcraft.blizzard.com/en-gb/) to fetch character data.
 
 In the future, the goals is to includes other data sources such as WarcraftLogs in order to provide a more comprehensive view of your performance or to compare your performance with other players.
