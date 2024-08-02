@@ -328,3 +328,5 @@ Retrieves a character's specializations information, including spec groups, spec
               }
             },
 ```
+
+The API response take less than a second to return and is around 13k lines of json.
