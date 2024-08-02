@@ -73,3 +73,19 @@ func (h *Handler) GetCharacterEquipment(c *gin.Context) {
 
 	c.JSON(http.StatusOK, equipment)
 }
+
+func (h *Handler) GetCharacterSpecializations(c *gin.Context) {
+	region := c.Query("region")
+	realmSlug := c.Param("realmSlug")
+	characterName := c.Param("characterName")
+	namespace := c.Query("namespace")
+	locale := c.Query("locale")
+
+	specializations, err := h.Client.GetCharacterSpecializations(region, realmSlug, characterName, namespace, locale)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character specializations"})
+		return
+	}
+
+	c.JSON(http.StatusOK, specializations)
+}

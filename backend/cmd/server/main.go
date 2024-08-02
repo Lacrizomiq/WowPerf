@@ -34,6 +34,7 @@ func main() {
 	r.GET("/blizzard/characters/:realmSlug/:characterName", blizardhandler.GetCharacterProfile)
 	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", blizardhandler.GetCharacterMythicKeystoneProfile)
 	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", blizardhandler.GetCharacterEquipment)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", blizardhandler.GetCharacterSpecializations)
 
 	log.Fatal(r.Run(":8080"))
 }

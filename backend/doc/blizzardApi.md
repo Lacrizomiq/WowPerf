@@ -284,3 +284,47 @@ Example response:
 
 ```
 ````
+
+### Specializations
+
+Retrieves a character's specializations information, including spec groups, specs, and spec tiers.
+
+**Endpoint**: `/blizzard/characters/{realmSlug}/{characterName}/specializations`
+`/blizzard/characters/{realmSlug}/{characterName}/specializations?region={region}&namespace={namespace}&locale={locale}`
+
+**Parameters**:
+
+- `region`: The region of the character's realm. Possible values: `us`, `eu`, `kr`, `tw`, `cn`.
+- `realmSlug`: The slug of the character's realm.
+- `characterName`: The name of the character.
+- `namespace`: The namespace of the character's profile.
+- `locale`: The locale of the character's profile. Possible values: `en_US`, `enGB`, `deDE`, `frFR`, `koKR`, `esES`, `zhCN`, `zhTW`, `ptBR`, `ruRU`, `itIT`, `jaJP`, `plPL`.
+
+**Response**:
+
+```json
+{
+              "id": 82670,
+              "rank": 1,
+              "tooltip": {
+                "spell_tooltip": {
+                  "cast_time": "Passive",
+                  "description": "Your direct damage spells inflict 30% of their damage on all other targets afflicted by your Vampiric Touch within 46 yards.\r\n\r\nDoes not apply to damage from Shadowy Apparitions, Shadow Word: Pain, and Vampiric Touch.",
+                  "spell": {
+                    "id": 199484,
+                    "key": {
+                      "href": "https://eu.api.blizzard.com/data/wow/spell/199484?namespace=static-11.0.0_55478-eu"
+                    },
+                    "name": "Psychic Link"
+                  }
+                },
+                "talent": {
+                  "id": 108819,
+                  "key": {
+                    "href": "https://eu.api.blizzard.com/data/wow/talent/108819?namespace=static-11.0.0_55478-eu"
+                  },
+                  "name": "Psychic Link"
+                }
+              }
+            },
+```
