@@ -32,7 +32,7 @@ export default function Header() {
           <li>
             <Link
               href="/signup"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 border-2 border-blue-300"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 border-2 border-blue-500"
             >
               Sign Up
             </Link>

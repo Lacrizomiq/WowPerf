@@ -11,9 +11,10 @@ export default function Hero() {
         priority
       />
       <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-center">
-        <h1 className="text-5xl font-bold mb-4">World of Warcraft</h1>
+        <h1 className="text-5xl font-bold mb-4">Welcome to WowPerf</h1>
         <p className="text-xl mb-8">
-          Explore characters, equipment, and talents
+          Explore characters, equipment, and talents to stay at the state of the
+          art.
         </p>
       </div>
     </div>

@@ -29,7 +29,7 @@ export default function FeaturedContent() {
           {featuredItems.map((item, index) => (
             <div
               key={index}
-              className="bg-gray-800 rounded-lg overflow-hidden shadow-lg"
+              className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300"
             >
               <Image
                 src={item.image}
