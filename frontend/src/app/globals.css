@@ -6,6 +6,10 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --color-deep-blue: #000033;
+  --color-midnight-blue: #191970;
+  --color-royal-blue: #4169e1;
+  --color-electric-blue: #00ffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,13 +21,41 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    to bottom,
+    var(--color-deep-blue),
+    var(--color-midnight-blue)
+  );
+  color: white;
+  min-height: 100vh;
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(
+    135deg,
+    var(--color-deep-blue),
+    var(--color-midnight-blue)
+  );
+}
+
+.text-gradient-glow {
+  background: linear-gradient(
+    to right,
+    var(--color-royal-blue),
+    var(--color-electric-blue)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(65, 105, 225, 0.5);
+}
+
+.glow-effect {
+  box-shadow: 0 0 15px rgba(65, 105, 225, 0.5);
+}
+
+.hover-glow:hover {
+  text-shadow: 0 0 10px var(--color-electric-blue);
 }
 
 @layer utilities {

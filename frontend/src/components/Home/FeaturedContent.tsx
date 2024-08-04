@@ -20,16 +20,16 @@ export default function FeaturedContent() {
   ];
 
   return (
-    <section className="py-12 bg-gray-900">
-      <div className="container mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-center">
+    <section className="py-12 bg-gradient-dark">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gradient-glow">
           Featured Content
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featuredItems.map((item, index) => (
             <div
               key={index}
-              className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300"
+              className="bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300 glow-effect"
             >
               <Image
                 src={item.image}
@@ -39,8 +39,10 @@ export default function FeaturedContent() {
                 objectFit="cover"
               />
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-400">{item.description}</p>
+                <h3 className="text-xl font-semibold mb-2 text-gradient-glow">
+                  {item.title}
+                </h3>
+                <p className="text-blue-200">{item.description}</p>
               </div>
             </div>
           ))}

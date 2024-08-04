@@ -1,16 +1,55 @@
+"use client";
+
+import { useState } from "react";
+
 export default function SearchBar() {
+  const [region, setRegion] = useState("");
+  const [realm, setRealm] = useState("");
+  const [character, setCharacter] = useState("");
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Handle the search logic here
+    console.log("Searching for:", { region, realm, character });
+  };
+
   return (
-    <div className="bg-gray-800 py-8">
-      <div className="container mx-auto">
-        <form className="flex justify-center">
+    <div className="bg-gradient-dark py-8 shadow-sm">
+      <div className="container mx-auto px-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4 "
+        >
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className="w-full md:w-1/6 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-400 appearance-none cursor-pointer"
+          >
+            <option value="" disabled selected>
+              Select Region
+            </option>
+            <option value="us">US</option>
+            <option value="eu">EU</option>
+            <option value="kr">KR</option>
+            <option value="tw">TW</option>
+          </select>
           <input
             type="text"
-            placeholder="Search for a character..."
-            className="w-1/2 px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
+            placeholder="Realm"
+            value={realm}
+            onChange={(e) => setRealm(e.target.value)}
+            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white"
+          />
+          <input
+            type="text"
+            placeholder="Character Name"
+            value={character}
+            onChange={(e) => setCharacter(e.target.value)}
+            className="w-full md:w-1/3 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white"
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white px-6 py-2 rounded-r-lg hover:bg-blue-600 transition duration-300"
+            className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 glow-effect"
           >
             Search
           </button>

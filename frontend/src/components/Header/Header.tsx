@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="bg-gray-800 py-4">
+    <header className="bg-gradient-dark py-4">
       <nav className="container mx-auto flex justify-between items-center">
         <Link href="/">
           <Image src="/wow.png" alt="WoW Logo" width={50} height={50} />
