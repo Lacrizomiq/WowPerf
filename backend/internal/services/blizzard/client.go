@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -53,12 +55,27 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) refreshToken(config *clientcredentials.Config) error {
-	token, err := config.Token(context.Background())
+
+	log.Println("Refreshing token...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	token, err := config.Token(ctx)
 	if err != nil {
+		log.Printf("Failed to get token: %v", err)
 		return fmt.Errorf("failed to get token: %w", err)
 	}
 
 	c.token = token
+	log.Printf("Token refreshed successfully. Expires at: %v", token.Expiry)
+	if scopes, ok := token.Extra("scope").(string); ok {
+		log.Printf("Token scopes: %s", scopes)
+		if !strings.Contains(scopes, "wow.profile") {
+			return fmt.Errorf("token does not have the required 'wow.profile' scope")
+		}
+	} else {
+		log.Println("Unable to retrieve token scopes")
+	}
 	return nil
 }
 
@@ -69,7 +86,7 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 			ClientSecret: os.Getenv("BLIZZARD_CLIENT_SECRET"),
 			TokenURL:     authURL,
 		}); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to refresh token: %w", err)
 		}
 	}
 
@@ -84,7 +101,11 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
+	req.Header.Set("Battlenet-Namespace", namespace)
+	req.Header.Set("Accept", "application/json")
+
+	log.Printf("Request URL: %s", req.URL.String())
+	log.Printf("Request headers: %v", req.Header)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -99,6 +120,11 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("API request failed. Status: %d, Body: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("API request failed with status code: %d, Body: %s", resp.StatusCode, string(body))
 	}
 
 	return body, nil
