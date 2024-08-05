@@ -25,11 +25,11 @@ export default function FeaturedContent() {
         <h2 className="text-3xl font-bold mb-8 text-center text-gradient-glow">
           Featured Content
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {featuredItems.map((item, index) => (
             <div
               key={index}
-              className="bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300 glow-effect"
+              className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)] max-w-sm bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300 glow-effect"
             >
               <Image
                 src={item.image}

@@ -14,7 +14,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="bg-gradient-dark py-8 shadow-sm">
+    <div className="py-8 bg-gradient-dark">
       <div className="container mx-auto px-4">
         <form
           onSubmit={handleSubmit}
@@ -23,7 +23,7 @@ export default function SearchBar() {
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full md:w-1/6 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-400 appearance-none cursor-pointer"
+            className="w-full md:w-1/6 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600 appearance-none cursor-pointer"
           >
             <option value="" disabled selected>
               Select Region
@@ -38,14 +38,14 @@ export default function SearchBar() {
             placeholder="Realm"
             value={realm}
             onChange={(e) => setRealm(e.target.value)}
-            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white"
+            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600"
           />
           <input
             type="text"
             placeholder="Character Name"
             value={character}
             onChange={(e) => setCharacter(e.target.value)}
-            className="w-full md:w-1/3 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white"
+            className="w-full md:w-1/3 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600"
           />
           <button
             type="submit"

@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <div className="relative h-[70vh] sm:h-[40vh] md:h-[50vh] lg:h-[60vh] xl:h-[70vh]">
+    <div className="relative h-[50vh] sm:h-[30vh] md:h-[40vh] lg:h-[40vh] xl:h-[50vh]">
       <Image
         src="/homepage.avif"
         alt="World of Warcraft Landscape"
@@ -10,7 +10,7 @@ export default function Hero() {
         objectFit="cover"
         priority
       />
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-center">
+      <div className="absolute inset-0 bg-black bg-opacity-20 flex flex-col justify-center items-center text-center">
         <h1 className="text-5xl font-bold mb-4">Welcome to WowPerf</h1>
         <p className="text-xl mb-8">
           Explore characters, equipment, and talents to stay at the state of the
