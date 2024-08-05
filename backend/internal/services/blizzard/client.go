@@ -101,6 +101,7 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
+	req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
 	req.Header.Set("Battlenet-Namespace", namespace)
 	req.Header.Set("Accept", "application/json")
 
@@ -112,10 +113,6 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status code: %d", resp.StatusCode)
-	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
