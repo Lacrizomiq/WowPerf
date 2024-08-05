@@ -5,6 +5,7 @@ import (
 	"wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -24,6 +25,13 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:3000"} // Replace with your frontend URL
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+
+	r.Use(cors.New(config))
 
 	// Raider.io API
 	r.GET("/characters", rioHandler.GetCharacterProfile)

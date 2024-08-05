@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SearchBar() {
   const [region, setRegion] = useState("");
   const [realm, setRealm] = useState("");
   const [character, setCharacter] = useState("");
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle the search logic here
+    if (region && realm && character) {
+      router.push(`/character/${region}/${realm}/${character}`);
+    }
     console.log("Searching for:", { region, realm, character });
   };
 

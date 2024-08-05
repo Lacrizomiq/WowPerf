@@ -1,0 +1,115 @@
+import api from "./api";
+
+export const getCharacterProfile = async (
+  region: string,
+  realm: string,
+  name: string,
+  fields?: string[]
+) => {
+  const params = new URLSearchParams({
+    region,
+    realm,
+    name: decodeURIComponent(name),
+  });
+  if (fields && fields.length > 0) {
+    params.append("fields", fields.join(","));
+  }
+
+  const { data } = await api.get(`/characters`, { params });
+
+  return data;
+};
+
+export const getCharacterGear = async (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  return getCharacterProfile(region, realm, name, ["gear"]);
+};
+
+export const getCharacterTalents = async (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  return getCharacterProfile(region, realm, name, ["talents"]);
+};
+
+export const getCharacterMythicPlusScores = async (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  const { data } = await api.get(`/characters/mythic-plus-scores`, {
+    params: { region, realm, name },
+  });
+  return data;
+};
+
+export const getCharacterRaidProgression = async (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  const { data } = await api.get(`/characters/raid-progression`, {
+    params: { region, realm, name },
+  });
+  return data;
+};
+
+export const getBlizzardCharacterProfile = async (
+  region: string,
+  realmSlug: string,
+  characterName: string
+) => {
+  const { data } = await api.get(
+    `/blizzard/characters/${realmSlug}/${characterName}`,
+    {
+      params: { region },
+    }
+  );
+  return data;
+};
+
+export const getBlizzardCharacterMythicKeystoneProfile = async (
+  region: string,
+  realmSlug: string,
+  characterName: string
+) => {
+  const { data } = await api.get(
+    `/blizzard/characters/${realmSlug}/${characterName}/mythic-keystone-profile`,
+    {
+      params: { region },
+    }
+  );
+  return data;
+};
+
+export const getBlizzardCharacterEquipment = async (
+  region: string,
+  realmSlug: string,
+  characterName: string
+) => {
+  const { data } = await api.get(
+    `/blizzard/characters/${realmSlug}/${characterName}/equipment`,
+    {
+      params: { region },
+    }
+  );
+  return data;
+};
+
+export const getBlizzardCharacterSpecializations = async (
+  region: string,
+  realmSlug: string,
+  characterName: string
+) => {
+  const { data } = await api.get(
+    `/blizzard/characters/${realmSlug}/${characterName}/specializations`,
+    {
+      params: { region },
+    }
+  );
+  return data;
+};

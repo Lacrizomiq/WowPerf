@@ -46,11 +46,65 @@ type CharacterProfile struct {
 	MythicPlusWeeklyHighestLevelRuns         []MythicPlusRun            `json:"mythic_plus_weekly_highest_level_runs,omitempty"`
 	MythicPlusPreviousWeeklyHighestLevelRuns []MythicPlusRun            `json:"mythic_plus_previous_weekly_highest_level_runs,omitempty"`
 	PreviousMythicPlusRanks                  *MythicPlusRanks           `json:"previous_mythic_plus_ranks,omitempty"`
+	TalentLoadout                            *TalentLoadout             `json:"talentLoadout,omitempty"`
+}
+
+type TalentLoadout struct {
+	LoadoutSpecID int          `json:"loadout_spec_id"`
+	LoadoutText   string       `json:"loadout_text"`
+	Loadout       []TalentNode `json:"loadout"`
+}
+
+type TalentNode struct {
+	Node       TalentNodeInfo `json:"node"`
+	EntryIndex int            `json:"entryIndex"`
+	Rank       int            `json:"rank"`
+}
+
+type TalentNodeInfo struct {
+	ID        int           `json:"id"`
+	TreeID    int           `json:"treeId"`
+	Type      int           `json:"type"`
+	Entries   []TalentEntry `json:"entries"`
+	Important bool          `json:"important"`
+	PosX      int           `json:"posX"`
+	PosY      int           `json:"posY"`
+	Row       int           `json:"row"`
+	Col       int           `json:"col"`
+}
+
+type TalentEntry struct {
+	ID                int   `json:"id"`
+	TraitDefinitionID int   `json:"traitDefinitionId"`
+	Type              int   `json:"type"`
+	MaxRanks          int   `json:"maxRanks"`
+	Spell             Spell `json:"spell"`
+}
+
+type Spell struct {
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	Icon        string  `json:"icon"`
+	School      int     `json:"school"`
+	Rank        *string `json:"rank"`
+	HasCooldown bool    `json:"hasCooldown"`
 }
 
 type Gear struct {
-	ItemLevelEquipped int `json:"item_level_equipped"`
-	ItemLevelTotal    int `json:"item_level_total"`
+	ItemLevelEquipped int             `json:"item_level_equipped"`
+	ItemLevelTotal    int             `json:"item_level_total"`
+	Items             map[string]Item `json:"items"`
+}
+
+type Item struct {
+	ItemID      int    `json:"item_id"`
+	ItemLevel   int    `json:"item_level"`
+	ItemQuality int    `json:"item_quality"`
+	Icon        string `json:"icon"`
+	Name        string `json:"name"`
+	Enchant     *int   `json:"enchant,omitempty"`
+	Gems        []int  `json:"gems,omitempty"`
+	Bonuses     []int  `json:"bonuses,omitempty"`
 }
 
 type Guild struct {
