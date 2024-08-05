@@ -106,7 +106,7 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 	req.Header.Set("Accept", "application/json")
 
 	log.Printf("Request URL: %s", req.URL.String())
-	log.Printf("Request headers: %v", req.Header)
+	log.Printf("Request headers: %s", logSafeHeaders(req.Header))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -125,6 +125,16 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 	}
 
 	return body, nil
+}
+
+func logSafeHeaders(headers http.Header) string {
+	safeHeaders := make(http.Header)
+	for k, v := range headers {
+		if k != "Authorization" {
+			safeHeaders[k] = v
+		}
+	}
+	return fmt.Sprintf("%v", safeHeaders)
 }
 
 func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
