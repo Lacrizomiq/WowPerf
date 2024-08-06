@@ -1,4 +1,5 @@
 import * as apiServices from "@/libs/apiServices";
+import { getCharacterGear } from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useRaiderIoCharacterProfile = (
@@ -23,6 +24,28 @@ export const useRaiderIoCharacterProfile = (
         return data;
       } catch (error) {
         console.error("Error in useRaiderIoCharacterProfile:", error);
+        throw error;
+      }
+    },
+  });
+};
+
+export const useGetRaiderIoCharacterGear = (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  return useQuery({
+    queryKey: ["gear", region, realm, name],
+    queryFn: async () => {
+      try {
+        const data = await getCharacterGear(region, realm, name);
+        if (!data || !data.gear) {
+          throw new Error("No gear data found");
+        }
+        return data;
+      } catch (error) {
+        console.error("Error fetching gear data:", error);
         throw error;
       }
     },

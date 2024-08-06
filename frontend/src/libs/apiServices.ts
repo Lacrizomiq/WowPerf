@@ -25,7 +25,16 @@ export const getCharacterGear = async (
   realm: string,
   name: string
 ) => {
-  return getCharacterProfile(region, realm, name, ["gear"]);
+  try {
+    const data = await getCharacterProfile(region, realm, name, ["gear"]);
+    if (!data || !data.gear) {
+      throw new Error("No gear data found in the API response");
+    }
+    return data;
+  } catch (error) {
+    console.error("Error in getCharacterGear:", error);
+    throw error;
+  }
 };
 
 export const getCharacterTalents = async (

@@ -10,8 +10,8 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 
 ## Features to date
 
-- Fetch character data from Raider.io API
-- Fetch character data from World of Warcraft API
+- Fetch character data from Raider.io API (profile, mythic plus scores, raid progression, talents, gear and more)
+- Fetch character data from World of Warcraft API (profile, mythic keystone profile, equipment, specializations)
 - Get all information for a character
 - Get all equipment for a character
 - Calculate mythic plus scores
@@ -19,11 +19,13 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 
 ## Todo
 
+- Get character media from Blizzard API
 - Setting up the interaction with WarcraftLogs API
 - Implementing Wowhead tooltip for the item
 - Implementing link to the item on Wowhead
 - Implementing link to Wow calculator talent tree
 - Make the frontend to display the data and let the user interact with it
+- Make the whole backend to be more like a wrapper around the APIs
 
 ## Tech stack
 
@@ -35,6 +37,7 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 - Postgres
 - Docker
 - OAuth 2.0
+- NextAuth.js
 
 ## Contributing
 

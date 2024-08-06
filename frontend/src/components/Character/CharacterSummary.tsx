@@ -25,24 +25,32 @@ export default function CharacterSummary({
 
   return (
     <div>
-      <div>
-        {character.thumbnail_url && (
-          <Image
-            src={character.thumbnail_url}
-            alt="World of Warcraft Logo"
-            width={100}
-            height={100}
-          />
-        )}
-      </div>
-      <div>
-        <h2 className="text-3xl font-bold  text-gradient-glow">
-          {character.name}
-        </h2>
-
-        <p className="text-blue-200">
-          {character.region.toUpperCase()} - {character.realm}
-        </p>
+      <div className="flex p-4 bg-gradient-dark">
+        <div className="mr-4 w-24 h-24 bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg glow-effect">
+          {character.thumbnail_url && (
+            <Image
+              src={character.thumbnail_url}
+              alt="World of Warcraft Logo"
+              width={96}
+              height={96}
+              objectFit="cover"
+            />
+          )}
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold  text-gradient-glow">
+            {character.name}
+          </h2>
+          <p className="text-blue-100">
+            {character.region.toUpperCase()} - {character.realm}
+          </p>
+          <div className="flex gap-2">
+            <p className="text-blue-400">{character.race}</p>
+            <p>
+              {character.active_spec_name} {character.class}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

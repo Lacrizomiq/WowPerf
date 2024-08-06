@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["render.worldofwarcraft.com"],
+    domains: ["wow.zamimg.com", "render.worldofwarcraft.com"],
   },
 };
 
