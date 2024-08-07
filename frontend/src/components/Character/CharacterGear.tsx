@@ -93,8 +93,8 @@ export default function CharacterGear({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex align-center items-center">
-        <h2 className="text-xl font-bold text-gradient-glow mb-4 ">Gear</h2>
+      <div className="flex align-center items-center justify-center">
+        <h2 className="text-2xl font-bold text-gradient-glow mb-4 ">Gear</h2>
         <p className="text-blue-200 mb-4 ml-2">
           {gear.item_level_equipped} Item Level (Equipped)
         </p>
