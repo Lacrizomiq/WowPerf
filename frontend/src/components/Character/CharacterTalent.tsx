@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { useGetRaiderIoCharacterTalents } from "@/hooks/useRaiderioApi";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import { SquareArrowOutUpRight } from "lucide-react";
+import ClassIcons from "@/components/ui/ClassIcons";
+import SpecIcons from "@/components/ui/SpecIcon";
 
 interface CharacterTalentProps {
   region: string;
@@ -48,29 +48,49 @@ export default function CharacterTalent({
   const classTalents = characterData.talentLoadout?.class_talents || [];
   const specTalents = characterData.talentLoadout?.spec_talents || [];
 
-  const renderTalentGroup = (talents: any[], title: string) => (
+  const renderTalentGroup = (
+    talents: any[],
+    title: string,
+    isClassTalents: boolean
+  ) => (
     <div className="mb-6 shadow-xl glow-effect p-4">
       <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
-        {title}
+        {isClassTalents ? (
+          <ClassIcons region={region} realm={realm} name={name} />
+        ) : (
+          <SpecIcons region={region} realm={realm} name={name} />
+        )}
+        <span className="ml-2">{title}</span>
       </h3>
       <div className="grid grid-cols-7 gap-2 mb-4">
         {talents.map((talent) => {
           const spellEntry = talent.node.entries[talent.entryIndex];
+          const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${spellEntry.spell.icon}.jpg`;
           return (
             <div key={talent.node.id} className="relative">
               <a
                 href={`https://www.wowhead.com/spell=${spellEntry.spell.id}`}
                 data-wowhead={`spell=${spellEntry.spell.id}`}
-                className="block cursor-pointer"
+                className="block cursor-pointer talent active relative"
                 data-wh-icon-size="medium"
+                target="_blank"
               >
-                <Image
-                  src={`https://wow.zamimg.com/images/wow/icons/large/${spellEntry.spell.icon}.jpg`}
-                  alt={spellEntry.spell.name}
-                  width={40}
-                  height={40}
-                  className="rounded-md border-2 border-gray-700"
-                />
+                <div className="relative w-10 h-10">
+                  <img
+                    src={iconUrl}
+                    alt={spellEntry.spell.name}
+                    className="w-full h-full rounded-md border-2 border-gray-700"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+                    }}
+                  />
+                  {talent.rank > 1 && (
+                    <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+                      {talent.rank}/2
+                    </div>
+                  )}
+                </div>
               </a>
             </div>
           );
@@ -111,28 +131,38 @@ export default function CharacterTalent({
           font-size: 14px;
         }
       `}</style>
-      <h2 className="text-2xl font-bold text-gradient-glow flex justify-center mb-6">
-        Talent Build Summary
-      </h2>
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          {renderTalentGroup(classTalents, "CLASS TALENTS")}
-        </div>
-        <div className="flex-1">
-          {renderTalentGroup(specTalents, "SPEC TALENTS")}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gradient-glow flex justify-between mb-6">
+          Talent Build Summary
+        </h2>
+        <div>
+          {talentCalculatorUrl && (
+            <a
+              href={talentCalculatorUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold flex items-center gap-2 align-center mb-4  hover:text-blue-300"
+            >
+              Talent Calculator <SquareArrowOutUpRight className="ml-2" />
+            </a>
+          )}
         </div>
       </div>
-      <div className="flex justify-center">
-        {talentCalculatorUrl && (
-          <a
-            href={talentCalculatorUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold flex items-center gap-2 align-center mb-4 text-blue-400 hover:text-blue-300"
-          >
-            Talent Calculator <SquareArrowOutUpRight className="ml-2" />
-          </a>
-        )}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          {renderTalentGroup(
+            classTalents,
+            `${characterData.class} Talents`,
+            true
+          )}
+        </div>
+        <div className="flex-1">
+          {renderTalentGroup(
+            specTalents,
+            `${characterData.active_spec_name} Talents`,
+            false
+          )}
+        </div>
       </div>
     </div>
   );
