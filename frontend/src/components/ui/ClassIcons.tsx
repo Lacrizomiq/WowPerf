@@ -14,12 +14,19 @@ const ClassIcons = ({ region, realm, name }: ClassIconsProps) => {
     isLoading,
     error,
   } = useGetRaiderIoCharacterTalents(region, realm, name);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading class icon</div>;
+  if (!characterData) return null;
+
+  const classNameForUrl = characterData.class.replace(/\s+/g, "");
+
   return (
     <Image
-      width="26"
-      height="26"
-      src={`https://assets.rpglogs.com/img/warcraft/icons/${characterData.class}.jpg`}
-      alt=""
+      width={26}
+      height={26}
+      src={`https://assets.rpglogs.com/img/warcraft/icons/${classNameForUrl}.jpg`}
+      alt={characterData.class}
     />
   );
 };

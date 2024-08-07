@@ -14,12 +14,20 @@ const SpecIcons = ({ region, realm, name }: SpecIconsProps) => {
     isLoading,
     error,
   } = useGetRaiderIoCharacterTalents(region, realm, name);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading spec icon</div>;
+  if (!characterData) return null;
+
+  const classNameForUrl = characterData.class.replace(/\s+/g, "");
+  const specNameForUrl = characterData.active_spec_name.replace(/\s+/g, "");
+
   return (
     <Image
-      width="26"
-      height="26"
-      src={`https://assets.rpglogs.com/img/warcraft/icons/${characterData.class}-${characterData.active_spec_name}.jpg`}
-      alt=""
+      width={26}
+      height={26}
+      src={`https://assets.rpglogs.com/img/warcraft/icons/${classNameForUrl}-${specNameForUrl}.jpg`}
+      alt={`${characterData.class} - ${characterData.active_spec_name}`}
     />
   );
 };
