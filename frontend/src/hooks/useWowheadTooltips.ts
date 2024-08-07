@@ -26,5 +26,12 @@ export function useWowheadTooltips() {
     } else if (window.$WowheadPower) {
       window.$WowheadPower.refreshLinks();
     }
+
+    // Configure Wowhead tooltips
+    if (window.whTooltips) {
+      window.whTooltips.renameLinks = false;
+      window.whTooltips.iconSize = "small";
+      window.whTooltips.hideSpecs = "inactive";
+    }
   }, []);
 }

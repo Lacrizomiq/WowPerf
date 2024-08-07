@@ -34,6 +34,17 @@ func (h *Handler) GetCharacterProfile(c *gin.Context) {
 
 	fields := parseFields(fieldsQuery)
 
+	hasTalents := false
+	for _, field := range fields {
+		if field == "talents" || field == "talents:categorized" {
+			hasTalents = true
+			break
+		}
+	}
+	if !hasTalents {
+		fields = append(fields, "talents:categorized")
+	}
+
 	profile, err := h.Client.GetCharacterProfile(region, realm, name, fields)
 	if err != nil {
 		log.Printf("Error getting character profile: %v", err)
@@ -41,7 +52,22 @@ func (h *Handler) GetCharacterProfile(c *gin.Context) {
 		return
 	}
 
+	if containsField(fields, "talents:categorized") && (profile.Talents.Categorized.Active == nil || len(profile.Talents.Categorized.Active) == 0) {
+		if profile.TalentLoadout.ClassTalents != nil {
+			profile.Talents.Categorized.Active = append(profile.TalentLoadout.ClassTalents, profile.TalentLoadout.SpecTalents...)
+		}
+	}
+
 	c.JSON(http.StatusOK, profile)
+}
+
+func containsField(fields []string, field string) bool {
+	for _, f := range fields {
+		if f == field {
+			return true
+		}
+	}
+	return false
 }
 
 func parseFields(fieldsQuery string) []string {

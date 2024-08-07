@@ -42,7 +42,22 @@ export const getCharacterTalents = async (
   realm: string,
   name: string
 ) => {
-  return getCharacterProfile(region, realm, name, ["talents"]);
+  try {
+    const data = await getCharacterProfile(region, realm, name, [
+      "talents:categorized",
+    ]);
+    if (!data) {
+      throw new Error("No data returned from API");
+    }
+    if (!data.talents?.categorized?.active && !data.talentLoadout) {
+      throw new Error("No talent data found");
+    }
+    console.log("Talent data received:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching talent data:", error);
+    throw error;
+  }
 };
 
 export const getCharacterMythicPlusScores = async (

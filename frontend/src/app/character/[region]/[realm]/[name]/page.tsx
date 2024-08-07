@@ -1,8 +1,10 @@
 "use client";
 
+import Header from "@/components/Header/Header";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import CharacterGear from "@/components/Character/CharacterGear";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
+import CharacterTalent from "@/components/Character/CharacterTalent";
 
 export default function CharacterPage({
   params,
@@ -15,8 +17,10 @@ export default function CharacterPage({
 
   return (
     <main className="bg-gradient-dark">
+      <Header />
       <CharacterSummary region={region} realm={realm} name={name} />
       <CharacterGear region={region} realm={realm} name={name} />
+      <CharacterTalent region={region} realm={realm} name={name} />
     </main>
   );
 }

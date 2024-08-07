@@ -1,5 +1,6 @@
 import * as apiServices from "@/libs/apiServices";
 import { getCharacterGear } from "@/libs/apiServices";
+import { getCharacterTalents } from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useRaiderIoCharacterProfile = (
@@ -49,6 +50,27 @@ export const useGetRaiderIoCharacterGear = (
         throw error;
       }
     },
+  });
+};
+
+export const useGetRaiderIoCharacterTalents = (
+  region: string,
+  realm: string,
+  name: string
+) => {
+  return useQuery({
+    queryKey: ["talents", region, realm, name],
+    queryFn: async () => {
+      try {
+        const data = await getCharacterTalents(region, realm, name);
+        return data;
+      } catch (error) {
+        console.error("Error fetching talents data:", error);
+        throw error;
+      }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 

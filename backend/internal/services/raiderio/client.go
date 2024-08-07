@@ -46,7 +46,17 @@ type CharacterProfile struct {
 	MythicPlusWeeklyHighestLevelRuns         []MythicPlusRun            `json:"mythic_plus_weekly_highest_level_runs,omitempty"`
 	MythicPlusPreviousWeeklyHighestLevelRuns []MythicPlusRun            `json:"mythic_plus_previous_weekly_highest_level_runs,omitempty"`
 	PreviousMythicPlusRanks                  *MythicPlusRanks           `json:"previous_mythic_plus_ranks,omitempty"`
-	TalentLoadout                            *TalentLoadout             `json:"talentLoadout,omitempty"`
+	TalentLoadout                            struct {
+		LoadoutSpecID int          `json:"loadout_spec_id"`
+		LoadoutText   string       `json:"loadout_text"`
+		ClassTalents  []TalentNode `json:"class_talents"`
+		SpecTalents   []TalentNode `json:"spec_talents"`
+	} `json:"talentLoadout"`
+	Talents struct {
+		Categorized struct {
+			Active []TalentNode `json:"active"`
+		} `json:"categorized"`
+	} `json:"talents"`
 }
 
 type TalentLoadout struct {
@@ -56,9 +66,20 @@ type TalentLoadout struct {
 }
 
 type TalentNode struct {
-	Node       TalentNodeInfo `json:"node"`
-	EntryIndex int            `json:"entryIndex"`
-	Rank       int            `json:"rank"`
+	Node struct {
+		ID        int           `json:"id"`
+		TreeID    int           `json:"treeId"`
+		Type      int           `json:"type"`
+		Entries   []TalentEntry `json:"entries"`
+		Important bool          `json:"important"`
+		PosX      int           `json:"posX"`
+		PosY      int           `json:"posY"`
+		Row       int           `json:"row"`
+		Col       int           `json:"col"`
+	} `json:"node"`
+	EntryIndex       int  `json:"entryIndex"`
+	Rank             int  `json:"rank"`
+	IncludeInSummary bool `json:"includeInSummary,omitempty"`
 }
 
 type TalentNodeInfo struct {
@@ -82,12 +103,12 @@ type TalentEntry struct {
 }
 
 type Spell struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Icon        string  `json:"icon"`
-	School      int     `json:"school"`
-	Rank        *string `json:"rank"`
-	HasCooldown bool    `json:"hasCooldown"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Icon        string `json:"icon"`
+	School      int    `json:"school"`
+	Rank        string `json:"rank,omitempty"`
+	HasCooldown bool   `json:"hasCooldown"`
 }
 
 type Gear struct {

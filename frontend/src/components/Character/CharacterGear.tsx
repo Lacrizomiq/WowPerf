@@ -17,6 +17,8 @@ interface GearItem {
   name: string;
   enchant?: number;
   slot: string;
+  bonuses?: number[];
+  gems?: number[];
 }
 
 const gearOrder = [
@@ -70,58 +72,53 @@ export default function CharacterGear({
   const { gear } = characterData;
 
   const orderedGear = gearOrder
-    .map((slot) => {
-      const item = gear.items[slot];
-      return item ? { ...item, slot } : null;
-    })
+    .map((slot) => (gear.items[slot] ? { ...gear.items[slot], slot } : null))
     .filter(Boolean) as GearItem[];
 
+  const getWowheadParams = (item: GearItem) => {
+    let params = `item=${item.item_id}&ilvl=${item.item_level}`;
+    if (item.bonuses?.length) params += `&bonus=${item.bonuses.join(":")}`;
+    if (item.gems?.length) params += `&gems=${item.gems.join(":")}`;
+    if (item.enchant) params += `&ench=${item.enchant}`;
+    return params;
+  };
+
   return (
-    <div className="p-4 bg-gradient-dark">
+    <div className="p-4 bg-gradient-dark shadow-lg glow-effect m-12">
       <style jsx global>{`
         .wowhead-tooltip {
-          scale: 0.8;
+          scale: 1.2;
           transform-origin: top left;
+          max-width: 300px;
+          font-size: 14px;
         }
       `}</style>
-      <h2 className="text-3xl font-bold text-gradient-glow mb-4">Gear</h2>
-      <p className="text-blue-200 mb-4">
-        Item Level: {gear.item_level_equipped} (Equipped)
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="flex align-center items-center">
+        <h2 className="text-xl font-bold text-gradient-glow mb-4 ">Gear</h2>
+        <p className="text-blue-200 mb-4 ml-2">
+          {gear.item_level_equipped} Item Level (Equipped)
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2 justify-center  ">
         {orderedGear.map((item) => (
-          <div
-            key={item.slot}
-            className="bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:scale-105 transition duration-300 glow-effect p-4"
-          >
-            <div className="flex items-center">
-              <div className="relative">
-                <a
-                  href={`https://www.wowhead.com/item=${item.item_id}`}
-                  data-wowhead={`item=${item.item_id}&ilvl=${item.item_level}`}
-                  className="block cursor-pointer"
-                >
-                  <Image
-                    src={`https://wow.zamimg.com/images/wow/icons/large/${item.icon}.jpg`}
-                    alt={item.name}
-                    width={56}
-                    height={56}
-                    className="rounded-md mr-4"
-                  />
-                </a>
+          <div key={item.slot} className="relative">
+            <a
+              href={`https://www.wowhead.com/item=${item.item_id}`}
+              data-wowhead={getWowheadParams(item)}
+              className="block cursor-pointer"
+              data-wh-icon-size="medium"
+            >
+              <Image
+                src={`https://wow.zamimg.com/images/wow/icons/large/${item.icon}.jpg`}
+                alt={item.name}
+                width={56}
+                height={56}
+                className="rounded-md border-2 border-gray-700"
+              />
+              <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
+                {item.item_level}
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gradient-glow">
-                  {item.name}
-                </h3>
-                <p className="text-blue-200">
-                  {item.slot} - iLvl: {item.item_level}
-                </p>
-                {item.enchant && (
-                  <p className="text-green-300">Enchant: {item.enchant}</p>
-                )}
-              </div>
-            </div>
+            </a>
           </div>
         ))}
       </div>
