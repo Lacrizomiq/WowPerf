@@ -21,6 +21,7 @@ func NewHandler() (*Handler, error) {
 	return &Handler{Client: client}, nil
 }
 
+// GetCharacterProfile retrieves a character's profile information, including name, realm, and class.
 func (h *Handler) GetCharacterProfile(c *gin.Context) {
 	region := c.Query("region")
 	realmSlug := c.Param("realmSlug")
@@ -50,6 +51,23 @@ func (h *Handler) GetCharacterMythicKeystoneProfile(c *gin.Context) {
 	locale := c.Query("locale")
 
 	details, err := h.Client.GetCharacterMythicKeystoneProfile(region, realmSlug, characterName, namespace, locale)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve mythic keystone season details"})
+		return
+	}
+
+	c.JSON(http.StatusOK, details)
+}
+
+func (h *Handler) GetCharacterMythicKeystoneSeasonDetails(c *gin.Context) {
+	region := c.Query("region")
+	realmSlug := c.Param("realmSlug")
+	characterName := c.Param("characterName")
+	seasonId := c.Param("seasonId")
+	namespace := c.Query("namespace")
+	locale := c.Query("locale")
+
+	details, err := h.Client.GetCharacterMythicKeystoneSeasonDetails(region, realmSlug, characterName, seasonId, namespace, locale)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve mythic keystone season details"})
 		return
@@ -88,4 +106,20 @@ func (h *Handler) GetCharacterSpecializations(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, specializations)
+}
+
+func (h *Handler) GetCharacterMedia(c *gin.Context) {
+	region := c.Query("region")
+	realmSlug := c.Param("realmSlug")
+	characterName := c.Param("characterName")
+	namespace := c.Query("namespace")
+	locale := c.Query("locale")
+
+	media, err := h.Client.GetCharacterMedia(region, realmSlug, characterName, namespace, locale)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character media"})
+		return
+	}
+
+	c.JSON(http.StatusOK, media)
 }

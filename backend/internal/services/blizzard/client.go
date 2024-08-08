@@ -137,6 +137,7 @@ func logSafeHeaders(headers http.Header) string {
 	return fmt.Sprintf("%v", safeHeaders)
 }
 
+// Returns a profile summary for a character.
 func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s", region, realmSlug, characterName)
@@ -153,6 +154,7 @@ func (c *Client) GetCharacterProfile(region, realmSlug, characterName, namespace
 	return result, nil
 }
 
+// Returns the Mythic Keystone profile index for a character.
 func (c *Client) GetCharacterMythicKeystoneProfile(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/mythic-keystone-profile", region, realmSlug, characterName)
 	body, err := c.makeRequest(endpoint, namespace, locale)
@@ -168,6 +170,24 @@ func (c *Client) GetCharacterMythicKeystoneProfile(region, realmSlug, characterN
 	return result, nil
 }
 
+// Returns the Mythic Keystone season details for a character.
+// Returns a 404 Not Found for characters that have not yet completed a Mythic Keystone dungeon for the specified season.
+func (c *Client) GetCharacterMythicKeystoneSeasonDetails(region, realmSlug, characterName, seasonId, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/mythic-keystone-profile/season/%s", region, realmSlug, characterName, seasonId)
+	body, err := c.makeRequest(endpoint, namespace, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result, nil
+}
+
+// Returns a summary of the items equipped by a character.
 func (c *Client) GetCharacterEquipment(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/equipment", region, realmSlug, characterName)
 	body, err := c.makeRequest(endpoint, namespace, locale)
@@ -183,8 +203,25 @@ func (c *Client) GetCharacterEquipment(region, realmSlug, characterName, namespa
 	return result, nil
 }
 
+// Returns a summary of a character's specializations.
 func (c *Client) GetCharacterSpecializations(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/specializations", region, realmSlug, characterName)
+	body, err := c.makeRequest(endpoint, namespace, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result, nil
+}
+
+// Returns a summary of the media assets available for a character (such as an avatar render).
+func (c *Client) GetCharacterMedia(region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/character-media", region, realmSlug, characterName)
 	body, err := c.makeRequest(endpoint, namespace, locale)
 	if err != nil {
 		return nil, err

@@ -214,6 +214,74 @@ Retrieves a character's mythic keystone profile information, including seasons, 
 }
 ```
 
+### Mythic Keystone Season Details
+
+Retrieves a character's mythic keystone season details, including seasons, tiers, and keystone upgrades.
+
+**Endpoint**: `/blizzard/characters/{realmSlug}/{characterName}/mythic-keystone-profile/season/{seasonId}`
+`/blizzard/characters/{realmSlug}/{characterName}/mythic-keystone-profile/season/{seasonId}?region={region}&namespace={namespace}&locale={locale}`
+
+**Parameters**:
+
+- `region`: The region of the character's realm. Possible values: `us`, `eu`, `kr`, `tw`, `cn`.
+- `realmSlug`: The slug of the character's realm.
+- `characterName`: The name of the character.
+- `seasonId`: The ID of the season to retrieve details for.
+- `namespace`: The namespace of the character's profile.
+- `locale`: The locale of the character's profile. Possible values: `enUS`, `enGB`, `deDE`, `frFR`, `koKR`, `esES`, `zhCN`, `zhTW`, `ptBR`, `ruRU`, `itIT`, `jaJP`, `plPL`.
+
+**Response**:
+
+```json
+{
+  "_links": {
+    "self": {
+      "href": "string"
+    }
+  },
+  "character": {
+    "id": "number",
+    "key": {
+      "href": "string"
+    },
+    "name": "string",
+    "realm": {
+      "id": "number",
+      "key": {
+        "href": "string"
+      },
+      "name": "string",
+      "slug": "string"
+    }
+  },
+  "current_mythic_rating": {
+    "color": {
+      "a": "number",
+      "b": "number",
+      "g": "number",
+      "r": "number"
+    },
+    "rating": "number"
+  },
+  "current_period": {
+    "period": {
+      "id": "number",
+      "key": {
+        "href": "string"
+      }
+    }
+  },
+  "seasons": [
+    {
+      "id": "number",
+      "key": {
+        "href": "string"
+      }
+    }
+  ]
+}
+```
+
 ### Equipment
 
 Retrieves a character's equipment information, including items, gems, and mounts.
