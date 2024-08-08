@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"wowperf/internal/services/blizzard"
+	wrapper "wowperf/internal/wrapper/blizzard"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,9 +35,21 @@ func (h *Handler) GetCharacterProfile(c *gin.Context) {
 		return
 	}
 
-	profile, err := h.Client.GetCharacterProfile(region, realmSlug, characterName, namespace, locale)
+	characterData, err := h.Client.GetCharacterProfile(region, realmSlug, characterName, namespace, locale)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character profile"})
+		return
+	}
+
+	mediaData, err := h.Client.GetCharacterMedia(region, realmSlug, characterName, namespace, locale)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character media"})
+		return
+	}
+
+	profile, err := wrapper.TransformCharacterInfo(characterData, mediaData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform character profile"})
 		return
 	}
 
