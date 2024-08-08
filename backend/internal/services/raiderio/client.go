@@ -112,20 +112,20 @@ type Spell struct {
 }
 
 type Gear struct {
-	ItemLevelEquipped int             `json:"item_level_equipped"`
-	ItemLevelTotal    int             `json:"item_level_total"`
+	ItemLevelEquipped float64         `json:"item_level_equipped"`
+	ItemLevelTotal    float64         `json:"item_level_total"`
 	Items             map[string]Item `json:"items"`
 }
 
 type Item struct {
-	ItemID      int    `json:"item_id"`
-	ItemLevel   int    `json:"item_level"`
-	ItemQuality int    `json:"item_quality"`
-	Icon        string `json:"icon"`
-	Name        string `json:"name"`
-	Enchant     *int   `json:"enchant,omitempty"`
-	Gems        []int  `json:"gems,omitempty"`
-	Bonuses     []int  `json:"bonuses,omitempty"`
+	ItemID      int     `json:"item_id"`
+	ItemLevel   float64 `json:"item_level"`
+	ItemQuality int     `json:"item_quality"`
+	Icon        string  `json:"icon"`
+	Name        string  `json:"name"`
+	Enchant     *int    `json:"enchant,omitempty"`
+	Gems        []int   `json:"gems,omitempty"`
+	Bonuses     []int   `json:"bonuses,omitempty"`
 }
 
 type Guild struct {
