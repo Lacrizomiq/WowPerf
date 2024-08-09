@@ -27,6 +27,7 @@ type Client struct {
 	token      *oauth2.Token
 }
 
+// NewClient creates a new Blizzard API client
 func NewClient() (*Client, error) {
 	clientID := os.Getenv("BLIZZARD_CLIENT_ID")
 	clientSecret := os.Getenv("BLIZZARD_CLIENT_SECRET")
@@ -54,6 +55,7 @@ func NewClient() (*Client, error) {
 	return client, nil
 }
 
+// refreshToken refreshes the token using the provided config
 func (c *Client) refreshToken(config *clientcredentials.Config) error {
 
 	log.Println("Refreshing token...")
@@ -79,6 +81,7 @@ func (c *Client) refreshToken(config *clientcredentials.Config) error {
 	return nil
 }
 
+// makeRequest makes a request to the Blizzard API
 func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error) {
 	if c.token.Expiry.Before(time.Now()) {
 		if err := c.refreshToken(&clientcredentials.Config{
@@ -127,6 +130,7 @@ func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error)
 	return body, nil
 }
 
+// logSafeHeaders logs the headers safely
 func logSafeHeaders(headers http.Header) string {
 	safeHeaders := make(http.Header)
 	for k, v := range headers {

@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"wowperf/internal/models"
+	"wowperf/internal/services/blizzard" // Assurez-vous que ce chemin d'importation est correct
 )
 
-func TransformCharacterGear(data map[string]interface{}) (*models.Gear, error) {
+func TransformCharacterGear(data map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (*models.Gear, error) {
 	gear := &models.Gear{
 		Items: make(map[string]models.Item),
 	}
@@ -67,17 +68,24 @@ func TransformCharacterGear(data map[string]interface{}) (*models.Gear, error) {
 			continue
 		}
 
-		media, ok := itemMap["media"].(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		icon := ""
-		if mediaKey, ok := media["key"].(map[string]interface{}); ok {
-			if href, ok := mediaKey["href"].(string); ok {
-				parts := strings.Split(href, "/")
-				if len(parts) > 0 {
-					icon = parts[len(parts)-1]
+		iconName := ""
+		iconURL := ""
+		if itemInfo, ok := itemMap["item"].(map[string]interface{}); ok {
+			if itemID, ok := itemInfo["id"].(float64); ok {
+				// Récupérer les informations d'icône détaillées
+				mediaData, err := gameDataClient.GetItemMedia(int(itemID), region, "static-"+region, locale)
+				if err == nil {
+					if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
+						if asset, ok := assets[0].(map[string]interface{}); ok {
+							if value, ok := asset["value"].(string); ok {
+								iconURL = value
+								parts := strings.Split(value, "/")
+								if len(parts) > 0 {
+									iconName = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -118,11 +126,13 @@ func TransformCharacterGear(data map[string]interface{}) (*models.Gear, error) {
 			ItemID:      int(itemID),
 			ItemLevel:   itemLevel,
 			ItemQuality: getItemQualityInt(itemQuality),
-			Icon:        icon,
-			Name:        name,
-			Enchant:     enchant,
-			Gems:        gems,
-			Bonuses:     bonusList,
+
+			IconName: iconName,
+			IconURL:  iconURL,
+			Name:     name,
+			Enchant:  enchant,
+			Gems:     gems,
+			Bonuses:  bonusList,
 		}
 	}
 

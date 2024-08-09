@@ -19,7 +19,7 @@ func main() {
 	}
 
 	rioHandler := raiderio.NewHandler()
-	blizardhandler, err := blizzard.NewHandler()
+	blizzardhandler, err := blizzard.NewHandler()
 	if err != nil {
 		log.Fatalf("Failed to initialize blizzard client: %v", err)
 	}
@@ -38,13 +38,16 @@ func main() {
 	r.GET("/characters/mythic-plus-scores", rioHandler.GetCharacterMythicPlusScores)
 	r.GET("/characters/raid-progression", rioHandler.GetCharacterRaidProgression)
 
-	// Blizzard API
-	r.GET("/blizzard/characters/:realmSlug/:characterName", blizardhandler.GetCharacterProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", blizardhandler.GetCharacterMythicKeystoneProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", blizardhandler.GetCharacterEquipment)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", blizardhandler.GetCharacterSpecializations)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", blizardhandler.GetCharacterMythicKeystoneSeasonDetails)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/character-media", blizardhandler.GetCharacterMedia)
+	// Blizzard Profile API
+	r.GET("/blizzard/characters/:realmSlug/:characterName", blizzardhandler.GetCharacterProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", blizzardhandler.GetCharacterMythicKeystoneProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", blizzardhandler.GetCharacterEquipment)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", blizzardhandler.GetCharacterSpecializations)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", blizzardhandler.GetCharacterMythicKeystoneSeasonDetails)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/character-media", blizzardhandler.GetCharacterMedia)
+
+	// Blizzard Game Data API
+	r.GET("/blizzard/data/item/:itemId/media", blizzardhandler.GetItemMedia)
 
 	log.Fatal(r.Run(":8080"))
 }
