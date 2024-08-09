@@ -1,6 +1,8 @@
 package wrapper
 
 import (
+	"fmt"
+	"strings"
 	"wowperf/internal/models"
 )
 
@@ -64,6 +66,19 @@ func TransformCharacterInfo(characterData map[string]interface{}, mediaData map[
 	profile.AchievementPoints = int(characterData["achievement_points"].(float64))
 	profile.Realm = characterData["realm"].(map[string]interface{})["name"].(string)
 
+	// region
+	if links, ok := characterData["_links"].(map[string]interface{}); ok {
+		if self, ok := links["self"].(map[string]interface{}); ok {
+			if href, ok := self["href"].(string); ok {
+				// Extraire la région de l'URL
+				parts := strings.Split(href, ".")
+				if len(parts) > 1 {
+					profile.Region = strings.ToLower(parts[0][8:])
+				}
+			}
+		}
+	}
+
 	// media
 	if assets, ok := mediaData["assets"].([]interface{}); ok {
 		for _, asset := range assets {
@@ -74,13 +89,21 @@ func TransformCharacterInfo(characterData map[string]interface{}, mediaData map[
 			switch key {
 			case "avatar":
 				profile.AvatarURL = value
-			case "inset_avatar":
+			case "inset":
 				profile.InsetAvatarURL = value
-			case "main":
+			case "main-raw":
 				profile.MainRawUrl = value
 			}
 		}
 	}
+
+	if profile.Region != "" && profile.Realm != "" && profile.Name != "" {
+		profile.ProfileURL = fmt.Sprintf("https://worldofwarcraft.com/en-gb/character/%s/%s/%s",
+			strings.ToLower(profile.Region),
+			strings.ToLower(profile.Realm),
+			strings.ToLower(profile.Name))
+	}
+
 	return profile, nil
 }
 

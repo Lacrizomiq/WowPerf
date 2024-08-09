@@ -96,13 +96,24 @@ func (h *Handler) GetCharacterEquipment(c *gin.Context) {
 	namespace := c.Query("namespace")
 	locale := c.Query("locale")
 
-	equipment, err := h.Client.GetCharacterEquipment(region, realmSlug, characterName, namespace, locale)
+	if region == "" || realmSlug == "" || characterName == "" || namespace == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
+		return
+	}
+
+	equipmentData, err := h.Client.GetCharacterEquipment(region, realmSlug, characterName, namespace, locale)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character equipment"})
 		return
 	}
 
-	c.JSON(http.StatusOK, equipment)
+	transformedGear, err := wrapper.TransformCharacterGear(equipmentData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform character equipment"})
+		return
+	}
+
+	c.JSON(http.StatusOK, transformedGear)
 }
 
 func (h *Handler) GetCharacterSpecializations(c *gin.Context) {
