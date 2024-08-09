@@ -116,11 +116,11 @@ func TransformCharacterGear(data map[string]interface{}) (*models.Gear, error) {
 
 		gear.Items[strings.ToLower(slotType)] = models.Item{
 			ItemID:      int(itemID),
-			ItemLevel:   itemLevel, // Maintenant c'est un float64
+			ItemLevel:   itemLevel,
 			ItemQuality: getItemQualityInt(itemQuality),
 			Icon:        icon,
 			Name:        name,
-			Enchant:     enchant, // Maintenant c'est un *int
+			Enchant:     enchant,
 			Gems:        gems,
 			Bonuses:     bonusList,
 		}
