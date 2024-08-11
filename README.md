@@ -2,8 +2,6 @@
 
 WowPerf is a web application that allows users to track their performance in World of Warcraft.
 
-It uses the [Raider.io API](https://raider.io/) to fetch character data, calculates mythic plus scores, raid progression and more.
-
 It also uses the [World of Warcraft API](https://worldofwarcraft.blizzard.com/en-gb/) to fetch character data.
 
 In the future, the goals is to includes other data sources such as WarcraftLogs in order to provide a more comprehensive view of your performance or to compare your performance with other players.
@@ -11,15 +9,15 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 ## Features to date
 
 - Fetch character data from Raider.io API (profile, mythic plus scores, raid progression, talents, gear and more)
-- Fetch character data from World of Warcraft API (profile, mythic keystone profile, equipment, specializations)
+- Fetch character data from World of Warcraft API (profile, mythic keystone profile, equipment, specializations, media)
 - Get all information for a character
 - Get all equipment for a character
 - Calculate mythic plus scores
 - Calculate raid progression
+- Get character media from Blizzard API
 
 ## Todo
 
-- Get character media from Blizzard API
 - Setting up the interaction with WarcraftLogs API
 - Implementing Wowhead tooltip for the item
 - Implementing link to the item on Wowhead
@@ -36,6 +34,7 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 - React Query
 - Postgres
 - Docker
+- Docker Compose
 - OAuth 2.0
 - NextAuth.js
 
