@@ -130,6 +130,7 @@ func (h *Handler) GetCharacterEquipment(c *gin.Context) {
 	c.JSON(http.StatusOK, transformedGear)
 }
 
+// GetCharacterSpecializations retrieves a character's specializations, including spec groups, specs, and spec tiers.
 func (h *Handler) GetCharacterSpecializations(c *gin.Context) {
 	region := c.Query("region")
 	realmSlug := c.Param("realmSlug")
@@ -137,13 +138,23 @@ func (h *Handler) GetCharacterSpecializations(c *gin.Context) {
 	namespace := c.Query("namespace")
 	locale := c.Query("locale")
 
+	log.Printf("Fetching specializations for %s-%s (region: %s, namespace: %s, locale: %s)", realmSlug, characterName, region, namespace, locale)
+
 	specializations, err := h.Client.GetCharacterSpecializations(region, realmSlug, characterName, namespace, locale)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character specializations"})
+		log.Printf("Error fetching character specializations: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to retrieve character specializations: %v", err)})
 		return
 	}
 
-	c.JSON(http.StatusOK, specializations)
+	talentLoadout, err := wrapper.TransformCharacterTalents(specializations, h.GameDataClient, region, namespace, locale)
+	if err != nil {
+		log.Printf("Error transforming character talents: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to transform character talents: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, talentLoadout)
 }
 
 // GetCharacterMedia retrieves a character's media assets, including avatar, inset avatar, main raw, and character media.

@@ -44,7 +44,8 @@ type CharacterProfile struct {
 type TalentLoadout struct {
 	LoadoutSpecID int          `json:"loadout_spec_id"`
 	LoadoutText   string       `json:"loadout_text"`
-	Loadout       []TalentNode `json:"loadout"`
+	ClassTalents  []TalentNode `json:"class_talents"`
+	SpecTalents   []TalentNode `json:"spec_talents"`
 }
 
 type TalentNode struct {
@@ -77,11 +78,12 @@ type TalentNodeInfo struct {
 }
 
 type TalentEntry struct {
-	ID                int   `json:"id"`
-	TraitDefinitionID int   `json:"traitDefinitionId"`
-	Type              int   `json:"type"`
-	MaxRanks          int   `json:"maxRanks"`
-	Spell             Spell `json:"spell"`
+	ID                int    `json:"id"`
+	TraitDefinitionID int    `json:"traitDefinitionId"`
+	Type              int    `json:"type"`
+	MaxRanks          int    `json:"maxRanks"`
+	Spell             Spell  `json:"spell"`
+	Description       string `json:"description"`
 }
 
 type Spell struct {

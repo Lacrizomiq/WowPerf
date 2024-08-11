@@ -77,7 +77,7 @@ func (c *GameDataClient) refreshToken(config *clientcredentials.Config) error {
 }
 
 // makeRequest makes a request to the Blizzard Game Data API
-func (c *GameDataClient) makeRequest(endpoint, namespace, locale string) ([]byte, error) {
+func (c *GameDataClient) makeRequest(endpoint, namespace, locale string) (map[string]interface{}, error) {
 	if c.token.Expiry.Before(time.Now()) {
 		if err := c.refreshToken(&clientcredentials.Config{
 			ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
@@ -122,7 +122,12 @@ func (c *GameDataClient) makeRequest(endpoint, namespace, locale string) ([]byte
 		return nil, fmt.Errorf("API request failed with status code: %d, Body: %s", resp.StatusCode, string(body))
 	}
 
-	return body, nil
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result, nil
 }
 
 // GetItemMedia retrieves the media assets for an item
@@ -133,19 +138,39 @@ func (c *GameDataClient) GetItemMedia(itemID int, region, namespace, locale stri
 	}
 
 	endpoint := fmt.Sprintf("%s/data/wow/media/item/%d", baseURL, itemID)
-	log.Printf("Making request to endpoint: %s", endpoint)
+	return c.makeRequest(endpoint, namespace, locale)
+}
 
-	body, err := c.makeRequest(endpoint, namespace, locale)
+// GetSpellMedia retrieves the media assets for a spell
+func (c *GameDataClient) GetSpellMedia(spellId int, region, namespace, locale string) (map[string]interface{}, error) {
+	baseURL := fmt.Sprintf("https://%s.api.blizzard.com", region)
+	if region == "cn" {
+		baseURL = "https://gateway.battlenet.com.cn"
+	}
+
+	endpoint := fmt.Sprintf("%s/data/wow/media/spell/%d", baseURL, spellId)
+	return c.makeRequest(endpoint, namespace, locale)
+}
+
+func (c *GameDataClient) GetTalentTree(specID int, region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent-tree/%d/playable-specialization/%d", region, specID, specID)
+	return c.makeRequest(endpoint, namespace, locale)
+}
+
+func (c *GameDataClient) GetTalentTreeNodes(treeID int, region, namespace, locale string) ([]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent-tree/%d", region, treeID)
+	data, err := c.makeRequest(endpoint, namespace, locale)
 	if err != nil {
-		log.Printf("Error making request: %v", err)
 		return nil, err
 	}
-
-	var result map[string]interface{}
-	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("Error unmarshalling response: %v", err)
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	nodes, ok := data["nodes"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("nodes not found or not a slice")
 	}
+	return nodes, nil
+}
 
-	return result, nil
+func (c *GameDataClient) GetTalent(talentID int, region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent/%d", region, talentID)
+	return c.makeRequest(endpoint, namespace, locale)
 }
