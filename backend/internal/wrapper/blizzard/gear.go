@@ -139,6 +139,7 @@ func transformSingleItem(item interface{}, gameDataClient *blizzard.GameDataClie
 	return slotType, transformedItem, nil
 }
 
+// getItemMedia retrieves the media assets for an item.
 func getItemMedia(itemInfo map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (string, string, error) {
 	if itemID, ok := itemInfo["id"].(float64); ok {
 		mediaData, err := gameDataClient.GetItemMedia(int(itemID), region, "static-"+region, locale)
@@ -204,6 +205,7 @@ func getGems(itemMap map[string]interface{}) []int {
 	return gems
 }
 
+// getItemQualityInt converts a string representation of an item quality to an integer.
 func getItemQualityInt(quality string) int {
 	switch quality {
 	case "POOR":
