@@ -34,6 +34,7 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 - React Query
 - Postgres
 - Docker
+- Docker Compose
 - OAuth 2.0
 - NextAuth.js
 
