@@ -52,12 +52,38 @@ func TransformCharacterGear(data map[string]interface{}, gameDataClient *blizzar
 		close(errorChan)
 	}()
 
+	var totalItemLevel float64
+	slotWeights := map[string]float64{
+		"head": 1, "neck": 1, "shoulder": 1, "back": 1, "chest": 1, "wrist": 1,
+		"hands": 1, "waist": 1, "legs": 1, "feet": 1, "finger_1": 1, "finger_2": 1,
+		"trinket_1": 1, "trinket_2": 1, "main_hand": 1, "off_hand": 1,
+	}
+
 	for item := range itemChan {
 		gear.Items[strings.ToLower(item.slotType)] = item.item
+
+		if weight, exists := slotWeights[strings.ToLower(item.slotType)]; exists {
+			totalItemLevel += item.item.ItemLevel * weight
+		}
 	}
 
 	if len(errorChan) > 0 {
 		return nil, <-errorChan
+	}
+
+	if _, hasOffHand := gear.Items["off_hand"]; !hasOffHand {
+		if mainHand, hasMainHand := gear.Items["main_hand"]; hasMainHand {
+			totalItemLevel += mainHand.ItemLevel
+		}
+	}
+
+	totalWeight := float64(len(slotWeights))
+	if _, hasOffHand := gear.Items["off_hand"]; !hasOffHand {
+		totalWeight--
+	}
+
+	if totalWeight > 0 {
+		gear.ItemLevelEquipped = totalItemLevel / totalWeight
 	}
 
 	return gear, nil
