@@ -48,17 +48,6 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataClient *bliz
 	talentLoadout.ClassTalents = classTalents
 	talentLoadout.SpecTalents = specTalents
 
-	// Fetch talent tree data and enrich talent nodes
-	treeData, err := gameDataClient.GetTalentTree(talentLoadout.TreeID, talentLoadout.LoadoutSpecID, region, namespace, locale)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve talent tree data: %w", err)
-	}
-
-	err = enrichTalentNodes(talentLoadout, treeData, gameDataClient, region, namespace, locale)
-	if err != nil {
-		return nil, fmt.Errorf("failed to enrich talent nodes: %w", err)
-	}
-
 	return talentLoadout, nil
 }
 
@@ -90,121 +79,39 @@ func processTalents(data map[string]interface{}, key string, gameDataClient *bli
 	return talents
 }
 
-func enrichTalentNodes(talentLoadout *models.TalentLoadout, treeData map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) error {
-	enrichNodesForType := func(nodes []models.TalentNode, nodeType string) error {
-		treeNodes, ok := treeData[nodeType].([]interface{})
-		if !ok {
-			log.Printf("Warning: '%s' field not found in talent tree data", nodeType)
-			return nil
-		}
-
-		for i := range nodes {
-			enrichNode(&nodes[i], treeNodes, gameDataClient, region, namespace, locale)
-		}
-		return nil
-	}
-
-	if err := enrichNodesForType(talentLoadout.ClassTalents, "class_talent_nodes"); err != nil {
-		return err
-	}
-	if err := enrichNodesForType(talentLoadout.SpecTalents, "spec_talent_nodes"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func enrichNode(node *models.TalentNode, treeNodes []interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) {
-	for _, treeNode := range treeNodes {
-		nodeData := treeNode.(map[string]interface{})
-		if int(nodeData["id"].(float64)) == node.Node.ID {
-			node.Node.PosX = int(nodeData["raw_position_x"].(float64))
-			node.Node.PosY = int(nodeData["raw_position_y"].(float64))
-			node.Node.Row = int(nodeData["display_row"].(float64))
-			node.Node.Col = int(nodeData["display_col"].(float64))
-
-			entries, ok := nodeData["ranks"].([]interface{})
-			if !ok || len(entries) == 0 {
-				continue
-			}
-
-			firstRank := entries[0].(map[string]interface{})
-			tooltip, ok := firstRank["tooltip"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			spellTooltip, ok := tooltip["spell_tooltip"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			talentEntry, err := transformTalentEntry(spellTooltip, gameDataClient, region, namespace, locale)
-			if err != nil {
-				log.Printf("Error transforming talent entry: %v", err)
-				continue
-			}
-
-			node.Node.Entries = append(node.Node.Entries, talentEntry)
-			break
-		}
-	}
-}
-
 func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID int) (models.TalentNode, error) {
 	node := models.TalentNode{}
 
-	nodeInfo, ok := talentMap["node"].(map[string]interface{})
-	if !ok {
-		nodeInfo = talentMap
-	}
-
-	node.Node.ID = safeGetInt(nodeInfo, "id")
+	node.Node.ID = safeGetInt(talentMap, "id")
 	node.Node.TreeID = treeID
-	node.Node.Type = safeGetInt(nodeInfo, "type")
 	node.EntryIndex = safeGetInt(talentMap, "entryIndex")
-	node.Rank = safeGetInt(talentMap, "rank")
 
-	entryMap, ok := nodeInfo["entries"].([]interface{})
-	if !ok || len(entryMap) == 0 {
+	tooltip, ok := talentMap["tooltip"].(map[string]interface{})
+	if !ok {
 		return node, nil
 	}
 
-	firstEntry := entryMap[0].(map[string]interface{})
-	entry, err := transformTalentEntry(firstEntry, gameDataClient, region, namespace, locale)
+	spellTooltip, ok := tooltip["spell_tooltip"].(map[string]interface{})
+	if !ok {
+		return node, nil
+	}
+
+	entry, err := transformTalentEntry(spellTooltip, gameDataClient, region, namespace, locale)
 	if err != nil {
 		return node, err
 	}
 
-	node.Node.Entries = []models.TalentEntry{entry}
+	entry.TalentID = safeGetInt(talentMap, "talent_id")
+	entry.Type = safeGetInt(talentMap, "type")
+	entry.Rank = safeGetInt(talentMap, "rank")
+
+	node.Node.Entries = append(node.Node.Entries, entry)
 
 	return node, nil
 }
 
-// func to handle safe conversions
-func safeGetInt(m map[string]interface{}, key string) int {
-	if val, ok := m[key]; ok {
-		if intVal, ok := val.(float64); ok {
-			return int(intVal)
-		}
-	}
-	return 0
-}
-
-func safeGetString(m map[string]interface{}, key string) string {
-	if val, ok := m[key]; ok {
-		if strVal, ok := val.(string); ok {
-			return strVal
-		}
-	}
-	return ""
-}
 func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (models.TalentEntry, error) {
 	entry := models.TalentEntry{}
-
-	entry.TalentID = safeGetInt(entryMap, "talent_id")
-	entry.Type = safeGetInt(entryMap, "type")
-	entry.Rank = safeGetInt(entryMap, "rank")
 
 	spell, ok := entryMap["spell"].(map[string]interface{})
 	if !ok {
@@ -235,4 +142,22 @@ func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizz
 	}
 
 	return entry, nil
+}
+
+func safeGetInt(m map[string]interface{}, key string) int {
+	if val, ok := m[key]; ok {
+		if intVal, ok := val.(float64); ok {
+			return int(intVal)
+		}
+	}
+	return 0
+}
+
+func safeGetString(m map[string]interface{}, key string) string {
+	if val, ok := m[key]; ok {
+		if strVal, ok := val.(string); ok {
+			return strVal
+		}
+	}
+	return ""
 }

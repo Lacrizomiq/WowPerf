@@ -30,17 +30,7 @@ type CharacterProfile struct {
 	MythicPlusWeeklyHighestLevelRuns         []MythicPlusRun            `json:"mythic_plus_weekly_highest_level_runs,omitempty"`
 	MythicPlusPreviousWeeklyHighestLevelRuns []MythicPlusRun            `json:"mythic_plus_previous_weekly_highest_level_runs,omitempty"`
 	PreviousMythicPlusRanks                  *MythicPlusRanks           `json:"previous_mythic_plus_ranks,omitempty"`
-	TalentLoadout                            *struct {
-		LoadoutSpecID int          `json:"loadout_spec_id"`
-		LoadoutText   string       `json:"loadout_text"`
-		ClassTalents  []TalentNode `json:"class_talents"`
-		SpecTalents   []TalentNode `json:"spec_talents"`
-	} `json:"talentLoadout,omitempty"`
-	Talents *struct {
-		Categorized struct {
-			Active []TalentNode `json:"active"`
-		} `json:"categorized"`
-	} `json:"talents,omitempty"`
+	TalentLoadout                            *TalentLoadout             `json:"talentLoadout,omitempty"`
 }
 
 type TalentLoadout struct {
@@ -64,7 +54,6 @@ type TalentNode struct {
 		Col       int           `json:"col"`
 	} `json:"node"`
 	EntryIndex       int  `json:"entryIndex"`
-	Rank             int  `json:"rank"`
 	IncludeInSummary bool `json:"includeInSummary,omitempty"`
 }
 
