@@ -81,11 +81,10 @@ type TalentNodeInfo struct {
 }
 
 type TalentEntry struct {
-	ID                int   `json:"id"`
-	TraitDefinitionID int   `json:"traitDefinitionId"`
-	Type              int   `json:"type"`
-	MaxRanks          int   `json:"maxRanks"`
-	Spell             Spell `json:"spell"`
+	TalentID int   `json:"talent_id"`
+	Type     int   `json:"type"`
+	Rank     int   `json:"rank"`
+	Spell    Spell `json:"spell"`
 }
 
 type Spell struct {

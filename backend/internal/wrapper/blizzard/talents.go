@@ -202,10 +202,9 @@ func safeGetString(m map[string]interface{}, key string) string {
 func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (models.TalentEntry, error) {
 	entry := models.TalentEntry{}
 
-	entry.ID = safeGetInt(entryMap, "id")
-	entry.TraitDefinitionID = safeGetInt(entryMap, "trait_definition_id")
+	entry.TalentID = safeGetInt(entryMap, "talent_id")
 	entry.Type = safeGetInt(entryMap, "type")
-	entry.MaxRanks = safeGetInt(entryMap, "max_ranks")
+	entry.Rank = safeGetInt(entryMap, "rank")
 
 	spell, ok := entryMap["spell"].(map[string]interface{})
 	if !ok {
