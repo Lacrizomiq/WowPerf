@@ -254,16 +254,6 @@ func transformTalentEntry(spellTooltip map[string]interface{}, gameDataClient *b
 
 	entry.Spell.ID = int(spell["id"].(float64))
 	entry.Spell.Name = spell["name"].(string)
-	entry.Spell.Description = spellTooltip["description"].(string)
-	entry.Spell.CastTime = spellTooltip["cast_time"].(string)
-
-	if cooldown, ok := spellTooltip["cooldown"].(string); ok {
-		entry.Spell.Cooldown = cooldown
-	}
-
-	if powerCost, ok := spellTooltip["power_cost"].(string); ok {
-		entry.Spell.PowerCost = powerCost
-	}
 
 	// Retrieve spell media
 	mediaData, err := gameDataClient.GetSpellMedia(entry.Spell.ID, region, namespace, locale)

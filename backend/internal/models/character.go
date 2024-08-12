@@ -89,14 +89,11 @@ type TalentEntry struct {
 }
 
 type Spell struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Icon        string `json:"icon"`
-	IconURL     string `json:"icon_url"`
-	Description string `json:"description"`
-	CastTime    string `json:"cast_time"`
-	Cooldown    string `json:"cooldown,omitempty"`
-	PowerCost   string `json:"power_cost,omitempty"`
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Icon    string `json:"icon"`
+	IconURL string `json:"icon_url"`
+	School  int    `json:"school"`
 }
 
 type Gear struct {
