@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
 )
@@ -43,42 +42,17 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataClient *bliz
 
 	talentLoadout.LoadoutText = activeLoadout["talent_loadout_code"].(string)
 
-	var wg sync.WaitGroup
-	talentChan := make(chan models.TalentNode, 100)
-	errorChan := make(chan error, 2)
-
-	wg.Add(2)
-	go processTalents(activeLoadout, "selected_class_talents", gameDataClient, region, namespace, locale, talentChan, errorChan, &wg, treeID)
-	go processTalents(activeLoadout, "selected_spec_talents", gameDataClient, region, namespace, locale, talentChan, errorChan, &wg, specID)
-
-	go func() {
-		wg.Wait()
-		close(talentChan)
-		close(errorChan)
-	}()
-
-	var classTalents, specTalents []models.TalentNode
-
-	for talent := range talentChan {
-		if talent.Node.TreeID == treeID {
-			classTalents = append(classTalents, talent)
-		} else if talent.Node.TreeID == specID {
-			specTalents = append(specTalents, talent)
-		}
-	}
-
-	if len(errorChan) > 0 {
-		return nil, <-errorChan
-	}
+	classTalents := processTalents(activeLoadout, "selected_class_talents", gameDataClient, region, namespace, locale, treeID)
+	specTalents := processTalents(activeLoadout, "selected_spec_talents", gameDataClient, region, namespace, locale, specID)
 
 	talentLoadout.ClassTalents = classTalents
 	talentLoadout.SpecTalents = specTalents
 
+	// Fetch talent tree data and enrich talent nodes
 	treeData, err := gameDataClient.GetTalentTree(talentLoadout.TreeID, talentLoadout.LoadoutSpecID, region, namespace, locale)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve talent tree data: %w", err)
 	}
-	log.Printf("Talent tree data: %+v", treeData)
 
 	err = enrichTalentNodes(talentLoadout, treeData, gameDataClient, region, namespace, locale)
 	if err != nil {
@@ -88,22 +62,53 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataClient *bliz
 	return talentLoadout, nil
 }
 
-func enrichTalentNodes(talentLoadout *models.TalentLoadout, treeData map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) error {
-	nodes, ok := treeData["class_talent_nodes"].([]interface{})
+func processTalents(data map[string]interface{}, key string, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID int) []models.TalentNode {
+	var talents []models.TalentNode
+
+	talentsData, ok := data[key].([]interface{})
 	if !ok {
-		nodes, ok = treeData["spec_talent_nodes"].([]interface{})
+		log.Printf("No talents found for key: %s", key)
+		return talents
+	}
+
+	for _, talent := range talentsData {
+		talentMap, ok := talent.(map[string]interface{})
 		if !ok {
-			log.Printf("Warning: neither 'class_talent_nodes' nor 'spec_talent_nodes' field found in talent tree data")
+			log.Printf("Invalid talent data structure")
+			continue
+		}
+
+		node, err := transformTalentNode(talentMap, gameDataClient, region, namespace, locale, treeID)
+		if err != nil {
+			log.Printf("Error transforming talent node: %v", err)
+			continue
+		}
+
+		talents = append(talents, node)
+	}
+
+	return talents
+}
+
+func enrichTalentNodes(talentLoadout *models.TalentLoadout, treeData map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) error {
+	enrichNodesForType := func(nodes []models.TalentNode, nodeType string) error {
+		treeNodes, ok := treeData[nodeType].([]interface{})
+		if !ok {
+			log.Printf("Warning: '%s' field not found in talent tree data", nodeType)
 			return nil
 		}
+
+		for i := range nodes {
+			enrichNode(&nodes[i], treeNodes, gameDataClient, region, namespace, locale)
+		}
+		return nil
 	}
 
-	for i := range talentLoadout.ClassTalents {
-		enrichNode(&talentLoadout.ClassTalents[i], nodes, gameDataClient, region, namespace, locale)
+	if err := enrichNodesForType(talentLoadout.ClassTalents, "class_talent_nodes"); err != nil {
+		return err
 	}
-
-	for i := range talentLoadout.SpecTalents {
-		enrichNode(&talentLoadout.SpecTalents[i], nodes, gameDataClient, region, namespace, locale)
+	if err := enrichNodesForType(talentLoadout.SpecTalents, "spec_talent_nodes"); err != nil {
+		return err
 	}
 
 	return nil
@@ -146,31 +151,6 @@ func enrichNode(node *models.TalentNode, treeNodes []interface{}, gameDataClient
 	}
 }
 
-func processTalents(data map[string]interface{}, key string, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, talentChan chan<- models.TalentNode, errorChan chan<- error, wg *sync.WaitGroup, treeID int) {
-	defer wg.Done()
-
-	talents, ok := data[key].([]interface{})
-	if !ok {
-		errorChan <- fmt.Errorf("%s not found or not a slice", key)
-		return
-	}
-
-	for _, talent := range talents {
-		talentMap, ok := talent.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		node, err := transformTalentNode(talentMap, gameDataClient, region, namespace, locale, treeID)
-		if err != nil {
-			errorChan <- err
-			return
-		}
-
-		talentChan <- node
-	}
-}
-
 func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID int) (models.TalentNode, error) {
 	node := models.TalentNode{}
 
@@ -179,42 +159,24 @@ func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizz
 		nodeInfo = talentMap
 	}
 
-	// Utiliser une fonction d'aide pour gérer les conversions de manière sûre
 	node.Node.ID = safeGetInt(nodeInfo, "id")
 	node.Node.TreeID = treeID
 	node.Node.Type = safeGetInt(nodeInfo, "type")
-	node.Node.Important = safeGetBool(nodeInfo, "important")
-	node.Node.PosX = safeGetInt(nodeInfo, "posX")
-	node.Node.PosY = safeGetInt(nodeInfo, "posY")
-	node.Node.Row = safeGetInt(nodeInfo, "row")
-	node.Node.Col = safeGetInt(nodeInfo, "col")
-
 	node.EntryIndex = safeGetInt(talentMap, "entryIndex")
 	node.Rank = safeGetInt(talentMap, "rank")
 
-	node.IncludeInSummary = safeGetBool(talentMap, "includeInSummary")
-
-	entries, ok := nodeInfo["entries"].([]interface{})
-	if !ok {
-		entries, ok = talentMap["entries"].([]interface{})
-		if !ok {
-			return node, nil
-		}
+	entryMap, ok := nodeInfo["entries"].([]interface{})
+	if !ok || len(entryMap) == 0 {
+		return node, nil
 	}
 
-	for _, entry := range entries {
-		entryMap, ok := entry.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		entryNode, err := transformTalentEntry(entryMap, gameDataClient, region, namespace, locale)
-		if err != nil {
-			return node, err
-		}
-
-		node.Node.Entries = append(node.Node.Entries, entryNode)
+	firstEntry := entryMap[0].(map[string]interface{})
+	entry, err := transformTalentEntry(firstEntry, gameDataClient, region, namespace, locale)
+	if err != nil {
+		return node, err
 	}
+
+	node.Node.Entries = []models.TalentEntry{entry}
 
 	return node, nil
 }
@@ -229,42 +191,44 @@ func safeGetInt(m map[string]interface{}, key string) int {
 	return 0
 }
 
-// func to handle safe conversions
-func safeGetBool(m map[string]interface{}, key string) bool {
+func safeGetString(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok {
-		if boolVal, ok := val.(bool); ok {
-			return boolVal
+		if strVal, ok := val.(string); ok {
+			return strVal
 		}
 	}
-	return false
+	return ""
 }
+func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (models.TalentEntry, error) {
+	entry := models.TalentEntry{}
 
-func transformTalentEntry(spellTooltip map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (models.TalentEntry, error) {
-	entry := models.TalentEntry{
-		ID:                0,
-		TraitDefinitionID: 0,
-		Type:              0,
-		MaxRanks:          1, // Assuming 1 as default
-	}
+	entry.ID = safeGetInt(entryMap, "id")
+	entry.TraitDefinitionID = safeGetInt(entryMap, "trait_definition_id")
+	entry.Type = safeGetInt(entryMap, "type")
+	entry.MaxRanks = safeGetInt(entryMap, "max_ranks")
 
-	spell, ok := spellTooltip["spell"].(map[string]interface{})
+	spell, ok := entryMap["spell"].(map[string]interface{})
 	if !ok {
 		return entry, fmt.Errorf("spell information not found")
 	}
 
-	entry.Spell.ID = int(spell["id"].(float64))
-	entry.Spell.Name = spell["name"].(string)
+	entry.Spell.ID = safeGetInt(spell, "id")
+	entry.Spell.Name = safeGetString(spell, "name")
+	entry.Spell.Icon = safeGetString(spell, "icon")
 
-	// Retrieve spell media
-	mediaData, err := gameDataClient.GetSpellMedia(entry.Spell.ID, region, namespace, locale)
-	if err == nil {
-		if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
-			if asset, ok := assets[0].(map[string]interface{}); ok {
-				if value, ok := asset["value"].(string); ok {
-					entry.Spell.IconURL = value
-					parts := strings.Split(value, "/")
-					if len(parts) > 0 {
-						entry.Spell.Icon = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
+	// Retrieve spell media only if the icon is empty
+	if entry.Spell.Icon == "" {
+		mediaData, err := gameDataClient.GetSpellMedia(entry.Spell.ID, region, namespace, locale)
+		if err == nil {
+			if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
+				if asset, ok := assets[0].(map[string]interface{}); ok {
+					if value, ok := asset["value"].(string); ok {
+						entry.Spell.IconURL = value
+						// Extract icon name from URL
+						parts := strings.Split(value, "/")
+						if len(parts) > 0 {
+							entry.Spell.Icon = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
+						}
 					}
 				}
 			}
