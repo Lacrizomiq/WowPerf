@@ -49,5 +49,12 @@ func main() {
 	// Blizzard Game Data API
 	r.GET("/blizzard/data/item/:itemId/media", blizzardhandler.GetItemMedia)
 
+	r.GET("/blizzard/data/playable-specialization/index", blizzardhandler.GetPlayableSpecializationIndex)
+	r.GET("/blizzard/data/playable-specialization/:specId", blizzardhandler.GetPlayableSpecialization)
+	r.GET("/blizzard/data/playable-specialization/:specId/media", blizzardhandler.GetPlayableSpecializationMedia)
+
+	r.GET("/blizzard/data/talent-tree/index", blizzardhandler.GetTalentTreeIndex)
+	r.GET("/blizzard/data/talent-tree/:talentTreeId/playable-specialization/:specId", blizzardhandler.GetTalentTree)
+
 	log.Fatal(r.Run(":8080"))
 }

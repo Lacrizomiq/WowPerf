@@ -154,16 +154,6 @@ func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizz
 		node.Node.Entries = append(node.Node.Entries, entryNode)
 	}
 
-	if len(node.Node.Entries) > 0 {
-		talentID := node.Node.Entries[0].ID
-		talentDetails, err := gameDataClient.GetTalent(talentID, region, namespace, locale)
-		if err == nil {
-			if description, ok := talentDetails["description"].(string); ok {
-				node.Node.Entries[0].Description = description
-			}
-		}
-	}
-
 	return node, nil
 }
 

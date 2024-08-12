@@ -216,3 +216,185 @@ func (h *Handler) GetItemMedia(c *gin.Context) {
 
 	c.JSON(http.StatusOK, mediaData)
 }
+
+// GetPlayableSpecializationIndex retrieves an index of playable specializations
+func (h *Handler) GetPlayableSpecializationIndex(c *gin.Context) {
+	if h.GameDataClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
+		return
+	}
+
+	region := c.Query("region")
+	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
+	locale := c.DefaultQuery("locale", "en_US")
+
+	log.Printf("Requesting playable specialization index for Region: %s, Namespace: %s, Locale: %s", region, namespace, locale)
+
+	index, err := h.GameDataClient.GetPlayableSpecializationIndex(region, namespace, locale)
+	if err != nil {
+		log.Printf("Error retrieving playable specialization index: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to retrieve playable specialization index: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, index)
+}
+
+// GetPlayableSpecialization retrieves a playable specialization
+func (h *Handler) GetPlayableSpecialization(c *gin.Context) {
+	if h.GameDataClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
+		return
+	}
+
+	specID := c.Param("specId")
+	region := c.Query("region")
+	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
+	locale := c.DefaultQuery("locale", "en_US")
+
+	if namespace == "" {
+		namespace = fmt.Sprintf("static-%s", region)
+	}
+
+	log.Printf("Requesting playable specialization for SpecID: %s, Region: %s, Namespace: %s, Locale: %s", specID, region, namespace, locale)
+
+	if specID == "" || region == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
+		return
+	}
+
+	id, err := strconv.Atoi(specID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid spec ID"})
+		return
+	}
+
+	data, err := h.GameDataClient.GetPlayableSpecialization(id, region, namespace, locale)
+	if err != nil {
+		log.Printf("Error retrieving playable specialization: %v", err)
+		if strings.Contains(err.Error(), "404") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Playable specialization not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve playable specialization"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+// GetPlayableSpecializationMedia retrieves the media assets for a playable specialization
+func (h *Handler) GetPlayableSpecializationMedia(c *gin.Context) {
+	if h.GameDataClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
+		return
+	}
+
+	specID := c.Param("specId")
+	region := c.Query("region")
+	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
+	locale := c.DefaultQuery("locale", "en_US")
+
+	if namespace == "" {
+		namespace = fmt.Sprintf("static-%s", region)
+	}
+
+	log.Printf("Requesting playable specialization media for SpecID: %s, Region: %s, Namespace: %s, Locale: %s", specID, region, namespace, locale)
+
+	if specID == "" || region == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
+		return
+	}
+
+	id, err := strconv.Atoi(specID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid spec ID"})
+		return
+	}
+
+	data, err := h.GameDataClient.GetPlayableSpecializationMedia(id, region, namespace, locale)
+	if err != nil {
+		log.Printf("Error retrieving playable specialization media: %v", err)
+		if strings.Contains(err.Error(), "404") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Playable specialization media not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve playable specialization media"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+// GetTalentTreeIndex retrieves an index of talent trees
+func (h *Handler) GetTalentTreeIndex(c *gin.Context) {
+	if h.GameDataClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
+		return
+	}
+
+	region := c.Query("region")
+	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
+	locale := c.DefaultQuery("locale", "en_US")
+
+	log.Printf("Requesting talent tree index for Region: %s, Namespace: %s, Locale: %s", region, namespace, locale)
+
+	index, err := h.GameDataClient.GetTalentTreeIndex(region, namespace, locale)
+	if err != nil {
+		log.Printf("Error retrieving talent tree index: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to retrieve talent tree index: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, index)
+}
+
+// GetTalentTree retrieves a talent tree by spec ID
+func (h *Handler) GetTalentTree(c *gin.Context) {
+	if h.GameDataClient == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
+		return
+	}
+
+	talentTreeID := c.Param("talentTreeId")
+	specID := c.Param("specId")
+	region := c.Query("region")
+	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
+	locale := c.DefaultQuery("locale", "en_US")
+
+	if namespace == "" {
+		namespace = fmt.Sprintf("static-%s", region)
+	}
+
+	log.Printf("Requesting talent tree for TalentTreeID: %s, SpecID: %s, Region: %s, Namespace: %s, Locale: %s", talentTreeID, specID, region, namespace, locale)
+
+	if talentTreeID == "" || specID == "" || region == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
+		return
+	}
+
+	treeID, err := strconv.Atoi(talentTreeID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid talent tree ID"})
+		return
+	}
+
+	specIDInt, err := strconv.Atoi(specID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid spec ID"})
+		return
+	}
+
+	data, err := h.GameDataClient.GetTalentTree(treeID, specIDInt, region, namespace, locale)
+	if err != nil {
+		log.Printf("Error retrieving talent tree: %v", err)
+		if strings.Contains(err.Error(), "404") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Talent tree not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve talent tree"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
