@@ -6,6 +6,8 @@ type CharacterProfile struct {
 	Class                                    string                     `json:"class"`
 	ActiveSpecName                           string                     `json:"active_spec_name"`
 	ActiveSpecRole                           string                     `json:"active_spec_role"`
+	TreeID                                   int                        `json:"tree_id"`
+	SpecID                                   int                        `json:"spec_id"`
 	Gender                                   string                     `json:"gender"`
 	Faction                                  string                     `json:"faction"`
 	AchievementPoints                        int                        `json:"achievement_points"`
@@ -44,6 +46,7 @@ type CharacterProfile struct {
 type TalentLoadout struct {
 	LoadoutSpecID int          `json:"loadout_spec_id"`
 	LoadoutText   string       `json:"loadout_text"`
+	TreeID        int          `json:"tree_id"`
 	ClassTalents  []TalentNode `json:"class_talents"`
 	SpecTalents   []TalentNode `json:"spec_talents"`
 }
@@ -78,21 +81,22 @@ type TalentNodeInfo struct {
 }
 
 type TalentEntry struct {
-	ID                int    `json:"id"`
-	TraitDefinitionID int    `json:"traitDefinitionId"`
-	Type              int    `json:"type"`
-	MaxRanks          int    `json:"maxRanks"`
-	Spell             Spell  `json:"spell"`
-	Description       string `json:"description"`
+	ID                int   `json:"id"`
+	TraitDefinitionID int   `json:"traitDefinitionId"`
+	Type              int   `json:"type"`
+	MaxRanks          int   `json:"maxRanks"`
+	Spell             Spell `json:"spell"`
 }
 
 type Spell struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Icon        string `json:"icon"`
-	School      int    `json:"school"`
-	Rank        string `json:"rank,omitempty"`
-	HasCooldown bool   `json:"hasCooldown"`
+	IconURL     string `json:"icon_url"`
+	Description string `json:"description"`
+	CastTime    string `json:"cast_time"`
+	Cooldown    string `json:"cooldown,omitempty"`
+	PowerCost   string `json:"power_cost,omitempty"`
 }
 
 type Gear struct {

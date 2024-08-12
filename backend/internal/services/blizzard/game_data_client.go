@@ -181,3 +181,27 @@ func (c *GameDataClient) GetTalentTree(talentTreeID, specID int, region, namespa
 	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent-tree/%d/playable-specialization/%d", region, talentTreeID, specID)
 	return c.makeRequest(endpoint, namespace, locale)
 }
+
+// GetTalentTreeNodes retrieves the nodes of a talent tree as well as links to associated playable specializations given a talent tree id
+func (c *GameDataClient) GetTalentTreeNodes(talentTreeID int, region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent-tree/%d", region, talentTreeID)
+	return c.makeRequest(endpoint, namespace, locale)
+}
+
+// GetTalentIndex retrieves an index of talents
+func (c *GameDataClient) GetTalentIndex(region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent/index", region)
+	return c.makeRequest(endpoint, namespace, locale)
+}
+
+// GetTalentByID retrieves a talent by ID
+func (c *GameDataClient) GetTalentByID(talentID int, region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/talent/%d", region, talentID)
+	return c.makeRequest(endpoint, namespace, locale)
+}
+
+// GetPlayableClassIndex retrieves an index of playable classes
+func (c *GameDataClient) GetPlayableClassIndex(region, namespace, locale string) (map[string]interface{}, error) {
+	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/playable-class/index", region)
+	return c.makeRequest(endpoint, namespace, locale)
+}
