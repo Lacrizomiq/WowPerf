@@ -77,7 +77,7 @@ func (c *GameDataClient) refreshToken(config *clientcredentials.Config) error {
 }
 
 // makeRequest makes a request to the Blizzard Game Data API
-func (c *GameDataClient) makeRequest(endpoint, namespace, locale string) (map[string]interface{}, error) {
+func (c *GameDataClient) MakeRequest(endpoint, namespace, locale string) (map[string]interface{}, error) {
 	if c.token.Expiry.Before(time.Now()) {
 		if err := c.refreshToken(&clientcredentials.Config{
 			ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),

@@ -82,7 +82,7 @@ func (c *Client) refreshToken(config *clientcredentials.Config) error {
 }
 
 // makeRequest makes a request to the Blizzard API
-func (c *Client) makeRequest(endpoint, namespace, locale string) ([]byte, error) {
+func (c *Client) MakeRequest(endpoint, namespace, locale string) ([]byte, error) {
 	if c.token.Expiry.Before(time.Now()) {
 		if err := c.refreshToken(&clientcredentials.Config{
 			ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
