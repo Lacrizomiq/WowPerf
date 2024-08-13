@@ -101,7 +101,10 @@ func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizz
 		return node, err
 	}
 
-	entry.TalentID = safeGetInt(talentMap, "talent_id")
+	if talentInfo, ok := tooltip["talent"].(map[string]interface{}); ok {
+		entry.TalentID = safeGetInt(talentInfo, "id")
+	}
+
 	entry.Type = safeGetInt(talentMap, "type")
 	entry.Rank = safeGetInt(talentMap, "rank")
 
