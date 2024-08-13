@@ -6,6 +6,8 @@ type CharacterProfile struct {
 	Class                                    string                     `json:"class"`
 	ActiveSpecName                           string                     `json:"active_spec_name"`
 	ActiveSpecRole                           string                     `json:"active_spec_role"`
+	TreeID                                   int                        `json:"tree_id"`
+	SpecID                                   int                        `json:"spec_id"`
 	Gender                                   string                     `json:"gender"`
 	Faction                                  string                     `json:"faction"`
 	AchievementPoints                        int                        `json:"achievement_points"`
@@ -28,23 +30,15 @@ type CharacterProfile struct {
 	MythicPlusWeeklyHighestLevelRuns         []MythicPlusRun            `json:"mythic_plus_weekly_highest_level_runs,omitempty"`
 	MythicPlusPreviousWeeklyHighestLevelRuns []MythicPlusRun            `json:"mythic_plus_previous_weekly_highest_level_runs,omitempty"`
 	PreviousMythicPlusRanks                  *MythicPlusRanks           `json:"previous_mythic_plus_ranks,omitempty"`
-	TalentLoadout                            *struct {
-		LoadoutSpecID int          `json:"loadout_spec_id"`
-		LoadoutText   string       `json:"loadout_text"`
-		ClassTalents  []TalentNode `json:"class_talents"`
-		SpecTalents   []TalentNode `json:"spec_talents"`
-	} `json:"talentLoadout,omitempty"`
-	Talents *struct {
-		Categorized struct {
-			Active []TalentNode `json:"active"`
-		} `json:"categorized"`
-	} `json:"talents,omitempty"`
+	TalentLoadout                            *TalentLoadout             `json:"talentLoadout,omitempty"`
 }
 
 type TalentLoadout struct {
 	LoadoutSpecID int          `json:"loadout_spec_id"`
 	LoadoutText   string       `json:"loadout_text"`
-	Loadout       []TalentNode `json:"loadout"`
+	TreeID        int          `json:"tree_id"`
+	ClassTalents  []TalentNode `json:"class_talents"`
+	SpecTalents   []TalentNode `json:"spec_talents"`
 }
 
 type TalentNode struct {
@@ -60,7 +54,6 @@ type TalentNode struct {
 		Col       int           `json:"col"`
 	} `json:"node"`
 	EntryIndex       int  `json:"entryIndex"`
-	Rank             int  `json:"rank"`
 	IncludeInSummary bool `json:"includeInSummary,omitempty"`
 }
 
@@ -77,20 +70,18 @@ type TalentNodeInfo struct {
 }
 
 type TalentEntry struct {
-	ID                int   `json:"id"`
-	TraitDefinitionID int   `json:"traitDefinitionId"`
-	Type              int   `json:"type"`
-	MaxRanks          int   `json:"maxRanks"`
-	Spell             Spell `json:"spell"`
+	TalentID int   `json:"talent_id"`
+	Type     int   `json:"type"`
+	Rank     int   `json:"rank"`
+	Spell    Spell `json:"spell"`
 }
 
 type Spell struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Icon        string `json:"icon"`
-	School      int    `json:"school"`
-	Rank        string `json:"rank,omitempty"`
-	HasCooldown bool   `json:"hasCooldown"`
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Icon    string `json:"icon"`
+	IconURL string `json:"icon_url"`
+	School  int    `json:"school"`
 }
 
 type Gear struct {

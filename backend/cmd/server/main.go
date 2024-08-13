@@ -47,7 +47,24 @@ func main() {
 	r.GET("/blizzard/characters/:realmSlug/:characterName/character-media", blizzardhandler.GetCharacterMedia)
 
 	// Blizzard Game Data API
+
+	// Items media API
 	r.GET("/blizzard/data/item/:itemId/media", blizzardhandler.GetItemMedia)
+
+	// Playable specializations API
+	r.GET("/blizzard/data/playable-specialization/index", blizzardhandler.GetPlayableSpecializationIndex)
+	r.GET("/blizzard/data/playable-specialization/:specId", blizzardhandler.GetPlayableSpecialization)
+	r.GET("/blizzard/data/playable-specialization/:specId/media", blizzardhandler.GetPlayableSpecializationMedia)
+
+	// Playable class API
+	r.GET("/blizzard/data/playable-class/index", blizzardhandler.GetPlayableClassIndex)
+
+	// Talent tree API
+	r.GET("/blizzard/data/talent-tree/index", blizzardhandler.GetTalentTreeIndex)
+	r.GET("/blizzard/data/talent-tree/:talentTreeId/playable-specialization/:specId", blizzardhandler.GetTalentTree)
+	r.GET("/blizzard/data/talent-tree/:talentTreeId/nodes", blizzardhandler.GetTalentTreeNodes)
+	r.GET("/blizzard/data/talent/index", blizzardhandler.GetTalentIndex)
+	r.GET("/blizzard/data/talent/:talentId", blizzardhandler.GetTalentByID)
 
 	log.Fatal(r.Run(":8080"))
 }
