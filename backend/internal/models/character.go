@@ -126,10 +126,6 @@ type Scores struct {
 	DPS    float64 `json:"dps"`
 	Healer float64 `json:"healer"`
 	Tank   float64 `json:"tank"`
-	Spec0  float64 `json:"spec_0"`
-	Spec1  float64 `json:"spec_1"`
-	Spec2  float64 `json:"spec_2"`
-	Spec3  float64 `json:"spec_3"`
 }
 
 type Segments struct {
@@ -137,10 +133,6 @@ type Segments struct {
 	DPS    Segment `json:"dps"`
 	Healer Segment `json:"healer"`
 	Tank   Segment `json:"tank"`
-	Spec0  Segment `json:"spec_0"`
-	Spec1  Segment `json:"spec_1"`
-	Spec2  Segment `json:"spec_2"`
-	Spec3  Segment `json:"spec_3"`
 }
 
 type Segment struct {
@@ -173,5 +165,11 @@ type MythicPlusRun struct {
 	ClearTimeMS         int     `json:"clear_time_ms"`
 	NumKeystoneUpgrades int     `json:"num_keystone_upgrades"`
 	Score               float64 `json:"score"`
+	Affixes             []Affix `json:"affixes"`
 	URL                 string  `json:"url"`
+}
+
+type Affix struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
