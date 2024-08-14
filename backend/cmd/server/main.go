@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	"wowperf/internal/api/blizzard"
+	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
+	serviceBlizzard "wowperf/internal/services/blizzard"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -11,18 +12,19 @@ import (
 )
 
 func main() {
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
 		return
 	}
 
-	rioHandler := raiderio.NewHandler()
-	blizzardhandler, err := blizzard.NewHandler()
+	blizzardService, err := serviceBlizzard.NewService()
 	if err != nil {
-		log.Fatalf("Failed to initialize blizzard client: %v", err)
+		log.Fatalf("Failed to initialize blizzard service: %v", err)
 	}
+
+	rioHandler := raiderio.NewHandler()
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService)
 
 	r := gin.Default()
 
@@ -38,33 +40,8 @@ func main() {
 	r.GET("/characters/mythic-plus-scores", rioHandler.GetCharacterMythicPlusScores)
 	r.GET("/characters/raid-progression", rioHandler.GetCharacterRaidProgression)
 
-	// Blizzard Profile API
-	r.GET("/blizzard/characters/:realmSlug/:characterName", blizzardhandler.GetCharacterProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", blizzardhandler.GetCharacterMythicKeystoneProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", blizzardhandler.GetCharacterEquipment)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", blizzardhandler.GetCharacterSpecializations)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", blizzardhandler.GetCharacterMythicKeystoneSeasonDetails)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/character-media", blizzardhandler.GetCharacterMedia)
-
-	// Blizzard Game Data API
-
-	// Items media API
-	r.GET("/blizzard/data/item/:itemId/media", blizzardhandler.GetItemMedia)
-
-	// Playable specializations API
-	r.GET("/blizzard/data/playable-specialization/index", blizzardhandler.GetPlayableSpecializationIndex)
-	r.GET("/blizzard/data/playable-specialization/:specId", blizzardhandler.GetPlayableSpecialization)
-	r.GET("/blizzard/data/playable-specialization/:specId/media", blizzardhandler.GetPlayableSpecializationMedia)
-
-	// Playable class API
-	r.GET("/blizzard/data/playable-class/index", blizzardhandler.GetPlayableClassIndex)
-
-	// Talent tree API
-	r.GET("/blizzard/data/talent-tree/index", blizzardhandler.GetTalentTreeIndex)
-	r.GET("/blizzard/data/talent-tree/:talentTreeId/playable-specialization/:specId", blizzardhandler.GetTalentTree)
-	r.GET("/blizzard/data/talent-tree/:talentTreeId/nodes", blizzardhandler.GetTalentTreeNodes)
-	r.GET("/blizzard/data/talent/index", blizzardhandler.GetTalentIndex)
-	r.GET("/blizzard/data/talent/:talentId", blizzardhandler.GetTalentByID)
+	// Blizzard API
+	blizzardHandler.RegisterRoutes(r)
 
 	log.Fatal(r.Run(":8080"))
 }
