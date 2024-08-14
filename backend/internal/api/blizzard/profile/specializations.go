@@ -43,7 +43,7 @@ func (h *SpecializationsHandler) GetCharacterSpecializations(c *gin.Context) {
 	}
 
 	// then transform the character profile into a struct
-	profile, err := wrapper.TransformCharacterInfo(characterData, nil)
+	characterProfile, err := wrapper.TransformCharacterInfo(characterData, nil)
 	if err != nil {
 		log.Printf("Error transforming character profile: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to transform character profile: %v", err)})
@@ -58,7 +58,7 @@ func (h *SpecializationsHandler) GetCharacterSpecializations(c *gin.Context) {
 	}
 
 	// then i transform the specializations into a talent loadout
-	talentLoadout, err := wrapper.TransformCharacterTalents(specializations, h.Service.GameDataClient, region, staticNamespace, locale, profile.TreeID, profile.SpecID)
+	talentLoadout, err := wrapper.TransformCharacterTalents(specializations, h.Service.GameDataClient, region, staticNamespace, locale, characterProfile.TreeID, characterProfile.SpecID)
 	if err != nil {
 		log.Printf("Error transforming character talents: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to transform character talents: %v", err)})

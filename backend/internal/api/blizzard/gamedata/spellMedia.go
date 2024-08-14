@@ -12,24 +12,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ItemMediaHandler struct {
+type SpellMediaHandler struct {
 	Service *blizzard.Service
 }
 
-func NewItemMediaHandler(service *blizzard.Service) *ItemMediaHandler {
-	return &ItemMediaHandler{
+func NewSpellMediaHandler(service *blizzard.Service) *SpellMediaHandler {
+	return &SpellMediaHandler{
 		Service: service,
 	}
 }
 
-// GetItemMedia retrieves the media assets for an item.
-func (h *ItemMediaHandler) GetItemMedia(c *gin.Context) {
+// GetSpellMedia retrieves the media assets for a spell
+func (h *SpellMediaHandler) GetSpellMedia(c *gin.Context) {
 	if h.Service.GameDataClient == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
 		return
 	}
 
-	itemID := c.Param("itemId")
+	spellID := c.Param("spellId")
 	region := c.Query("region")
 	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
 	locale := c.DefaultQuery("locale", "en_US")
@@ -38,26 +38,26 @@ func (h *ItemMediaHandler) GetItemMedia(c *gin.Context) {
 		namespace = fmt.Sprintf("static-%s", region)
 	}
 
-	log.Printf("Requesting item media for ItemID: %s, Region: %s, Namespace: %s, Locale: %s", itemID, region, namespace, locale)
+	log.Printf("Requesting spell media for SpellID: %s, Region: %s, Namespace: %s, Locale: %s", spellID, region, namespace, locale)
 
-	if itemID == "" || region == "" {
+	if spellID == "" || region == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
 		return
 	}
 
-	id, err := strconv.Atoi(itemID)
+	id, err := strconv.Atoi(spellID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid item ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid spell ID"})
 		return
 	}
 
-	mediaData, err := gamedataService.GetItemMedia(h.Service.GameData, id, region, namespace, locale)
+	mediaData, err := gamedataService.GetSpellMedia(h.Service.GameData, id, region, namespace, locale)
 	if err != nil {
-		log.Printf("Error retrieving item media: %v", err)
+		log.Printf("Error retrieving spell media: %v", err)
 		if strings.Contains(err.Error(), "404") {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Item media not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Spell media not found"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve item media"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve spell media"})
 		}
 		return
 	}
