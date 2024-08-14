@@ -25,6 +25,13 @@ type Handler struct {
 	MythicKeystoneAffixIndex    *gamedata.MythicKeystoneAffixIndexHandler
 	MythicKeystoneAffixByID     *gamedata.MythicKeystoneAffixByIDHandler
 	MythicKeystoneAffixMedia    *gamedata.MythicKeystoneAffixMediaHandler
+	MythicKeystoneIndex         *gamedata.MythicKeystoneIndexHandler
+	MythicKeystoneDungeonsIndex *gamedata.MythicKeystoneDungeonsIndexHandler
+	MythicKeystoneByID          *gamedata.MythicKeystoneByIDHandler
+	MythicKeystonePeriodsIndex  *gamedata.MythicKeystonePeriodsIndexHandler
+	MythicKeystonePeriodByID    *gamedata.MythicKeystonePeriodByIDHandler
+	MythicKeystoneSeasonsIndex  *gamedata.MythicKeystoneSeasonsIndexHandler
+	MythicKeystoneSeasonByID    *gamedata.MythicKeystoneSeasonByIDHandler
 }
 
 func NewHandler(service *blizzard.Service) *Handler {
@@ -45,6 +52,13 @@ func NewHandler(service *blizzard.Service) *Handler {
 		MythicKeystoneAffixIndex:    gamedata.NewMythicKeystoneAffixIndexHandler(service),
 		MythicKeystoneAffixByID:     gamedata.NewMythicKeystoneAffixByIDHandler(service),
 		MythicKeystoneAffixMedia:    gamedata.NewMythicKeystoneAffixMediaHandler(service),
+		MythicKeystoneIndex:         gamedata.NewMythicKeystoneIndexHandler(service),
+		MythicKeystoneDungeonsIndex: gamedata.NewMythicKeystoneDungeonsIndexHandler(service),
+		MythicKeystoneByID:          gamedata.NewMythicKeystoneByIDHandler(service),
+		MythicKeystonePeriodsIndex:  gamedata.NewMythicKeystonePeriodsIndexHandler(service),
+		MythicKeystonePeriodByID:    gamedata.NewMythicKeystonePeriodByIDHandler(service),
+		MythicKeystoneSeasonsIndex:  gamedata.NewMythicKeystoneSeasonsIndexHandler(service),
+		MythicKeystoneSeasonByID:    gamedata.NewMythicKeystoneSeasonByIDHandler(service),
 	}
 }
 
@@ -75,4 +89,11 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/mythic-keystone-affix/:affixId", h.MythicKeystoneAffixByID.GetMythicKeystoneAffixByID)
 	r.GET("/blizzard/data/mythic-keystone-affix/:affixId/media", h.MythicKeystoneAffixMedia.GetMythicKeystoneAffixMedia)
 
+	r.GET("/blizzard/data/mythic-keystone/index", h.MythicKeystoneIndex.GetMythicKeystoneIndex)
+	r.GET("/blizzard/data/mythic-keystone/dungeon/index", h.MythicKeystoneDungeonsIndex.GetMythicKeystoneDungeonsIndex)
+	r.GET("/blizzard/data/mythic-keystone/:mythicKeystoneId", h.MythicKeystoneByID.GetMythicKeystoneByID)
+	r.GET("/blizzard/data/mythic-keystone/period/index", h.MythicKeystonePeriodsIndex.GetMythicKeystonePeriodsIndex)
+	r.GET("/blizzard/data/mythic-keystone/period/:periodId", h.MythicKeystonePeriodByID.GetMythicKeystonePeriodByID)
+	r.GET("/blizzard/data/mythic-keystone/season/index", h.MythicKeystoneSeasonsIndex.GetMythicKeystoneSeasonsIndex)
+	r.GET("/blizzard/data/mythic-keystone/season/:seasonId", h.MythicKeystoneSeasonByID.GetMythicKeystoneSeasonByID)
 }
