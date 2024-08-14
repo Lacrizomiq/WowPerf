@@ -3,6 +3,7 @@ package profile
 import (
 	"net/http"
 	"wowperf/internal/services/blizzard"
+	"wowperf/internal/services/blizzard/profile"
 	wrapper "wowperf/internal/wrapper/blizzard"
 
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,7 @@ func (h *EquipmentHandler) GetCharacterEquipment(c *gin.Context) {
 		return
 	}
 
-	equipmentData, err := h.Service.Client.GetCharacterEquipment(region, realmSlug, characterName, namespace, locale)
+	equipmentData, err := profile.GetCharacterEquipment(h.Service.Profile, region, realmSlug, characterName, namespace, locale)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve character equipment"})
 		return

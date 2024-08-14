@@ -6,10 +6,10 @@ import (
 	"wowperf/internal/services/blizzard"
 )
 
-// Returns a summary of the items equipped by a character.
-func GetCharacterEquipment(c *blizzard.Client, region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
+// GetCharacterEquipment returns a summary of the items equipped by a character.
+func GetCharacterEquipment(s *blizzard.ProfileService, region, realmSlug, characterName, namespace, locale string) (map[string]interface{}, error) {
 	endpoint := fmt.Sprintf(apiURL+"/profile/wow/character/%s/%s/equipment", region, realmSlug, characterName)
-	body, err := c.MakeRequest(endpoint, namespace, locale)
+	body, err := s.Client.MakeRequest(endpoint, namespace, locale)
 	if err != nil {
 		return nil, err
 	}
