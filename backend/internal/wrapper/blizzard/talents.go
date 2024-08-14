@@ -6,9 +6,10 @@ import (
 	"strings"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
+	"wowperf/internal/services/blizzard/gamedata"
 )
 
-func TransformCharacterTalents(data map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID, specID int) (*models.TalentLoadout, error) {
+func TransformCharacterTalents(data map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID, specID int) (*models.TalentLoadout, error) {
 	talentLoadout := &models.TalentLoadout{
 		LoadoutSpecID: specID,
 		TreeID:        treeID,
@@ -42,8 +43,8 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataClient *bliz
 
 	talentLoadout.LoadoutText = activeLoadout["talent_loadout_code"].(string)
 
-	classTalents := processTalents(activeLoadout, "selected_class_talents", gameDataClient, region, namespace, locale, treeID)
-	specTalents := processTalents(activeLoadout, "selected_spec_talents", gameDataClient, region, namespace, locale, specID)
+	classTalents := processTalents(activeLoadout, "selected_class_talents", gameDataService, region, namespace, locale, treeID)
+	specTalents := processTalents(activeLoadout, "selected_spec_talents", gameDataService, region, namespace, locale, specID)
 
 	talentLoadout.ClassTalents = classTalents
 	talentLoadout.SpecTalents = specTalents
@@ -51,7 +52,7 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataClient *bliz
 	return talentLoadout, nil
 }
 
-func processTalents(data map[string]interface{}, key string, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID int) []models.TalentNode {
+func processTalents(data map[string]interface{}, key string, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) []models.TalentNode {
 	var talents []models.TalentNode
 
 	talentsData, ok := data[key].([]interface{})
@@ -67,7 +68,7 @@ func processTalents(data map[string]interface{}, key string, gameDataClient *bli
 			continue
 		}
 
-		node, err := transformTalentNode(talentMap, gameDataClient, region, namespace, locale, treeID)
+		node, err := transformTalentNode(talentMap, gameDataService, region, namespace, locale, treeID)
 		if err != nil {
 			log.Printf("Error transforming talent node: %v", err)
 			continue
@@ -79,7 +80,7 @@ func processTalents(data map[string]interface{}, key string, gameDataClient *bli
 	return talents
 }
 
-func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string, treeID int) (models.TalentNode, error) {
+func transformTalentNode(talentMap map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) (models.TalentNode, error) {
 	node := models.TalentNode{}
 
 	node.Node.ID = safeGetInt(talentMap, "id")
@@ -96,7 +97,8 @@ func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizz
 		return node, nil
 	}
 
-	entry, err := transformTalentEntry(spellTooltip, gameDataClient, region, namespace, locale)
+	entry, err := transformTalentEntry(spellTooltip, gameDataService, region, namespace, locale)
+
 	if err != nil {
 		return node, err
 	}
@@ -113,7 +115,7 @@ func transformTalentNode(talentMap map[string]interface{}, gameDataClient *blizz
 	return node, nil
 }
 
-func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (models.TalentEntry, error) {
+func transformTalentEntry(entryMap map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (models.TalentEntry, error) {
 	entry := models.TalentEntry{}
 
 	spell, ok := entryMap["spell"].(map[string]interface{})
@@ -127,7 +129,7 @@ func transformTalentEntry(entryMap map[string]interface{}, gameDataClient *blizz
 
 	// Retrieve spell media only if the icon is empty
 	if entry.Spell.Icon == "" {
-		mediaData, err := gameDataClient.GetSpellMedia(entry.Spell.ID, region, namespace, locale)
+		mediaData, err := gamedata.GetSpellMedia(gameDataService, entry.Spell.ID, region, namespace, locale)
 		if err == nil {
 			if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
 				if asset, ok := assets[0].(map[string]interface{}); ok {

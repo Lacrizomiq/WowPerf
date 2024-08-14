@@ -24,7 +24,7 @@ type Handler struct {
 	TalentByID                  *gamedata.TalentByIDHandler
 }
 
-func NewHandler(service *blizzard.Service) (*Handler, error) {
+func NewHandler(service *blizzard.Service) *Handler {
 	return &Handler{
 		CharacterProfile:            profile.NewCharacterProfileHandler(service),
 		CharacterMedia:              profile.NewCharacterMediaHandler(service),

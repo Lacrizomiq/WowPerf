@@ -58,7 +58,7 @@ func (h *SpecializationsHandler) GetCharacterSpecializations(c *gin.Context) {
 	}
 
 	// then i transform the specializations into a talent loadout
-	talentLoadout, err := wrapper.TransformCharacterTalents(specializations, h.Service.GameDataClient, region, staticNamespace, locale, characterProfile.TreeID, characterProfile.SpecID)
+	talentLoadout, err := wrapper.TransformCharacterTalents(specializations, h.Service.GameData, region, staticNamespace, locale, characterProfile.TreeID, characterProfile.SpecID)
 	if err != nil {
 		log.Printf("Error transforming character talents: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to transform character talents: %v", err)})

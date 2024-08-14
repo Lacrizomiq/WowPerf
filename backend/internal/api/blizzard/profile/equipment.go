@@ -38,7 +38,7 @@ func (h *EquipmentHandler) GetCharacterEquipment(c *gin.Context) {
 		return
 	}
 
-	transformedGear, err := wrapper.TransformCharacterGear(equipmentData, h.Service.GameDataClient, region, namespace, locale)
+	transformedGear, err := wrapper.TransformCharacterGear(equipmentData, h.Service.GameData, region, namespace, locale)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform character equipment"})
 		return
