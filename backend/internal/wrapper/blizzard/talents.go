@@ -2,8 +2,8 @@ package wrapper
 
 import (
 	"fmt"
-	"log"
 	"strings"
+	"sync"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
 	"wowperf/internal/services/blizzard/gamedata"
@@ -20,7 +20,6 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataService *bli
 		return nil, fmt.Errorf("specializations not found or empty")
 	}
 
-	// Find the active loadout
 	var activeLoadout map[string]interface{}
 	for _, spec := range specializations {
 		specMap := spec.(map[string]interface{})
@@ -43,41 +42,102 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataService *bli
 
 	talentLoadout.LoadoutText = activeLoadout["talent_loadout_code"].(string)
 
-	classTalents := processTalents(activeLoadout, "selected_class_talents", gameDataService, region, namespace, locale, treeID)
-	specTalents := processTalents(activeLoadout, "selected_spec_talents", gameDataService, region, namespace, locale, specID)
+	var wg sync.WaitGroup
+	classTalentsChan := make(chan []models.TalentNode, 1)
+	specTalentsChan := make(chan []models.TalentNode, 1)
+	errorChan := make(chan error, 2)
 
-	talentLoadout.ClassTalents = classTalents
-	talentLoadout.SpecTalents = specTalents
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		classTalents, err := processTalents(activeLoadout, "selected_class_talents", gameDataService, region, namespace, locale, treeID)
+		if err != nil {
+			errorChan <- err
+		} else {
+			classTalentsChan <- classTalents
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		specTalents, err := processTalents(activeLoadout, "selected_spec_talents", gameDataService, region, namespace, locale, specID)
+		if err != nil {
+			errorChan <- err
+		} else {
+			specTalentsChan <- specTalents
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(classTalentsChan)
+		close(specTalentsChan)
+		close(errorChan)
+	}()
+
+	select {
+	case err := <-errorChan:
+		return nil, err
+	case classTalents := <-classTalentsChan:
+		talentLoadout.ClassTalents = classTalents
+	}
+
+	select {
+	case err := <-errorChan:
+		return nil, err
+	case specTalents := <-specTalentsChan:
+		talentLoadout.SpecTalents = specTalents
+	}
 
 	return talentLoadout, nil
 }
 
-func processTalents(data map[string]interface{}, key string, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) []models.TalentNode {
+func processTalents(data map[string]interface{}, key string, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) ([]models.TalentNode, error) {
 	var talents []models.TalentNode
 
 	talentsData, ok := data[key].([]interface{})
 	if !ok {
-		log.Printf("No talents found for key: %s", key)
-		return talents
+		return nil, fmt.Errorf("no talents found for key: %s", key)
 	}
+
+	var wg sync.WaitGroup
+	talentChan := make(chan models.TalentNode, len(talentsData))
+	errorChan := make(chan error, len(talentsData))
 
 	for _, talent := range talentsData {
-		talentMap, ok := talent.(map[string]interface{})
-		if !ok {
-			log.Printf("Invalid talent data structure")
-			continue
-		}
+		wg.Add(1)
+		go func(talent interface{}) {
+			defer wg.Done()
+			talentMap, ok := talent.(map[string]interface{})
+			if !ok {
+				errorChan <- fmt.Errorf("invalid talent data structure")
+				return
+			}
 
-		node, err := transformTalentNode(talentMap, gameDataService, region, namespace, locale, treeID)
-		if err != nil {
-			log.Printf("Error transforming talent node: %v", err)
-			continue
-		}
-
-		talents = append(talents, node)
+			node, err := transformTalentNode(talentMap, gameDataService, region, namespace, locale, treeID)
+			if err != nil {
+				errorChan <- err
+				return
+			}
+			talentChan <- node
+		}(talent)
 	}
 
-	return talents
+	go func() {
+		wg.Wait()
+		close(talentChan)
+		close(errorChan)
+	}()
+
+	for talent := range talentChan {
+		talents = append(talents, talent)
+	}
+
+	if len(errorChan) > 0 {
+		return nil, <-errorChan
+	}
+
+	return talents, nil
 }
 
 func transformTalentNode(talentMap map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) (models.TalentNode, error) {

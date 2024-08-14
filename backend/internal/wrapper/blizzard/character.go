@@ -154,7 +154,7 @@ func TransformCharacterInfo(characterData map[string]interface{}, mediaData map[
 	if links, ok := characterData["_links"].(map[string]interface{}); ok {
 		if self, ok := links["self"].(map[string]interface{}); ok {
 			if href, ok := self["href"].(string); ok {
-				// Extraire la région de l'URL
+				// Extract region from URL
 				parts := strings.Split(href, ".")
 				if len(parts) > 1 {
 					profile.Region = strings.ToLower(parts[0][8:])
