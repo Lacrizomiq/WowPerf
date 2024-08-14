@@ -22,6 +22,9 @@ type Handler struct {
 	TalentTreeNodes             *gamedata.TalentTreeNodesHandler
 	TalentIndex                 *gamedata.TalentIndexHandler
 	TalentByID                  *gamedata.TalentByIDHandler
+	MythicKeystoneAffixIndex    *gamedata.MythicKeystoneAffixIndexHandler
+	MythicKeystoneAffixByID     *gamedata.MythicKeystoneAffixByIDHandler
+	MythicKeystoneAffixMedia    *gamedata.MythicKeystoneAffixMediaHandler
 }
 
 func NewHandler(service *blizzard.Service) *Handler {
@@ -39,6 +42,9 @@ func NewHandler(service *blizzard.Service) *Handler {
 		TalentTreeNodes:             gamedata.NewTalentTreeNodesHandler(service),
 		TalentIndex:                 gamedata.NewTalentIndexHandler(service),
 		TalentByID:                  gamedata.NewTalentByIDHandler(service),
+		MythicKeystoneAffixIndex:    gamedata.NewMythicKeystoneAffixIndexHandler(service),
+		MythicKeystoneAffixByID:     gamedata.NewMythicKeystoneAffixByIDHandler(service),
+		MythicKeystoneAffixMedia:    gamedata.NewMythicKeystoneAffixMediaHandler(service),
 	}
 }
 
@@ -64,5 +70,9 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/talent-tree/:talentTreeId/nodes", h.TalentTreeNodes.GetTalentTreeNodes)
 	r.GET("/blizzard/data/talent/index", h.TalentIndex.GetTalentIndex)
 	r.GET("/blizzard/data/talent/:talentId", h.TalentByID.GetTalentByID)
+
+	r.GET("/blizzard/data/mythic-keystone-affix/index", h.MythicKeystoneAffixIndex.GetMythicKeystoneAffixIndex)
+	r.GET("/blizzard/data/mythic-keystone-affix/:affixId", h.MythicKeystoneAffixByID.GetMythicKeystoneAffixByID)
+	r.GET("/blizzard/data/mythic-keystone-affix/:affixId/media", h.MythicKeystoneAffixMedia.GetMythicKeystoneAffixMedia)
 
 }
