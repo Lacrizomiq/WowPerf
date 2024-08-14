@@ -6,11 +6,12 @@ import (
 	"sync"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
+	"wowperf/internal/services/blizzard/gamedata"
 )
 
 // TransformCharacterGear transforms the gear data from the Blizzard API into an easier to use Gear struct.
 // Using a channel to handle the concurrency of the requests.
-func TransformCharacterGear(data map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (*models.Gear, error) {
+func TransformCharacterGear(data map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (*models.Gear, error) {
 	gear := &models.Gear{
 		Items: make(map[string]models.Item),
 	}
@@ -31,7 +32,7 @@ func TransformCharacterGear(data map[string]interface{}, gameDataClient *blizzar
 		wg.Add(1)
 		go func(item interface{}) {
 			defer wg.Done()
-			slotType, transformedItem, err := transformSingleItem(item, gameDataClient, region, namespace, locale)
+			slotType, transformedItem, err := transformSingleItem(item, gameDataService, region, namespace, locale)
 			if err != nil {
 				errorChan <- err
 				return
@@ -90,7 +91,7 @@ func TransformCharacterGear(data map[string]interface{}, gameDataClient *blizzar
 }
 
 // transformSingleItem transforms a single item from the Blizzard API into a struct.
-func transformSingleItem(item interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (string, models.Item, error) {
+func transformSingleItem(item interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (string, models.Item, error) {
 	itemMap, ok := item.(map[string]interface{})
 	if !ok {
 		return "", models.Item{}, fmt.Errorf("item is not a map")
@@ -141,7 +142,7 @@ func transformSingleItem(item interface{}, gameDataClient *blizzard.GameDataClie
 		return "", models.Item{}, fmt.Errorf("item name not found")
 	}
 
-	iconName, iconURL, err := getItemMedia(itemInfo, gameDataClient, region, namespace, locale)
+	iconName, iconURL, err := getItemMedia(itemInfo, gameDataService, region, namespace, locale)
 	if err != nil {
 		return "", models.Item{}, err
 	}
@@ -166,9 +167,9 @@ func transformSingleItem(item interface{}, gameDataClient *blizzard.GameDataClie
 }
 
 // getItemMedia retrieves the media assets for an item.
-func getItemMedia(itemInfo map[string]interface{}, gameDataClient *blizzard.GameDataClient, region, namespace, locale string) (string, string, error) {
+func getItemMedia(itemInfo map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (string, string, error) {
 	if itemID, ok := itemInfo["id"].(float64); ok {
-		mediaData, err := gameDataClient.GetItemMedia(int(itemID), region, "static-"+region, locale)
+		mediaData, err := gamedata.GetItemMedia(gameDataService, int(itemID), region, "static-"+region, locale)
 		if err == nil {
 			if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
 				if asset, ok := assets[0].(map[string]interface{}); ok {
