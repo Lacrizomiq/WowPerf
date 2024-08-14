@@ -2,6 +2,7 @@ package wrapper
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"wowperf/internal/models"
@@ -187,23 +188,23 @@ func transformTalentEntry(entryMap map[string]interface{}, gameDataService *bliz
 	entry.Spell.Name = safeGetString(spell, "name")
 	entry.Spell.Icon = safeGetString(spell, "icon")
 
-	// Retrieve spell media only if the icon is empty
-	if entry.Spell.Icon == "" {
-		mediaData, err := gamedata.GetSpellMedia(gameDataService, entry.Spell.ID, region, namespace, locale)
-		if err == nil {
-			if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
-				if asset, ok := assets[0].(map[string]interface{}); ok {
-					if value, ok := asset["value"].(string); ok {
-						entry.Spell.IconURL = value
-						// Extract icon name from URL
-						parts := strings.Split(value, "/")
-						if len(parts) > 0 {
-							entry.Spell.Icon = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
-						}
+	// Always try to retrieve spell media
+	mediaData, err := gamedata.GetSpellMedia(gameDataService, entry.Spell.ID, region, namespace, locale)
+	if err == nil {
+		if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
+			if asset, ok := assets[0].(map[string]interface{}); ok {
+				if value, ok := asset["value"].(string); ok {
+					entry.Spell.IconURL = value
+					// Extract icon name from URL
+					parts := strings.Split(value, "/")
+					if len(parts) > 0 {
+						entry.Spell.Icon = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
 					}
 				}
 			}
 		}
+	} else {
+		log.Printf("Failed to get spell media for spell ID %d: %v", entry.Spell.ID, err)
 	}
 
 	return entry, nil
