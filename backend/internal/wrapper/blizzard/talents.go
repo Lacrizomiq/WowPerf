@@ -3,6 +3,7 @@ package wrapper
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"sync"
 	"wowperf/internal/models"
@@ -42,6 +43,7 @@ func TransformCharacterTalents(data map[string]interface{}, gameDataService *bli
 	}
 
 	talentLoadout.LoadoutText = activeLoadout["talent_loadout_code"].(string)
+	talentLoadout.EncodedLoadoutText = EncodeLoadoutString(talentLoadout.LoadoutText)
 
 	var wg sync.WaitGroup
 	classTalentsChan := make(chan []models.TalentNode, 1)
@@ -219,6 +221,7 @@ func safeGetInt(m map[string]interface{}, key string) int {
 	return 0
 }
 
+// safeGetString returns a string value from a map, or an empty string if the value is not found or is not a string
 func safeGetString(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok {
 		if strVal, ok := val.(string); ok {
@@ -226,4 +229,12 @@ func safeGetString(m map[string]interface{}, key string) string {
 		}
 	}
 	return ""
+}
+
+// EncodeLoadoutString encodes a loadout string for use in a URL
+func EncodeLoadoutString(loadout string) string {
+	if loadout == "" {
+		return ""
+	}
+	return url.QueryEscape(loadout)
 }
