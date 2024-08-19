@@ -6,7 +6,8 @@ import (
 )
 
 // GetMythicKeystoneAffixIndex retrieves an index of mythic keystone affixes
-func GetMythicKeystoneAffixIndex(s *blizzard.GameDataService, region, namespace, locale string) (map[string]interface{}, error) {
+func GetMythicKeystoneAffixIndex(s *blizzard.GameDataService, region, locale string) (map[string]interface{}, error) {
+	namespace := fmt.Sprintf("static-%s", region)
 	endpoint := fmt.Sprintf("https://%s.api.blizzard.com/data/wow/keystone-affix/index", region)
 	return s.Client.MakeRequest(endpoint, namespace, locale)
 }

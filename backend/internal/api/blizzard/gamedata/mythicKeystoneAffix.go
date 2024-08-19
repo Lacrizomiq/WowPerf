@@ -59,7 +59,7 @@ func (h *MythicKeystoneAffixIndexHandler) GetMythicKeystoneAffixIndex(c *gin.Con
 
 	log.Printf("Requesting mythic keystone affix index for Region: %s, Namespace: %s, Locale: %s", region, namespace, locale)
 
-	index, err := gamedataService.GetMythicKeystoneAffixIndex(h.Service.GameData, region, namespace, locale)
+	index, err := gamedataService.GetMythicKeystoneAffixIndex(h.Service.GameData, region, locale)
 	if err != nil {
 		log.Printf("Error retrieving mythic keystone affix index: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to retrieve mythic keystone affix index: %v", err)})
