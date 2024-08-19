@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"wowperf/internal/models"
@@ -236,5 +237,11 @@ func EncodeLoadoutString(loadout string) string {
 	if loadout == "" {
 		return ""
 	}
-	return url.QueryEscape(loadout)
+
+	// Encode the loadout string
+	encoded := url.QueryEscape(loadout)
+
+	// Remove any double percent signs
+	re := regexp.MustCompile(`%2`)
+	return re.ReplaceAllString(encoded, "")
 }
