@@ -32,6 +32,9 @@ type Handler struct {
 	MythicKeystonePeriodByID    *gamedata.MythicKeystonePeriodByIDHandler
 	MythicKeystoneSeasonsIndex  *gamedata.MythicKeystoneSeasonsIndexHandler
 	MythicKeystoneSeasonByID    *gamedata.MythicKeystoneSeasonByIDHandler
+	JournalInstanceIndex        *gamedata.JournalInstanceIndexHandler
+	JournalInstanceByID         *gamedata.JournalInstanceByIDHandler
+	JournalInstanceMedia        *gamedata.JournalInstanceMediaHandler
 }
 
 func NewHandler(service *blizzard.Service) *Handler {
@@ -59,6 +62,9 @@ func NewHandler(service *blizzard.Service) *Handler {
 		MythicKeystonePeriodByID:    gamedata.NewMythicKeystonePeriodByIDHandler(service),
 		MythicKeystoneSeasonsIndex:  gamedata.NewMythicKeystoneSeasonsIndexHandler(service),
 		MythicKeystoneSeasonByID:    gamedata.NewMythicKeystoneSeasonByIDHandler(service),
+		JournalInstanceIndex:        gamedata.NewJournalInstanceIndexHandler(service),
+		JournalInstanceByID:         gamedata.NewJournalInstanceByIDHandler(service),
+		JournalInstanceMedia:        gamedata.NewJournalInstanceMediaHandler(service),
 	}
 }
 
@@ -96,4 +102,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/mythic-keystone/period/:periodId", h.MythicKeystonePeriodByID.GetMythicKeystonePeriodByID)
 	r.GET("/blizzard/data/mythic-keystone/season/index", h.MythicKeystoneSeasonsIndex.GetMythicKeystoneSeasonsIndex)
 	r.GET("/blizzard/data/mythic-keystone/season/:seasonId", h.MythicKeystoneSeasonByID.GetMythicKeystoneSeasonByID)
+
+	r.GET("/blizzard/data/journal-instance/index", h.JournalInstanceIndex.GetJournalInstanceIndex)
+	r.GET("/blizzard/data/journal-instance/:instanceId", h.JournalInstanceByID.GetJournalInstanceByID)
+	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.JournalInstanceMedia.GetJournalInstanceMedia)
 }
