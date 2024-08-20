@@ -2,14 +2,11 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // MythicPlusRun represents a run in the Mythic+ dungeon
 // It includes the seasons, the dungeon, the affixes, the members, the score, the duration, etc.
 type MythicPlusRun struct {
-	gorm.Model
 	CompletedTimestamp    time.Time
 	DungeonID             uint
 	Dungeon               Dungeon
@@ -19,13 +16,12 @@ type MythicPlusRun struct {
 	MythicRating          float64
 	SeasonID              uint
 	Season                Season
-	Affixes               []Affix `gorm:"many2many:mythic_run_affixes;"`
+	Affixes               []Affix
 	Members               []MythicPlusRunMember
 }
 
 // MythicPlusRunMember represents a member in the Mythic+ dungeon run
 type MythicPlusRunMember struct {
-	gorm.Model
 	MythicPlusRunID   uint
 	CharacterID       uint
 	CharacterName     string
