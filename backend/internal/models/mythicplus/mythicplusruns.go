@@ -27,7 +27,7 @@ type MythicPlusRunMember struct {
 	CharacterID       uint
 	CharacterName     string
 	RealmID           uint
-	RealmName         string
+	RealmName         string `json:"-"`
 	RealmSlug         string
 	EquippedItemLevel int
 	RaceID            uint
