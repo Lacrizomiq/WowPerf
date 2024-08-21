@@ -42,8 +42,8 @@ type SeasonalAffix struct {
 // Example: Mists of Tirna Scithe
 type Dungeon struct {
 	gorm.Model
-	ID               uint `gorm:"primaryKey"`
-	ChallengeModeID  *uint
+	ID               uint   `gorm:"primaryKey"`
+	ChallengeModeID  *uint  `gorm:"index"`
 	Slug             string `gorm:"uniqueIndex"`
 	Name             string
 	ShortName        string

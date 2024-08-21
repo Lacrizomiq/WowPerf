@@ -6,6 +6,7 @@ import (
 	"wowperf/internal/services/blizzard"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
@@ -37,14 +38,14 @@ type Handler struct {
 	JournalInstanceMedia        *gamedata.JournalInstanceMediaHandler
 }
 
-func NewHandler(service *blizzard.Service) *Handler {
+func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 	return &Handler{
 		CharacterProfile:            profile.NewCharacterProfileHandler(service),
 		CharacterMedia:              profile.NewCharacterMediaHandler(service),
 		Equipment:                   profile.NewEquipmentHandler(service),
 		ItemMedia:                   gamedata.NewItemMediaHandler(service),
 		MythicKeystoneProfile:       profile.NewMythicKeystoneProfileHandler(service),
-		MythicKeystoneSeasonDetails: profile.NewMythicKeystoneSeasonDetailsHandler(service),
+		MythicKeystoneSeasonDetails: profile.NewMythicKeystoneSeasonDetailsHandler(service, db),
 		Specializations:             profile.NewSpecializationsHandler(service),
 		SpellMedia:                  gamedata.NewSpellMediaHandler(service),
 		TalentTreeIndex:             gamedata.NewTalentTreeIndexHandler(service),
@@ -77,7 +78,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", h.Equipment.GetCharacterEquipment)
 
 	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", h.MythicKeystoneProfile.GetCharacterMythicKeystoneProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", h.MythicKeystoneSeasonDetails.GetCharacterMythicKeystoneSeasonDetails)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", h.MythicKeystoneSeasonDetails.GetCharacterMythicKeystoneSeasonBestRuns)
 
 	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", h.Specializations.GetCharacterSpecializations)
 

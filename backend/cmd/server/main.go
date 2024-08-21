@@ -42,7 +42,7 @@ func main() {
 	}
 
 	rioHandler := raiderio.NewHandler()
-	blizzardHandler := apiBlizzard.NewHandler(blizzardService)
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
 
 	r := gin.Default()
 

@@ -24,7 +24,6 @@ type MythicPlusRun struct {
 
 // MythicPlusRunMember represents a member in the Mythic+ dungeon run
 type MythicPlusRunMember struct {
-	MythicPlusRunID   uint
 	CharacterID       uint
 	CharacterName     string
 	RealmID           uint
