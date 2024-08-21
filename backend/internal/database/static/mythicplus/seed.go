@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -54,17 +55,34 @@ type AffixData struct {
 }
 
 const (
-	staticMythicPlusPath = "/data/static/M+/"
+	staticMythicPlusPath = "./static/M+/"
 )
 
+// SeedDatabase seeds the Mythic+ database with the static data
 func SeedDatabase(db *gorm.DB) error {
-	if err := seedSeasons(db, filepath.Join(staticMythicPlusPath, "DF", "MMDF.json")); err != nil {
+	absPath, err := filepath.Abs(staticMythicPlusPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %v", err)
+	}
+
+	log.Printf("Static files path: %s", absPath)
+
+	files, err := ioutil.ReadDir(absPath)
+	if err != nil {
+		log.Printf("Error reading directory: %v", err)
+	} else {
+		for _, file := range files {
+			log.Printf("Found file: %s", file.Name())
+		}
+	}
+
+	if err := seedSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
 		return err
 	}
-	if err := seedSeasons(db, filepath.Join(staticMythicPlusPath, "TWW", "S1MMTWW.json")); err != nil {
+	if err := seedSeasons(db, filepath.Join(absPath, "TWW", "S1MMTWW.json")); err != nil {
 		return err
 	}
-	if err := seedAffixes(db, filepath.Join(staticMythicPlusPath, "affixes.json")); err != nil {
+	if err := seedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
 		return err
 	}
 	return nil

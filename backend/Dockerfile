@@ -7,6 +7,8 @@ RUN go mod download
 
 COPY . .
 
+COPY data/static ./static
+
 RUN go build -o main ./cmd/server
 
 EXPOSE 8080
