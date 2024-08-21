@@ -4,36 +4,57 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export const useGetBlizzardCharacterProfile = (
   region: string,
   realmSlug: string,
-  characterName: string
+  characterName: string,
+  namespace: string,
+  locale: string
 ) => {
   return useQuery({
-    queryKey: ["characters"],
-    queryFn: async () => {
-      const { data } = await apiServices.getBlizzardCharacterProfile(
+    queryKey: [
+      "characters",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
+      apiServices.getBlizzardCharacterProfile(
         region,
         realmSlug,
-        characterName
-      );
-      return data;
-    },
+        characterName,
+        namespace,
+        locale
+      ),
   });
 };
 
-export const useGetBlizzardCharacterMythicKeystoneProfile = (
+export const useGetBlizzardCharacterMythicPlusBestRuns = (
   region: string,
   realmSlug: string,
-  characterName: string
+  characterName: string,
+  namespace: string,
+  locale: string,
+  seasonId: string
 ) => {
   return useQuery({
-    queryKey: ["mythic-keystone-profile"],
+    queryKey: [
+      "mythic-plus-best-runs",
+      seasonId,
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
     queryFn: async () => {
-      const { data } =
-        await apiServices.getBlizzardCharacterMythicKeystoneProfile(
-          region,
-          realmSlug,
-          characterName
-        );
-      return data;
+      apiServices.getBlizzardCharacterMythicPlusBestRuns(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale,
+        seasonId
+      );
     },
   });
 };
@@ -41,35 +62,47 @@ export const useGetBlizzardCharacterMythicKeystoneProfile = (
 export const useGetBlizzardCharacterEquipment = (
   region: string,
   realmSlug: string,
-  characterName: string
+  characterName: string,
+  namespace: string,
+  locale: string
 ) => {
   return useQuery({
-    queryKey: ["equipment"],
-    queryFn: async () => {
-      const { data } = await apiServices.getBlizzardCharacterEquipment(
+    queryKey: [
+      "equipment",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
+      apiServices.getBlizzardCharacterEquipment(
         region,
         realmSlug,
-        characterName
-      );
-      return data;
-    },
+        characterName,
+        namespace,
+        locale
+      ),
   });
 };
 
 export const useGetBlizzardCharacterSpecializations = (
   region: string,
   realmSlug: string,
-  characterName: string
+  characterName: string,
+  namespace: string,
+  locale: string
 ) => {
   return useQuery({
     queryKey: ["specializations"],
     queryFn: async () => {
-      const { data } = await apiServices.getBlizzardCharacterSpecializations(
+      apiServices.getBlizzardCharacterSpecializations(
         region,
         realmSlug,
-        characterName
+        characterName,
+        namespace,
+        locale
       );
-      return data;
     },
   });
 };

@@ -1,23 +1,27 @@
 import React from "react";
 import Image from "next/image";
-import { useRaiderIoCharacterProfile } from "@/hooks/useRaiderioApi";
+import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 
 interface CharacterSummaryProps {
   region: string;
   realm: string;
   name: string;
+  namespace: string;
+  locale: string;
 }
 
 export default function CharacterSummary({
   region,
   realm,
   name,
+  namespace,
+  locale,
 }: CharacterSummaryProps) {
   const {
     data: character,
     isLoading,
     error,
-  } = useRaiderIoCharacterProfile(region, realm, name);
+  } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
 
   if (isLoading) return <div>Loading character data...</div>;
   if (error) return <div>Error loading character data: {error.message}</div>;
@@ -26,13 +30,13 @@ export default function CharacterSummary({
   return (
     <div>
       <div className="flex p-4 bg-gradient-dark">
-        <div className="mr-4 w-24 h-24 bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg glow-effect">
-          {character.thumbnail_url && (
+        <div className="mr-4  bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg glow-effect">
+          {character.inset_avatar_url && (
             <Image
-              src={character.thumbnail_url}
+              src={character.inset_avatar_url}
               alt="World of Warcraft Logo"
-              width={96}
-              height={96}
+              width={196}
+              height={196}
               objectFit="cover"
             />
           )}
