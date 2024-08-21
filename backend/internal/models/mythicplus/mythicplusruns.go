@@ -10,8 +10,10 @@ type MythicPlusRun struct {
 	CompletedTimestamp    time.Time
 	DungeonID             uint
 	Dungeon               Dungeon
+	ShortName             string
 	Duration              int64
 	IsCompletedWithinTime bool
+	KeyStoneUpgrades      int
 	KeystoneLevel         int
 	MythicRating          float64
 	SeasonID              uint

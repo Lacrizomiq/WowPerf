@@ -42,13 +42,15 @@ type SeasonalAffix struct {
 // Example: Mists of Tirna Scithe
 type Dungeon struct {
 	gorm.Model
-	ID        uint   `gorm:"primaryKey"`
-	Slug      string `gorm:"uniqueIndex"`
-	Name      string
-	ShortName string
-	MediaURL  string
-	Icon      *string
-	Seasons   []Season `gorm:"many2many:season_dungeons;"`
+	ID               uint `gorm:"primaryKey"`
+	ChallengeModeID  *uint
+	Slug             string `gorm:"uniqueIndex"`
+	Name             string
+	ShortName        string
+	MediaURL         string
+	Icon             *string
+	KeyStoneUpgrades []KeyStoneUpgrade
+	Seasons          []Season `gorm:"many2many:season_dungeons;"`
 }
 
 // SeasonDungeon represents a season-dungeon relationship in the Mythic+ dungeon pool
@@ -65,4 +67,12 @@ type Affix struct {
 	Icon        string
 	Description string
 	WowheadURL  string
+}
+
+// KeyStoneUpgrades represents the number of keystone upgrades for a dungeon
+type KeyStoneUpgrade struct {
+	gorm.Model
+	DungeonID          uint
+	QualifyingDuration int
+	UpgradeLevel       int
 }

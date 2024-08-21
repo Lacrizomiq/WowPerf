@@ -2,81 +2,49 @@ package wrapper
 
 import (
 	"fmt"
-	"strings"
-	"time"
+	"sync"
 	"wowperf/internal/models"
+
+	"gorm.io/gorm"
 )
 
-func TransformMythicPlusBestRuns(data map[string]interface{}) ([]models.MythicPlusRun, error) {
-	var bestRuns []models.MythicPlusRun
-
-	rawBestRuns, ok := data["best_runs"].([]interface{})
+func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB) ([]models.MythicPlusRun, error) {
+	bestRuns, ok := data["best_runs"].([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("best runs not found")
+		return nil, fmt.Errorf("best runs not found or not a slice")
 	}
 
-	for _, run := range rawBestRuns {
-		runMap, ok := run.(map[string]interface{})
-		if !ok {
-			continue
-		}
+	var wg sync.WaitGroup
+	runChan := make(chan models.MythicPlusRun, len(bestRuns))
+	errChan := make(chan error, len(bestRuns))
 
-		dungeon, _ := runMap["dungeon"].(map[string]interface{})
-		dungeonName, _ := dungeon["name"].(string)
-
-		completedTimestamp, _ := runMap["completed_timestamp"].(float64)
-		completedAt := time.Unix(int64(completedTimestamp), 0).Format("2006-01-02 15:04:05")
-
-		mythicRating, _ := runMap["mythic_rating"].(map[string]interface{})
-		score, _ := mythicRating["rating"].(float64)
-
-		bestRun := models.MythicPlusRun{
-			Dungeon:             dungeonName,
-			ShortName:           getShortName(dungeonName),
-			MythicLevel:         int(runMap["keystone_level"].(float64)),
-			CompletedAt:         completedAt,
-			ClearTimeMS:         int(runMap["duration"].(float64)),
-			NumKeystoneUpgrades: getKeystoneUpgrades(runMap),
-			Score:               score,
-			URL:                 "",
-			Affixes:             getAffixes(runMap),
-		}
-
-		bestRuns = append(bestRuns, bestRun)
+	for _, run := range bestRuns {
+		wg.Add(1)
+		go func(run interface{}) {
+			defer wg.Done()
+			mythicRun, err := processMythicPlusRun(run, db)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			runChan <- mythicRun
+		}(run)
 	}
 
-	return bestRuns, nil
-}
+	go func() {
+		wg.Wait()
+		close(runChan)
+		close(errChan)
+	}()
 
-// getShortName returns a short name for a dungeon name
-func getShortName(dungeonName string) string {
-	return strings.ReplaceAll(dungeonName, " ", "_")
-}
-
-// getKeystoneUpgrades returns the number of keystone upgrades for a run
-func getKeystoneUpgrades(runMap map[string]interface{}) int {
-	keystoneUpgrades, _ := runMap["keystone_upgrades"].([]interface{})
-	return len(keystoneUpgrades)
-}
-
-// getAffixes returns the affixes for a run
-func getAffixes(runMap map[string]interface{}) []models.Affix {
-	affixes := []models.Affix{}
-
-	for _, affix := range runMap["affixes"].([]interface{}) {
-		affixMap, ok := affix.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		affixID, _ := affixMap["affix_id"].(float64)
-		affixName, _ := affixMap["affix_name"].(string)
-
-		affixes = append(affixes, models.Affix{
-			ID:   int(affixID),
-			Name: affixName,
-		})
+	var results []models.MythicPlusRun
+	for run := range runChan {
+		results = append(results, run)
 	}
 
-	return affixes
+	if len(errChan) > 0 {
+		return nil, <-errChan
+	}
+
+	return results, nil
 }
