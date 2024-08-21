@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,9 +14,10 @@ import (
 
 type SeasonData struct {
 	Seasons []struct {
-		Slug          string    `json:"slug"`
-		Name          string    `json:"name"`
-		ShortName     string    `json:"short_name"`
+		Slug      string `json:"slug"`
+		Name      string `json:"name"`
+		ShortName string `json:"short_name"`
+
 		SeasonalAffix *struct{} `json:"seasonal_affix"`
 		Starts        struct {
 			US string `json:"us"`
@@ -34,12 +34,17 @@ type SeasonData struct {
 			CN string `json:"cn"`
 		} `json:"ends"`
 		Dungeons []struct {
-			ID        uint   `json:"id"`
-			Slug      string `json:"slug"`
-			Name      string `json:"name"`
-			ShortName string `json:"short_name"`
-			MediaURL  string `json:"mediaURL"`
-			Icon      string `json:"icon"`
+			ID               uint   `json:"id"`
+			ChallengeModeID  uint   `json:"challenge_mode_id"`
+			Slug             string `json:"slug"`
+			Name             string `json:"name"`
+			ShortName        string `json:"short_name"`
+			MediaURL         string `json:"mediaURL"`
+			Icon             string `json:"icon"`
+			KeystoneUpgrades []struct {
+				QualifyingDuration int `json:"qualifying_duration"`
+				UpgradeLevel       int `json:"upgrade_level"`
+			} `json:"keystone_upgrades"`
 		} `json:"dungeons"`
 	} `json:"seasons"`
 }
@@ -67,7 +72,7 @@ func SeedDatabase(db *gorm.DB) error {
 
 	log.Printf("Static files path: %s", absPath)
 
-	files, err := ioutil.ReadDir(absPath)
+	files, err := os.ReadDir(absPath)
 	if err != nil {
 		log.Printf("Error reading directory: %v", err)
 	} else {
@@ -122,16 +127,33 @@ func seedSeasons(db *gorm.DB, filePath string) error {
 
 		for _, d := range s.Dungeons {
 			dungeon := mythicplus.Dungeon{
-				ID:        d.ID,
-				Slug:      d.Slug,
-				Name:      d.Name,
-				ShortName: d.ShortName,
-				MediaURL:  d.MediaURL,
-				Icon:      &d.Icon,
+				ID:              d.ID,
+				ChallengeModeID: &d.ChallengeModeID,
+				Slug:            d.Slug,
+				Name:            d.Name,
+				ShortName:       d.ShortName,
+				MediaURL:        d.MediaURL,
+				Icon:            &d.Icon,
 			}
 
 			if err := db.FirstOrCreate(&dungeon, mythicplus.Dungeon{ID: d.ID}).Error; err != nil {
 				return fmt.Errorf("error creating dungeon %s: %v", d.Name, err)
+			}
+
+			if err := db.Where("dungeon_id = ?", dungeon.ID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
+				return fmt.Errorf("error deleting old keystone upgrades for dungeon %s: %v", d.Name, err)
+			}
+
+			for _, ku := range d.KeystoneUpgrades {
+				keyStoneUpgrade := mythicplus.KeyStoneUpgrade{
+					DungeonID:          dungeon.ID,
+					QualifyingDuration: ku.QualifyingDuration,
+					UpgradeLevel:       ku.UpgradeLevel,
+				}
+
+				if err := db.Create(&keyStoneUpgrade).Error; err != nil {
+					return fmt.Errorf("error creating keystone upgrade for dungeon %s: %v", d.Name, err)
+				}
 			}
 
 			if err := db.Model(&season).Association("Dungeons").Append(&dungeon); err != nil {

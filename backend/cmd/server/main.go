@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	err = db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{})
+	err = db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{}, &mythicplus.KeyStoneUpgrade{})
 	if err != nil {
 		log.Fatalf("Failed to auto migrate database: %v", err)
 	}
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	rioHandler := raiderio.NewHandler()
-	blizzardHandler := apiBlizzard.NewHandler(blizzardService)
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
 
 	r := gin.Default()
 

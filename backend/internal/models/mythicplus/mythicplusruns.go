@@ -10,8 +10,10 @@ type MythicPlusRun struct {
 	CompletedTimestamp    time.Time
 	DungeonID             uint
 	Dungeon               Dungeon
+	ShortName             string
 	Duration              int64
 	IsCompletedWithinTime bool
+	KeyStoneUpgrades      int
 	KeystoneLevel         int
 	MythicRating          float64
 	SeasonID              uint
@@ -22,11 +24,10 @@ type MythicPlusRun struct {
 
 // MythicPlusRunMember represents a member in the Mythic+ dungeon run
 type MythicPlusRunMember struct {
-	MythicPlusRunID   uint
 	CharacterID       uint
 	CharacterName     string
 	RealmID           uint
-	RealmName         string
+	RealmName         string `json:"-"`
 	RealmSlug         string
 	EquippedItemLevel int
 	RaceID            uint
