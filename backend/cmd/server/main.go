@@ -4,6 +4,10 @@ import (
 	"log"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
+
+	"wowperf/internal/database"
+
+	mythicplus "wowperf/internal/models/mythicplus"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 
 	"github.com/gin-contrib/cors"
@@ -16,6 +20,20 @@ func main() {
 	if err != nil {
 		log.Println("Error loading .env file")
 		return
+	}
+
+	db, err := database.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+
+	err = db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{})
+	if err != nil {
+		log.Fatalf("Failed to auto migrate database: %v", err)
+	}
+
+	if err := database.SeedDatabase(db); err != nil {
+		log.Fatalf("Failed to seed database: %v", err)
 	}
 
 	blizzardService, err := serviceBlizzard.NewService()

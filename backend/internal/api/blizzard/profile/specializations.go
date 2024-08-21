@@ -65,5 +65,13 @@ func (h *SpecializationsHandler) GetCharacterSpecializations(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, talentLoadout)
+	response := gin.H{
+		"talent_loadout": talentLoadout,
+	}
+
+	if talentLoadout != nil {
+		response["encoded_loadout"] = talentLoadout.EncodedLoadoutText
+	}
+
+	c.JSON(http.StatusOK, response)
 }

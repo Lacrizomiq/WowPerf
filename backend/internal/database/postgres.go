@@ -12,7 +12,7 @@ import (
 
 var DB *gorm.DB
 
-func InitDB() {
+func InitDB() (*gorm.DB, error) {
 
 	err := godotenv.Load()
 	if err != nil {
@@ -33,4 +33,6 @@ func InitDB() {
 		log.Fatal("Failed to connect to database", err)
 	}
 	fmt.Println("Connected to database")
+
+	return DB, nil
 }
