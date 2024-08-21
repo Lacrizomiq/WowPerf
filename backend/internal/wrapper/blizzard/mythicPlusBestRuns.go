@@ -11,8 +11,24 @@ import (
 	"gorm.io/gorm"
 )
 
+var SeasonIDMapping = map[string]int{
+	"season-tww-1": 13,
+	"season-df-4":  12,
+	"season-df-3":  11,
+	"season-df-2":  10,
+	"season-df-1":  9,
+}
+
+var SeasonSlugMapping = make(map[int]string)
+
+func init() {
+	for slug, id := range SeasonIDMapping {
+		SeasonSlugMapping[id] = slug
+	}
+}
+
 // TransformMythicPlusBestRuns transforms the best runs from the Mythic+ API into a struct that is easier to use than the Blizzard API response
-func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB) ([]mythicplus.MythicPlusRun, error) {
+func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB, seasonSlug string) ([]mythicplus.MythicPlusRun, error) {
 	bestRuns, ok := data["best_runs"].([]interface{})
 	if !ok {
 		log.Println("Error: best runs not found or not a slice")
@@ -27,15 +43,13 @@ func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB) ([]my
 		wg.Add(1)
 		go func(i int, run interface{}) {
 			defer wg.Done()
-			log.Printf("Processing run %d", i)
-			mythicRun, err := processMythicPlusRun(run, db)
+			mythicRun, err := processMythicPlusRun(run, db, seasonSlug)
 			if err != nil {
 				log.Printf("Error processing run %d: %v", i, err)
 				errChan <- err
 				return
 			}
 			runChan <- mythicRun
-			log.Printf("Finished processing run %d", i)
 		}(i, run)
 	}
 
@@ -61,7 +75,7 @@ func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB) ([]my
 }
 
 // processMythicPlusRun transforms a single Mythic+ run from the Blizzard API into a struct.
-func processMythicPlusRun(runData interface{}, db *gorm.DB) (mythicplus.MythicPlusRun, error) {
+func processMythicPlusRun(runData interface{}, db *gorm.DB, seasonSlug string) (mythicplus.MythicPlusRun, error) {
 	log.Println("Starting processMythicPlusRun")
 
 	runMap, ok := runData.(map[string]interface{})
@@ -74,8 +88,13 @@ func processMythicPlusRun(runData interface{}, db *gorm.DB) (mythicplus.MythicPl
 	challengeModeID := uint(dungeonMap["id"].(float64))
 	log.Printf("Processing dungeon with ChallengeModeID: %d", challengeModeID)
 
+	blizzardSeasonID, exists := SeasonIDMapping[seasonSlug]
+	if !exists {
+		return mythicplus.MythicPlusRun{}, fmt.Errorf("unknown season slug: %s", seasonSlug)
+	}
+
 	var dungeon mythicplus.Dungeon
-	err := db.Preload("KeyStoneUpgrades").Preload("Seasons").Where("challenge_mode_id = ?", challengeModeID).First(&dungeon).Error
+	err := db.Preload("KeyStoneUpgrades").Preload("Seasons", "slug = ?", seasonSlug).Where("challenge_mode_id = ?", challengeModeID).First(&dungeon).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("Warning: Dungeon with ChallengeModeID %d not found in database", challengeModeID)
@@ -121,10 +140,8 @@ func processMythicPlusRun(runData interface{}, db *gorm.DB) (mythicplus.MythicPl
 		return mythicplus.MythicPlusRun{}, fmt.Errorf("error getting members: %v", err)
 	}
 
-	var seasonID uint
 	var season mythicplus.Season
 	if len(dungeon.Seasons) > 0 {
-		seasonID = dungeon.Seasons[0].ID
 		season = dungeon.Seasons[0]
 	} else {
 		log.Printf("Warning: No seasons associated with dungeon %d", dungeon.ID)
@@ -140,7 +157,7 @@ func processMythicPlusRun(runData interface{}, db *gorm.DB) (mythicplus.MythicPl
 		KeyStoneUpgrades:      KeystoneUpgrades,
 		KeystoneLevel:         keystoneLevel,
 		MythicRating:          score,
-		SeasonID:              seasonID,
+		SeasonID:              uint(blizzardSeasonID),
 		Season:                season,
 		Affixes:               affixes,
 		Members:               members,

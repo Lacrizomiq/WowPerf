@@ -49,8 +49,8 @@ type Dungeon struct {
 	ShortName        string
 	MediaURL         string
 	Icon             *string
-	KeyStoneUpgrades []KeyStoneUpgrade
-	Seasons          []Season `gorm:"many2many:season_dungeons;"`
+	KeyStoneUpgrades []KeyStoneUpgrade `json:"-"`
+	Seasons          []Season          `gorm:"many2many:season_dungeons;"`
 }
 
 // SeasonDungeon represents a season-dungeon relationship in the Mythic+ dungeon pool

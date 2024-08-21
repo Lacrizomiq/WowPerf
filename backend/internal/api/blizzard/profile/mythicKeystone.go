@@ -3,6 +3,7 @@ package profile
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"wowperf/internal/services/blizzard"
 	"wowperf/internal/services/blizzard/profile"
@@ -61,25 +62,41 @@ func (h *MythicKeystoneSeasonDetailsHandler) GetCharacterMythicKeystoneSeasonBes
 	region := c.Query("region")
 	realmSlug := c.Param("realmSlug")
 	characterName := c.Param("characterName")
-	seasonId := c.Param("seasonId")
+	seasonIdStr := c.Param("seasonId")
 	namespace := c.Query("namespace")
 	locale := c.Query("locale")
 
-	if region == "" || realmSlug == "" || characterName == "" || seasonId == "" || namespace == "" {
+	if region == "" || realmSlug == "" || characterName == "" || seasonIdStr == "" || namespace == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
 		return
 	}
 
-	rawData, err := profile.GetCharacterMythicKeystoneSeasonDetails(h.Service.Profile, region, realmSlug, characterName, seasonId, namespace, locale)
+	// Validate season ID
+	seasonId, err := strconv.Atoi(seasonIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid season ID format"})
+		return
+	}
+
+	// Get season slug
+	seasonSlug, exists := wrapper.SeasonSlugMapping[seasonId]
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown season ID"})
+		return
+	}
+
+	// Retrieve raw data from blizzard API
+	rawData, err := profile.GetCharacterMythicKeystoneSeasonDetails(h.Service.Profile, region, realmSlug, characterName, seasonIdStr, namespace, locale)
 	if err != nil {
 		log.Printf("Error retrieving mythic keystone season details: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve mythic keystone season details"})
 		return
 	}
 
-	log.Printf("Raw data retrieved successfully for %s-%s, season %s", realmSlug, characterName, seasonId)
+	log.Printf("Raw data retrieved successfully for %s-%s, season %s", realmSlug, characterName, seasonIdStr)
 
-	transformedData, err := wrapper.TransformMythicPlusBestRuns(rawData, h.DB)
+	// Transform the raw data into a more usable format from the wrapper
+	transformedData, err := wrapper.TransformMythicPlusBestRuns(rawData, h.DB, seasonSlug)
 	if err != nil {
 		log.Printf("Error transforming mythic keystone season details: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform mythic keystone season details"})
