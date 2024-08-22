@@ -22,20 +22,12 @@
 
 body {
   background: linear-gradient(
-    to bottom,
+    135deg,
     var(--color-deep-blue),
     var(--color-midnight-blue)
   );
   color: white;
   min-height: 100vh;
-}
-
-.bg-gradient-dark {
-  background: linear-gradient(
-    135deg,
-    var(--color-deep-blue),
-    var(--color-midnight-blue)
-  );
 }
 
 .text-gradient-glow {

@@ -2,10 +2,19 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      "wow.zamimg.com",
-      "render.worldofwarcraft.com",
-      "assets.rpglogs.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "wow.zamimg.com",
+      },
+      {
+        protocol: "https",
+        hostname: "render.worldofwarcraft.com",
+      },
+      {
+        protocol: "https",
+        hostname: "assets.rpglogs.com",
+      },
     ],
   },
 };

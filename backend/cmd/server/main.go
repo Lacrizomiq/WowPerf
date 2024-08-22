@@ -7,7 +7,6 @@ import (
 
 	"wowperf/internal/database"
 
-	mythicplus "wowperf/internal/models/mythicplus"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 
 	"github.com/gin-contrib/cors"
@@ -27,9 +26,9 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	err = db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{}, &mythicplus.KeyStoneUpgrade{})
-	if err != nil {
-		log.Fatalf("Failed to auto migrate database: %v", err)
+	// Utiliser la nouvelle fonction de migration
+	if err := database.Migrate(db); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
 	if err := database.SeedDatabase(db); err != nil {

@@ -94,7 +94,7 @@ func processMythicPlusRun(runData interface{}, db *gorm.DB, seasonSlug string) (
 	}
 
 	var dungeon mythicplus.Dungeon
-	err := db.Preload("KeyStoneUpgrades").Preload("Seasons", "slug = ?", seasonSlug).Where("challenge_mode_id = ?", challengeModeID).First(&dungeon).Error
+	err := db.Preload("Seasons", "slug = ?", seasonSlug).Where("challenge_mode_id = ?", challengeModeID).First(&dungeon).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Printf("Warning: Dungeon with ChallengeModeID %d not found in database", challengeModeID)
@@ -110,19 +110,33 @@ func processMythicPlusRun(runData interface{}, db *gorm.DB, seasonSlug string) (
 	}
 
 	log.Printf("Dungeon found: %+v", dungeon)
+	log.Printf("KeyStoneUpgrades for dungeon %d: %+v", dungeon.ID, dungeon.KeyStoneUpgrades)
 
 	completedTimestamp := time.Unix(int64(runMap["completed_timestamp"].(float64))/1000, 0)
 	duration := int64(runMap["duration"].(float64))
 
 	keystoneLevel := int(runMap["keystone_level"].(float64))
 
+	var keyStoneUpgrades []mythicplus.KeyStoneUpgrade
+	err = db.Where("challenge_mode_id = ?", challengeModeID).Order("qualifying_duration DESC").Find(&keyStoneUpgrades).Error
+	if err != nil {
+		log.Printf("Error fetching KeyStoneUpgrades: %v", err)
+	}
+
+	log.Printf("KeyStoneUpgrades for ChallengeModeID %d: %+v", challengeModeID, keyStoneUpgrades)
+
 	var KeystoneUpgrades int
-	for _, upgrade := range dungeon.KeyStoneUpgrades {
-		if duration <= int64(upgrade.QualifyingDuration) {
-			KeystoneUpgrades = upgrade.UpgradeLevel
-		} else {
-			break
+	if len(keyStoneUpgrades) > 0 {
+		for _, upgrade := range keyStoneUpgrades {
+			if duration <= int64(upgrade.QualifyingDuration) {
+				KeystoneUpgrades = upgrade.UpgradeLevel
+			} else {
+				break
+			}
 		}
+		log.Printf("Calculated KeystoneUpgrades: %d for duration %d", KeystoneUpgrades, duration)
+	} else {
+		log.Printf("Warning: No keystone upgrades found for ChallengeModeID %d", challengeModeID)
 	}
 
 	mythicRating := runMap["mythic_rating"].(map[string]interface{})

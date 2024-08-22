@@ -140,13 +140,13 @@ func seedSeasons(db *gorm.DB, filePath string) error {
 				return fmt.Errorf("error creating dungeon %s: %v", d.Name, err)
 			}
 
-			if err := db.Where("dungeon_id = ?", dungeon.ID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
+			if err := db.Where("challenge_mode_id = ?", d.ChallengeModeID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
 				return fmt.Errorf("error deleting old keystone upgrades for dungeon %s: %v", d.Name, err)
 			}
 
 			for _, ku := range d.KeystoneUpgrades {
 				keyStoneUpgrade := mythicplus.KeyStoneUpgrade{
-					DungeonID:          dungeon.ID,
+					ChallengeModeID:    &d.ChallengeModeID,
 					QualifyingDuration: ku.QualifyingDuration,
 					UpgradeLevel:       ku.UpgradeLevel,
 				}

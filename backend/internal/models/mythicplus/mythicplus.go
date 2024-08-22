@@ -43,13 +43,13 @@ type SeasonalAffix struct {
 type Dungeon struct {
 	*gorm.Model      `json:"-"`
 	ID               uint   `gorm:"primaryKey"`
-	ChallengeModeID  *uint  `gorm:"index"`
+	ChallengeModeID  *uint  `gorm:"uniqueIndex"`
 	Slug             string `gorm:"uniqueIndex"`
 	Name             string
 	ShortName        string
 	MediaURL         string
 	Icon             *string
-	KeyStoneUpgrades []KeyStoneUpgrade `json:"-"`
+	KeyStoneUpgrades []KeyStoneUpgrade `gorm:"foreignKey:ChallengeModeID;references:ChallengeModeID"`
 	Seasons          []Season          `gorm:"many2many:season_dungeons;"`
 }
 
@@ -72,7 +72,7 @@ type Affix struct {
 // KeyStoneUpgrades represents the number of keystone upgrades for a dungeon
 type KeyStoneUpgrade struct {
 	*gorm.Model        `json:"-"`
-	DungeonID          uint
+	ChallengeModeID    *uint `gorm:"index"`
 	QualifyingDuration int
 	UpgradeLevel       int
 }

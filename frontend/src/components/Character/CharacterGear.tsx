@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { useGetRaiderIoCharacterGear } from "@/hooks/useRaiderioApi";
+import { useGetBlizzardCharacterEquipment } from "@/hooks/useBlizzardApi";
+import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import Image from "next/image";
 
@@ -7,18 +8,27 @@ interface CharacterGearProps {
   region: string;
   realm: string;
   name: string;
+  namespace: string;
+  locale: string;
 }
 
-interface GearItem {
-  item_id: number;
-  item_level: number;
-  item_quality: number;
-  icon: string;
-  name: string;
-  enchant?: number;
-  slot: string;
-  bonuses?: number[];
-  gems?: number[];
+interface EquipmentData {
+  item_level_equipped: number;
+  item_level_total: number;
+  items: {
+    [key: string]: {
+      item_id: number;
+      item_level: number;
+      item_quality: number;
+      icon_name: string;
+      icon_url: string;
+      name: string;
+      slot: string;
+      enchant?: number;
+      gems?: number[];
+      bonuses?: number[];
+    };
+  };
 }
 
 const gearOrder = [
@@ -32,25 +42,35 @@ const gearOrder = [
   "waist",
   "legs",
   "feet",
-  "finger1",
-  "finger2",
-  "trinket1",
-  "trinket2",
-  "mainhand",
-  "offhand",
+  "finger_1",
+  "finger_2",
+  "trinket_1",
+  "trinket_2",
+  "main_hand",
+  "off_hand",
 ];
 
 export default function CharacterGear({
   region,
   realm,
   name,
+  namespace,
+  locale,
 }: CharacterGearProps) {
   const {
     data: characterData,
     isLoading,
     error,
-  } = useGetRaiderIoCharacterGear(region, realm, name);
+  } = useGetBlizzardCharacterEquipment(region, realm, name, namespace, locale);
   useWowheadTooltips();
+
+  const { data: characterProfile } = useGetBlizzardCharacterProfile(
+    region,
+    realm,
+    name,
+    namespace,
+    locale
+  );
 
   useEffect(() => {
     if (characterData && window.$WowheadPower) {
@@ -66,16 +86,19 @@ export default function CharacterGear({
         {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
-  if (!characterData || !characterData.gear)
+  if (!characterData || !characterData.items)
     return <div className="text-yellow-500">No gear data found</div>;
 
-  const { gear } = characterData;
-
   const orderedGear = gearOrder
-    .map((slot) => (gear.items[slot] ? { ...gear.items[slot], slot } : null))
-    .filter(Boolean) as GearItem[];
+    .map((slot) =>
+      characterData.items[slot] ? { ...characterData.items[slot], slot } : null
+    )
+    .filter(Boolean) as (EquipmentData["items"][string] & { slot: string })[];
 
-  const getWowheadParams = (item: GearItem) => {
+  const getWowheadParams = (
+    item: EquipmentData["items"][string],
+    slot: string
+  ) => {
     let params = `item=${item.item_id}&ilvl=${item.item_level}`;
     if (item.bonuses?.length) params += `&bonus=${item.bonuses.join(":")}`;
     if (item.gems?.length) params += `&gems=${item.gems.join(":")}`;
@@ -84,7 +107,7 @@ export default function CharacterGear({
   };
 
   return (
-    <div className="p-4 bg-gradient-dark shadow-lg glow-effect m-12">
+    <div className="p-4 bg-gradient-dark shadow-lg m-12 flex justify-center items-center glow-effect">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -93,34 +116,76 @@ export default function CharacterGear({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex align-center items-center justify-between mb-2 px-4">
-        <h2 className="text-2xl font-bold text-gradient-glow mb-6">Gear</h2>
-        <p className="text-blue-200 mb-4 ml-2">
-          {gear.item_level_equipped} item lvl (Equipped)
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2 justify-center  ">
-        {orderedGear.map((item) => (
-          <div key={item.slot} className="relative">
-            <a
-              href={`https://www.wowhead.com/item=${item.item_id}`}
-              data-wowhead={getWowheadParams(item)}
-              className="block cursor-pointer"
-              data-wh-icon-size="medium"
-            >
-              <Image
-                src={`https://wow.zamimg.com/images/wow/icons/large/${item.icon}.jpg`}
-                alt={item.name}
-                width={56}
-                height={56}
-                className="rounded-md border-2 border-gray-700"
-              />
-              <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
-                {item.item_level}
+
+      {/* Container for the gear layout */}
+      <div className="flex flex-col items-center">
+        <div className="flex justify-between w-full max-w-5xl">
+          <div className="flex flex-col gap-2">
+            {/* Left column (upper body gear) */}
+            {orderedGear.slice(0, 8).map((item) => (
+              <div key={item.slot} className="relative flex items-center">
+                <a
+                  href={`https://www.wowhead.com/item=${item.item_id}`}
+                  data-wowhead={getWowheadParams(item, item.slot)}
+                  className="block cursor-pointer"
+                  data-wh-icon-size="medium"
+                >
+                  <Image
+                    src={item.icon_url}
+                    alt={item.name}
+                    width={48}
+                    height={48}
+                    className="rounded-md border-2 border-gray-700"
+                  />
+                </a>
+                <div className="ml-2 text-white text-sm">
+                  <div>{item.name}</div>
+                  <div className="text-xs">{item.item_level}</div>
+                </div>
               </div>
-            </a>
+            ))}
           </div>
-        ))}
+
+          {/* Center column (character image) */}
+          <div className="flex flex-col items-center justify-center">
+            <Image
+              src={characterProfile.main_raw_url}
+              alt="Character"
+              width={450}
+              height={450}
+              className=" scale-150"
+            />
+            <div className="text-blue-200 mt-4 text-center">
+              {characterData.item_level_equipped} item lvl (Equipped)
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {/* Right column (lower body gear) */}
+            {orderedGear.slice(8).map((item) => (
+              <div key={item.slot} className="relative flex items-center">
+                <a
+                  href={`https://www.wowhead.com/item=${item.item_id}`}
+                  data-wowhead={getWowheadParams(item, item.slot)}
+                  className="block cursor-pointer"
+                  data-wh-icon-size="medium"
+                >
+                  <Image
+                    src={item.icon_url}
+                    alt={item.name}
+                    width={48}
+                    height={48}
+                    className="rounded-md border-2 border-gray-700"
+                  />
+                </a>
+                <div className="ml-2 text-white text-sm">
+                  <div>{item.name}</div>
+                  <div className="text-xs">{item.item_level}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

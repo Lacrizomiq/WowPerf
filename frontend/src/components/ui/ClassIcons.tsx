@@ -1,23 +1,37 @@
 import React from "react";
 import Image from "next/image";
-import { useGetRaiderIoCharacterTalents } from "@/hooks/useRaiderioApi";
+import { useGetBlizzardCharacterSpecializations } from "@/hooks/useBlizzardApi";
 
 interface ClassIconsProps {
   region: string;
   realm: string;
   name: string;
+  namespace: string;
+  locale: string;
 }
 
-const ClassIcons = ({ region, realm, name }: ClassIconsProps) => {
+const ClassIcons = ({
+  region,
+  realm,
+  name,
+  namespace,
+  locale,
+}: ClassIconsProps) => {
   const {
     data: characterData,
     isLoading,
     error,
-  } = useGetRaiderIoCharacterTalents(region, realm, name);
+  } = useGetBlizzardCharacterSpecializations(
+    region,
+    realm,
+    name,
+    namespace,
+    locale
+  );
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading class icon</div>;
-  if (!characterData) return null;
+  if (!characterData || !characterData.class) return null;
 
   const classNameForUrl = characterData.class.replace(/\s+/g, "");
 
