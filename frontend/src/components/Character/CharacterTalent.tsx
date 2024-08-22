@@ -1,4 +1,6 @@
-import React, { useEffect } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   useGetBlizzardCharacterSpecializations,
   useGetBlizzardCharacterProfile,
@@ -72,6 +74,17 @@ export default function CharacterTalent({
     isLoading: isLoadingProfile,
     error: profileError,
   } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
+
+  const [displayMode, setDisplayMode] = useState<"list" | "tree">("list");
+
+  const toggleDisplayMode = () => {
+    setDisplayMode((prevMode) => (prevMode === "list" ? "tree" : "list"));
+  };
+
+  const [zoom, setZoom] = useState(100);
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 200));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 10, 50));
 
   useWowheadTooltips();
 
@@ -153,6 +166,7 @@ export default function CharacterTalent({
           )}
           <span className="ml-2">{title}</span>
         </h3>
+
         <div className="grid grid-cols-7 gap-2 mb-4">
           {talents.map((talent) => {
             const spellEntry = talent.node.entries[talent.entryIndex];
@@ -208,8 +222,20 @@ export default function CharacterTalent({
 
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
+  const TalentTree = ({ encodedLoadout }: { encodedLoadout: string }) => {
+    return (
+      <div className="w-full h-0 pb-[100%] relative">
+        <iframe
+          src={`https://www.raidbots.com/simbot/render/talents/${encodedLoadout}?width=800&level=70&mini`}
+          className="absolute top-0 left-0 w-full h-full border-0"
+          title="Talent Tree"
+        />
+      </div>
+    );
+  };
+
   return (
-    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12">
+    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -218,31 +244,68 @@ export default function CharacterTalent({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gradient-glow flex justify-between mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gradient-glow">
           Talent Build Summary
         </h2>
-        <div>
+        <div className="flex gap-4">
+          <button
+            onClick={toggleDisplayMode}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
+          </button>
           {talentCalculatorUrl && (
             <a
               href={talentCalculatorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold flex items-center gap-2 align-center mb-4 hover:text-blue-300"
+              className="font-bold flex items-center gap-2 align-center hover:text-blue-300"
             >
               Talent Calculator <SquareArrowOutUpRight className="ml-2" />
             </a>
           )}
         </div>
       </div>
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          {renderTalentGroup(classTalents, `${characterClass} Talents`, true)}
+      {displayMode === "list" ? (
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            {renderTalentGroup(classTalents, `${characterClass} Talents`, true)}
+          </div>
+          <div className="flex-1">
+            {renderTalentGroup(specTalents, `${activeSpecName} Talents`, false)}
+          </div>
         </div>
-        <div className="flex-1">
-          {renderTalentGroup(specTalents, `${activeSpecName} Talents`, false)}
+      ) : (
+        <div className="flex flex-col items-center">
+          <div className="mb-4 flex gap-4">
+            <button
+              onClick={handleZoomOut}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Zoom Out
+            </button>
+            <button
+              onClick={handleZoomIn}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Zoom In
+            </button>
+          </div>
+          <div className="w-full max-w-4xl overflow-hidden">
+            <div
+              style={{
+                transform: `scale(${zoom / 100})`,
+                transformOrigin: "top center",
+              }}
+            >
+              <TalentTree
+                encodedLoadout={specializationsData.encoded_loadout}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
