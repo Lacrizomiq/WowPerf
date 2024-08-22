@@ -94,15 +94,21 @@ export const useGetBlizzardCharacterSpecializations = (
   locale: string
 ) => {
   return useQuery({
-    queryKey: ["specializations"],
-    queryFn: async () => {
+    queryKey: [
+      "specializations",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
       apiServices.getBlizzardCharacterSpecializations(
         region,
         realmSlug,
         characterName,
         namespace,
         locale
-      );
-    },
+      ),
   });
 };

@@ -1,120 +1,207 @@
 import React, { useEffect } from "react";
-import { useGetRaiderIoCharacterTalents } from "@/hooks/useRaiderioApi";
+import {
+  useGetBlizzardCharacterSpecializations,
+  useGetBlizzardCharacterProfile,
+} from "@/hooks/useBlizzardApi";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import { SquareArrowOutUpRight } from "lucide-react";
 import ClassIcons from "@/components/ui/ClassIcons";
 import SpecIcons from "@/components/ui/SpecIcon";
+import Image from "next/image";
 
 interface CharacterTalentProps {
   region: string;
   realm: string;
   name: string;
+  namespace: string;
+  locale: string;
+}
+
+interface TalentNode {
+  node: {
+    id: number;
+    entries: Array<{
+      spell: {
+        id: number;
+        name: string;
+        icon_url: string;
+      };
+    }>;
+  };
+  entryIndex: number;
+  rank: number;
+}
+
+interface SpecializationsData {
+  encoded_loadout: string;
+  talent_loadout: {
+    class_talents: TalentNode[];
+    spec_talents: TalentNode[];
+    encoded_loadout_text: string;
+    loadout_spec_id: number;
+    loadout_text: string;
+  };
+}
+
+interface ProfileData {
+  class: string;
+  active_spec_name: string;
 }
 
 export default function CharacterTalent({
   region,
   realm,
   name,
+  namespace,
+  locale,
 }: CharacterTalentProps) {
   const {
-    data: characterData,
-    isLoading,
-    error,
-  } = useGetRaiderIoCharacterTalents(region, realm, name);
+    data: specializationsData,
+    isLoading: isLoadingSpecializations,
+    error: specializationsError,
+  } = useGetBlizzardCharacterSpecializations(
+    region,
+    realm,
+    name,
+    namespace,
+    locale
+  );
+
+  const {
+    data: profileData,
+    isLoading: isLoadingProfile,
+    error: profileError,
+  } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
+
   useWowheadTooltips();
 
   useEffect(() => {
-    if (characterData && window.$WowheadPower) {
+    if (specializationsData && window.$WowheadPower) {
       window.$WowheadPower.refreshLinks();
     }
-  }, [characterData]);
+  }, [specializationsData]);
 
-  if (isLoading)
+  if (isLoadingSpecializations || isLoadingProfile)
     return <div className="text-white">Loading talent data...</div>;
-  if (error)
+
+  if (specializationsError || profileError) {
+    console.error("Specializations Error:", specializationsError);
+    console.error("Profile Error:", profileError);
     return (
       <div className="text-red-500">
         Error loading talent data:{" "}
-        {error instanceof Error ? error.message : "Unknown error"}
+        {((specializationsError || profileError) as Error)?.message ||
+          "Unknown error"}
       </div>
     );
+  }
 
-  if (
-    !characterData ||
-    (!characterData.talentLoadout && !characterData.talents)
-  )
+  console.log("Full Specializations Data:", specializationsData);
+  console.log("Class Talents:", specializationsData?.class_talents);
+  console.log("Spec Talents:", specializationsData?.spec_talents);
+  console.log("Full Profile Data:", profileData);
+
+  if (!specializationsData && !profileData) {
+    return (
+      <div className="text-yellow-500">No talent or profile data found</div>
+    );
+  }
+
+  if (!specializationsData) {
     return <div className="text-yellow-500">No talent data found</div>;
+  }
 
-  const classTalents = characterData.talentLoadout?.class_talents || [];
-  const specTalents = characterData.talentLoadout?.spec_talents || [];
+  if (!profileData) {
+    return <div className="text-yellow-500">No profile data found</div>;
+  }
+
+  const classTalents = specializationsData.talent_loadout?.class_talents || [];
+  const specTalents = specializationsData.talent_loadout?.spec_talents || [];
+  const loadoutText = specializationsData.talent_loadout?.loadout_text || "";
+
+  const characterClass = profileData.class || "Unknown Class";
+  const activeSpecName = profileData.active_spec_name || "Unknown Spec";
 
   const renderTalentGroup = (
-    talents: any[],
+    talents: TalentNode[],
     title: string,
     isClassTalents: boolean
-  ) => (
-    <div className="mb-6 shadow-xl glow-effect p-4">
-      <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
-        {isClassTalents ? (
-          <ClassIcons region={region} realm={realm} name={name} />
-        ) : (
-          <SpecIcons region={region} realm={realm} name={name} />
-        )}
-        <span className="ml-2">{title}</span>
-      </h3>
-      <div className="grid grid-cols-7 gap-2 mb-4">
-        {talents.map((talent) => {
-          const spellEntry = talent.node.entries[talent.entryIndex];
-          const iconUrl = `https://wow.zamimg.com/images/wow/icons/large/${spellEntry.spell.icon}.jpg`;
-          return (
-            <div key={talent.node.id} className="relative">
-              <a
-                href={`https://www.wowhead.com/spell=${spellEntry.spell.id}`}
-                data-wowhead={`spell=${spellEntry.spell.id}`}
-                className="block cursor-pointer talent active relative"
-                data-wh-icon-size="medium"
-                target="_blank"
-              >
-                <div className="relative w-10 h-10">
-                  <img
-                    src={iconUrl}
-                    alt={spellEntry.spell.name}
-                    className="w-full h-full rounded-md border-2 border-gray-700"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
-                    }}
-                  />
-                  {talent.rank > 1 && (
-                    <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-                      {talent.rank}/2
-                    </div>
-                  )}
-                </div>
-              </a>
-            </div>
-          );
-        })}
+  ) => {
+    if (!talents || talents.length === 0) {
+      return <div className="text-yellow-500">No {title} found</div>;
+    }
+
+    return (
+      <div className="mb-6 shadow-xl glow-effect p-4">
+        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+          {isClassTalents ? (
+            <ClassIcons
+              region={region}
+              realm={realm}
+              name={name}
+              namespace={namespace}
+              locale={locale}
+            />
+          ) : (
+            <SpecIcons
+              region={region}
+              realm={realm}
+              name={name}
+              namespace={namespace}
+              locale={locale}
+            />
+          )}
+          <span className="ml-2">{title}</span>
+        </h3>
+        <div className="grid grid-cols-7 gap-2 mb-4">
+          {talents.map((talent) => {
+            const spellEntry = talent.node.entries[talent.entryIndex];
+            if (!spellEntry) return null;
+            return (
+              <div key={talent.node.id} className="relative">
+                <a
+                  href={`https://www.wowhead.com/spell=${spellEntry.spell.id}`}
+                  data-wowhead={`spell=${spellEntry.spell.id}`}
+                  className="block cursor-pointer talent active relative"
+                  data-wh-icon-size="medium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="relative w-10 h-10">
+                    <Image
+                      src={spellEntry.spell.icon_url}
+                      alt={spellEntry.spell.name}
+                      width={40}
+                      height={40}
+                      className="w-full h-full rounded-md border-2 border-gray-700"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+                      }}
+                    />
+                    {talent.rank > 1 && (
+                      <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+                        {talent.rank}/2
+                      </div>
+                    )}
+                  </div>
+                </a>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const getTalentCalculatorUrl = () => {
-    if (
-      !characterData.class ||
-      !characterData.active_spec_name ||
-      !characterData.talentLoadout?.loadout_text
-    ) {
+    if (!characterClass || !activeSpecName || !loadoutText) {
       return "";
     }
 
-    const classSlug = characterData.class.toLowerCase().replace(" ", "");
-    const specSlug = characterData.active_spec_name
-      .toLowerCase()
-      .replace(" ", "");
-    const encodedLoadout = encodeURIComponent(
-      characterData.talentLoadout.loadout_text
-    );
+    const classSlug = characterClass.toLowerCase().replace(" ", "");
+    const specSlug = activeSpecName.toLowerCase().replace(" ", "");
+    const encodedLoadout = encodeURIComponent(loadoutText);
 
     return `https://www.wowhead.com/talent-calc/${classSlug}/${specSlug}/${encodedLoadout}`;
   };
@@ -141,7 +228,7 @@ export default function CharacterTalent({
               href={talentCalculatorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold flex items-center gap-2 align-center mb-4  hover:text-blue-300"
+              className="font-bold flex items-center gap-2 align-center mb-4 hover:text-blue-300"
             >
               Talent Calculator <SquareArrowOutUpRight className="ml-2" />
             </a>
@@ -150,18 +237,10 @@ export default function CharacterTalent({
       </div>
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          {renderTalentGroup(
-            classTalents,
-            `${characterData.class} Talents`,
-            true
-          )}
+          {renderTalentGroup(classTalents, `${characterClass} Talents`, true)}
         </div>
         <div className="flex-1">
-          {renderTalentGroup(
-            specTalents,
-            `${characterData.active_spec_name} Talents`,
-            false
-          )}
+          {renderTalentGroup(specTalents, `${activeSpecName} Talents`, false)}
         </div>
       </div>
     </div>
