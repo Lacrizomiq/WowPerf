@@ -2,12 +2,14 @@ package database
 
 import (
 	mythicplus "wowperf/internal/models/mythicplus"
+	talents "wowperf/internal/models/talents"
 
 	"gorm.io/gorm"
 )
 
 func Migrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{}); err != nil {
+	// Mythic+ migrations
+	if err := db.AutoMigrate(&mythicplus.Season{}, &mythicplus.Dungeon{}, &mythicplus.Affix{}, &mythicplus.KeyStoneUpgrade{}); err != nil {
 		return err
 	}
 
@@ -20,7 +22,16 @@ func Migrate(db *gorm.DB) error {
 		}
 	}
 
-	if err := db.AutoMigrate(&mythicplus.KeyStoneUpgrade{}); err != nil {
+	// Talents migrations
+	if err := db.AutoMigrate(
+		&talents.ClassTalent{},
+		&talents.SpecTalent{},
+		&talents.HeroTalent{},
+		&talents.SubTreeTalent{},
+		&talents.TalentNode{},
+		&talents.TalentEntry{},
+		&talents.FullNodeOrder{},
+	); err != nil {
 		return err
 	}
 

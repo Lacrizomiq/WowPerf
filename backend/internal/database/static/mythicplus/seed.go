@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 	mythicplus "wowperf/internal/models/mythicplus"
 
@@ -63,38 +62,8 @@ const (
 	staticMythicPlusPath = "./static/M+/"
 )
 
-// SeedDatabase seeds the Mythic+ database with the static data
-func SeedDatabase(db *gorm.DB) error {
-	absPath, err := filepath.Abs(staticMythicPlusPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path: %v", err)
-	}
-
-	log.Printf("Static files path: %s", absPath)
-
-	files, err := os.ReadDir(absPath)
-	if err != nil {
-		log.Printf("Error reading directory: %v", err)
-	} else {
-		for _, file := range files {
-			log.Printf("Found file: %s", file.Name())
-		}
-	}
-
-	if err := seedSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
-		return err
-	}
-	if err := seedSeasons(db, filepath.Join(absPath, "TWW", "S1MMTWW.json")); err != nil {
-		return err
-	}
-	if err := seedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
-		return err
-	}
-	return nil
-}
-
 // seedSeasonsFromFile seeds the Mythic+ seasons from a JSON file
-func seedSeasons(db *gorm.DB, filePath string) error {
+func SeedSeasons(db *gorm.DB, filePath string) error {
 	var seasonData SeasonData
 	seasonFile, err := os.ReadFile(filePath)
 	if err != nil {
@@ -166,7 +135,7 @@ func seedSeasons(db *gorm.DB, filePath string) error {
 }
 
 // seedAffixes seeds the Mythic+ affixes from a JSON file
-func seedAffixes(db *gorm.DB, filePath string) error {
+func SeedAffixes(db *gorm.DB, filePath string) error {
 	var affixData AffixData
 	affixFile, err := os.ReadFile(filePath)
 	if err != nil {
