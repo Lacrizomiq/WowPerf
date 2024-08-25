@@ -57,6 +57,10 @@ export default function CharacterLayout({
       <nav className="flex space-x-4 items-center justify-center font-bold  p-4 text-white">
         <button onClick={() => setSelectedTab("gear")}>Gear</button>
         <button onClick={() => setSelectedTab("talents")}>Talents</button>
+        <button onClick={() => setSelectedTab("mythic-plus")}>Mythic+</button>
+        <button onClick={() => setSelectedTab("raid-progression")}>
+          Raids
+        </button>
       </nav>
 
       <div>{renderContent()}</div>
