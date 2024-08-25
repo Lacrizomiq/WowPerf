@@ -5,72 +5,41 @@ import (
 	"gorm.io/gorm"
 )
 
-// ClassTalent represents a class talent in the talent tree for a specific Class
-type ClassTalent struct {
-	gorm.Model  `json:"-"`
-	TraitTreeID int          `json:"traitTreeId"`
-	ClassName   string       `json:"className"`
-	ClassID     int          `json:"classId"`
-	Nodes       []TalentNode `gorm:"foreignKey:ClassTalentID"`
-}
-
-// SpecTalent represents a spec talent in the talent tree for a specific Spec
-type SpecTalent struct {
-	gorm.Model  `json:"-"`
-	TraitTreeID int          `json:"traitTreeId"`
-	ClassName   string       `json:"className"`
-	ClassID     int          `json:"classId"`
-	SpecName    string       `json:"specName"`
-	SpecID      int          `json:"specId"`
-	Nodes       []TalentNode `gorm:"foreignKey:SpecTalentID"`
-}
-
-// HeroTalent represents a hero talent in the talent tree for a specific class and spec
-type HeroTalent struct {
-	gorm.Model  `json:"-"`
-	TraitTreeID int          `json:"traitTreeId"`
-	ClassName   string       `json:"className"`
-	ClassID     int          `json:"classId"`
-	SpecName    string       `json:"specName"`
-	SpecID      int          `json:"specId"`
-	SubTreeID   int          `json:"subTreeId"`
-	Nodes       []TalentNode `gorm:"foreignKey:HeroTalentID"`
-}
-
-// SubTreeTalent represents a sub-tree talent in the talent tree for a specific hero spec
-type SubTreeTalent struct {
-	gorm.Model      `json:"-"`
-	TraitTreeID     int    `json:"traitTreeId"`
-	TraitSubTreeID  int    `json:"traitSubTreeId"`
-	Name            string `json:"name"`
-	AtlasMemberName string `json:"atlasMemberName"`
-	Nodes           []int  `gorm:"type:integer[]"`
-}
-
-// Talent represents a talent in the talent tree
-type TalentNode struct {
+type TalentTree struct {
 	gorm.Model    `json:"-"`
-	NodeID        int           `json:"id"`
-	Name          string        `json:"name"`
-	Type          string        `json:"type"`
-	PosX          int           `json:"posX"`
-	PosY          int           `json:"posY"`
-	MaxRanks      int           `json:"maxRanks"`
-	EntryNode     bool          `json:"entryNode"`
-	ReqPoints     int           `json:"reqPoints,omitempty"`
-	FreeNode      bool          `json:"freeNode,omitempty"`
-	Next          pq.Int64Array `gorm:"type:integer[]"`
-	Prev          pq.Int64Array `gorm:"type:integer[]"`
-	ClassTalentID *uint
-	SpecTalentID  *uint
-	HeroTalentID  *uint
-	Entries       []TalentEntry `gorm:"foreignKey:NodeID"`
+	TraitTreeID   int           `gorm:"uniqueIndex" json:"traitTreeId"`
+	ClassName     string        `json:"className"`
+	ClassID       int           `json:"classId"`
+	SpecName      string        `json:"specName"`
+	SpecID        int           `json:"specId"`
+	ClassNodes    []TalentNode  `gorm:"foreignKey:TalentTreeID;references:TraitTreeID" json:"classNodes"`
+	SpecNodes     []TalentNode  `gorm:"foreignKey:TalentTreeID;references:TraitTreeID" json:"specNodes"`
+	HeroNodes     []TalentNode  `gorm:"foreignKey:TalentTreeID;references:TraitTreeID" json:"heroNodes"`
+	SubTreeNodes  []SubTreeNode `gorm:"foreignKey:TalentTreeID;references:TraitTreeID" json:"subTreeNodes"`
+	FullNodeOrder pq.Int64Array `gorm:"type:integer[]" json:"fullNodeOrder"`
 }
 
-// TalentEntry represents an entry in a talent node
+type TalentNode struct {
+	gorm.Model   `json:"-"`
+	TalentTreeID int           `json:"-"`
+	NodeID       int           `gorm:"uniqueIndex" json:"id"`
+	NodeType     string        `json:"nodeType"`
+	Name         string        `json:"name"`
+	Type         string        `json:"type"`
+	PosX         int           `json:"posX"`
+	PosY         int           `json:"posY"`
+	MaxRanks     int           `json:"maxRanks"`
+	EntryNode    bool          `json:"entryNode"`
+	ReqPoints    int           `json:"reqPoints,omitempty"`
+	FreeNode     bool          `json:"freeNode,omitempty"`
+	Next         pq.Int64Array `gorm:"type:integer[]" json:"next"`
+	Prev         pq.Int64Array `gorm:"type:integer[]" json:"prev"`
+	Entries      []TalentEntry `gorm:"foreignKey:NodeID;references:NodeID" json:"entries"`
+}
+
 type TalentEntry struct {
 	gorm.Model   `json:"-"`
-	NodeID       int    `json:"nodeId"`
+	NodeID       int    `json:"-"`
 	EntryID      int    `json:"id"`
 	DefinitionID int    `json:"definitionId"`
 	MaxRanks     int    `json:"maxRanks"`
@@ -81,9 +50,27 @@ type TalentEntry struct {
 	Index        int    `json:"index"`
 }
 
-// FullNodeOrder represents the full node order for a specific talent tree
-type FullNodeOrder struct {
-	gorm.Model  `json:"-"`
-	TraitTreeID int           `json:"traitTreeId"`
-	NodeOrder   pq.Int64Array `gorm:"type:integer[]"`
+type SubTreeNode struct {
+	gorm.Model    `json:"-"`
+	TalentTreeID  int            `json:"-"`
+	SubTreeNodeID int            `json:"id" gorm:"uniqueIndex:idx_sub_tree_node_id_talent_tree_id"`
+	Name          string         `json:"name"`
+	Type          string         `json:"type"`
+	PosX          int            `json:"posX"`
+	PosY          int            `json:"posY"`
+	EntryNode     bool           `json:"entryNode"`
+	Entries       []SubTreeEntry `gorm:"foreignKey:SubTreeNodeID;references:SubTreeNodeID" json:"entries"`
+	Nodes         []TalentNode   `gorm:"many2many:sub_tree_node_talents;" json:"-"`
+}
+
+type SubTreeEntry struct {
+	gorm.Model      `json:"-"`
+	SubTreeNodeID   int           `json:"subTreeNodeId"`
+	EntryID         int           `json:"id"`
+	Type            string        `json:"type"`
+	Name            string        `json:"name"`
+	TraitSubTreeID  int           `json:"traitSubTreeId"`
+	TraitTreeID     int           `json:"traitTreeId"`
+	AtlasMemberName string        `json:"atlasMemberName"`
+	Nodes           pq.Int64Array `gorm:"type:integer[]" json:"nodes"`
 }
