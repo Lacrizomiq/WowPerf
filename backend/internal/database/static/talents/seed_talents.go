@@ -287,7 +287,7 @@ func processSubTreeNodes(tx *gorm.DB, subTreeNodes []models.SubTreeNode, talentT
 			var talentNode models.TalentNode
 			if err := tx.Where("node_id = ? AND talent_tree_id = ?", nodeID, talentTreeID).First(&talentNode).Error; err != nil {
 				if err == gorm.ErrRecordNotFound {
-					log.Printf("TalentNode %d not found for SubTreeNode %d", nodeID, currentSubTreeNode.SubTreeNodeID)
+					log.Printf("TalentNode %v not found for SubTreeNode %d", nodeID, currentSubTreeNode.SubTreeNodeID)
 					continue
 				}
 				return err
