@@ -46,9 +46,9 @@ func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, 
 
 	var talentTree talents.TalentTree
 	err = db.Where("trait_tree_id = ? AND spec_id = ?", treeID, specID).
-		Preload("ClassNodes").
-		Preload("SpecNodes").
-		Preload("HeroNodes").
+		Preload("ClassNodes.Entries").
+		Preload("SpecNodes.Entries").
+		Preload("HeroNodes.Entries").
 		First(&talentTree).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get talent tree: %w", err)
