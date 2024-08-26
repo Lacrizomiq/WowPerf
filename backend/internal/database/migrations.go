@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	mythicplus "wowperf/internal/models/mythicplus"
 	talents "wowperf/internal/models/talents"
 
@@ -33,35 +34,60 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	// Add unique constraint on trait_tree_id
-	if err := db.Exec("ALTER TABLE talent_trees ADD CONSTRAINT uni_talent_trees_trait_tree_id UNIQUE (trait_tree_id)").Error; err != nil {
-		return err
+	// Helper function to check and add/update constraints
+	addOrUpdateConstraint := func(tableName, constraintName, constraintDefinition string) error {
+		var constraintExists int64
+		db.Raw(fmt.Sprintf("SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_name = '%s' AND constraint_name = '%s'", tableName, constraintName)).Scan(&constraintExists)
+
+		if constraintExists == 0 {
+			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
+				return err
+			}
+		} else {
+			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s", tableName, constraintName)).Error; err != nil {
+				return err
+			}
+			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
-	// Add unique constraint on node_id in talent_nodes
-	if err := db.Exec("ALTER TABLE talent_nodes ADD CONSTRAINT uni_talent_nodes_node_id UNIQUE (node_id)").Error; err != nil {
-		return err
-	}
-
-	// Add foreign key constraints
+	// Add or update constraints
 	constraints := []struct {
+		tableName            string
+		constraintName       string
+		constraintDefinition string
+	}{
+		{"talent_nodes", "uni_talent_nodes_node_tree_spec", "UNIQUE (node_id, talent_tree_id, spec_id)"},
+		{"talent_entries", "uni_talent_entries_entry_node_tree_spec", "UNIQUE (entry_id, node_id, talent_tree_id, spec_id)"},
+		{"talent_trees", "uni_talent_trees_trait_tree_spec_id", "UNIQUE (trait_tree_id, spec_id)"},
+		{"sub_tree_nodes", "uni_sub_tree_nodes_id_tree_spec", "UNIQUE (sub_tree_node_id, talent_tree_id, spec_id)"},
+	}
+
+	for _, c := range constraints {
+		if err := addOrUpdateConstraint(c.tableName, c.constraintName, c.constraintDefinition); err != nil {
+			return err
+		}
+	}
+
+	// Update foreign key constraints
+	foreignKeys := []struct {
 		table      string
 		constraint string
 		query      string
 	}{
-		{"talent_nodes", "fk_talent_trees", "ALTER TABLE talent_nodes ADD CONSTRAINT fk_talent_trees FOREIGN KEY (talent_tree_id) REFERENCES talent_trees(trait_tree_id)"},
-		{"talent_entries", "fk_talent_nodes", "ALTER TABLE talent_entries ADD CONSTRAINT fk_talent_nodes FOREIGN KEY (node_id) REFERENCES talent_nodes(node_id)"},
-		{"sub_tree_nodes", "fk_talent_trees_sub", "ALTER TABLE sub_tree_nodes ADD CONSTRAINT fk_talent_trees_sub FOREIGN KEY (talent_tree_id) REFERENCES talent_trees(trait_tree_id)"},
+		{"talent_nodes", "fk_talent_trees", "ALTER TABLE talent_nodes ADD CONSTRAINT fk_talent_trees FOREIGN KEY (talent_tree_id, spec_id) REFERENCES talent_trees(trait_tree_id, spec_id)"},
+		{"talent_entries", "fk_talent_trees_entries", "ALTER TABLE talent_entries ADD CONSTRAINT fk_talent_trees_entries FOREIGN KEY (talent_tree_id, spec_id) REFERENCES talent_trees(trait_tree_id, spec_id)"},
+		{"sub_tree_nodes", "fk_talent_trees_sub", "ALTER TABLE sub_tree_nodes ADD CONSTRAINT fk_talent_trees_sub FOREIGN KEY (talent_tree_id, spec_id) REFERENCES talent_trees(trait_tree_id, spec_id)"},
 		{"sub_tree_entries", "fk_sub_tree_nodes_entries", "ALTER TABLE sub_tree_entries ADD CONSTRAINT fk_sub_tree_nodes_entries FOREIGN KEY (sub_tree_node_id) REFERENCES sub_tree_nodes(sub_tree_node_id)"},
 	}
 
-	for _, c := range constraints {
-		var count int64
-		db.Raw("SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_name = ? AND constraint_name = ?", c.table, c.constraint).Scan(&count)
-		if count == 0 {
-			if err := db.Exec(c.query).Error; err != nil {
-				return err
-			}
+	for _, fk := range foreignKeys {
+		db.Exec(fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s", fk.table, fk.constraint))
+		if err := db.Exec(fk.query).Error; err != nil {
+			return err
 		}
 	}
 

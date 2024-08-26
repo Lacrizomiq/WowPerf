@@ -40,49 +40,35 @@ type TalentLoadout struct {
 	TreeID             int          `json:"tree_id"`
 	ClassTalents       []TalentNode `json:"class_talents"`
 	SpecTalents        []TalentNode `json:"spec_talents"`
+	HeroTalents        []TalentNode `json:"hero_talents"`
 }
 
 type TalentNode struct {
-	Node struct {
-		ID        int           `json:"id"`
-		TreeID    int           `json:"treeId"`
-		Type      int           `json:"type"`
-		Entries   []TalentEntry `json:"entries"`
-		Important bool          `json:"important"`
-		PosX      int           `json:"posX"`
-		PosY      int           `json:"posY"`
-		Row       int           `json:"row"`
-		Col       int           `json:"col"`
-	} `json:"node"`
-	EntryIndex       int  `json:"entryIndex"`
-	IncludeInSummary bool `json:"includeInSummary,omitempty"`
-}
-
-type TalentNodeInfo struct {
-	ID        int           `json:"id"`
-	TreeID    int           `json:"treeId"`
-	Type      int           `json:"type"`
-	Entries   []TalentEntry `json:"entries"`
-	Important bool          `json:"important"`
+	NodeID    int           `json:"id"`
+	NodeType  string        `json:"nodeType"`
+	Name      string        `json:"name"`
+	Type      string        `json:"type"`
 	PosX      int           `json:"posX"`
 	PosY      int           `json:"posY"`
-	Row       int           `json:"row"`
-	Col       int           `json:"col"`
+	MaxRanks  int           `json:"maxRanks"`
+	EntryNode bool          `json:"entryNode"`
+	ReqPoints int           `json:"reqPoints,omitempty"`
+	FreeNode  bool          `json:"freeNode,omitempty"`
+	Next      []int         `json:"next"`
+	Prev      []int         `json:"prev"`
+	Entries   []TalentEntry `json:"entries"`
+	Rank      int           `json:"rank"`
 }
 
 type TalentEntry struct {
-	TalentID int   `json:"talent_id"`
-	Type     int   `json:"type"`
-	Rank     int   `json:"rank"`
-	Spell    Spell `json:"spell"`
-}
-
-type Spell struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Icon    string `json:"icon"`
-	IconURL string `json:"icon_url"`
-	School  int    `json:"school"`
+	EntryID      int    `json:"id"`
+	DefinitionID int    `json:"definitionId"`
+	MaxRanks     int    `json:"maxRanks"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	SpellID      int    `json:"spellId"`
+	Icon         string `json:"icon"`
+	Index        int    `json:"index"`
 }
 
 type Gear struct {
