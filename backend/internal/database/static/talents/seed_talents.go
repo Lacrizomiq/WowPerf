@@ -17,19 +17,23 @@ const (
 	talentsFilePath = "./static/talents.json"
 )
 
+// TalentTreeInput represents the input structure for a talent tree
 type TalentTreeInput struct {
 	TraitTreeID   int                  `json:"traitTreeId"`
 	ClassName     string               `json:"className"`
 	ClassID       int                  `json:"classId"`
+	ClassIcon     string               `json:"classIcon"`
 	SpecName      string               `json:"specName"`
 	SpecID        int                  `json:"specId"`
+	SpecIcon      string               `json:"specIcon"`
 	ClassNodes    []models.TalentNode  `json:"classNodes"`
 	SpecNodes     []models.TalentNode  `json:"specNodes"`
-	HeroNodes     []models.TalentNode  `json:"heroNodes"`
+	HeroNodes     []models.HeroNode    `json:"heroNodes"` // Changed to HeroNode
 	SubTreeNodes  []models.SubTreeNode `json:"subTreeNodes"`
 	FullNodeOrder []int                `json:"fullNodeOrder"`
 }
 
+// SeedTalents seeds the database with talent tree data
 func SeedTalents(db *gorm.DB) error {
 	log.Println("Seeding talents...")
 	db.Logger = db.Logger.LogMode(logger.Silent)
@@ -58,7 +62,9 @@ func SeedTalents(db *gorm.DB) error {
 				SpecID:        tree.SpecID,
 				ClassName:     tree.ClassName,
 				ClassID:       tree.ClassID,
+				ClassIcon:     tree.ClassIcon,
 				SpecName:      tree.SpecName,
+				SpecIcon:      tree.SpecIcon,
 				FullNodeOrder: fullNodeOrder,
 			}
 
@@ -77,7 +83,8 @@ func SeedTalents(db *gorm.DB) error {
 			if err := processNodes(tx, tree.SpecNodes, tree.TraitTreeID, tree.SpecID, "spec"); err != nil {
 				return err
 			}
-			if err := processNodes(tx, tree.HeroNodes, tree.TraitTreeID, tree.SpecID, "hero"); err != nil {
+			// Changed to process HeroNodes
+			if err := processHeroNodes(tx, tree.HeroNodes, tree.TraitTreeID, tree.SpecID); err != nil {
 				return err
 			}
 			if err := processSubTreeNodes(tx, tree.SubTreeNodes, tree.TraitTreeID, tree.SpecID); err != nil {
@@ -90,6 +97,7 @@ func SeedTalents(db *gorm.DB) error {
 	})
 }
 
+// processNodes handles the creation or update of TalentNodes
 func processNodes(tx *gorm.DB, nodes []models.TalentNode, talentTreeID int, specID int, nodeType string) error {
 	for _, node := range nodes {
 		var existingNode models.TalentNode
@@ -161,6 +169,79 @@ func processNodes(tx *gorm.DB, nodes []models.TalentNode, talentTreeID int, spec
 	return nil
 }
 
+// processHeroNodes handles the creation or update of HeroNodes
+func processHeroNodes(tx *gorm.DB, nodes []models.HeroNode, talentTreeID int, specID int) error {
+	for _, node := range nodes {
+		var existingNode models.HeroNode
+		err := tx.Where("node_id = ? AND talent_tree_id = ? AND spec_id = ?", node.NodeID, talentTreeID, specID).First(&existingNode).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return err
+		}
+
+		currentNode := models.HeroNode{
+			TalentTreeID: talentTreeID,
+			SpecID:       specID,
+			NodeID:       node.NodeID,
+			Name:         node.Name,
+			Type:         node.Type,
+			PosX:         node.PosX,
+			PosY:         node.PosY,
+			MaxRanks:     node.MaxRanks,
+			EntryNode:    node.EntryNode,
+			SubTreeID:    node.SubTreeID,
+			RequiresNode: node.RequiresNode,
+			Next:         node.Next,
+			Prev:         node.Prev,
+			FreeNode:     node.FreeNode,
+		}
+
+		if err == gorm.ErrRecordNotFound {
+			if err := tx.Create(&currentNode).Error; err != nil {
+				return err
+			}
+		} else {
+			if err := tx.Model(&existingNode).Updates(currentNode).Error; err != nil {
+				return err
+			}
+		}
+
+		// Process entries
+		for _, entry := range node.Entries {
+			var existingEntry models.HeroEntry
+			err := tx.Where("node_id = ? AND talent_tree_id = ? AND spec_id = ? AND entry_id = ?", currentNode.NodeID, talentTreeID, specID, entry.EntryID).First(&existingEntry).Error
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return err
+			}
+
+			newEntry := models.HeroEntry{
+				NodeID:       currentNode.NodeID,
+				TalentTreeID: talentTreeID,
+				SpecID:       specID,
+				EntryID:      entry.EntryID,
+				DefinitionID: entry.DefinitionID,
+				MaxRanks:     entry.MaxRanks,
+				Type:         entry.Type,
+				Name:         entry.Name,
+				SpellID:      entry.SpellID,
+				Icon:         entry.Icon,
+				Index:        entry.Index,
+			}
+
+			if err == gorm.ErrRecordNotFound {
+				if err := tx.Create(&newEntry).Error; err != nil {
+					return err
+				}
+			} else {
+				if err := tx.Model(&existingEntry).Updates(newEntry).Error; err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// processSubTreeNodes handles the creation or update of SubTreeNodes
 func processSubTreeNodes(tx *gorm.DB, subTreeNodes []models.SubTreeNode, talentTreeID int, specID int) error {
 	log.Printf("Processing %d SubTreeNodes for TalentTree %d, SpecID %d", len(subTreeNodes), talentTreeID, specID)
 
@@ -243,24 +324,25 @@ func processSubTreeNodes(tx *gorm.DB, subTreeNodes []models.SubTreeNode, talentT
 				}
 				log.Printf("Updated SubTreeEntry %d for SubTreeNode %d", entry.EntryID, currentSubTreeNode.SubTreeNodeID)
 			}
-		}
 
-		// Process associated nodes
-		for _, nodeID := range subTreeNode.Nodes {
-			var talentNode models.TalentNode
-			if err := tx.Where("node_id = ? AND talent_tree_id = ? AND spec_id = ?", nodeID, talentTreeID, specID).First(&talentNode).Error; err != nil {
-				if err == gorm.ErrRecordNotFound {
-					log.Printf("TalentNode %v not found for SubTreeNode %d", nodeID, currentSubTreeNode.SubTreeNodeID)
-					continue
+			// Process associated nodes for each SubTreeEntry
+			for _, nodeID := range entry.Nodes {
+				var talentNode models.TalentNode
+				if err := tx.Where("node_id = ? AND talent_tree_id = ? AND spec_id = ?", nodeID, talentTreeID, specID).First(&talentNode).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						log.Printf("TalentNode %v not found for SubTreeEntry %d", nodeID, entry.EntryID)
+						continue
+					}
+					return err
 				}
-				return err
-			}
 
-			if err := tx.Exec("INSERT INTO sub_tree_node_talents (sub_tree_node_id, talent_node_id) VALUES (?, ?) ON CONFLICT DO NOTHING", currentSubTreeNode.ID, talentNode.ID).Error; err != nil {
-				log.Printf("Error associating TalentNode %d with SubTreeNode %d: %v", talentNode.ID, currentSubTreeNode.ID, err)
-				return err
+				log.Printf("Attempting to associate TalentNode %d with SubTreeNode %d", talentNode.ID, currentSubTreeNode.ID)
+				if err := tx.Exec("INSERT INTO sub_tree_node_talents (sub_tree_node_id, talent_node_id) VALUES (?, ?) ON CONFLICT DO NOTHING", currentSubTreeNode.ID, talentNode.ID).Error; err != nil {
+					log.Printf("Error inserting association between SubTreeNode %d and TalentNode %d: %v", currentSubTreeNode.ID, talentNode.ID, err)
+					return err
+				}
+				log.Printf("Successfully associated TalentNode %d with SubTreeNode %d", talentNode.ID, currentSubTreeNode.ID)
 			}
-			log.Printf("Associated TalentNode %d with SubTreeNode %d", talentNode.ID, currentSubTreeNode.ID)
 		}
 	}
 	return nil
