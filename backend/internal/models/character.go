@@ -34,55 +34,97 @@ type CharacterProfile struct {
 }
 
 type TalentLoadout struct {
-	LoadoutSpecID      int          `json:"loadout_spec_id"`
-	LoadoutText        string       `json:"loadout_text"`
-	EncodedLoadoutText string       `json:"encoded_loadout_text"`
-	TreeID             int          `json:"tree_id"`
-	ClassTalents       []TalentNode `json:"class_talents"`
-	SpecTalents        []TalentNode `json:"spec_talents"`
+	LoadoutSpecID      int           `json:"loadout_spec_id"`
+	TreeID             int           `json:"tree_id"`
+	LoadoutText        string        `json:"loadout_text"`
+	EncodedLoadoutText string        `json:"encoded_loadout_text"`
+	ClassIcon          string        `json:"class_icon"`
+	SpecIcon           string        `json:"spec_icon"`
+	ClassTalents       []TalentNode  `json:"class_talents"`
+	SpecTalents        []TalentNode  `json:"spec_talents"`
+	SubTreeNodes       []SubTreeNode `json:"sub_tree_nodes"`
+	HeroTalents        []HeroTalent  `json:"hero_talents"`
 }
 
 type TalentNode struct {
-	Node struct {
-		ID        int           `json:"id"`
-		TreeID    int           `json:"treeId"`
-		Type      int           `json:"type"`
-		Entries   []TalentEntry `json:"entries"`
-		Important bool          `json:"important"`
-		PosX      int           `json:"posX"`
-		PosY      int           `json:"posY"`
-		Row       int           `json:"row"`
-		Col       int           `json:"col"`
-	} `json:"node"`
-	EntryIndex       int  `json:"entryIndex"`
-	IncludeInSummary bool `json:"includeInSummary,omitempty"`
-}
-
-type TalentNodeInfo struct {
-	ID        int           `json:"id"`
-	TreeID    int           `json:"treeId"`
-	Type      int           `json:"type"`
-	Entries   []TalentEntry `json:"entries"`
-	Important bool          `json:"important"`
+	NodeID    int           `json:"id"`
+	NodeType  string        `json:"nodeType"`
+	Name      string        `json:"name"`
+	Type      string        `json:"type"`
 	PosX      int           `json:"posX"`
 	PosY      int           `json:"posY"`
-	Row       int           `json:"row"`
-	Col       int           `json:"col"`
+	MaxRanks  int           `json:"maxRanks"`
+	EntryNode bool          `json:"entryNode"`
+	ReqPoints int           `json:"reqPoints,omitempty"`
+	FreeNode  bool          `json:"freeNode,omitempty"`
+	Next      []int         `json:"next"`
+	Prev      []int         `json:"prev"`
+	Entries   []TalentEntry `json:"entries"`
+	Rank      int           `json:"rank"`
 }
 
 type TalentEntry struct {
-	TalentID int   `json:"talent_id"`
-	Type     int   `json:"type"`
-	Rank     int   `json:"rank"`
-	Spell    Spell `json:"spell"`
+	EntryID      int    `json:"id"`
+	DefinitionID int    `json:"definitionId"`
+	MaxRanks     int    `json:"maxRanks"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	SpellID      int    `json:"spellId"`
+	Icon         string `json:"icon"`
+	Index        int    `json:"index"`
 }
 
-type Spell struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Icon    string `json:"icon"`
-	IconURL string `json:"icon_url"`
-	School  int    `json:"school"`
+type HeroTalent struct {
+	ID             int         `json:"id"`
+	Type           string      `json:"type"`
+	Name           string      `json:"name"`
+	TraitSubTreeID int         `json:"traitSubTreeId"`
+	Nodes          []int       `json:"nodes"`
+	Rank           int         `json:"rank"`
+	Entries        []HeroEntry `json:"entries"`
+}
+
+type HeroEntry struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	MaxRanks  int    `json:"maxRanks"`
+	EntryNode bool   `json:"entryNode"`
+	SubTreeID int    `json:"subTreeId"`
+	FreeNode  bool   `json:"freeNode"`
+	SpellID   int    `json:"spellId"`
+	Icon      string `json:"icon"`
+}
+
+type HeroNode struct {
+	ID        int         `json:"id"`
+	Name      string      `json:"name"`
+	Type      string      `json:"type"`
+	PosX      int         `json:"posX"`
+	PosY      int         `json:"posY"`
+	MaxRanks  int         `json:"maxRanks"`
+	EntryNode bool        `json:"entryNode"`
+	SubTreeID int         `json:"subTreeId"`
+	Next      []int       `json:"next"`
+	Prev      []int       `json:"prev"`
+	Entries   []HeroEntry `json:"entries"`
+	FreeNode  bool        `json:"freeNode"`
+}
+
+type SubTreeNode struct {
+	SubTreeNodeID int            `json:"id"`
+	Name          string         `json:"name"`
+	Type          string         `json:"type"`
+	Entries       []SubTreeEntry `json:"entries"`
+}
+
+type SubTreeEntry struct {
+	EntryID         int    `json:"id"`
+	Type            string `json:"type"`
+	Name            string `json:"name"`
+	TraitSubTreeID  int    `json:"traitSubTreeId"`
+	AtlasMemberName string `json:"atlasMemberName"`
+	Nodes           []int  `json:"nodes"`
 }
 
 type Gear struct {

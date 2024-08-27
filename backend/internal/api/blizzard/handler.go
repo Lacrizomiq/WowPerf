@@ -46,7 +46,7 @@ func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 		ItemMedia:                   gamedata.NewItemMediaHandler(service),
 		MythicKeystoneProfile:       profile.NewMythicKeystoneProfileHandler(service),
 		MythicKeystoneSeasonDetails: profile.NewMythicKeystoneSeasonDetailsHandler(service, db),
-		Specializations:             profile.NewSpecializationsHandler(service),
+		Specializations:             profile.NewSpecializationsHandler(service, db),
 		SpellMedia:                  gamedata.NewSpellMediaHandler(service),
 		TalentTreeIndex:             gamedata.NewTalentTreeIndexHandler(service),
 		TalentTree:                  gamedata.NewTalentTreeHandler(service),

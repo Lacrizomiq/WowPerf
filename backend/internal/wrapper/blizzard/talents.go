@@ -3,245 +3,282 @@ package wrapper
 import (
 	"fmt"
 	"log"
-	"net/url"
-	"regexp"
-	"strings"
-	"sync"
-	"wowperf/internal/models"
-	"wowperf/internal/services/blizzard"
-	"wowperf/internal/services/blizzard/gamedata"
+	profile "wowperf/internal/models"
+	talents "wowperf/internal/models/talents"
+
+	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
-func TransformCharacterTalents(data map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID, specID int) (*models.TalentLoadout, error) {
-	talentLoadout := &models.TalentLoadout{
-		LoadoutSpecID: specID,
-		TreeID:        treeID,
+// TransformCharacterTalents transforms character talent data using Blizzard API data and the local database.
+func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB, treeID, specID int) (*profile.TalentLoadout, error) {
+	talentTree, err := getTalentTreeFromDB(db, treeID, specID)
+	if err != nil {
+		log.Printf("Error getting talent tree from DB: %v", err)
+		return nil, fmt.Errorf("failed to get talent tree from database: %w", err)
 	}
 
-	specializations, ok := data["specializations"].([]interface{})
-	if !ok || len(specializations) == 0 {
-		return nil, fmt.Errorf("specializations not found or empty")
+	selectedHeroTalentTree := getSelectedHeroTalentTree(blizzardData, db)
+
+	talentLoadout := &profile.TalentLoadout{
+		LoadoutSpecID:      specID,
+		TreeID:             treeID,
+		LoadoutText:        getStringValue(blizzardData, "loadout_text"),
+		EncodedLoadoutText: getStringValue(blizzardData, "encoded_loadout_text"),
+		ClassIcon:          talentTree.ClassIcon,
+		SpecIcon:           talentTree.SpecIcon,
+		SubTreeNodes:       []profile.SubTreeNode{selectedHeroTalentTree},
 	}
 
-	var activeLoadout map[string]interface{}
-	for _, spec := range specializations {
-		specMap := spec.(map[string]interface{})
-		loadouts := specMap["loadouts"].([]interface{})
-		for _, loadout := range loadouts {
-			loadoutMap := loadout.(map[string]interface{})
-			if loadoutMap["is_active"].(bool) {
-				activeLoadout = loadoutMap
-				break
-			}
-		}
-		if activeLoadout != nil {
-			break
-		}
-	}
+	selectedClassTalents := getSelectedTalents(blizzardData, "selected_class_talents")
+	selectedSpecTalents := getSelectedTalents(blizzardData, "selected_spec_talents")
+	selectedHeroTalents := getSelectedTalents(blizzardData, "selected_hero_talents")
 
-	if activeLoadout == nil {
-		return nil, fmt.Errorf("active loadout not found")
-	}
-
-	talentLoadout.LoadoutText = activeLoadout["talent_loadout_code"].(string)
-	talentLoadout.EncodedLoadoutText = EncodeLoadoutString(talentLoadout.LoadoutText)
-
-	var wg sync.WaitGroup
-	classTalentsChan := make(chan []models.TalentNode, 1)
-	specTalentsChan := make(chan []models.TalentNode, 1)
-	errorChan := make(chan error, 2)
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		classTalents, err := processTalents(activeLoadout, "selected_class_talents", gameDataService, region, namespace, locale, treeID)
-		if err != nil {
-			errorChan <- err
-		} else {
-			classTalentsChan <- classTalents
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		specTalents, err := processTalents(activeLoadout, "selected_spec_talents", gameDataService, region, namespace, locale, specID)
-		if err != nil {
-			errorChan <- err
-		} else {
-			specTalentsChan <- specTalents
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(classTalentsChan)
-		close(specTalentsChan)
-		close(errorChan)
-	}()
-
-	select {
-	case err := <-errorChan:
-		return nil, err
-	case classTalents := <-classTalentsChan:
-		talentLoadout.ClassTalents = classTalents
-	}
-
-	select {
-	case err := <-errorChan:
-		return nil, err
-	case specTalents := <-specTalentsChan:
-		talentLoadout.SpecTalents = specTalents
-	}
+	talentLoadout.ClassTalents = transformTalents(talentTree.ClassNodes, selectedClassTalents)
+	talentLoadout.SpecTalents = transformTalents(talentTree.SpecNodes, selectedSpecTalents)
+	talentLoadout.HeroTalents = transformHeroTalents(talentTree.HeroNodes, selectedHeroTalents)
 
 	return talentLoadout, nil
 }
 
-func processTalents(data map[string]interface{}, key string, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) ([]models.TalentNode, error) {
-	var talents []models.TalentNode
-
-	talentsData, ok := data[key].([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("no talents found for key: %s", key)
-	}
-
-	var wg sync.WaitGroup
-	talentChan := make(chan models.TalentNode, len(talentsData))
-	errorChan := make(chan error, len(talentsData))
-
-	for _, talent := range talentsData {
-		wg.Add(1)
-		go func(talent interface{}) {
-			defer wg.Done()
-			talentMap, ok := talent.(map[string]interface{})
-			if !ok {
-				errorChan <- fmt.Errorf("invalid talent data structure")
-				return
-			}
-
-			node, err := transformTalentNode(talentMap, gameDataService, region, namespace, locale, treeID)
-			if err != nil {
-				errorChan <- err
-				return
-			}
-			talentChan <- node
-		}(talent)
-	}
-
-	go func() {
-		wg.Wait()
-		close(talentChan)
-		close(errorChan)
-	}()
-
-	for talent := range talentChan {
-		talents = append(talents, talent)
-	}
-
-	if len(errorChan) > 0 {
-		return nil, <-errorChan
-	}
-
-	return talents, nil
-}
-
-func transformTalentNode(talentMap map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string, treeID int) (models.TalentNode, error) {
-	node := models.TalentNode{}
-
-	node.Node.ID = safeGetInt(talentMap, "id")
-	node.Node.TreeID = treeID
-	node.EntryIndex = safeGetInt(talentMap, "entryIndex")
-
-	tooltip, ok := talentMap["tooltip"].(map[string]interface{})
-	if !ok {
-		return node, nil
-	}
-
-	spellTooltip, ok := tooltip["spell_tooltip"].(map[string]interface{})
-	if !ok {
-		return node, nil
-	}
-
-	entry, err := transformTalentEntry(spellTooltip, gameDataService, region, namespace, locale)
-
+// getTalentTreeFromDB retrieves the talent tree from the database
+func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, error) {
+	var talentTree talents.TalentTree
+	err := db.Where("trait_tree_id = ? AND spec_id = ?", treeID, specID).
+		Preload("ClassNodes.Entries").
+		Preload("SpecNodes.Entries").
+		Preload("HeroNodes.Entries").
+		Preload("SubTreeNodes").
+		First(&talentTree).Error
 	if err != nil {
-		return node, err
+		return nil, fmt.Errorf("failed to get talent tree: %w", err)
 	}
 
-	if talentInfo, ok := tooltip["talent"].(map[string]interface{}); ok {
-		entry.TalentID = safeGetInt(talentInfo, "id")
+	log.Printf("Number of SubTreeNodes: %d", len(talentTree.SubTreeNodes))
+	for _, node := range talentTree.SubTreeNodes {
+		log.Printf("SubTreeNode %d: %s", node.SubTreeNodeID, node.Name)
 	}
 
-	entry.Type = safeGetInt(talentMap, "type")
-	entry.Rank = safeGetInt(talentMap, "rank")
-
-	node.Node.Entries = append(node.Node.Entries, entry)
-
-	return node, nil
+	return &talentTree, nil
 }
 
-func transformTalentEntry(entryMap map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (models.TalentEntry, error) {
-	entry := models.TalentEntry{}
+// getSelectedTalents extracts the selected talents from Blizzard data
+func getSelectedTalents(data map[string]interface{}, key string) map[int]int {
+	selected := make(map[int]int)
+	log.Printf("Getting selected talents for key: %s", key)
 
-	spell, ok := entryMap["spell"].(map[string]interface{})
+	specializations, ok := data["specializations"].([]interface{})
 	if !ok {
-		return entry, fmt.Errorf("spell information not found")
+		log.Printf("Specializations not found or incorrect type")
+		return selected
 	}
 
-	entry.Spell.ID = safeGetInt(spell, "id")
-	entry.Spell.Name = safeGetString(spell, "name")
-	entry.Spell.Icon = safeGetString(spell, "icon")
+	for _, spec := range specializations {
+		specMap, ok := spec.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-	// Always try to retrieve spell media
-	mediaData, err := gamedata.GetSpellMedia(gameDataService, entry.Spell.ID, region, namespace, locale)
-	if err == nil {
-		if assets, ok := mediaData["assets"].([]interface{}); ok && len(assets) > 0 {
-			if asset, ok := assets[0].(map[string]interface{}); ok {
-				if value, ok := asset["value"].(string); ok {
-					entry.Spell.IconURL = value
-					// Extract icon name from URL
-					parts := strings.Split(value, "/")
-					if len(parts) > 0 {
-						entry.Spell.Icon = strings.TrimSuffix(parts[len(parts)-1], ".jpg")
-					}
+		loadouts, ok := specMap["loadouts"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for _, loadout := range loadouts {
+			loadoutMap, ok := loadout.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			talents, ok := loadoutMap[key].([]interface{})
+			if !ok {
+				continue
+			}
+
+			for _, talent := range talents {
+				t, ok := talent.(map[string]interface{})
+				if !ok {
+					continue
+				}
+
+				id, ok := t["id"].(float64)
+				if !ok {
+					continue
+				}
+
+				rank, ok := t["rank"].(float64)
+				if !ok {
+					continue
+				}
+
+				selected[int(id)] = int(rank)
+				log.Printf("Added talent: id=%d, rank=%d", int(id), int(rank))
+			}
+		}
+	}
+
+	return selected
+}
+
+func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB) profile.SubTreeNode {
+	var selectedTree map[string]interface{}
+	if specializations, ok := data["specializations"].([]interface{}); ok && len(specializations) > 0 {
+		if spec, ok := specializations[0].(map[string]interface{}); ok {
+			if loadouts, ok := spec["loadouts"].([]interface{}); ok && len(loadouts) > 0 {
+				if loadout, ok := loadouts[0].(map[string]interface{}); ok {
+					selectedTree = loadout["selected_hero_talent_tree"].(map[string]interface{})
 				}
 			}
 		}
-	} else {
-		log.Printf("Failed to get spell media for spell ID %d: %v", entry.Spell.ID, err)
 	}
 
-	return entry, nil
+	if selectedTree == nil {
+		log.Println("No selected hero talent tree found")
+		return profile.SubTreeNode{}
+	}
+
+	subTreeNodeID := int(selectedTree["id"].(float64))
+
+	var subTreeEntries []talents.SubTreeEntry
+	err := db.Where("trait_sub_tree_id = ?", subTreeNodeID).Find(&subTreeEntries).Error
+	if err != nil {
+		log.Printf("Error fetching sub tree entries for TraitSubTreeID %d: %v", subTreeNodeID, err)
+		return profile.SubTreeNode{}
+	}
+
+	if len(subTreeEntries) == 0 {
+		log.Printf("No sub tree entries found for TraitSubTreeID: %d", subTreeNodeID)
+		return profile.SubTreeNode{}
+	}
+
+	log.Printf("Found %d sub tree entries for TraitSubTreeID: %d", len(subTreeEntries), subTreeNodeID)
+
+	return profile.SubTreeNode{
+		SubTreeNodeID: subTreeNodeID,
+		Name:          selectedTree["name"].(string),
+		Type:          "subtree",
+		Entries:       transformSubTreeEntries(subTreeEntries),
+	}
 }
 
-func safeGetInt(m map[string]interface{}, key string) int {
-	if val, ok := m[key]; ok {
-		if intVal, ok := val.(float64); ok {
-			return int(intVal)
+// transformTalents transforms database talent nodes to profile talent nodes
+func transformTalents(dbNodes []talents.TalentNode, selectedTalents map[int]int) []profile.TalentNode {
+	var transformedNodes []profile.TalentNode
+	for _, dbNode := range dbNodes {
+		rank := selectedTalents[dbNode.NodeID]
+		profileNode := profile.TalentNode{
+			NodeID:    dbNode.NodeID,
+			NodeType:  dbNode.NodeType,
+			Name:      dbNode.Name,
+			Type:      dbNode.Type,
+			PosX:      dbNode.PosX,
+			PosY:      dbNode.PosY,
+			MaxRanks:  dbNode.MaxRanks,
+			EntryNode: dbNode.EntryNode,
+			ReqPoints: dbNode.ReqPoints,
+			FreeNode:  dbNode.FreeNode,
+			Next:      convertInt64ArrayToIntSlice(dbNode.Next),
+			Prev:      convertInt64ArrayToIntSlice(dbNode.Prev),
+			Entries:   transformTalentEntries(dbNode.Entries),
+			Rank:      rank,
+		}
+		transformedNodes = append(transformedNodes, profileNode)
+	}
+	return transformedNodes
+}
+
+// transformHeroTalents transforms hero nodes into hero talents
+func transformHeroTalents(dbNodes []talents.HeroNode, selectedTalents map[int]int) []profile.HeroTalent {
+	var transformedHeroTalents []profile.HeroTalent
+	for _, dbNode := range dbNodes {
+		rank := selectedTalents[dbNode.NodeID]
+		if rank > 0 {
+			heroTalent := profile.HeroTalent{
+				ID:             dbNode.NodeID,
+				Type:           dbNode.Type,
+				Name:           dbNode.Name,
+				TraitSubTreeID: dbNode.SubTreeID,
+				Nodes:          convertInt64ArrayToIntSlice(dbNode.Next),
+				Rank:           rank,
+				Entries:        transformHeroEntries(dbNode.Entries),
+			}
+			transformedHeroTalents = append(transformedHeroTalents, heroTalent)
 		}
 	}
-	return 0
+	return transformedHeroTalents
 }
 
-// safeGetString returns a string value from a map, or an empty string if the value is not found or is not a string
-func safeGetString(m map[string]interface{}, key string) string {
-	if val, ok := m[key]; ok {
-		if strVal, ok := val.(string); ok {
-			return strVal
+// transformHeroEntries transforms database hero entries to profile hero nodes
+func transformHeroEntries(dbEntries []talents.HeroEntry) []profile.HeroEntry {
+	var transformedEntries []profile.HeroEntry
+	for _, entry := range dbEntries {
+		transformedEntry := profile.HeroEntry{
+			ID:        entry.EntryID,
+			Name:      entry.Name,
+			Type:      entry.Type,
+			MaxRanks:  entry.MaxRanks,
+			EntryNode: true,
+			FreeNode:  true,
+			SpellID:   entry.SpellID,
+			Icon:      entry.Icon,
+		}
+		transformedEntries = append(transformedEntries, transformedEntry)
+	}
+	return transformedEntries
+}
+
+// transformSubTreeNodes transforms database subtree nodes to profile subtree nodes
+func transformSubTreeNodes(dbNodes []talents.SubTreeNode, selectedTree profile.SubTreeNode) []profile.SubTreeNode {
+	for _, dbNode := range dbNodes {
+		if dbNode.SubTreeNodeID == selectedTree.SubTreeNodeID {
+			return []profile.SubTreeNode{selectedTree}
 		}
 	}
-	return ""
+	return []profile.SubTreeNode{}
 }
 
-// EncodeLoadoutString encodes a loadout string for use in a URL
-func EncodeLoadoutString(loadout string) string {
-	if loadout == "" {
-		return ""
+// transformTalentEntries transforms database talent entries to profile talent entries
+func transformTalentEntries(dbEntries []talents.TalentEntry) []profile.TalentEntry {
+	var transformedEntries []profile.TalentEntry
+	for _, entry := range dbEntries {
+		transformedEntry := profile.TalentEntry{
+			EntryID:      entry.EntryID,
+			DefinitionID: entry.DefinitionID,
+			MaxRanks:     entry.MaxRanks,
+			Type:         entry.Type,
+			Name:         entry.Name,
+			SpellID:      entry.SpellID,
+			Icon:         entry.Icon,
+			Index:        entry.Index,
+		}
+		transformedEntries = append(transformedEntries, transformedEntry)
+	}
+	return transformedEntries
+}
+
+// transformSubTreeEntries transforms database subtree entries to profile subtree entries
+func transformSubTreeEntries(dbEntries []talents.SubTreeEntry) []profile.SubTreeEntry {
+	var transformedEntries []profile.SubTreeEntry
+	for _, entry := range dbEntries {
+		transformedEntry := profile.SubTreeEntry{
+			EntryID:         entry.EntryID,
+			Type:            entry.Type,
+			Name:            entry.Name,
+			TraitSubTreeID:  entry.TraitSubTreeID,
+			AtlasMemberName: entry.AtlasMemberName,
+			Nodes:           convertInt64ArrayToIntSlice(entry.Nodes),
+		}
+		transformedEntries = append(transformedEntries, transformedEntry)
 	}
 
-	// Encode the loadout string
-	encoded := url.QueryEscape(loadout)
+	return transformedEntries
+}
 
-	// Remove any double percent signs
-	re := regexp.MustCompile(`%2`)
-	return re.ReplaceAllString(encoded, "")
+// convertInt64ArrayToIntSlice converts pq.Int64Array to []int
+func convertInt64ArrayToIntSlice(arr pq.Int64Array) []int {
+	result := make([]int, len(arr))
+	for i, v := range arr {
+		result[i] = int(v)
+	}
+	return result
 }
