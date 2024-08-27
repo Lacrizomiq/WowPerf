@@ -35,9 +35,9 @@ type CharacterProfile struct {
 
 type TalentLoadout struct {
 	LoadoutSpecID      int          `json:"loadout_spec_id"`
+	TreeID             int          `json:"tree_id"`
 	LoadoutText        string       `json:"loadout_text"`
 	EncodedLoadoutText string       `json:"encoded_loadout_text"`
-	TreeID             int          `json:"tree_id"`
 	ClassTalents       []TalentNode `json:"class_talents"`
 	SpecTalents        []TalentNode `json:"spec_talents"`
 	HeroTalents        []TalentNode `json:"hero_talents"`
