@@ -22,6 +22,7 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 	selectedClassTalents := getSelectedTalents(blizzardData, "selected_class_talents")
 	selectedSpecTalents := getSelectedTalents(blizzardData, "selected_spec_talents")
 	selectedHeroTalents := getSelectedTalents(blizzardData, "selected_hero_talents")
+	encodedLoadoutText := getEncodedLoadoutText(blizzardData)
 
 	classTalents := make([]profile.TalentNode, 0)
 	specTalents := make([]profile.TalentNode, 0)
@@ -38,7 +39,6 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		}
 	}
 
-	// Vérification supplémentaire pour s'assurer que les talents sont dans la bonne catégorie
 	classTalents = filterTalentsByType(classTalents, "class")
 	specTalents = filterTalentsByType(specTalents, "spec")
 
@@ -46,7 +46,7 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		LoadoutSpecID:      specID,
 		TreeID:             treeID,
 		LoadoutText:        getStringValue(blizzardData, "loadout_text"),
-		EncodedLoadoutText: getStringValue(blizzardData, "encoded_loadout_text"),
+		EncodedLoadoutText: encodedLoadoutText,
 		ClassIcon:          talentTree.ClassIcon,
 		SpecIcon:           talentTree.SpecIcon,
 		ClassTalents:       classTalents,
@@ -59,6 +59,50 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 	sortTalentNodes(talentLoadout.SpecTalents)
 
 	return talentLoadout, nil
+}
+
+// getEncodedLoadoutText extracts the encoded loadout text from Blizzard data
+func getEncodedLoadoutText(data map[string]interface{}) string {
+	specializations, ok := data["specializations"].([]interface{})
+	if !ok {
+		log.Printf("Specializations not found or incorrect type")
+		return ""
+	}
+
+	for _, spec := range specializations {
+		specMap, ok := spec.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		loadouts, ok := specMap["loadouts"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for _, loadout := range loadouts {
+			loadoutMap, ok := loadout.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			isActive, ok := loadoutMap["is_active"].(bool)
+			if !ok || !isActive {
+				continue
+			}
+
+			talentLoadoutCode, ok := loadoutMap["talent_loadout_code"].(string)
+			if !ok {
+				log.Printf("talent_loadout_code not found or incorrect type in active loadout")
+				return ""
+			}
+
+			return talentLoadoutCode
+		}
+	}
+
+	log.Printf("No active loadout found")
+	return ""
 }
 
 // transformSingleTalent transforms a single talent node from the Blizzard API into a struct.
@@ -171,6 +215,7 @@ func getSelectedTalents(data map[string]interface{}, key string) map[int]int {
 	return selected
 }
 
+// getSelectedHeroTalentTree extracts the selected hero talent tree from Blizzard data
 func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB) profile.SubTreeNode {
 	var selectedTree map[string]interface{}
 	if specializations, ok := data["specializations"].([]interface{}); ok && len(specializations) > 0 {
