@@ -3,6 +3,7 @@ package wrapper
 import (
 	"fmt"
 	"log"
+	"sort"
 	profile "wowperf/internal/models"
 	talents "wowperf/internal/models/talents"
 
@@ -18,7 +19,28 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		return nil, fmt.Errorf("failed to get talent tree from database: %w", err)
 	}
 
-	selectedHeroTalentTree := getSelectedHeroTalentTree(blizzardData, db)
+	selectedClassTalents := getSelectedTalents(blizzardData, "selected_class_talents")
+	selectedSpecTalents := getSelectedTalents(blizzardData, "selected_spec_talents")
+	selectedHeroTalents := getSelectedTalents(blizzardData, "selected_hero_talents")
+
+	classTalents := make([]profile.TalentNode, 0)
+	specTalents := make([]profile.TalentNode, 0)
+
+	for _, dbNode := range talentTree.ClassNodes {
+		if node := transformSingleTalent(dbNode, selectedClassTalents[dbNode.NodeID]); node != nil {
+			classTalents = append(classTalents, *node)
+		}
+	}
+
+	for _, dbNode := range talentTree.SpecNodes {
+		if node := transformSingleTalent(dbNode, selectedSpecTalents[dbNode.NodeID]); node != nil {
+			specTalents = append(specTalents, *node)
+		}
+	}
+
+	// Vérification supplémentaire pour s'assurer que les talents sont dans la bonne catégorie
+	classTalents = filterTalentsByType(classTalents, "class")
+	specTalents = filterTalentsByType(specTalents, "spec")
 
 	talentLoadout := &profile.TalentLoadout{
 		LoadoutSpecID:      specID,
@@ -27,18 +49,47 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		EncodedLoadoutText: getStringValue(blizzardData, "encoded_loadout_text"),
 		ClassIcon:          talentTree.ClassIcon,
 		SpecIcon:           talentTree.SpecIcon,
-		SubTreeNodes:       []profile.SubTreeNode{selectedHeroTalentTree},
+		ClassTalents:       classTalents,
+		SpecTalents:        specTalents,
+		HeroTalents:        transformHeroTalents(talentTree.HeroNodes, selectedHeroTalents),
+		SubTreeNodes:       []profile.SubTreeNode{getSelectedHeroTalentTree(blizzardData, db)},
 	}
 
-	selectedClassTalents := getSelectedTalents(blizzardData, "selected_class_talents")
-	selectedSpecTalents := getSelectedTalents(blizzardData, "selected_spec_talents")
-	selectedHeroTalents := getSelectedTalents(blizzardData, "selected_hero_talents")
-
-	talentLoadout.ClassTalents = transformTalents(talentTree.ClassNodes, selectedClassTalents)
-	talentLoadout.SpecTalents = transformTalents(talentTree.SpecNodes, selectedSpecTalents)
-	talentLoadout.HeroTalents = transformHeroTalents(talentTree.HeroNodes, selectedHeroTalents)
+	sortTalentNodes(talentLoadout.ClassTalents)
+	sortTalentNodes(talentLoadout.SpecTalents)
 
 	return talentLoadout, nil
+}
+
+// transformSingleTalent transforms a single talent node from the Blizzard API into a struct.
+func transformSingleTalent(dbNode talents.TalentNode, rank int) *profile.TalentNode {
+	return &profile.TalentNode{
+		NodeID:    dbNode.NodeID,
+		NodeType:  dbNode.NodeType,
+		Name:      dbNode.Name,
+		Type:      dbNode.Type,
+		PosX:      dbNode.PosX,
+		PosY:      dbNode.PosY,
+		MaxRanks:  dbNode.MaxRanks,
+		EntryNode: dbNode.EntryNode,
+		ReqPoints: dbNode.ReqPoints,
+		FreeNode:  dbNode.FreeNode,
+		Next:      convertInt64ArrayToIntSlice(dbNode.Next),
+		Prev:      convertInt64ArrayToIntSlice(dbNode.Prev),
+		Entries:   transformTalentEntries(dbNode.Entries),
+		Rank:      rank,
+	}
+}
+
+// filterTalentsByType filters the talents by node type
+func filterTalentsByType(talents []profile.TalentNode, nodeType string) []profile.TalentNode {
+	filtered := make([]profile.TalentNode, 0)
+	for _, talent := range talents {
+		if talent.NodeType == nodeType {
+			filtered = append(filtered, talent)
+		}
+	}
+	return filtered
 }
 
 // getTalentTreeFromDB retrieves the talent tree from the database
@@ -161,32 +212,6 @@ func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB) profile
 	}
 }
 
-// transformTalents transforms database talent nodes to profile talent nodes
-func transformTalents(dbNodes []talents.TalentNode, selectedTalents map[int]int) []profile.TalentNode {
-	var transformedNodes []profile.TalentNode
-	for _, dbNode := range dbNodes {
-		rank := selectedTalents[dbNode.NodeID]
-		profileNode := profile.TalentNode{
-			NodeID:    dbNode.NodeID,
-			NodeType:  dbNode.NodeType,
-			Name:      dbNode.Name,
-			Type:      dbNode.Type,
-			PosX:      dbNode.PosX,
-			PosY:      dbNode.PosY,
-			MaxRanks:  dbNode.MaxRanks,
-			EntryNode: dbNode.EntryNode,
-			ReqPoints: dbNode.ReqPoints,
-			FreeNode:  dbNode.FreeNode,
-			Next:      convertInt64ArrayToIntSlice(dbNode.Next),
-			Prev:      convertInt64ArrayToIntSlice(dbNode.Prev),
-			Entries:   transformTalentEntries(dbNode.Entries),
-			Rank:      rank,
-		}
-		transformedNodes = append(transformedNodes, profileNode)
-	}
-	return transformedNodes
-}
-
 // transformHeroTalents transforms hero nodes into hero talents
 func transformHeroTalents(dbNodes []talents.HeroNode, selectedTalents map[int]int) []profile.HeroTalent {
 	var transformedHeroTalents []profile.HeroTalent
@@ -225,16 +250,6 @@ func transformHeroEntries(dbEntries []talents.HeroEntry) []profile.HeroEntry {
 		transformedEntries = append(transformedEntries, transformedEntry)
 	}
 	return transformedEntries
-}
-
-// transformSubTreeNodes transforms database subtree nodes to profile subtree nodes
-func transformSubTreeNodes(dbNodes []talents.SubTreeNode, selectedTree profile.SubTreeNode) []profile.SubTreeNode {
-	for _, dbNode := range dbNodes {
-		if dbNode.SubTreeNodeID == selectedTree.SubTreeNodeID {
-			return []profile.SubTreeNode{selectedTree}
-		}
-	}
-	return []profile.SubTreeNode{}
 }
 
 // transformTalentEntries transforms database talent entries to profile talent entries
@@ -281,4 +296,14 @@ func convertInt64ArrayToIntSlice(arr pq.Int64Array) []int {
 		result[i] = int(v)
 	}
 	return result
+}
+
+// sortTalentNodes sorts the talent nodes by their position in the tree
+func sortTalentNodes(nodes []profile.TalentNode) {
+	sort.Slice(nodes, func(i, j int) bool {
+		if nodes[i].PosY == nodes[j].PosY {
+			return nodes[i].PosX < nodes[j].PosX
+		}
+		return nodes[i].PosY < nodes[j].PosY
+	})
 }
