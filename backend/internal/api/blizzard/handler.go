@@ -49,7 +49,7 @@ func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 		Specializations:             profile.NewSpecializationsHandler(service, db),
 		SpellMedia:                  gamedata.NewSpellMediaHandler(service),
 		TalentTreeIndex:             gamedata.NewTalentTreeIndexHandler(service),
-		TalentTree:                  gamedata.NewTalentTreeHandler(service),
+		TalentTree:                  gamedata.NewTalentTreeHandler(db),
 		TalentTreeNodes:             gamedata.NewTalentTreeNodesHandler(service),
 		TalentIndex:                 gamedata.NewTalentIndexHandler(service),
 		TalentByID:                  gamedata.NewTalentByIDHandler(service),

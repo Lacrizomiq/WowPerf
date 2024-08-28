@@ -8,8 +8,10 @@ import (
 	"strings"
 	"wowperf/internal/services/blizzard"
 	gamedataService "wowperf/internal/services/blizzard/gamedata"
+	wrapper "wowperf/internal/wrapper/blizzard"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type TalentTreeIndexHandler struct {
@@ -17,7 +19,7 @@ type TalentTreeIndexHandler struct {
 }
 
 type TalentTreeHandler struct {
-	Service *blizzard.Service
+	DB *gorm.DB
 }
 
 type TalentTreeNodesHandler struct {
@@ -38,9 +40,9 @@ func NewTalentTreeIndexHandler(service *blizzard.Service) *TalentTreeIndexHandle
 	}
 }
 
-func NewTalentTreeHandler(service *blizzard.Service) *TalentTreeHandler {
+func NewTalentTreeHandler(db *gorm.DB) *TalentTreeHandler {
 	return &TalentTreeHandler{
-		Service: service,
+		DB: db,
 	}
 }
 
@@ -89,26 +91,14 @@ func (h *TalentTreeIndexHandler) GetTalentTreeIndex(c *gin.Context) {
 	c.JSON(http.StatusOK, index)
 }
 
-// GetTalentTree retrieves a talent tree by spec ID
+// GetTalentTree retrieves a talent tree by spec ID from the database
 func (h *TalentTreeHandler) GetTalentTree(c *gin.Context) {
-	if h.Service.GameDataClient == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Game Data Client not initialized"})
-		return
-	}
-
 	talentTreeID := c.Param("talentTreeId")
 	specID := c.Param("specId")
-	region := c.Query("region")
-	namespace := c.DefaultQuery("namespace", fmt.Sprintf("static-%s", region))
-	locale := c.DefaultQuery("locale", "en_US")
 
-	if namespace == "" {
-		namespace = fmt.Sprintf("static-%s", region)
-	}
+	log.Printf("Requesting talent tree for TalentTreeID: %s, SpecID: %s", talentTreeID, specID)
 
-	log.Printf("Requesting talent tree for TalentTreeID: %s, SpecID: %s, Region: %s, Namespace: %s, Locale: %s", talentTreeID, specID, region, namespace, locale)
-
-	if talentTreeID == "" || specID == "" || region == "" {
+	if talentTreeID == "" || specID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
 		return
 	}
@@ -125,10 +115,10 @@ func (h *TalentTreeHandler) GetTalentTree(c *gin.Context) {
 		return
 	}
 
-	data, err := gamedataService.GetTalentTree(h.Service.GameData, treeID, specIDInt, region, namespace, locale)
+	talentTree, err := wrapper.GetFullTalentTree(h.DB, treeID, specIDInt)
 	if err != nil {
 		log.Printf("Error retrieving talent tree: %v", err)
-		if strings.Contains(err.Error(), "404") {
+		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Talent tree not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve talent tree"})
@@ -136,7 +126,7 @@ func (h *TalentTreeHandler) GetTalentTree(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, data)
+	c.JSON(http.StatusOK, talentTree)
 }
 
 // GetTalentTreeNodes retrieves the nodes of a talent tree as well as links to associated playable specializations given a talent tree id
