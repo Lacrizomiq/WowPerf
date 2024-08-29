@@ -51,9 +51,6 @@ const TalentTree: React.FC<TalentTreeProps> = ({
 
   return (
     <div className="talent-tree p-4 bg-gradient-dark shadow-lg rounded-lg overflow-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        {className} - {specName} Talents
-      </h2>
       <div className="flex flex-col space-y-2">
         <ClassTalents
           talents={filteredClassTalents}
@@ -61,11 +58,13 @@ const TalentTree: React.FC<TalentTreeProps> = ({
           selectedTalents={selectedTalents.filter(
             (t) => t.nodeType === "class"
           )}
+          classIcon={talentData?.classIcon || ""}
         />
         <SpecTalents
           talents={filteredSpecTalents}
           specName={specName}
           selectedTalents={selectedTalents.filter((t) => t.nodeType === "spec")}
+          specIcon={talentData?.specIcon || ""}
         />
       </div>
     </div>
