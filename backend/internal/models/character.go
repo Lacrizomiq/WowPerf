@@ -79,6 +79,8 @@ type HeroTalent struct {
 	Type           string      `json:"type"`
 	Name           string      `json:"name"`
 	TraitSubTreeID int         `json:"traitSubTreeId"`
+	PosX           int         `json:"posX"`
+	PosY           int         `json:"posY"`
 	Nodes          []int       `json:"nodes"`
 	Rank           int         `json:"rank"`
 	Entries        []HeroEntry `json:"entries"`

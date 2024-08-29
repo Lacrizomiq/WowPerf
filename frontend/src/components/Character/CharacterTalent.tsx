@@ -51,6 +51,8 @@ interface HeroTalent {
   type: string;
   name: string;
   traitSubTreeId: number;
+  posX: number;
+  posY: number;
   nodes: number[];
   rank: number;
   entries: HeroEntry[];
@@ -171,6 +173,37 @@ export default function CharacterTalent({
     );
   };
 
+  const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
+    const subTreeName = talentLoadout.sub_tree_nodes[0]?.name;
+    const subtreeIcon =
+      talentLoadout.sub_tree_nodes[0]?.entries[0]?.atlasMemberName;
+    const iconUrl = subtreeIcon
+      ? `https://wow.zamimg.com/images/wow/TextureAtlas/live/${subtreeIcon}.webp`
+      : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+
+    return (
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+          <Image
+            src={iconUrl}
+            alt="Hero Talents"
+            width={40}
+            height={40}
+            className="mr-2"
+            unoptimized
+          />
+          <span>{subTreeName} Hero Talents</span>
+        </h3>
+
+        <div className="grid grid-cols-7 gap-2 mb-4">
+          {heroTalents.map((talent) => (
+            <HeroTalentIcon key={talent.id} talent={talent} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const getTalentCalculatorUrl = () => {
     if (
       !characterClass ||
@@ -240,6 +273,11 @@ export default function CharacterTalent({
               talentLoadout.spec_icon
             )}
           </div>
+          {talentLoadout.hero_talents.length > 0 && (
+            <div className="flex-1">
+              {renderHeroTalentsGroup(talentLoadout.hero_talents)}
+            </div>
+          )}
         </div>
       ) : (
         <TalentTree
@@ -294,6 +332,48 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
           {talent.rank > 0 && (
             <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
               {talent.rank}/{talent.maxRanks}
+            </div>
+          )}
+        </div>
+      </a>
+    </div>
+  );
+};
+
+interface HeroTalentIconProps {
+  talent: HeroTalent;
+}
+
+const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <div className="relative">
+      <a
+        href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
+        data-wowhead={`spell=${talent.entries[0].spellId}`}
+        className="block cursor-pointer talent active relative"
+        data-wh-icon-size="medium"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div className="relative w-10 h-10">
+          <Image
+            src={
+              imageError
+                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+                : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+            }
+            alt={talent.name}
+            width={40}
+            height={40}
+            className="w-full h-full rounded-md border-2 border-gray-700"
+            onError={() => setImageError(true)}
+            unoptimized
+          />
+          {talent.rank > 0 && (
+            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+              {talent.rank}/{talent.entries[0].maxRanks}
             </div>
           )}
         </div>

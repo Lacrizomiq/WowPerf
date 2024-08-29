@@ -268,6 +268,8 @@ func transformHeroTalents(dbNodes []talents.HeroNode, selectedTalents map[int]in
 				Type:           dbNode.Type,
 				Name:           dbNode.Name,
 				TraitSubTreeID: dbNode.SubTreeID,
+				PosX:           dbNode.PosX,
+				PosY:           dbNode.PosY,
 				Nodes:          convertInt64ArrayToIntSlice(dbNode.Next),
 				Rank:           rank,
 				Entries:        transformHeroEntries(dbNode.Entries),
