@@ -2,6 +2,7 @@ import React from "react";
 import { TalentNode } from "@/types/talents";
 import ClassTalents from "./ClassTalents";
 import SpecTalents from "./SpecTalents";
+import HeroSpecTalents from "./HeroTalent";
 import { useGetBlizzardTalentTree } from "@/hooks/useBlizzardApi";
 
 interface TalentTreeProps {
@@ -12,7 +13,7 @@ interface TalentTreeProps {
   locale: string;
   className: string;
   specName: string;
-  selectedTalents: TalentNode[]; // Add this prop
+  selectedTalents: TalentNode[];
 }
 
 const TalentTree: React.FC<TalentTreeProps> = ({
@@ -23,7 +24,7 @@ const TalentTree: React.FC<TalentTreeProps> = ({
   locale,
   className,
   specName,
-  selectedTalents, // Add this prop
+  selectedTalents,
 }) => {
   const {
     data: talentData,

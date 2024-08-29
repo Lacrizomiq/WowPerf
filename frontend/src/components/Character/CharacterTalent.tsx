@@ -4,71 +4,16 @@ import {
   useGetBlizzardCharacterProfile,
 } from "@/hooks/useBlizzardApi";
 import TalentTree from "@/components/TalentTree/TalentTree";
+import HeroTalentTree from "@/components/TalentTree/HeroTalentTree";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import { SquareArrowOutUpRight } from "lucide-react";
 import Image from "next/image";
-import { TalentNode } from "@/types/talents";
-
-interface CharacterTalentProps {
-  region: string;
-  realm: string;
-  name: string;
-  namespace: string;
-  locale: string;
-}
-
-interface TalentLoadout {
-  loadout_spec_id: number;
-  tree_id: number;
-  loadout_text: string;
-  encoded_loadout_text: string;
-  class_icon: string;
-  spec_icon: string;
-  class_talents: TalentNode[];
-  spec_talents: TalentNode[];
-  sub_tree_nodes: SubTreeNode[];
-  hero_talents: HeroTalent[];
-}
-
-interface SubTreeNode {
-  id: number;
-  name: string;
-  type: string;
-  entries: SubTreeEntry[];
-}
-
-interface SubTreeEntry {
-  id: number;
-  type: string;
-  name: string;
-  traitSubTreeId: number;
-  atlasMemberName: string;
-  nodes: number[];
-}
-
-interface HeroTalent {
-  id: number;
-  type: string;
-  name: string;
-  traitSubTreeId: number;
-  posX: number;
-  posY: number;
-  nodes: number[];
-  rank: number;
-  entries: HeroEntry[];
-}
-
-interface HeroEntry {
-  id: number;
-  name: string;
-  type: string;
-  maxRanks: number;
-  entryNode: boolean;
-  subTreeId: number;
-  freeNode: boolean;
-  spellId: number;
-  icon: string;
-}
+import {
+  TalentNode,
+  CharacterTalentProps,
+  TalentLoadout,
+  HeroTalent,
+} from "@/types/talents";
 
 export default function CharacterTalent({
   region,
@@ -152,7 +97,7 @@ export default function CharacterTalent({
 
     return (
       <div className="mb-6 shadow-xl glow-effect p-4">
-        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center pb-4">
           <Image
             src={icon}
             alt={title}
@@ -182,8 +127,8 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+      <div className="mb-6 shadow-xl glow-effect p-4">
+        <h3 className="text-lg font-semibold text-gradient-glow mb-4 pb-4 items-center flex justify-center">
           <Image
             src={iconUrl}
             alt="Hero Talents"
@@ -280,19 +225,33 @@ export default function CharacterTalent({
           )}
         </div>
       ) : (
-        <TalentTree
-          talentTreeId={talentLoadout.tree_id}
-          specId={profileData.spec_id}
-          region={region}
-          namespace={namespace}
-          locale={locale}
-          className={characterClass}
-          specName={activeSpecName}
-          selectedTalents={[
-            ...talentLoadout.class_talents,
-            ...talentLoadout.spec_talents,
-          ].filter((t) => t.rank > 0)}
-        />
+        <>
+          <TalentTree
+            talentTreeId={talentLoadout.tree_id}
+            specId={profileData.spec_id}
+            region={region}
+            namespace={namespace}
+            locale={locale}
+            className={characterClass}
+            specName={activeSpecName}
+            selectedTalents={[
+              ...talentLoadout.class_talents,
+              ...talentLoadout.spec_talents,
+            ].filter((t) => t.rank > 0)}
+          />
+          <HeroTalentTree
+            talentTreeId={talentLoadout.tree_id}
+            specId={profileData.spec_id}
+            region={region}
+            namespace={namespace}
+            locale={locale}
+            className={characterClass}
+            specName={activeSpecName}
+            selectedHeroTalentTree={[...talentLoadout.hero_talents].filter(
+              (t) => t.rank > 0
+            )}
+          />
+        </>
       )}
     </div>
   );
