@@ -77,3 +77,21 @@ export const getBlizzardCharacterSpecializations = async (
   );
   return data;
 };
+
+// Get all the talents tree for a talent tree ID and spec ID
+// Example : for a Shaman with the spec Restauration
+export const getBlizzardTalentTree = async (
+  talentTreeId: number,
+  specId: number,
+  region: string,
+  namespace: string,
+  locale: string
+) => {
+  const { data } = await api.get(
+    `/blizzard/data/talent-tree/${talentTreeId}/playable-specialization/${specId}`,
+    {
+      params: { region, namespace, locale },
+    }
+  );
+  return data;
+};

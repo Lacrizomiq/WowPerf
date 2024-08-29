@@ -112,3 +112,23 @@ export const useGetBlizzardCharacterSpecializations = (
       ),
   });
 };
+
+export const useGetBlizzardTalentTree = (
+  talentTreeId: number,
+  specId: number,
+  region: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: ["talentTree", talentTreeId, specId, region, namespace, locale],
+    queryFn: () =>
+      apiServices.getBlizzardTalentTree(
+        talentTreeId,
+        specId,
+        region,
+        namespace,
+        locale
+      ),
+  });
+};

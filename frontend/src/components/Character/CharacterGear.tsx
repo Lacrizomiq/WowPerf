@@ -3,6 +3,20 @@ import { useGetBlizzardCharacterEquipment } from "@/hooks/useBlizzardApi";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import Image from "next/image";
+/// <reference path="../../global.d.ts" />
+
+declare global {
+  interface Window {
+    $WowheadPower?: {
+      refreshLinks: () => void;
+    };
+    whTooltips?: {
+      renameLinks: boolean;
+      iconSize: string;
+      hideSpecs: string;
+    };
+  }
+}
 
 interface CharacterGearProps {
   region: string;
@@ -73,7 +87,11 @@ export default function CharacterGear({
   );
 
   useEffect(() => {
-    if (characterData && window.$WowheadPower) {
+    if (
+      characterData &&
+      typeof window !== "undefined" &&
+      window.$WowheadPower
+    ) {
       window.$WowheadPower.refreshLinks();
     }
   }, [characterData]);
