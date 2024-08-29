@@ -6,7 +6,6 @@ interface TalentGridProps {
   talents: TalentNode[];
   selectedTalents: TalentNode[];
 }
-
 const TalentGrid: React.FC<TalentGridProps> = ({
   talents,
   selectedTalents,
