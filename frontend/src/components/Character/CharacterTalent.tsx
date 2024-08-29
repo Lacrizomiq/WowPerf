@@ -250,6 +250,10 @@ export default function CharacterTalent({
           locale={locale}
           className={characterClass}
           specName={activeSpecName}
+          selectedTalents={[
+            ...talentLoadout.class_talents,
+            ...talentLoadout.spec_talents,
+          ].filter((t) => t.rank > 0)}
         />
       )}
     </div>

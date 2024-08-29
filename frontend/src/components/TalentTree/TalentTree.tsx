@@ -12,6 +12,7 @@ interface TalentTreeProps {
   locale: string;
   className: string;
   specName: string;
+  selectedTalents: TalentNode[]; // Add this prop
 }
 
 const TalentTree: React.FC<TalentTreeProps> = ({
@@ -22,6 +23,7 @@ const TalentTree: React.FC<TalentTreeProps> = ({
   locale,
   className,
   specName,
+  selectedTalents, // Add this prop
 }) => {
   const {
     data: talentData,
@@ -36,14 +38,35 @@ const TalentTree: React.FC<TalentTreeProps> = ({
   const classTalents = talentData?.classNodes || [];
   const specTalents = talentData?.specNodes || [];
 
+  // Filter out hero talents and ensure we only have class and spec talents
+  const filteredClassTalents = classTalents.filter(
+    (talent: TalentNode) => talent.nodeType === "class"
+  );
+  const filteredSpecTalents = specTalents.filter(
+    (talent: TalentNode) => talent.nodeType === "spec"
+  );
+
+  console.log("Filtered Class Talents:", filteredClassTalents);
+  console.log("Filtered Spec Talents:", filteredSpecTalents);
+
   return (
     <div className="talent-tree p-4 bg-gradient-dark shadow-lg rounded-lg overflow-auto">
       <h2 className="text-2xl font-bold mb-4 text-center">
-        Talent Build Summary
+        {className} - {specName} Talents
       </h2>
-      <div className="flex flex-col space-y-8">
-        <ClassTalents talents={classTalents} className={className} />
-        <SpecTalents talents={specTalents} specName={specName} />
+      <div className="flex flex-col space-y-2">
+        <ClassTalents
+          talents={filteredClassTalents}
+          className={className}
+          selectedTalents={selectedTalents.filter(
+            (t) => t.nodeType === "class"
+          )}
+        />
+        <SpecTalents
+          talents={filteredSpecTalents}
+          specName={specName}
+          selectedTalents={selectedTalents.filter((t) => t.nodeType === "spec")}
+        />
       </div>
     </div>
   );
