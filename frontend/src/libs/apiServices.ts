@@ -95,3 +95,18 @@ export const getBlizzardTalentTree = async (
   );
   return data;
 };
+
+export const getBlizzardMythicDungeonPerSeason = async (seasonSlug: string) => {
+  try {
+    const { data } = await api.get(
+      `/data/mythic-keystone/season/${seasonSlug}/dungeons`,
+      {
+        params: {},
+      }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error in getBlizzardMythicDungeonPerSeason:", error);
+    throw error;
+  }
+};

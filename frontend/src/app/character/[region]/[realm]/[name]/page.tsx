@@ -5,14 +5,15 @@ import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
+import MythicDungeon from "@/components/MythicPlus/MythicDungeon";
 import { useState } from "react";
 
 export default function CharacterLayout({
   params,
 }: {
-  params: { region: string; realm: string; name: string };
+  params: { region: string; realm: string; name: string; seasonSlug: string };
 }) {
-  const { region, realm, name } = params;
+  const { region, realm, name, seasonSlug } = params;
   const [selectedTab, setSelectedTab] = useState<string>("gear");
 
   useWowheadTooltips();
@@ -39,6 +40,8 @@ export default function CharacterLayout({
             locale="en_GB"
           />
         );
+      case "mythic-plus":
+        return <MythicDungeon seasonSlug={"season-tww-1"} />;
       default:
         return null;
     }

@@ -132,3 +132,10 @@ export const useGetBlizzardTalentTree = (
       ),
   });
 };
+
+export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
+  return useQuery({
+    queryKey: ["mythicDungeonPerSeason", seasonSlug],
+    queryFn: () => apiServices.getBlizzardMythicDungeonPerSeason(seasonSlug),
+  });
+};
