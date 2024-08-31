@@ -36,6 +36,7 @@ type Handler struct {
 	JournalInstanceIndex        *gamedata.JournalInstanceIndexHandler
 	JournalInstanceByID         *gamedata.JournalInstanceByIDHandler
 	JournalInstanceMedia        *gamedata.JournalInstanceMediaHandler
+	GetSeasonDungeons           *profile.GetSeasonDungeonsHandler
 }
 
 func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
@@ -66,6 +67,7 @@ func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 		JournalInstanceIndex:        gamedata.NewJournalInstanceIndexHandler(service),
 		JournalInstanceByID:         gamedata.NewJournalInstanceByIDHandler(service),
 		JournalInstanceMedia:        gamedata.NewJournalInstanceMediaHandler(service),
+		GetSeasonDungeons:           profile.NewGetSeasonDungeonsHandler(service, db),
 	}
 }
 
@@ -107,4 +109,6 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/journal-instance/index", h.JournalInstanceIndex.GetJournalInstanceIndex)
 	r.GET("/blizzard/data/journal-instance/:instanceId", h.JournalInstanceByID.GetJournalInstanceByID)
 	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.JournalInstanceMedia.GetJournalInstanceMedia)
+
+	r.GET("data/mythic-keystone/season/:seasonSlug/dungeons", h.GetSeasonDungeons.GetSeasonDungeons)
 }
