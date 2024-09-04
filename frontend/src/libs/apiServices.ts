@@ -21,6 +21,7 @@ export const getBlizzardCharacterProfile = async (
   }
 };
 
+// getBlizzardCharacterMythicPlusBestRuns retrieves the best runs for a character in a specific season
 export const getBlizzardCharacterMythicPlusBestRuns = async (
   region: string,
   realmSlug: string,
@@ -38,7 +39,13 @@ export const getBlizzardCharacterMythicPlusBestRuns = async (
     );
     return data;
   } catch (error) {
-    console.error("Error in getBlizzardCharacterProfile:", error);
+    console.error("Error in getBlizzardCharacterMythicPlusBestRuns:", error);
+    if (error instanceof Error && "response" in error) {
+      const axiosError = error as any;
+      console.error("Response data:", axiosError.response?.data);
+      console.error("Response status:", axiosError.response?.status);
+      console.error("Response headers:", axiosError.response?.headers);
+    }
     throw error;
   }
 };
@@ -94,4 +101,19 @@ export const getBlizzardTalentTree = async (
     }
   );
   return data;
+};
+
+export const getBlizzardMythicDungeonPerSeason = async (seasonSlug: string) => {
+  try {
+    const { data } = await api.get(
+      `/data/mythic-keystone/season/${seasonSlug}/dungeons`,
+      {
+        params: {},
+      }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error in getBlizzardMythicDungeonPerSeason:", error);
+    throw error;
+  }
 };

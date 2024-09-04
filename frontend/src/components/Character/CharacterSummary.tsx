@@ -42,7 +42,9 @@ export default function CharacterSummary({
           )}
         </div>
         <div>
-          <h2 className="text-3xl font-bold  text-gradient-glow">
+          <h2
+            className={`text-4xl font-bold class-color--${character.tree_id}`}
+          >
             {character.name}
           </h2>
           <p className="text-blue-100">

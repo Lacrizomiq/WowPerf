@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	models "wowperf/internal/models/mythicplus"
 	"wowperf/internal/services/blizzard"
 	"wowperf/internal/services/blizzard/profile"
 	wrapper "wowperf/internal/wrapper/blizzard"
@@ -22,6 +23,11 @@ type MythicKeystoneSeasonDetailsHandler struct {
 	DB      *gorm.DB
 }
 
+type GetSeasonDungeonsHandler struct {
+	Service *blizzard.Service
+	DB      *gorm.DB
+}
+
 func NewMythicKeystoneProfileHandler(service *blizzard.Service) *MythicKeystoneProfileHandler {
 	return &MythicKeystoneProfileHandler{
 		Service: service,
@@ -30,6 +36,13 @@ func NewMythicKeystoneProfileHandler(service *blizzard.Service) *MythicKeystoneP
 
 func NewMythicKeystoneSeasonDetailsHandler(service *blizzard.Service, db *gorm.DB) *MythicKeystoneSeasonDetailsHandler {
 	return &MythicKeystoneSeasonDetailsHandler{
+		Service: service,
+		DB:      db,
+	}
+}
+
+func NewGetSeasonDungeonsHandler(service *blizzard.Service, db *gorm.DB) *GetSeasonDungeonsHandler {
+	return &GetSeasonDungeonsHandler{
 		Service: service,
 		DB:      db,
 	}
@@ -105,4 +118,32 @@ func (h *MythicKeystoneSeasonDetailsHandler) GetCharacterMythicKeystoneSeasonBes
 
 	log.Printf("Data transformed successfully, returning %d runs", len(transformedData))
 	c.JSON(http.StatusOK, transformedData)
+}
+
+func (h *GetSeasonDungeonsHandler) GetSeasonDungeons(c *gin.Context) {
+	seasonSlug := c.Param("seasonSlug")
+
+	if seasonSlug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required parameters"})
+		return
+	}
+
+	var season models.Season
+	if err := h.DB.Preload("Dungeons.KeyStoneUpgrades").Where("slug = ?", seasonSlug).First(&season).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Season not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve season data"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"season": gin.H{
+			"name":      season.Name,
+			"shortName": season.ShortName,
+			"startsUS":  season.StartsUS,
+		},
+		"dungeons": season.Dungeons,
+	})
 }
