@@ -34,8 +34,7 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
             <span className="text-sm text-gray-400">{dungeon.ShortName}</span>
             {run && (
               <div className="mt-2 text-center">
-                <p className="text-sm">Level: {run.KeystoneLevel}</p>
-                <p className="text-sm">Score: {run.MythicRating.toFixed(2)}</p>
+                <p className="text-sm"> +{run.KeystoneLevel}</p>
               </div>
             )}
           </div>

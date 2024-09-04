@@ -77,7 +77,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
         mythicPlusRuns={mythicPlusRuns || []}
         onDungeonClick={handleDungeonClick}
       />
-      {selectedRun && <DungeonDetails run={selectedRun} />}
+      {selectedRun && <DungeonDetails run={selectedRun} region={region} />}
     </div>
   );
 };

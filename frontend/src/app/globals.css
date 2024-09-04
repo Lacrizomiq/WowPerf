@@ -72,6 +72,70 @@ body {
   text-shadow: 0 0 10px var(--color-electric-blue);
 }
 
+.class-color--795 {
+  color: #fff !important;
+}
+
+.class-color--750 {
+  color: #c41f3b !important;
+}
+
+.class-color--872 {
+  color: #33937f !important;
+}
+
+.class-color--850 {
+  color: #c79c6e !important;
+}
+
+.class-color--793 {
+  color: #ff7d0a !important;
+}
+
+.class-color--720 {
+  color: #9482c9 !important;
+}
+
+.class-color--1000 {
+  color: #00ff96 !important;
+}
+
+.class-color--854 {
+  color: #a330c9 !important;
+}
+
+.class-color--786 {
+  color: #0070de !important;
+}
+
+.class-color--790 {
+  color: #f58cba !important;
+}
+
+.class-color--774 {
+  color: #abd473 !important;
+}
+
+.class-color--852 {
+  color: #fff569 !important;
+}
+
+.class-color--658 {
+  color: #69ccf0 !important;
+}
+
+.item-quality--4 {
+  color: #a335ee;
+}
+
+.item-quality--3 {
+  color: #0070ff;
+}
+
+.item-quality--2 {
+  color: #1eff00;
+}
+
 @layer base {
   * {
     @apply border-border;

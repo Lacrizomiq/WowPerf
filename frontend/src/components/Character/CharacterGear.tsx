@@ -124,6 +124,19 @@ export default function CharacterGear({
     return params;
   };
 
+  const getItemQualityClass = (quality: number) => {
+    switch (quality) {
+      case 4:
+        return "item-quality--4";
+      case 3:
+        return "item-quality--3";
+      case 2:
+        return "item-quality--2";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="p-4 bg-gradient-dark shadow-lg m-12 flex justify-center items-center glow-effect">
       <style jsx global>{`
@@ -157,7 +170,9 @@ export default function CharacterGear({
                   />
                 </a>
                 <div className="ml-2 text-white text-sm">
-                  <div>{item.name}</div>
+                  <span className={getItemQualityClass(item.item_quality)}>
+                    {item.name}
+                  </span>
                   <div className="text-xs">{item.item_level}</div>
                 </div>
               </div>
@@ -197,7 +212,11 @@ export default function CharacterGear({
                   />
                 </a>
                 <div className="ml-2 text-white text-sm">
-                  <div>{item.name}</div>
+                  <div>
+                    <span className={getItemQualityClass(item.item_quality)}>
+                      {item.name}
+                    </span>
+                  </div>
                   <div className="text-xs">{item.item_level}</div>
                 </div>
               </div>
