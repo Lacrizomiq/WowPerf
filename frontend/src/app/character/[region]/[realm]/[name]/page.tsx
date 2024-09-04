@@ -5,7 +5,7 @@ import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
-import MythicDungeon from "@/components/MythicPlus/MythicDungeon";
+import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import { useState } from "react";
 
 export default function CharacterLayout({
@@ -41,7 +41,16 @@ export default function CharacterLayout({
           />
         );
       case "mythic-plus":
-        return <MythicDungeon seasonSlug={"season-tww-1"} />;
+        return (
+          <MythicDungeonOverview
+            characterName={name}
+            realmSlug={realm}
+            region={region}
+            namespace={`profile-${region}`}
+            locale="en_GB"
+            seasonSlug={seasonSlug || "season-tww-1"}
+          />
+        );
       default:
         return null;
     }

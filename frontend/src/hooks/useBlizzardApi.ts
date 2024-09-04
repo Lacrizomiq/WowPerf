@@ -1,5 +1,6 @@
 import * as apiServices from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MythicPlusRuns } from "@/types/mythicPlusRuns";
 
 export const useGetBlizzardCharacterProfile = (
   region: string,
@@ -28,6 +29,7 @@ export const useGetBlizzardCharacterProfile = (
   });
 };
 
+// useGetBlizzardCharacterMythicPlusBestRuns retrieves the best runs for a character in a specific season
 export const useGetBlizzardCharacterMythicPlusBestRuns = (
   region: string,
   realmSlug: string,
@@ -36,25 +38,25 @@ export const useGetBlizzardCharacterMythicPlusBestRuns = (
   locale: string,
   seasonId: string
 ) => {
-  return useQuery({
-    queryKey: [
-      "mythic-plus-best-runs",
-      seasonId,
-      region,
-      realmSlug,
-      characterName,
-      namespace,
-      locale,
-    ],
+  return useQuery<MythicPlusRuns[] | null>({
+    queryKey: ["mythic-plus-runs", region, realmSlug, characterName, seasonId],
     queryFn: async () => {
-      apiServices.getBlizzardCharacterMythicPlusBestRuns(
-        region,
-        realmSlug,
-        characterName,
-        namespace,
-        locale,
-        seasonId
-      );
+      try {
+        return await apiServices.getBlizzardCharacterMythicPlusBestRuns(
+          region,
+          realmSlug,
+          characterName,
+          namespace,
+          locale,
+          seasonId
+        );
+      } catch (error: any) {
+        if (error.response && error.response.status === 500) {
+          console.warn("No Mythic+ data available for this season");
+          return null;
+        }
+        throw error;
+      }
     },
   });
 };

@@ -10,6 +10,28 @@
   --color-midnight-blue: #191970;
   --color-royal-blue: #4169e1;
   --color-electric-blue: #00ffff;
+
+  /* shadcn/ui variables */
+  --background: 220 100% 2%;
+  --foreground: 0 0% 98%;
+  --card: 220 100% 2%;
+  --card-foreground: 0 0% 98%;
+  --popover: 220 100% 2%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+  --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,13 +43,13 @@
 }
 
 body {
+  color: white;
+  min-height: 100vh;
   background: linear-gradient(
-    135deg,
+    to bottom,
     var(--color-deep-blue),
     var(--color-midnight-blue)
   );
-  color: white;
-  min-height: 100vh;
 }
 
 .text-gradient-glow {
@@ -50,40 +72,11 @@ body {
   text-shadow: 0 0 10px var(--color-electric-blue);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-.talent-grid {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  aspect-ratio: 1 / 1;
-}
-
-.talent-icon {
-  position: relative;
-  width: 30px;
-  height: 30px;
-}
-
-.talent-icon.selected img {
-  border-color: goldenrod;
-  filter: brightness(100%);
-}
-
-.talent-icon.unselected img {
-  border-color: #444;
-  filter: brightness(50%);
-}
-
-.talent-tree {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.talent-icon.selected {
-  animation: glow 1.5s ease-in-out infinite alternate;
+  body {
+    @apply bg-background text-foreground;
+  }
 }
