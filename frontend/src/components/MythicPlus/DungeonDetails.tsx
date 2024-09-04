@@ -1,11 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { MythicPlusRuns } from "@/types/mythicPlusRuns";
+import Image from "next/image";
+import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 
 interface DungeonDetailsProps {
   run: MythicPlusRuns;
 }
 
 const DungeonDetails: React.FC<DungeonDetailsProps> = ({ run }) => {
+  useWowheadTooltips();
+
+  useEffect(() => {
+    if (window.$WowheadPower) {
+      window.$WowheadPower.refreshLinks();
+    }
+  }, [run]);
   return (
     <div className="mt-8 p-6 bg-deep-blue rounded-lg">
       <h2 className="text-2xl font-bold mb-4">
@@ -19,10 +28,25 @@ const DungeonDetails: React.FC<DungeonDetailsProps> = ({ run }) => {
           <p>Completed: {new Date(run.CompletedTimestamp).toLocaleString()}</p>
         </div>
         <div>
-          <p>Affixes:</p>
-          <ul>
+          <ul className="flex flex-wrap gap-2">
             {run.Affixes.map((affix) => (
-              <li key={affix.ID}>{affix.Name}</li>
+              <li key={affix.ID} className="flex flex-col items-center gap-2">
+                <a
+                  href={affix.WowheadURL}
+                  data-wowhead={`affix=${affix.ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src={`https://wow.zamimg.com/images/wow/icons/large/${affix.Icon}.jpg`}
+                    alt={affix.Name}
+                    width={44}
+                    height={44}
+                    unoptimized
+                  />
+                  <span>{affix.Name}</span>
+                </a>
+              </li>
             ))}
           </ul>
         </div>

@@ -47,6 +47,8 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     selectedSeason.id.toString()
   );
 
+  console.log("Mythic+ Runs Data:", mythicPlusRuns);
+
   const handleSeasonChange = (seasonSlug: string) => {
     const newSeason = seasons.find((s) => s.slug === seasonSlug);
     if (newSeason) {
