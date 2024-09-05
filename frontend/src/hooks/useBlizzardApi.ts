@@ -1,6 +1,6 @@
 import * as apiServices from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MythicPlusRuns } from "@/types/mythicPlusRuns";
+import { MythicPlusSeasonInfo } from "@/types/mythicPlusRuns";
 
 export const useGetBlizzardCharacterProfile = (
   region: string,
@@ -38,7 +38,7 @@ export const useGetBlizzardCharacterMythicPlusBestRuns = (
   locale: string,
   seasonId: string
 ) => {
-  return useQuery<MythicPlusRuns[] | null>({
+  return useQuery<MythicPlusSeasonInfo | null>({
     queryKey: ["mythic-plus-runs", region, realmSlug, characterName, seasonId],
     queryFn: async () => {
       try {

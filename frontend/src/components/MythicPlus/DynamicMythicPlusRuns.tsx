@@ -1,6 +1,6 @@
 import React from "react";
 import { useGetBlizzardCharacterMythicPlusBestRuns } from "@/hooks/useBlizzardApi";
-import { MythicPlusRuns } from "@/types/mythicPlusRuns";
+import { MythicPlusSeasonInfo } from "@/types/mythicPlusRuns";
 
 interface DynamicMythicPlusRunsProps {
   characterName: string;
@@ -20,7 +20,7 @@ const DynamicMythicPlusRuns: React.FC<DynamicMythicPlusRunsProps> = ({
   seasonId,
 }) => {
   const {
-    data: mythicPlusRuns,
+    data: mythicPlusSeasonInfo,
     isLoading,
     error,
   } = useGetBlizzardCharacterMythicPlusBestRuns(
@@ -32,20 +32,27 @@ const DynamicMythicPlusRuns: React.FC<DynamicMythicPlusRunsProps> = ({
     seasonId
   );
 
-  console.log("Mythic+ Runs Data:", mythicPlusRuns);
+  console.log("Mythic+ Season Info:", mythicPlusSeasonInfo);
 
   if (isLoading) return <div>Loading Mythic+ runs...</div>;
-  if (error) return <div>Error loading Mythic+ runs</div>;
-  if (!mythicPlusRuns)
+  if (error) return <div>Error loading Mythic+ runs: {error.message}</div>;
+  if (!mythicPlusSeasonInfo)
     return <div>No Mythic+ data available for this season</div>;
-  if (mythicPlusRuns.length === 0)
+  if (mythicPlusSeasonInfo.BestRuns.length === 0)
     return <div>No Mythic+ runs found for this season</div>;
 
   return (
     <div className="w-full mt-6">
-      <h2 className="text-2xl font-bold mb-4">Best Mythic+ Runs</h2>
+      <h2 className="text-2xl font-bold mb-4">Mythic+ Season Overview</h2>
+      <p className="text-xl mb-2">
+        Overall Mythic Rating:{" "}
+        <span style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}>
+          {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
+        </span>
+      </p>
+      <h3 className="text-xl font-bold mb-2">Best Mythic+ Runs</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {mythicPlusRuns.map((run: MythicPlusRuns) => (
+        {mythicPlusSeasonInfo.BestRuns.map((run) => (
           <div
             key={`${run.Dungeon.ID}-${run.CompletedTimestamp}`}
             className="bg-deep-blue p-4 rounded-lg"

@@ -1,4 +1,5 @@
 import api from "./api";
+import axios from "axios";
 
 export const getBlizzardCharacterProfile = async (
   region: string,
@@ -30,6 +31,12 @@ export const getBlizzardCharacterMythicPlusBestRuns = async (
   locale: string,
   seasonId: string
 ) => {
+  if (seasonId === "13") {
+    // TWW Season 1
+    console.log("Using static data for TWW Season 1");
+    return null; // Return null for TWW Season 1
+  }
+
   try {
     const { data } = await api.get(
       `/blizzard/characters/${realmSlug}/${characterName}/mythic-keystone-profile/season/${seasonId}`,
@@ -39,14 +46,21 @@ export const getBlizzardCharacterMythicPlusBestRuns = async (
     );
     return data;
   } catch (error) {
-    console.error("Error in getBlizzardCharacterMythicPlusBestRuns:", error);
-    if (error instanceof Error && "response" in error) {
-      const axiosError = error as any;
-      console.error("Response data:", axiosError.response?.data);
-      console.error("Response status:", axiosError.response?.status);
-      console.error("Response headers:", axiosError.response?.headers);
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        console.log(`No Mythic+ data available for season ${seasonId}`);
+        return null;
+      }
+      console.error(
+        "Error in getBlizzardCharacterMythicPlusBestRuns:",
+        error.message
+      );
     }
-    throw error;
+    console.error(
+      "Unexpected error in getBlizzardCharacterMythicPlusBestRuns:",
+      error
+    );
+    return null;
   }
 };
 

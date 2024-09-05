@@ -2,6 +2,7 @@ export interface Season {
   slug: string;
   name: string;
   shortName: string;
+  id: number;
   Dungeons: null | Dungeon[];
 }
 
@@ -34,6 +35,15 @@ export interface Member {
   RaceName: string;
   SpecializationID: number;
   Specialization: string;
+}
+
+export interface MythicPlusSeasonInfo {
+  CharacterName: string;
+  RealmSlug: string;
+  SeasonID: number;
+  OverallMythicRating: number;
+  OverallMythicRatingHex: string;
+  BestRuns: MythicPlusRuns[];
 }
 
 export interface MythicPlusRuns {
