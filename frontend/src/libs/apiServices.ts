@@ -131,3 +131,13 @@ export const getBlizzardMythicDungeonPerSeason = async (seasonSlug: string) => {
     throw error;
   }
 };
+
+export const getBlizzardRaidsByExpansion = async (expansion: string) => {
+  try {
+    const { data } = await api.get(`/blizzard/data/raids/${expansion}`);
+    return data;
+  } catch (error) {
+    console.error("Error in getBlizzardRaidsByExpansion:", error);
+    throw error;
+  }
+};

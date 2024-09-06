@@ -141,3 +141,10 @@ export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
     queryFn: () => apiServices.getBlizzardMythicDungeonPerSeason(seasonSlug),
   });
 };
+
+export const useGetBlizzardRaidsByExpansion = (expansion: string) => {
+  return useQuery({
+    queryKey: ["raidsByExpansion", expansion],
+    queryFn: () => apiServices.getBlizzardRaidsByExpansion(expansion),
+  });
+};

@@ -7,7 +7,7 @@ import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import { useState } from "react";
-
+import RaidOverview from "@/components/Raids/RaidOverview";
 export default function CharacterLayout({
   params,
 }: {
@@ -51,6 +51,8 @@ export default function CharacterLayout({
             seasonSlug={seasonSlug || "season-tww-1"}
           />
         );
+      case "raid-progression":
+        return <RaidOverview initialExpansion="DF" />;
       default:
         return null;
     }
