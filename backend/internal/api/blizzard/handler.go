@@ -40,6 +40,7 @@ type Handler struct {
 	EncounterSummary            *profile.EncounterSummaryHandler
 	EncounterDungeon            *profile.EncounterDungeonHandler
 	EncounterRaid               *profile.EncounterRaidHandler
+	RaidsByExpansion            *gamedata.RaidsByExpansionHandler
 }
 
 func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
@@ -74,6 +75,7 @@ func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 		EncounterSummary:            profile.NewEncounterSummaryHandler(service),
 		EncounterDungeon:            profile.NewEncounterDungeonHandler(service),
 		EncounterRaid:               profile.NewEncounterRaidHandler(service),
+		RaidsByExpansion:            gamedata.NewRaidsByExpansionHandler(db),
 	}
 }
 
@@ -121,4 +123,6 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.JournalInstanceMedia.GetJournalInstanceMedia)
 
 	r.GET("data/mythic-keystone/season/:seasonSlug/dungeons", h.GetSeasonDungeons.GetSeasonDungeons)
+
+	r.GET("/blizzard/data/raids/:expansion", h.RaidsByExpansion.GetRaidsByExpansion)
 }

@@ -58,10 +58,6 @@ type AffixData struct {
 	} `json:"affix_details"`
 }
 
-const (
-	staticMythicPlusPath = "./static/M+/"
-)
-
 // seedSeasonsFromFile seeds the Mythic+ seasons from a JSON file
 func SeedSeasons(db *gorm.DB, filePath string) error {
 	var seasonData SeasonData
