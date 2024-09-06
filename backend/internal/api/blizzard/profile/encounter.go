@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"wowperf/internal/services/blizzard"
 	"wowperf/internal/services/blizzard/profile"
+	wrapper "wowperf/internal/wrapper/blizzard"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,5 +102,16 @@ func (h *EncounterRaidHandler) GetCharacterEncounterRaid(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, encounterRaid)
+	if encounterRaid == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No raid encounters found"})
+		return
+	}
+
+	transformedData, err := wrapper.TransformRaidData(encounterRaid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform raid data"})
+		return
+	}
+
+	c.JSON(http.StatusOK, transformedData)
 }
