@@ -1,5 +1,6 @@
 import api from "./api";
 import axios from "axios";
+import { StaticRaid } from "@/types/raids";
 
 export const getBlizzardCharacterProfile = async (
   region: string,
@@ -132,9 +133,13 @@ export const getBlizzardMythicDungeonPerSeason = async (seasonSlug: string) => {
   }
 };
 
-export const getBlizzardRaidsByExpansion = async (expansion: string) => {
+export const getBlizzardRaidsByExpansion = async (
+  expansion: string
+): Promise<StaticRaid[]> => {
   try {
-    const { data } = await api.get(`/blizzard/data/raids/${expansion}`);
+    const url = `/blizzard/data/raids/${expansion}`;
+    console.log(`Fetching raids for expansion: ${expansion} from URL: ${url}`);
+    const { data } = await api.get<StaticRaid[]>(url);
     return data;
   } catch (error) {
     console.error("Error in getBlizzardRaidsByExpansion:", error);

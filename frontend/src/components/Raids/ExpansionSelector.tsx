@@ -8,25 +8,23 @@ import {
 } from "@/components/ui/select";
 
 interface ExpansionSelectorProps {
-  expansions: string[];
-  selectedExpansion: string;
+  currentExpansion: string;
   onExpansionChange: (expansion: string) => void;
 }
 
 const ExpansionSelector: React.FC<ExpansionSelectorProps> = ({
-  expansions,
-  selectedExpansion,
+  currentExpansion,
   onExpansionChange,
 }) => {
-  const uniqueExpansions = Array.from(new Set(expansions));
+  const availableExpansions = ["TWW", "DF"];
 
   return (
-    <Select onValueChange={onExpansionChange} value={selectedExpansion}>
+    <Select onValueChange={onExpansionChange} value={currentExpansion}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select an expansion" />
       </SelectTrigger>
       <SelectContent>
-        {uniqueExpansions.map((expansion) => (
+        {availableExpansions.map((expansion) => (
           <SelectItem key={expansion} value={expansion}>
             {expansion}
           </SelectItem>

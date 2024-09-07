@@ -1,6 +1,7 @@
 import * as apiServices from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MythicPlusSeasonInfo } from "@/types/mythicPlusRuns";
+import { StaticRaid } from "@/types/raids";
 
 // useGetBlizzardCharacterProfile retrieves the profile for a character
 export const useGetBlizzardCharacterProfile = (
@@ -149,7 +150,7 @@ export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
 
 // useGetBlizzardRaidsByExpansion retrieves the raids by expansion
 export const useGetBlizzardRaidsByExpansion = (expansion: string) => {
-  return useQuery({
+  return useQuery<StaticRaid[]>({
     queryKey: ["raidsByExpansion", expansion],
     queryFn: () => apiServices.getBlizzardRaidsByExpansion(expansion),
   });

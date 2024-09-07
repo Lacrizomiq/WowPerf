@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useGetBlizzardRaidsByExpansion,
   useGetBlizzardCharacterEncounterRaid,
@@ -14,7 +14,7 @@ interface RaidOverviewProps {
   region: string;
   namespace: string;
   locale: string;
-  initialExpansion: string;
+  expansion: string;
 }
 
 const RaidOverview: React.FC<RaidOverviewProps> = ({
@@ -23,9 +23,9 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
   region,
   namespace,
   locale,
-  initialExpansion,
+  expansion,
 }) => {
-  const [selectedExpansion, setSelectedExpansion] = useState(initialExpansion);
+  const [selectedExpansion, setSelectedExpansion] = useState(expansion);
   const [selectedRaid, setSelectedRaid] = useState<StaticRaid | null>(null);
 
   const { data: staticRaids, isLoading: isStaticLoading } =
@@ -39,8 +39,8 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
       locale
     );
 
-  const handleExpansionChange = (expansion: string) => {
-    setSelectedExpansion(expansion);
+  const handleExpansionChange = (newExpansion: string) => {
+    setSelectedExpansion(newExpansion);
     setSelectedRaid(null);
   };
 
@@ -55,8 +55,7 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
   return (
     <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
       <ExpansionSelector
-        expansions={staticRaids?.map((raid) => raid.Expansion) || []}
-        selectedExpansion={selectedExpansion}
+        currentExpansion={selectedExpansion}
         onExpansionChange={handleExpansionChange}
       />
       <StaticRaidsList
