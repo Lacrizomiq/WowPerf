@@ -37,7 +37,8 @@ export default function CharacterSummary({
               alt="World of Warcraft Logo"
               width={196}
               height={196}
-              objectFit="cover"
+              className="object-cover"
+              priority
             />
           )}
         </div>
