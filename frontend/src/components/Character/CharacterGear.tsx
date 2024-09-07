@@ -187,6 +187,7 @@ export default function CharacterGear({
               width={450}
               height={450}
               className=" scale-150"
+              priority
             />
             <div className="text-blue-200 mt-4 text-center">
               {characterData.item_level_equipped} item lvl (Equipped)

@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import {
   Select,
@@ -8,23 +6,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Raid } from "@/types/raids";
 
 interface ExpansionSelectorProps {
-  raids: Raid[];
-  onExpansionChange: (expansion: string) => void;
+  expansions: string[];
   selectedExpansion: string;
+  onExpansionChange: (expansion: string) => void;
 }
 
-// Select an expansion to see the raids
 const ExpansionSelector: React.FC<ExpansionSelectorProps> = ({
-  raids,
-  onExpansionChange,
+  expansions,
   selectedExpansion,
+  onExpansionChange,
 }) => {
-  const uniqueExpansions = Array.from(
-    new Set(raids.map((raid) => raid.Expansion))
-  );
+  const uniqueExpansions = Array.from(new Set(expansions));
 
   return (
     <Select onValueChange={onExpansionChange} value={selectedExpansion}>

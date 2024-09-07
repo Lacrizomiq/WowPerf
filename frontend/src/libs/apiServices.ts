@@ -141,3 +141,31 @@ export const getBlizzardRaidsByExpansion = async (expansion: string) => {
     throw error;
   }
 };
+
+export const getBlizzardCharacterEncounterRaid = async (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  try {
+    const url = `/blizzard/characters/${realmSlug}/${characterName}/encounters/raids`;
+    console.log(`Fetching raid encounters from: ${url}`);
+    console.log(
+      `Params: region=${region}, namespace=${namespace}, locale=${locale}`
+    );
+    const { data } = await api.get(url, {
+      params: { region, namespace, locale },
+    });
+    console.log("Raid encounter data received:", data);
+    return data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      console.warn("Raid encounter data not found for this character");
+      return null;
+    }
+    console.error("Error in getBlizzardCharacterEncounterRaid:", error);
+    throw error;
+  }
+};

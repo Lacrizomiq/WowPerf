@@ -2,6 +2,7 @@ import * as apiServices from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MythicPlusSeasonInfo } from "@/types/mythicPlusRuns";
 
+// useGetBlizzardCharacterProfile retrieves the profile for a character
 export const useGetBlizzardCharacterProfile = (
   region: string,
   realmSlug: string,
@@ -61,6 +62,7 @@ export const useGetBlizzardCharacterMythicPlusBestRuns = (
   });
 };
 
+// useGetBlizzardCharacterEquipment retrieves the equipment for a character
 export const useGetBlizzardCharacterEquipment = (
   region: string,
   realmSlug: string,
@@ -88,6 +90,7 @@ export const useGetBlizzardCharacterEquipment = (
   });
 };
 
+// useGetBlizzardCharacterSpecializations retrieves the specializations for a character
 export const useGetBlizzardCharacterSpecializations = (
   region: string,
   realmSlug: string,
@@ -115,6 +118,7 @@ export const useGetBlizzardCharacterSpecializations = (
   });
 };
 
+// useGetBlizzardTalentTree retrieves the talent tree for a character
 export const useGetBlizzardTalentTree = (
   talentTreeId: number,
   specId: number,
@@ -135,6 +139,7 @@ export const useGetBlizzardTalentTree = (
   });
 };
 
+// useGetBlizzardMythicDungeonPerSeason retrieves the mythic dungeon per season
 export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
   return useQuery({
     queryKey: ["mythicDungeonPerSeason", seasonSlug],
@@ -142,9 +147,47 @@ export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
   });
 };
 
+// useGetBlizzardRaidsByExpansion retrieves the raids by expansion
 export const useGetBlizzardRaidsByExpansion = (expansion: string) => {
   return useQuery({
     queryKey: ["raidsByExpansion", expansion],
     queryFn: () => apiServices.getBlizzardRaidsByExpansion(expansion),
+  });
+};
+
+// useGetBlizzardCharacterEncounterRaid retrieves a character's raid encounters.
+export const useGetBlizzardCharacterEncounterRaid = (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: [
+      "characterEncounterRaid",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: async () => {
+      console.log(
+        `Fetching raid encounters for ${characterName} on ${realmSlug}`
+      );
+      const data = await apiServices.getBlizzardCharacterEncounterRaid(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale
+      );
+      if (data === null) {
+        console.log("No raid encounter data available for this character");
+        return { expansions: [] };
+      }
+      return data;
+    },
   });
 };

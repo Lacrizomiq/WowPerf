@@ -1,37 +1,75 @@
 import React, { useState } from "react";
-import { Raid } from "@/types/raids";
-import { useGetBlizzardRaidsByExpansion } from "@/hooks/useBlizzardApi";
-import StaticRaidsList from "./StaticRaidsList";
+import {
+  useGetBlizzardRaidsByExpansion,
+  useGetBlizzardCharacterEncounterRaid,
+} from "@/hooks/useBlizzardApi";
 import ExpansionSelector from "./ExpansionSelector";
+import StaticRaidsList from "./StaticRaidsList";
+import RaidDetails from "./RaidDetails";
+import { StaticRaid, RaidProgressionData } from "@/types/raids";
 
 interface RaidOverviewProps {
+  characterName: string;
+  realmSlug: string;
+  region: string;
+  namespace: string;
+  locale: string;
   initialExpansion: string;
 }
 
-const RaidOverview: React.FC<RaidOverviewProps> = ({ initialExpansion }) => {
-  const {
-    data: raids,
-    isLoading,
-    error,
-  } = useGetBlizzardRaidsByExpansion(initialExpansion);
-
+const RaidOverview: React.FC<RaidOverviewProps> = ({
+  characterName,
+  realmSlug,
+  region,
+  namespace,
+  locale,
+  initialExpansion,
+}) => {
   const [selectedExpansion, setSelectedExpansion] = useState(initialExpansion);
+  const [selectedRaid, setSelectedRaid] = useState<StaticRaid | null>(null);
+
+  const { data: staticRaids, isLoading: isStaticLoading } =
+    useGetBlizzardRaidsByExpansion(selectedExpansion);
+  const { data: raidProgressionData, isLoading: isProgressionLoading } =
+    useGetBlizzardCharacterEncounterRaid(
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale
+    );
 
   const handleExpansionChange = (expansion: string) => {
     setSelectedExpansion(expansion);
+    setSelectedRaid(null);
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  const handleRaidSelect = (raid: StaticRaid) => {
+    setSelectedRaid(raid);
+  };
+
+  if (isStaticLoading || isProgressionLoading) {
+    return <div>Loading raid data...</div>;
+  }
 
   return (
-    <div>
+    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
       <ExpansionSelector
-        raids={raids || []}
-        onExpansionChange={handleExpansionChange}
+        expansions={staticRaids?.map((raid) => raid.Expansion) || []}
         selectedExpansion={selectedExpansion}
+        onExpansionChange={handleExpansionChange}
       />
-      <StaticRaidsList raids={raids || []} />
+      <StaticRaidsList
+        raids={staticRaids || []}
+        raidProgressionData={raidProgressionData}
+        onRaidSelect={handleRaidSelect}
+      />
+      {selectedRaid && (
+        <RaidDetails
+          staticRaid={selectedRaid}
+          raidProgressionData={raidProgressionData}
+        />
+      )}
     </div>
   );
 };
