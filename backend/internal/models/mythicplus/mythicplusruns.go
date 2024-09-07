@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+type MythicPlusSeasonInfo struct {
+	CharacterName          string
+	RealmSlug              string
+	SeasonID               uint
+	OverallMythicRating    float64
+	OverallMythicRatingHex string
+	BestRuns               []MythicPlusRun
+}
+
 // MythicPlusRun represents a run in the Mythic+ dungeon
 // It includes the seasons, the dungeon, the affixes, the members, the score, the duration, etc.
 type MythicPlusRun struct {

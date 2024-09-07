@@ -28,12 +28,47 @@ func init() {
 }
 
 // TransformMythicPlusBestRuns transforms the best runs from the Mythic+ API into a struct that is easier to use than the Blizzard API response
-func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB, seasonSlug string) ([]mythicplus.MythicPlusRun, error) {
+func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB, seasonSlug string) (*mythicplus.MythicPlusSeasonInfo, error) {
 	bestRuns, ok := data["best_runs"].([]interface{})
 	if !ok {
 		log.Println("Error: best runs not found or not a slice")
 		return nil, fmt.Errorf("best runs not found or not a slice")
 	}
+
+	// Extract character information
+	character, ok := data["character"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("character information not found")
+	}
+
+	characterName := character["name"].(string)
+	realm, ok := character["realm"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("realm information not found")
+	}
+	realmSlug := realm["slug"].(string)
+
+	// Extract mythic rating
+	mythicRating, ok := data["mythic_rating"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("mythic rating information not found")
+	}
+	overallRating := mythicRating["rating"].(float64)
+	color, ok := mythicRating["color"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("color information not found")
+	}
+	r := int(color["r"].(float64))
+	g := int(color["g"].(float64))
+	b := int(color["b"].(float64))
+	colorHex := fmt.Sprintf("#%02X%02X%02X", r, g, b)
+
+	// Extract season information
+	season, ok := data["season"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("season information not found")
+	}
+	seasonID := uint(season["id"].(float64))
 
 	var wg sync.WaitGroup
 	runChan := make(chan mythicplus.MythicPlusRun, len(bestRuns))
@@ -70,8 +105,17 @@ func TransformMythicPlusBestRuns(data map[string]interface{}, db *gorm.DB, seaso
 		return nil, err
 	}
 
+	seasonInfo := &mythicplus.MythicPlusSeasonInfo{
+		CharacterName:          characterName,
+		RealmSlug:              realmSlug,
+		SeasonID:               seasonID,
+		OverallMythicRating:    overallRating,
+		OverallMythicRatingHex: colorHex,
+		BestRuns:               results,
+	}
+
 	log.Printf("Successfully transformed %d runs", len(results))
-	return results, nil
+	return seasonInfo, nil
 }
 
 // processMythicPlusRun transforms a single Mythic+ run from the Blizzard API into a struct.

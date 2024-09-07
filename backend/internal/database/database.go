@@ -5,6 +5,7 @@ import (
 	"log"
 	"path/filepath"
 	mythicplus "wowperf/internal/database/static/mythicplus"
+	raids "wowperf/internal/database/static/raids"
 	talents "wowperf/internal/database/static/talents"
 
 	"gorm.io/gorm"
@@ -12,6 +13,10 @@ import (
 
 const (
 	staticMythicPlusPath = "./static/M+/"
+)
+
+const (
+	staticRaidsPath = "./static/Raid/"
 )
 
 func SeedDatabase(db *gorm.DB) error {
@@ -25,6 +30,11 @@ func SeedDatabase(db *gorm.DB) error {
 	// Seed Talents data
 	if err := talents.SeedTalents(db); err != nil {
 		return fmt.Errorf("error seeding Talents data: %v", err)
+	}
+
+	// Seed Raids data
+	if err := seedRaidsData(db); err != nil {
+		return fmt.Errorf("error seeding Raids data: %v", err)
 	}
 
 	log.Println("Database seeding completed successfully.")
@@ -46,5 +56,22 @@ func seedMythicPlusData(db *gorm.DB) error {
 	if err := mythicplus.SeedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
 		return err
 	}
+	return nil
+}
+
+func seedRaidsData(db *gorm.DB) error {
+	absPath, err := filepath.Abs(staticRaidsPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %v", err)
+	}
+
+	if err := raids.SeedRaids(db, filepath.Join(absPath, "TWW", "raids.json")); err != nil {
+		return err
+	}
+
+	if err := raids.SeedRaids(db, filepath.Join(absPath, "DF", "raids.json")); err != nil {
+		return err
+	}
+
 	return nil
 }

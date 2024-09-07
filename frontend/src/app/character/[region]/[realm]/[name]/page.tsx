@@ -1,19 +1,26 @@
 "use client";
 
+import React, { useState } from "react";
 import Header from "@/components/Header/Header";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
-import { useState } from "react";
+import RaidOverview from "@/components/Raids/RaidOverview";
 
 export default function CharacterLayout({
   params,
 }: {
-  params: { region: string; realm: string; name: string; seasonSlug: string };
+  params: {
+    region: string;
+    realm: string;
+    name: string;
+    seasonSlug: string;
+    expansion?: string;
+  };
 }) {
-  const { region, realm, name, seasonSlug } = params;
+  const { region, realm, name, seasonSlug, expansion } = params;
   const [selectedTab, setSelectedTab] = useState<string>("gear");
 
   useWowheadTooltips();
@@ -51,6 +58,17 @@ export default function CharacterLayout({
             seasonSlug={seasonSlug || "season-tww-1"}
           />
         );
+      case "raid-progression":
+        return (
+          <RaidOverview
+            characterName={name}
+            realmSlug={realm}
+            region={region}
+            namespace={`profile-${region}`}
+            locale="en_GB"
+            expansion={expansion || "TWW"}
+          />
+        );
       default:
         return null;
     }
@@ -66,7 +84,7 @@ export default function CharacterLayout({
         namespace={`profile-${region}`}
         locale="en_GB"
       />
-      <nav className="flex space-x-4 items-center justify-center font-bold  p-4 text-white">
+      <nav className="flex space-x-4 items-center justify-center font-bold p-4 text-white">
         <button onClick={() => setSelectedTab("gear")}>Gear</button>
         <button onClick={() => setSelectedTab("talents")}>Talents</button>
         <button onClick={() => setSelectedTab("mythic-plus")}>Mythic+</button>

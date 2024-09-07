@@ -109,17 +109,18 @@ func (h *MythicKeystoneSeasonDetailsHandler) GetCharacterMythicKeystoneSeasonBes
 	log.Printf("Raw data retrieved successfully for %s-%s, season %s", realmSlug, characterName, seasonIdStr)
 
 	// Transform the raw data into a more usable format from the wrapper
-	transformedData, err := wrapper.TransformMythicPlusBestRuns(rawData, h.DB, seasonSlug)
+	seasonInfo, err := wrapper.TransformMythicPlusBestRuns(rawData, h.DB, seasonSlug)
 	if err != nil {
 		log.Printf("Error transforming mythic keystone season details: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to transform mythic keystone season details"})
 		return
 	}
 
-	log.Printf("Data transformed successfully, returning %d runs", len(transformedData))
-	c.JSON(http.StatusOK, transformedData)
+	log.Printf("Data transformed successfully, returning season info with %d runs", len(seasonInfo.BestRuns))
+	c.JSON(http.StatusOK, seasonInfo)
 }
 
+// GetSeasonDungeons retrieves the dungeons for a given season
 func (h *GetSeasonDungeonsHandler) GetSeasonDungeons(c *gin.Context) {
 	seasonSlug := c.Param("seasonSlug")
 

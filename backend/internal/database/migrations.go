@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	mythicplus "wowperf/internal/models/mythicplus"
+	raids "wowperf/internal/models/raids"
 	talents "wowperf/internal/models/talents"
 
 	"gorm.io/gorm"
@@ -23,13 +24,18 @@ func Migrate(db *gorm.DB) error {
 		}
 	}
 
+	// Raids migrations
+	if err := db.AutoMigrate(&raids.Raid{}); err != nil {
+		return err
+	}
+
 	// Talents migrations
 	if err := db.AutoMigrate(
 		&talents.TalentTree{},
 		&talents.TalentNode{},
 		&talents.TalentEntry{},
-		&talents.HeroNode{},  // Added HeroNode
-		&talents.HeroEntry{}, // Added HeroEntry
+		&talents.HeroNode{},
+		&talents.HeroEntry{},
 		&talents.SubTreeNode{},
 		&talents.SubTreeEntry{},
 	); err != nil {

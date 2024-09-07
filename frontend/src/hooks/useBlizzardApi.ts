@@ -1,7 +1,9 @@
 import * as apiServices from "@/libs/apiServices";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MythicPlusRuns } from "@/types/mythicPlusRuns";
+import { MythicPlusSeasonInfo } from "@/types/mythicPlusRuns";
+import { StaticRaid } from "@/types/raids";
 
+// useGetBlizzardCharacterProfile retrieves the profile for a character
 export const useGetBlizzardCharacterProfile = (
   region: string,
   realmSlug: string,
@@ -38,7 +40,7 @@ export const useGetBlizzardCharacterMythicPlusBestRuns = (
   locale: string,
   seasonId: string
 ) => {
-  return useQuery<MythicPlusRuns[] | null>({
+  return useQuery<MythicPlusSeasonInfo | null>({
     queryKey: ["mythic-plus-runs", region, realmSlug, characterName, seasonId],
     queryFn: async () => {
       try {
@@ -61,6 +63,7 @@ export const useGetBlizzardCharacterMythicPlusBestRuns = (
   });
 };
 
+// useGetBlizzardCharacterEquipment retrieves the equipment for a character
 export const useGetBlizzardCharacterEquipment = (
   region: string,
   realmSlug: string,
@@ -88,6 +91,7 @@ export const useGetBlizzardCharacterEquipment = (
   });
 };
 
+// useGetBlizzardCharacterSpecializations retrieves the specializations for a character
 export const useGetBlizzardCharacterSpecializations = (
   region: string,
   realmSlug: string,
@@ -115,6 +119,7 @@ export const useGetBlizzardCharacterSpecializations = (
   });
 };
 
+// useGetBlizzardTalentTree retrieves the talent tree for a character
 export const useGetBlizzardTalentTree = (
   talentTreeId: number,
   specId: number,
@@ -135,9 +140,55 @@ export const useGetBlizzardTalentTree = (
   });
 };
 
+// useGetBlizzardMythicDungeonPerSeason retrieves the mythic dungeon per season
 export const useGetBlizzardMythicDungeonPerSeason = (seasonSlug: string) => {
   return useQuery({
     queryKey: ["mythicDungeonPerSeason", seasonSlug],
     queryFn: () => apiServices.getBlizzardMythicDungeonPerSeason(seasonSlug),
+  });
+};
+
+// useGetBlizzardRaidsByExpansion retrieves the raids by expansion
+export const useGetBlizzardRaidsByExpansion = (expansion: string) => {
+  return useQuery<StaticRaid[]>({
+    queryKey: ["raidsByExpansion", expansion],
+    queryFn: () => apiServices.getBlizzardRaidsByExpansion(expansion),
+  });
+};
+
+// useGetBlizzardCharacterEncounterRaid retrieves a character's raid encounters.
+export const useGetBlizzardCharacterEncounterRaid = (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: [
+      "characterEncounterRaid",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: async () => {
+      console.log(
+        `Fetching raid encounters for ${characterName} on ${realmSlug}`
+      );
+      const data = await apiServices.getBlizzardCharacterEncounterRaid(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale
+      );
+      if (data === null) {
+        console.log("No raid encounter data available for this character");
+        return { expansions: [] };
+      }
+      return data;
+    },
   });
 };

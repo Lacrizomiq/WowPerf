@@ -10,7 +10,8 @@ import {
 import {
   MythicDungeonProps,
   Dungeon,
-  MythicPlusRuns,
+  MythicPlusSeasonInfo,
+  Season,
 } from "@/types/mythicPlusRuns";
 
 const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
@@ -21,10 +22,9 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   locale,
   seasonSlug,
 }) => {
-  const [selectedSeason, setSelectedSeason] = useState<{
-    slug: string;
-    id: number;
-  }>(seasons.find((s) => s.slug === seasonSlug) || seasons[0]);
+  const [selectedSeason, setSelectedSeason] = useState<Season>(
+    seasons.find((s) => s.slug === seasonSlug) || seasons[0]
+  );
 
   const [selectedDungeon, setSelectedDungeon] = useState<Dungeon | null>(null);
 
@@ -35,7 +35,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   } = useGetBlizzardMythicDungeonPerSeason(selectedSeason.slug);
 
   const {
-    data: mythicPlusRuns,
+    data: mythicPlusSeasonInfo,
     isLoading: isRunsLoading,
     error: runsError,
   } = useGetBlizzardCharacterMythicPlusBestRuns(
@@ -46,8 +46,6 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     locale,
     selectedSeason.id.toString()
   );
-
-  console.log("Mythic+ Runs Data:", mythicPlusRuns);
 
   const handleSeasonChange = (seasonSlug: string) => {
     const newSeason = seasons.find((s) => s.slug === seasonSlug);
@@ -65,16 +63,37 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   if (dungeonError || runsError) return <div>Error loading data</div>;
   if (!dungeonData) return <div>No dungeon data found</div>;
 
-  const selectedRun = mythicPlusRuns?.find(
+  const selectedRun = mythicPlusSeasonInfo?.BestRuns.find(
     (run) => run.Dungeon.ID === selectedDungeon?.ID
   );
 
   return (
     <div className="p-4 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
-      <SeasonsSelector seasons={seasons} onSeasonChange={handleSeasonChange} />
+      <SeasonsSelector
+        seasons={seasons}
+        onSeasonChange={handleSeasonChange}
+        selectedSeason={selectedSeason}
+      />
+      {!mythicPlusSeasonInfo ? (
+        <div className="mt-4">
+          <h2 className="text-2xl font-bold mb-4">{selectedSeason.name}</h2>
+          <p>This character has no Mythic+ data for this season.</p>
+        </div>
+      ) : (
+        <div className="mb-4 pt-2">
+          <p className="text-xl">
+            Season Mythic Rating :{" "}
+            <span
+              style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
+            >
+              {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
+            </span>
+          </p>
+        </div>
+      )}
       <StaticDungeonList
         dungeons={dungeonData.dungeons}
-        mythicPlusRuns={mythicPlusRuns || []}
+        mythicPlusRuns={mythicPlusSeasonInfo?.BestRuns || []}
         onDungeonClick={handleDungeonClick}
       />
       {selectedRun && <DungeonDetails run={selectedRun} region={region} />}
