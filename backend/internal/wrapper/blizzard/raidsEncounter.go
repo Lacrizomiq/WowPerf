@@ -35,6 +35,10 @@ func TransformRaidData(rawData interface{}) (raidsEncounter.ExpansionRaids, erro
 		expID := int(expansion["id"].(float64))
 		expName := expansion["name"].(string)
 
+		if expID != 503 && expID != 505 {
+			continue
+		}
+
 		expWithRaids := raidsEncounter.ExpansionWithRaids{
 			ID:    expID,
 			Name:  expName,
