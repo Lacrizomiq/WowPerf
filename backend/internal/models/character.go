@@ -75,27 +75,24 @@ type TalentEntry struct {
 }
 
 type HeroTalent struct {
-	ID             int         `json:"id"`
-	Type           string      `json:"type"`
-	Name           string      `json:"name"`
-	TraitSubTreeID int         `json:"traitSubTreeId"`
-	PosX           int         `json:"posX"`
-	PosY           int         `json:"posY"`
-	Nodes          []int       `json:"nodes"`
-	Rank           int         `json:"rank"`
-	Entries        []HeroEntry `json:"entries"`
+	ID      int         `json:"id"`
+	Name    string      `json:"name"`
+	Type    string      `json:"type"`
+	PosX    int         `json:"posX"`
+	PosY    int         `json:"posY"`
+	Rank    int         `json:"rank"`
+	Entries []HeroEntry `json:"entries"`
 }
 
 type HeroEntry struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	MaxRanks  int    `json:"maxRanks"`
-	EntryNode bool   `json:"entryNode"`
-	SubTreeID int    `json:"subTreeId"`
-	FreeNode  bool   `json:"freeNode"`
-	SpellID   int    `json:"spellId"`
-	Icon      string `json:"icon"`
+	EntryID      int    `json:"id"`
+	DefinitionID int    `json:"definitionId"`
+	MaxRanks     int    `json:"maxRanks"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	SpellID      int    `json:"spellId"`
+	Icon         string `json:"icon"`
+	Index        int    `json:"index"`
 }
 
 type HeroNode struct {
@@ -127,6 +124,7 @@ type SubTreeEntry struct {
 	TraitSubTreeID  int    `json:"traitSubTreeId"`
 	AtlasMemberName string `json:"atlasMemberName"`
 	Nodes           []int  `json:"nodes"`
+	Rank            int    `json:"rank"`
 }
 
 type Gear struct {

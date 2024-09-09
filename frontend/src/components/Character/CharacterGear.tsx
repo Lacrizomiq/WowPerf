@@ -194,7 +194,7 @@ export default function CharacterGear({
               <div className="text-red-500">No character image found</div>
             )}
             <div className="text-blue-200 mt-4 text-center">
-              {characterData.item_level_equipped} item lvl (Equipped)
+              {characterData.item_level_equipped.toFixed(1)} item lvl (Equipped)
             </div>
           </div>
 
