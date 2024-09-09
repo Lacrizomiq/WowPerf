@@ -375,30 +375,40 @@ func extractSelectedHeroTalentTree(data map[string]interface{}) map[string]inter
 }
 
 func transformSubTreeNode(dbNode talents.SubTreeNode, selectedTalents map[int]int) profile.SubTreeNode {
-	return profile.SubTreeNode{
-		SubTreeNodeID: dbNode.SubTreeNodeID,
-		Name:          dbNode.Name,
-		Type:          dbNode.Type,
-		Entries:       transformSubTreeEntries(dbNode.Entries, selectedTalents),
+	transformedNode := profile.SubTreeNode{
+		ID:   dbNode.SubTreeNodeID,
+		Name: dbNode.Name,
+		Type: dbNode.Type,
 	}
+
+	if dbNode.Entries != nil {
+		transformedNode.Entries = transformSubTreeEntries(dbNode.Entries, selectedTalents)
+	} else {
+		transformedNode.Entries = []profile.SubTreeEntry{}
+	}
+
+	return transformedNode
 }
 
 func transformSubTreeEntries(dbEntries []talents.SubTreeEntry, selectedTalents map[int]int) []profile.SubTreeEntry {
-	var transformedEntries []profile.SubTreeEntry
-	for _, entry := range dbEntries {
-		rank := selectedTalents[entry.EntryID]
-		if rank > 0 {
-			transformedEntry := profile.SubTreeEntry{
-				EntryID:         entry.EntryID,
-				Type:            entry.Type,
-				Name:            entry.Name,
-				TraitSubTreeID:  entry.TraitSubTreeID,
-				AtlasMemberName: entry.AtlasMemberName,
-				Nodes:           convertInt64ArrayToIntSlice(entry.Nodes),
-				Rank:            rank,
-			}
-			transformedEntries = append(transformedEntries, transformedEntry)
-		}
+	if len(dbEntries) == 0 {
+		return []profile.SubTreeEntry{}
 	}
-	return transformedEntries
+
+	entry := dbEntries[0]
+	transformedEntry := profile.SubTreeEntry{
+		ID:              entry.EntryID,
+		Type:            "subtree",
+		Name:            entry.Name,
+		TraitSubTreeID:  entry.TraitSubTreeID,
+		AtlasMemberName: entry.AtlasMemberName,
+		Nodes:           convertInt64ArrayToIntSlice(entry.Nodes),
+	}
+
+	// Use selectedTalents to set the rank
+	if rank, ok := selectedTalents[entry.EntryID]; ok {
+		transformedEntry.Rank = rank
+	}
+
+	return []profile.SubTreeEntry{transformedEntry}
 }

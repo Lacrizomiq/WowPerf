@@ -111,14 +111,14 @@ type HeroNode struct {
 }
 
 type SubTreeNode struct {
-	SubTreeNodeID int            `json:"id"`
-	Name          string         `json:"name"`
-	Type          string         `json:"type"`
-	Entries       []SubTreeEntry `json:"entries"`
+	ID      int            `json:"id"`
+	Name    string         `json:"name"`
+	Type    string         `json:"type"`
+	Entries []SubTreeEntry `json:"entries"`
 }
 
 type SubTreeEntry struct {
-	EntryID         int    `json:"id"`
+	ID              int    `json:"id"`
 	Type            string `json:"type"`
 	Name            string `json:"name"`
 	TraitSubTreeID  int    `json:"traitSubTreeId"`
