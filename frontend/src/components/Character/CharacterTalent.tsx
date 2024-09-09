@@ -54,6 +54,12 @@ export default function CharacterTalent({
     }
   }, [specializationsData]);
 
+  useEffect(() => {
+    if (window.$WowheadPower && window.$WowheadPower.refreshLinks) {
+      window.$WowheadPower.refreshLinks();
+    }
+  }, []);
+
   if (isLoadingSpecializations || isLoadingProfile)
     return <div className="text-white">Loading talent data...</div>;
 
@@ -118,7 +124,8 @@ export default function CharacterTalent({
     );
   };
 
-  const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
+  {
+    /* const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
     const subTreeName = talentLoadout.sub_tree_nodes[0]?.name;
     const subtreeIcon =
       talentLoadout.sub_tree_nodes[0]?.entries[0]?.atlasMemberName;
@@ -147,7 +154,8 @@ export default function CharacterTalent({
         </div>
       </div>
     );
-  };
+  };*/
+  }
 
   const getTalentCalculatorUrl = () => {
     if (
@@ -220,7 +228,7 @@ export default function CharacterTalent({
           </div>
           {talentLoadout.hero_talents.length > 0 && (
             <div className="flex-1">
-              {renderHeroTalentsGroup(talentLoadout.hero_talents)}
+              {/* {renderHeroTalentsGroup(talentLoadout.hero_talents)} */}
             </div>
           )}
         </div>

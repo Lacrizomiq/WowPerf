@@ -21,7 +21,6 @@ export interface TalentNode {
   maxRanks: number;
   entryNode: boolean;
   reqPoints?: number;
-  freeNode?: boolean;
   next: number[];
   prev: number[];
   entries: TalentEntry[];
@@ -45,15 +44,15 @@ export interface TalentLoadout {
   spec_icon: string;
   class_talents: TalentNode[];
   spec_talents: TalentNode[];
-  sub_tree_nodes: SubTreeNode[];
   hero_talents: HeroTalent[];
+  sub_tree_nodes: SubTreeNode[];
 }
 
 export interface SubTreeNode {
   id: number;
   name: string;
   type: string;
-  entries: SubTreeEntry[];
+  entries: TalentEntry[] | null;
 }
 
 export interface SubTreeEntry {
@@ -67,14 +66,12 @@ export interface SubTreeEntry {
 
 export interface HeroTalent {
   id: number;
-  type: string;
   name: string;
-  traitSubTreeId: number;
+  type: string;
   posX: number;
   posY: number;
-  nodes: number[];
   rank: number;
-  entries: HeroEntry[];
+  entries: TalentEntry[];
 }
 
 export interface HeroEntry {
