@@ -9,6 +9,10 @@ import (
 	"wowperf/internal/services/blizzard/gamedata"
 )
 
+func isItemEmpty(item models.Item) bool {
+	return item.ItemID == 0 && item.ItemLevel == 0 && item.Name == ""
+}
+
 // TransformCharacterGear transforms the gear data from the Blizzard API into an easier to use Gear struct.
 // Using a channel to handle the concurrency of the requests.
 func TransformCharacterGear(data map[string]interface{}, gameDataService *blizzard.GameDataService, region, namespace, locale string) (*models.Gear, error) {
@@ -54,33 +58,39 @@ func TransformCharacterGear(data map[string]interface{}, gameDataService *blizza
 	}()
 
 	var totalItemLevel float64
+	var totalWeight float64
 	slotWeights := map[string]float64{
 		"head": 1, "neck": 1, "shoulder": 1, "back": 1, "chest": 1, "wrist": 1,
 		"hands": 1, "waist": 1, "legs": 1, "feet": 1, "finger_1": 1, "finger_2": 1,
 		"trinket_1": 1, "trinket_2": 1, "main_hand": 1, "off_hand": 1,
 	}
 
+	hasTwoHandWeapon := false
+
 	for item := range itemChan {
 		gear.Items[strings.ToLower(item.slotType)] = item.item
 
-		if weight, exists := slotWeights[strings.ToLower(item.slotType)]; exists {
-			totalItemLevel += item.item.ItemLevel * weight
+		weight := slotWeights[strings.ToLower(item.slotType)]
+		if strings.ToLower(item.slotType) == "main_hand" {
+			if item.item.IsTwoHand {
+				hasTwoHandWeapon = true
+				weight = 2
+			}
 		}
+
+		totalItemLevel += item.item.ItemLevel * weight
+		totalWeight += weight
 	}
 
 	if len(errorChan) > 0 {
 		return nil, <-errorChan
 	}
 
-	if _, hasOffHand := gear.Items["off_hand"]; !hasOffHand {
-		if mainHand, hasMainHand := gear.Items["main_hand"]; hasMainHand {
-			totalItemLevel += mainHand.ItemLevel
+	if !hasTwoHandWeapon {
+		offHandItem, exists := gear.Items["off_hand"]
+		if !exists || isItemEmpty(offHandItem) {
+			totalWeight--
 		}
-	}
-
-	totalWeight := float64(len(slotWeights))
-	if _, hasOffHand := gear.Items["off_hand"]; !hasOffHand {
-		totalWeight--
 	}
 
 	if totalWeight > 0 {
@@ -151,6 +161,13 @@ func transformSingleItem(item interface{}, gameDataService *blizzard.GameDataSer
 	bonusList := getBonusList(itemMap)
 	gems := getGems(itemMap)
 
+	isTwoHand := false
+	if inventory, ok := itemMap["inventory_type"].(map[string]interface{}); ok {
+		if inventoryType, ok := inventory["type"].(string); ok {
+			isTwoHand = inventoryType == "TWOHWEAPON" || inventoryType == "RANGEDRIGHT"
+		}
+	}
+
 	transformedItem := models.Item{
 		ItemID:      int(itemID),
 		ItemLevel:   itemLevel,
@@ -161,6 +178,7 @@ func transformSingleItem(item interface{}, gameDataService *blizzard.GameDataSer
 		Enchant:     enchant,
 		Gems:        gems,
 		Bonuses:     bonusList,
+		IsTwoHand:   isTwoHand,
 	}
 
 	return slotType, transformedItem, nil
