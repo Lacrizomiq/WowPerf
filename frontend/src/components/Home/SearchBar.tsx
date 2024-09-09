@@ -1,20 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { eu, us, tw, kr } from "@/data/realms"; // Assurez-vous d'importer vos objets de données de royaume
+
+interface Realm {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 export default function SearchBar() {
   const [region, setRegion] = useState("");
   const [realm, setRealm] = useState("");
   const [character, setCharacter] = useState("");
+  const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    switch (region) {
+      case "eu":
+        setRealms(eu.realms);
+        break;
+      case "us":
+        setRealms(us.realms);
+        break;
+      case "tw":
+        setRealms(tw.realms);
+        break;
+      case "kr":
+        setRealms(kr.realms);
+        break;
+      default:
+        setRealms([]);
+    }
+    setRealm(""); // Reset realm when region changes
+  }, [region]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (region && realm && character) {
-      router.push(`/character/${region}/${realm}/${character}`);
+      const lowerCaseCharacter = character.toLowerCase();
+      router.push(`/character/${region}/${realm}/${lowerCaseCharacter}`);
     }
-    console.log("Searching for:", { region, realm, character });
   };
 
   return (
@@ -22,28 +50,36 @@ export default function SearchBar() {
       <div className="container mx-auto px-4">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4 "
+          className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4"
         >
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             className="w-full md:w-1/6 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600 appearance-none cursor-pointer"
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               Select Region
             </option>
-            <option value="us">US</option>
             <option value="eu">EU</option>
+            <option value="us">US</option>
             <option value="kr">KR</option>
             <option value="tw">TW</option>
           </select>
-          <input
-            type="text"
-            placeholder="Realm"
+          <select
             value={realm}
             onChange={(e) => setRealm(e.target.value)}
-            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600"
-          />
+            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600 appearance-none cursor-pointer"
+            disabled={!region}
+          >
+            <option value="" disabled>
+              Select Realm
+            </option>
+            {realms.map((realm) => (
+              <option key={realm.id} value={realm.slug}>
+                {realm.name}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             placeholder="Character Name"

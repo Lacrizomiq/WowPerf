@@ -181,14 +181,18 @@ export default function CharacterGear({
 
           {/* Center column (character image) */}
           <div className="flex flex-col items-center justify-center">
-            <Image
-              src={characterProfile.main_raw_url}
-              alt="Character"
-              width={450}
-              height={450}
-              className=" scale-150"
-              priority
-            />
+            {characterProfile && characterProfile.main_raw_url ? (
+              <Image
+                src={characterProfile.main_raw_url}
+                alt="Character"
+                width={450}
+                height={450}
+                className=" scale-150"
+                priority
+              />
+            ) : (
+              <div className="text-red-500">No character image found</div>
+            )}
             <div className="text-blue-200 mt-4 text-center">
               {characterData.item_level_equipped} item lvl (Equipped)
             </div>
