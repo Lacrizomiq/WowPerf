@@ -114,6 +114,8 @@ type SubTreeNode struct {
 	ID      int            `json:"id"`
 	Name    string         `json:"name"`
 	Type    string         `json:"type"`
+	PosX    int            `json:"posX"`
+	PosY    int            `json:"posY"`
 	Entries []SubTreeEntry `json:"entries"`
 }
 
