@@ -115,7 +115,7 @@ export default function CharacterTalent({
           <span>{title}</span>
         </h3>
 
-        <div className="grid grid-cols-7 gap-2 mb-4">
+        <div className="grid grid-cols-6 gap-2 mb-4">
           {selectedTalents.map((talent) => (
             <TalentIcon key={talent.id} talent={talent} />
           ))}
@@ -272,28 +272,51 @@ interface TalentIconProps {
 const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
+  // Vérifier si le talent a des entrées
+  const hasEntries = talent.entries && talent.entries.length > 0;
+  const spellId = hasEntries ? talent.entries[0].spellId : undefined;
+  const icon = hasEntries ? talent.entries[0].icon : "inv_misc_questionmark";
+
   return (
     <div className="relative">
-      <a
-        href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
-        data-wowhead={`spell=${talent.entries[0].spellId}`}
-        className="block cursor-pointer talent active relative"
-        data-wh-icon-size="medium"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      {spellId ? (
+        <a
+          href={`https://www.wowhead.com/spell=${spellId}`}
+          data-wowhead={`spell=${spellId}`}
+          className="block cursor-pointer talent active relative"
+          data-wh-icon-size="medium"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div className="relative w-10 h-10">
+            <Image
+              src={
+                imageError
+                  ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+                  : `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
+              }
+              alt={talent.name}
+              width={40}
+              height={40}
+              className="w-full h-full rounded-md border-2 border-gray-700"
+              onError={() => setImageError(true)}
+              unoptimized
+            />
+            {talent.rank > 0 && (
+              <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+                {talent.rank}/{talent.maxRanks}
+              </div>
+            )}
+          </div>
+        </a>
+      ) : (
         <div className="relative w-10 h-10">
           <Image
-            src={
-              imageError
-                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-                : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
-            }
+            src="https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
             alt={talent.name}
             width={40}
             height={40}
             className="w-full h-full rounded-md border-2 border-gray-700"
-            onError={() => setImageError(true)}
             unoptimized
           />
           {talent.rank > 0 && (
@@ -302,7 +325,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
             </div>
           )}
         </div>
-      </a>
+      )}
     </div>
   );
 };

@@ -207,15 +207,7 @@ func transformSingleTalent(dbNode talents.TalentNode, rank int) profile.TalentNo
 		Rank:      rank,
 	}
 
-	if dbNode.Type == "choice" {
-		// Pour les talents de type "choice", ne garder que l'entrée sélectionnée
-		for _, entry := range dbNode.Entries {
-			if entry.Index == rank {
-				transformed.Entries = []profile.TalentEntry{transformTalentEntry(entry)}
-				break
-			}
-		}
-	} else {
+	if dbNode.Type == "choice" || rank > 0 {
 		transformed.Entries = transformTalentEntries(dbNode.Entries)
 	}
 
@@ -265,11 +257,9 @@ func transformHeroEntriesToProfileEntries(entries []talents.HeroEntry) []profile
 func filterTalentsByType(talents []profile.TalentNode, nodeType string) []profile.TalentNode {
 	filtered := make([]profile.TalentNode, 0)
 	for _, talent := range talents {
-		if talent.NodeType == nodeType && talent.Rank > 0 {
+		if talent.NodeType == nodeType {
 			filtered = append(filtered, talent)
-			log.Printf("Filtered selected talent: NodeID=%d, Name=%s, Type=%s, Rank=%d", talent.NodeID, talent.Name, talent.NodeType, talent.Rank)
-		} else {
-			log.Printf("Skipped unselected talent: NodeID=%d, Name=%s, Type=%s, Rank=%d", talent.NodeID, talent.Name, talent.NodeType, talent.Rank)
+			log.Printf("Filtered talent: NodeID=%d, Name=%s, Type=%s, Rank=%d", talent.NodeID, talent.Name, talent.NodeType, talent.Rank)
 		}
 	}
 	return filtered
@@ -297,6 +287,15 @@ func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, 
 
 func sortTalentNodes(nodes []profile.TalentNode) {
 	sort.Slice(nodes, func(i, j int) bool {
+		// sort by posY (top to bottom)
+		if nodes[i].PosY != nodes[j].PosY {
+			return nodes[i].PosY < nodes[j].PosY
+		}
+		// if posY is equal, sort by posX (left to right)
+		if nodes[i].PosX != nodes[j].PosX {
+			return nodes[i].PosX < nodes[j].PosX
+		}
+		// if posX and posY are equal, use NodeID as final criteria
 		return nodes[i].NodeID < nodes[j].NodeID
 	})
 }
