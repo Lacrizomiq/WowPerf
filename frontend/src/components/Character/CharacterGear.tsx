@@ -138,7 +138,7 @@ export default function CharacterGear({
   };
 
   return (
-    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4 ">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -148,13 +148,19 @@ export default function CharacterGear({
         }
       `}</style>
 
+      <div className="text-blue-200 mb-4">
+        {characterData.item_level_equipped.toFixed(1)} item lvl (Equipped)
+      </div>
       {/* Container for the gear layout */}
       <div className="flex flex-col items-center">
         <div className="flex justify-between w-full max-w-5xl">
           <div className="flex flex-col gap-2">
             {/* Left column (upper body gear) */}
-            {orderedGear.slice(0, 8).map((item) => (
-              <div key={item.slot} className="relative flex items-center">
+            {orderedGear.slice(0, 7).map((item) => (
+              <div
+                key={item.slot}
+                className="relative flex items-center bg-deep-blue rounded-md"
+              >
                 <a
                   href={`https://www.wowhead.com/item=${item.item_id}`}
                   data-wowhead={getWowheadParams(item, item.slot)}
@@ -193,15 +199,15 @@ export default function CharacterGear({
             ) : (
               <div className="text-red-500">No character image found</div>
             )}
-            <div className="text-blue-200 mt-4 text-center">
-              {characterData.item_level_equipped.toFixed(1)} item lvl (Equipped)
-            </div>
           </div>
 
           <div className="flex flex-col gap-2">
             {/* Right column (lower body gear) */}
-            {orderedGear.slice(8).map((item) => (
-              <div key={item.slot} className="relative flex items-center">
+            {orderedGear.slice(7).map((item) => (
+              <div
+                key={item.slot}
+                className="relative flex items-center bg-deep-blue rounded-md"
+              >
                 <a
                   href={`https://www.wowhead.com/item=${item.item_id}`}
                   data-wowhead={getWowheadParams(item, item.slot)}

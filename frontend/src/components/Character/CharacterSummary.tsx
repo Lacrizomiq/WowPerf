@@ -35,7 +35,7 @@ export default function CharacterSummary({
     return <div className="text-center p-4">No character data found</div>;
 
   return (
-    <div className="bg-[#002440] rounded-xl p-5 flex items-center space-x-5 mb-5">
+    <div className="bg-[#002440] rounded-xl p-5 flex items-center space-x-5">
       <div className="relative">
         {character.avatar_url && (
           <Image

@@ -79,6 +79,7 @@ export default function CharacterLayout({
     <div className="min-h-screen p-5 bg-[#000c1a] text-white">
       <div className="max-w-7xl mx-auto">
         <Header />
+
         <CharacterSummary
           region={region}
           realm={realm}
@@ -86,37 +87,43 @@ export default function CharacterLayout({
           namespace={`profile-${region}`}
           locale="en_GB"
         />
-        <nav className="flex justify-center mb-5 space-x-4">
-          {[
-            { name: "Gear", icon: <Shield size={20} />, key: "gear" },
-            { name: "Talents", icon: <ScrollText size={20} />, key: "talents" },
-            {
-              name: "Mythic+",
-              icon: <Hourglass size={20} />,
-              key: "mythic-plus",
-            },
-            {
-              name: "Raids",
-              icon: <Sword size={20} />,
-              key: "raid-progression",
-            },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setSelectedTab(tab.key)}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all bg-[#002440] justify-center
+        <div className="bg-[#002440] flex justify-center p-5 mt-5 rounded-t-xl">
+          <nav className="flex justify-center  bg-[#002440] border-2 border-[#003660] w-fit">
+            {[
+              { name: "Gear", icon: <Shield size={20} />, key: "gear" },
+              {
+                name: "Talents",
+                icon: <ScrollText size={20} />,
+                key: "talents",
+              },
+              {
+                name: "Mythic+",
+                icon: <Hourglass size={20} />,
+                key: "mythic-plus",
+              },
+              {
+                name: "Raids",
+                icon: <Sword size={20} />,
+                key: "raid-progression",
+              },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedTab(tab.key)}
+                className={`flex items-center space-x-2 px-6 py-3  transition-all bg-[#002440] justify-center border-2 border-[#003660]
                 ${
                   selectedTab === tab.key
                     ? "bg-[#003660]"
                     : "hover:bg-[#003660] hover:bg-opacity-50"
                 }`}
-            >
-              {tab.icon}
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </nav>
-        <div>{renderContent()}</div>
+              >
+                {tab.icon}
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="bg-[#002440] rounded-b-xl p-5">{renderContent()}</div>
       </div>
     </div>
   );

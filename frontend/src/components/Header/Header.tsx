@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import MiniSearchBar from "./MiniSearchBar";
 
 export default function Header() {
   return (
@@ -12,18 +13,10 @@ export default function Header() {
         <ul className="flex items-center space-x-6">
           <li>
             <Link
-              href="/characters"
-              className="text-white hover:text-blue-300 transition-colors"
-            >
-              Characters
-            </Link>
-          </li>
-          <li>
-            <Link
               href="/dungeons"
               className="text-white hover:text-blue-300 transition-colors"
             >
-              Dungeons
+              Mythic +
             </Link>
           </li>
           <li>
@@ -33,6 +26,9 @@ export default function Header() {
             >
               Raids
             </Link>
+          </li>
+          <li>
+            <MiniSearchBar />
           </li>
           <li>
             <Link

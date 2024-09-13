@@ -102,7 +102,7 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-xl glow-effect p-4">
+      <div className="mb-6 shadow-2xl glow-effect p-4">
         <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center pb-4">
           <Image
             src={icon}
