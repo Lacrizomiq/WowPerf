@@ -11,6 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// SelectedTalentInfo is used to store selected talent details including rank and the selected entry for choice talents
+type SelectedTalentInfo struct {
+	Rank            int
+	SelectedEntryID int
+}
+
 // TransformCharacterTalents transforms character talent data using Blizzard API data and the local database.
 func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB, treeID, specID int) (*profile.TalentLoadout, error) {
 	talentTree, err := getTalentTreeFromDB(db, treeID, specID)
@@ -48,20 +54,20 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 	return talentLoadout, nil
 }
 
-func transformTalents(dbNodes []talents.TalentNode, selectedTalents map[int]int) []profile.TalentNode {
+func transformTalents(dbNodes []talents.TalentNode, selectedTalents map[int]SelectedTalentInfo) []profile.TalentNode {
 	transformed := make([]profile.TalentNode, 0)
 	for _, dbNode := range dbNodes {
-		rank, isSelected := selectedTalents[dbNode.NodeID]
+		selectedInfo, isSelected := selectedTalents[dbNode.NodeID]
 		if isSelected {
-			transformed = append(transformed, transformSingleTalent(dbNode, rank))
+			transformed = append(transformed, transformSingleTalent(dbNode, selectedInfo))
 		}
 	}
 	return transformed
 }
 
-func getActiveLoadoutTalents(data map[string]interface{}, targetSpecID int) (map[int]int, map[int]int) {
-	selectedTalents := make(map[int]int)
-	selectedHeroTalents := make(map[int]int)
+func getActiveLoadoutTalents(data map[string]interface{}, targetSpecID int) (map[int]SelectedTalentInfo, map[int]SelectedTalentInfo) {
+	selectedTalents := make(map[int]SelectedTalentInfo)
+	selectedHeroTalents := make(map[int]SelectedTalentInfo)
 	specializations, ok := data["specializations"].([]interface{})
 	if !ok {
 		log.Printf("Specializations not found or incorrect type")
@@ -111,7 +117,7 @@ func getActiveLoadoutTalents(data map[string]interface{}, targetSpecID int) (map
 	return selectedTalents, selectedHeroTalents
 }
 
-func processTalents(loadoutMap map[string]interface{}, key string, selected map[int]int) {
+func processTalents(loadoutMap map[string]interface{}, key string, selected map[int]SelectedTalentInfo) {
 	talents, ok := loadoutMap[key].([]interface{})
 	if !ok {
 		return
@@ -133,9 +139,21 @@ func processTalents(loadoutMap map[string]interface{}, key string, selected map[
 			continue
 		}
 
+		selectedEntryID := 0
+		if tooltipData, ok := t["tooltip"].(map[string]interface{}); ok {
+			if talentData, ok := tooltipData["talent"].(map[string]interface{}); ok {
+				if talentID, ok := talentData["id"].(float64); ok {
+					selectedEntryID = int(talentID)
+				}
+			}
+		}
+
 		if rank > 0 {
-			selected[int(id)] = int(rank)
-			log.Printf("Added selected talent: id=%d, rank=%d, type=%s", int(id), int(rank), key)
+			selected[int(id)] = SelectedTalentInfo{
+				Rank:            int(rank),
+				SelectedEntryID: selectedEntryID,
+			}
+			log.Printf("Added selected talent: id=%d, rank=%d, selectedEntryID=%d, type=%s", int(id), int(rank), selectedEntryID, key)
 		}
 	}
 }
@@ -190,7 +208,7 @@ func getEncodedLoadoutText(data map[string]interface{}, targetSpecID int) string
 	return ""
 }
 
-func transformSingleTalent(dbNode talents.TalentNode, rank int) profile.TalentNode {
+func transformSingleTalent(dbNode talents.TalentNode, selectedInfo SelectedTalentInfo) profile.TalentNode {
 	transformed := profile.TalentNode{
 		NodeID:    dbNode.NodeID,
 		NodeType:  dbNode.NodeType,
@@ -204,35 +222,42 @@ func transformSingleTalent(dbNode talents.TalentNode, rank int) profile.TalentNo
 		FreeNode:  dbNode.FreeNode,
 		Next:      convertInt64ArrayToIntSlice(dbNode.Next),
 		Prev:      convertInt64ArrayToIntSlice(dbNode.Prev),
-		Rank:      rank,
+		Rank:      selectedInfo.Rank,
 	}
 
-	if dbNode.Type == "choice" || rank > 0 {
+	if dbNode.Type == "choice" {
+		for _, entry := range dbNode.Entries {
+			if entry.DefinitionID == selectedInfo.SelectedEntryID {
+				transformed.Entries = []profile.TalentEntry{transformTalentEntry(entry)}
+				break
+			}
+		}
+	} else if selectedInfo.Rank > 0 {
 		transformed.Entries = transformTalentEntries(dbNode.Entries)
 	}
 
 	return transformed
 }
 
-func transformHeroTalents(dbNodes []talents.HeroNode, selectedHeroTalents map[int]int) []profile.HeroTalent {
+func transformHeroTalents(dbNodes []talents.HeroNode, selectedHeroTalents map[int]SelectedTalentInfo) []profile.HeroTalent {
 	transformed := make([]profile.HeroTalent, 0)
 	for _, dbNode := range dbNodes {
-		rank, isSelected := selectedHeroTalents[dbNode.NodeID]
+		selectedInfo, isSelected := selectedHeroTalents[dbNode.NodeID]
 		if isSelected {
-			transformed = append(transformed, transformHeroTalent(dbNode, rank))
+			transformed = append(transformed, transformHeroTalent(dbNode, selectedInfo))
 		}
 	}
 	return transformed
 }
 
-func transformHeroTalent(dbNode talents.HeroNode, rank int) profile.HeroTalent {
+func transformHeroTalent(dbNode talents.HeroNode, selectedInfo SelectedTalentInfo) profile.HeroTalent {
 	return profile.HeroTalent{
 		ID:      dbNode.NodeID,
 		Name:    dbNode.Name,
 		Type:    dbNode.Type,
 		PosX:    dbNode.PosX,
 		PosY:    dbNode.PosY,
-		Rank:    rank,
+		Rank:    selectedInfo.Rank,
 		Entries: transformHeroEntriesToProfileEntries(dbNode.Entries),
 	}
 }
