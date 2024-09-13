@@ -49,19 +49,27 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
   };
 
   if (isStaticLoading || isProgressionLoading) {
-    return <div>Loading raid data...</div>;
+    return (
+      <div className="text-white text-center p-4">Loading raid data...</div>
+    );
   }
 
   return (
-    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
-      <ExpansionSelector
-        currentExpansion={selectedExpansion}
-        onExpansionChange={handleExpansionChange}
-      />
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gradient-glow">
+          Raids Progression
+        </h2>
+        <ExpansionSelector
+          currentExpansion={selectedExpansion}
+          onExpansionChange={handleExpansionChange}
+        />
+      </div>
       <StaticRaidsList
         raids={staticRaids || []}
         raidProgressionData={raidProgressionData}
         onRaidSelect={handleRaidSelect}
+        selectedRaid={selectedRaid}
       />
       {selectedRaid && (
         <RaidDetails

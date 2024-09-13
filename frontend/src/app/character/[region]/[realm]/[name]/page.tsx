@@ -8,6 +8,7 @@ import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import RaidOverview from "@/components/Raids/RaidOverview";
+import { Shield, Book, Sword, Activity } from "lucide-react";
 
 export default function CharacterLayout({
   params,
@@ -75,25 +76,44 @@ export default function CharacterLayout({
   };
 
   return (
-    <main className="bg-gradient-dark">
-      <Header />
-      <CharacterSummary
-        region={region}
-        realm={realm}
-        name={name}
-        namespace={`profile-${region}`}
-        locale="en_GB"
-      />
-      <nav className="flex space-x-4 items-center justify-center font-bold p-4 text-white">
-        <button onClick={() => setSelectedTab("gear")}>Gear</button>
-        <button onClick={() => setSelectedTab("talents")}>Talents</button>
-        <button onClick={() => setSelectedTab("mythic-plus")}>Mythic+</button>
-        <button onClick={() => setSelectedTab("raid-progression")}>
-          Raids
-        </button>
-      </nav>
-
-      <div>{renderContent()}</div>
-    </main>
+    <div className="min-h-screen p-5 bg-[#000c1a] text-white">
+      <div className="max-w-7xl mx-auto">
+        <Header />
+        <CharacterSummary
+          region={region}
+          realm={realm}
+          name={name}
+          namespace={`profile-${region}`}
+          locale="en_GB"
+        />
+        <nav className="flex justify-center mb-5 space-x-4">
+          {[
+            { name: "Gear", icon: <Shield size={20} />, key: "gear" },
+            { name: "Talents", icon: <Book size={20} />, key: "talents" },
+            { name: "Mythic+", icon: <Sword size={20} />, key: "mythic-plus" },
+            {
+              name: "Raids",
+              icon: <Activity size={20} />,
+              key: "raid-progression",
+            },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setSelectedTab(tab.key)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all bg-[#002440] justify-center
+                ${
+                  selectedTab === tab.key
+                    ? "bg-[#003660]"
+                    : "hover:bg-[#003660] hover:bg-opacity-50"
+                }`}
+            >
+              {tab.icon}
+              <span>{tab.name}</span>
+            </button>
+          ))}
+        </nav>
+        <div>{renderContent()}</div>
+      </div>
+    </div>
   );
 }

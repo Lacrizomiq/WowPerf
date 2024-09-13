@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dungeon } from "@/types/mythicPlusRuns";
+
 interface Season {
   slug: string;
   name: string;
@@ -30,12 +31,16 @@ const SeasonsSelector: React.FC<SeasonsSelectorProps> = ({
 }) => {
   return (
     <Select onValueChange={onSeasonChange} value={selectedSeason.slug}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[200px] bg-gradient-purple  text-white border-none">
         <SelectValue placeholder="Select a season" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-gradient-purple  text-white">
         {seasons.map((season) => (
-          <SelectItem key={season.slug} value={season.slug}>
+          <SelectItem
+            key={season.slug}
+            value={season.slug}
+            className="hover:bg-gradient-purple"
+          >
             {season.name}
           </SelectItem>
         ))}

@@ -178,7 +178,7 @@ export default function CharacterTalent({
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
   return (
-    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;

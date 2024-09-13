@@ -138,7 +138,7 @@ export default function CharacterGear({
   };
 
   return (
-    <div className="p-4 bg-gradient-dark shadow-lg m-12 flex justify-center items-center glow-effect">
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;

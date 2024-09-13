@@ -15,12 +15,21 @@ const RaidDetails: React.FC<RaidDetailsProps> = ({
     .find((raid) => raid.id === staticRaid.ID);
 
   if (!raidProgress) {
-    return <div>No progression data available for this raid.</div>;
+    return (
+      <div className="bg-deep-blue p-4 rounded-lg mt-8">
+        <h2 className="text-2xl font-bold mb-4 text-gradient-glow">
+          {staticRaid.Name}
+        </h2>
+        <p>No progression data available for this raid.</p>
+      </div>
+    );
   }
 
   return (
     <div className="bg-deep-blue p-4 rounded-lg mt-8">
-      <h2 className="text-2xl font-bold mb-4">{staticRaid.Name}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gradient-glow">
+        {staticRaid.Name}
+      </h2>
       {raidProgress.modes.map((mode: RaidMode) => (
         <div key={mode.difficulty} className="mb-4">
           <h3 className="text-xl font-semibold pb-2">{mode.difficulty}</h3>

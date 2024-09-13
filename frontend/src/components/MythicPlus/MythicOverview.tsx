@@ -59,30 +59,40 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     setSelectedDungeon(dungeon);
   };
 
-  if (isDungeonLoading || isRunsLoading) return <div>Loading data...</div>;
-  if (dungeonError || runsError) return <div>Error loading data</div>;
-  if (!dungeonData) return <div>No dungeon data found</div>;
+  if (isDungeonLoading || isRunsLoading)
+    return <div className="text-white text-center p-4">Loading data...</div>;
+  if (dungeonError || runsError)
+    return (
+      <div className="text-red-500 text-center p-4">Error loading data</div>
+    );
+  if (!dungeonData)
+    return (
+      <div className="text-yellow-500 text-center p-4">
+        No dungeon data found
+      </div>
+    );
 
   const selectedRun = mythicPlusSeasonInfo?.BestRuns.find(
     (run) => run.Dungeon.ID === selectedDungeon?.ID
   );
 
   return (
-    <div className="p-4 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
-      <SeasonsSelector
-        seasons={seasons}
-        onSeasonChange={handleSeasonChange}
-        selectedSeason={selectedSeason}
-      />
-      {!mythicPlusSeasonInfo ? (
-        <div className="mt-4">
-          <h2 className="text-2xl font-bold mb-4">{selectedSeason.name}</h2>
-          <p>This character has no Mythic+ data for this season.</p>
-        </div>
-      ) : (
-        <div className="mb-4 pt-2">
-          <p className="text-xl">
-            Season Mythic Rating :{" "}
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gradient-glow">
+          Mythic+ Dungeons
+        </h2>
+        <SeasonsSelector
+          seasons={seasons}
+          onSeasonChange={handleSeasonChange}
+          selectedSeason={selectedSeason}
+        />
+      </div>
+
+      {mythicPlusSeasonInfo && (
+        <div className="mb-6">
+          <p className="text-xl text-white">
+            Season Mythic Rating:{" "}
             <span
               style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
             >
@@ -91,11 +101,14 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
           </p>
         </div>
       )}
+
       <StaticDungeonList
         dungeons={dungeonData.dungeons}
         mythicPlusRuns={mythicPlusSeasonInfo?.BestRuns || []}
         onDungeonClick={handleDungeonClick}
+        selectedDungeon={selectedDungeon}
       />
+
       {selectedRun && <DungeonDetails run={selectedRun} region={region} />}
     </div>
   );
