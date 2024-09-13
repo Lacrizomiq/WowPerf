@@ -30,22 +30,24 @@ const SeasonsSelector: React.FC<SeasonsSelectorProps> = ({
   selectedSeason,
 }) => {
   return (
-    <Select onValueChange={onSeasonChange} value={selectedSeason.slug}>
-      <SelectTrigger className="w-[200px] bg-gradient-purple  text-white border-none">
-        <SelectValue placeholder="Select a season" />
-      </SelectTrigger>
-      <SelectContent className="bg-gradient-purple  text-white">
-        {seasons.map((season) => (
-          <SelectItem
-            key={season.slug}
-            value={season.slug}
-            className="hover:bg-gradient-purple"
-          >
-            {season.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <>
+      <Select onValueChange={onSeasonChange} value={selectedSeason.slug}>
+        <SelectTrigger className="w-[200px] bg-gradient-purple text-white border-none">
+          <SelectValue placeholder="Select a season" />
+        </SelectTrigger>
+        <SelectContent className="bg-gradient-purple text-white">
+          {seasons.map((season) => (
+            <SelectItem
+              key={season.slug}
+              value={season.slug}
+              className="hover:bg-gradient-purple"
+            >
+              {season.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 };
 

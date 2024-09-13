@@ -124,11 +124,10 @@ export default function CharacterTalent({
     );
   };
 
-  {
-    /* const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
-    const subTreeName = talentLoadout.sub_tree_nodes[0]?.name;
+  const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
+    const subTreeName = talentLoadout.sub_tree_nodes?.[0]?.name ?? "Unknown";
     const subtreeIcon =
-      talentLoadout.sub_tree_nodes[0]?.entries[0]?.atlasMemberName;
+      talentLoadout.sub_tree_nodes?.[0]?.entries?.[0]?.atlasMemberName;
     const iconUrl = subtreeIcon
       ? `https://wow.zamimg.com/images/wow/TextureAtlas/live/${subtreeIcon}.webp`
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
@@ -154,8 +153,7 @@ export default function CharacterTalent({
         </div>
       </div>
     );
-  };*/
-  }
+  };
 
   const getTalentCalculatorUrl = () => {
     if (
@@ -194,7 +192,7 @@ export default function CharacterTalent({
         <div className="flex gap-4">
           <button
             onClick={toggleDisplayMode}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
@@ -205,7 +203,7 @@ export default function CharacterTalent({
               rel="noopener noreferrer"
               className="font-bold flex items-center gap-2 align-center hover:text-blue-300"
             >
-              Talent Calculator <SquareArrowOutUpRight className="ml-2" />
+              Talent Calculator <SquareArrowOutUpRight className="px-1" />
             </a>
           )}
         </div>
@@ -228,7 +226,7 @@ export default function CharacterTalent({
           </div>
           {talentLoadout.hero_talents.length > 0 && (
             <div className="flex-1">
-              {/* {renderHeroTalentsGroup(talentLoadout.hero_talents)} */}
+              {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
         </div>

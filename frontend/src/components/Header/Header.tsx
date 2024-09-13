@@ -37,7 +37,7 @@ export default function Header() {
           <li>
             <Link
               href="/signin"
-              className="px-4 py-2 text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-white bg-gradient-blue rounded-full hover:bg-blue-700 transition-colors"
             >
               Sign In
             </Link>
@@ -45,7 +45,7 @@ export default function Header() {
           <li>
             <Link
               href="/signup"
-              className="px-4 py-2 text-white bg-purple-600 rounded-full hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 text-white bg-gradient-purple rounded-full hover:bg-purple-600 transition-colors"
             >
               Sign Up
             </Link>

@@ -61,7 +61,15 @@ body {
 }
 
 .bg-gradient-purple {
-  background: linear-gradient(135deg, #3f5dae, #5d3586, #5438b3);
+  background: linear-gradient(135deg, #22397a, #532f76, #5438b3);
+}
+
+.bg-gradient-blue {
+  background: linear-gradient(
+    135deg,
+    var(--color-royal-blue),
+    rgba(65, 105, 225, 0.5)
+  );
 }
 
 .text-gradient-glow {

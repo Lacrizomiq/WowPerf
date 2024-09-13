@@ -32,12 +32,13 @@ const RaidDetails: React.FC<RaidDetailsProps> = ({
       </h2>
       {raidProgress.modes.map((mode: RaidMode) => (
         <div key={mode.difficulty} className="mb-4">
-          <h3 className="text-xl font-semibold pb-2">{mode.difficulty}</h3>
-
-          <p>
-            Progress: {mode.progress.completed_count}/
-            {mode.progress.total_count}
-          </p>
+          <div className="flex items-center text-center justify-between">
+            <h3 className="text-xl font-bold pb-2">{mode.difficulty}</h3>
+            <p>
+              Progress: {mode.progress.completed_count}/
+              {mode.progress.total_count}
+            </p>
+          </div>
           <ul className="mt-2">
             {mode.progress.encounters.map((encounter) => (
               <li

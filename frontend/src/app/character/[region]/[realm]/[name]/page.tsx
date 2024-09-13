@@ -8,7 +8,7 @@ import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import RaidOverview from "@/components/Raids/RaidOverview";
-import { Shield, Book, Sword, Activity } from "lucide-react";
+import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 
 export default function CharacterLayout({
   params,
@@ -89,11 +89,15 @@ export default function CharacterLayout({
         <nav className="flex justify-center mb-5 space-x-4">
           {[
             { name: "Gear", icon: <Shield size={20} />, key: "gear" },
-            { name: "Talents", icon: <Book size={20} />, key: "talents" },
-            { name: "Mythic+", icon: <Sword size={20} />, key: "mythic-plus" },
+            { name: "Talents", icon: <ScrollText size={20} />, key: "talents" },
+            {
+              name: "Mythic+",
+              icon: <Hourglass size={20} />,
+              key: "mythic-plus",
+            },
             {
               name: "Raids",
-              icon: <Activity size={20} />,
+              icon: <Sword size={20} />,
               key: "raid-progression",
             },
           ].map((tab) => (

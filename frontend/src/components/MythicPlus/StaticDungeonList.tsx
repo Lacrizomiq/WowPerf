@@ -29,7 +29,7 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
             }`}
             onClick={() => onDungeonClick(dungeon)}
           >
-            <div className="h-48 bg-gray-300 relative">
+            <div className="h-36 bg-gray-300 relative">
               <Image
                 src={dungeon.MediaURL}
                 alt={dungeon.Name}
@@ -45,9 +45,6 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
               {run ? (
                 <div className="text-center">
                   <p className="text-blue-300">Level: {run.KeystoneLevel}</p>
-                  <p className="text-blue-300">
-                    Score: {run.MythicRating.toFixed(2)}
-                  </p>
                 </div>
               ) : (
                 <p className="text-center text-blue-300">
