@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { TalentNode } from "@/types/talents";
-import TalentGrid from "./TalentGrid";
+import TalentGrid from "@/components/TalentTree/TalentGrid";
 
 interface ClassTalentsProps {
   talents: TalentNode[];

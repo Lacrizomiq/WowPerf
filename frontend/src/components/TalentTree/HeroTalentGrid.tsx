@@ -12,7 +12,7 @@ const HeroTalentGrid: React.FC<TalentGridProps> = ({
 }) => {
   const cellSize = 40;
   const padding = 10;
-  const scaleFactor = 0.1; // Adjust this value to scale the grid
+  const scaleFactor = 0.1;
 
   const minX = Math.min(...talents.map((t) => t.posX));
   const minY = Math.min(...talents.map((t) => t.posY));

@@ -11,6 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// SelectedTalentInfo is used to store selected talent details including rank and the selected entry for choice talents
+type SelectedTalentInfo struct {
+	Rank            int
+	SelectedEntryID int
+}
+
 // TransformCharacterTalents transforms character talent data using Blizzard API data and the local database.
 func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB, treeID, specID int) (*profile.TalentLoadout, error) {
 	talentTree, err := getTalentTreeFromDB(db, treeID, specID)
@@ -19,28 +25,15 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		return nil, fmt.Errorf("failed to get talent tree from database: %w", err)
 	}
 
-	selectedClassTalents := getSelectedTalents(blizzardData, "selected_class_talents")
-	selectedSpecTalents := getSelectedTalents(blizzardData, "selected_spec_talents")
-	selectedHeroTalents := getSelectedTalents(blizzardData, "selected_hero_talents")
-	encodedLoadoutText := getEncodedLoadoutText(blizzardData)
+	selectedTalents, selectedHeroTalents := getActiveLoadoutTalents(blizzardData, specID)
 
-	classTalents := make([]profile.TalentNode, 0)
-	specTalents := make([]profile.TalentNode, 0)
+	classTalents := transformTalents(talentTree.ClassNodes, selectedTalents)
+	specTalents := transformTalents(talentTree.SpecNodes, selectedTalents)
+	heroTalents := transformHeroTalents(talentTree.HeroNodes, selectedHeroTalents)
 
-	for _, dbNode := range talentTree.ClassNodes {
-		if node := transformSingleTalent(dbNode, selectedClassTalents[dbNode.NodeID]); node != nil {
-			classTalents = append(classTalents, *node)
-		}
-	}
+	encodedLoadoutText := getEncodedLoadoutText(blizzardData, specID)
 
-	for _, dbNode := range talentTree.SpecNodes {
-		if node := transformSingleTalent(dbNode, selectedSpecTalents[dbNode.NodeID]); node != nil {
-			specTalents = append(specTalents, *node)
-		}
-	}
-
-	classTalents = filterTalentsByType(classTalents, "class")
-	specTalents = filterTalentsByType(specTalents, "spec")
+	talentTreeID := treeID
 
 	talentLoadout := &profile.TalentLoadout{
 		LoadoutSpecID:      specID,
@@ -49,10 +42,10 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 		EncodedLoadoutText: encodedLoadoutText,
 		ClassIcon:          talentTree.ClassIcon,
 		SpecIcon:           talentTree.SpecIcon,
-		ClassTalents:       classTalents,
-		SpecTalents:        specTalents,
-		HeroTalents:        transformHeroTalents(talentTree.HeroNodes, selectedHeroTalents),
-		SubTreeNodes:       []profile.SubTreeNode{getSelectedHeroTalentTree(blizzardData, db)},
+		ClassTalents:       filterTalentsByType(classTalents, "class"),
+		SpecTalents:        filterTalentsByType(specTalents, "spec"),
+		HeroTalents:        heroTalents,
+		SubTreeNodes:       getSelectedHeroTalentTree(blizzardData, db, specID, talentTreeID),
 	}
 
 	sortTalentNodes(talentLoadout.ClassTalents)
@@ -61,17 +54,129 @@ func TransformCharacterTalents(blizzardData map[string]interface{}, db *gorm.DB,
 	return talentLoadout, nil
 }
 
-// getEncodedLoadoutText extracts the encoded loadout text from Blizzard data
-func getEncodedLoadoutText(data map[string]interface{}) string {
+func transformTalents(dbNodes []talents.TalentNode, selectedTalents map[int]SelectedTalentInfo) []profile.TalentNode {
+	transformed := make([]profile.TalentNode, 0)
+	for _, dbNode := range dbNodes {
+		selectedInfo, isSelected := selectedTalents[dbNode.NodeID]
+		if isSelected {
+			transformed = append(transformed, transformSingleTalent(dbNode, selectedInfo))
+		}
+	}
+	return transformed
+}
+
+func getActiveLoadoutTalents(data map[string]interface{}, targetSpecID int) (map[int]SelectedTalentInfo, map[int]SelectedTalentInfo) {
+	selectedTalents := make(map[int]SelectedTalentInfo)
+	selectedHeroTalents := make(map[int]SelectedTalentInfo)
 	specializations, ok := data["specializations"].([]interface{})
 	if !ok {
 		log.Printf("Specializations not found or incorrect type")
+		return selectedTalents, selectedHeroTalents
+	}
+
+	for _, spec := range specializations {
+		specMap, ok := spec.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		specInfo, ok := specMap["specialization"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		specID, ok := specInfo["id"].(float64)
+		if !ok || int(specID) != targetSpecID {
+			continue
+		}
+
+		loadouts, ok := specMap["loadouts"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		for _, loadout := range loadouts {
+			loadoutMap, ok := loadout.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			isActive, ok := loadoutMap["is_active"].(bool)
+			if !ok || !isActive {
+				continue
+			}
+
+			processTalents(loadoutMap, "selected_class_talents", selectedTalents)
+			processTalents(loadoutMap, "selected_spec_talents", selectedTalents)
+			processTalents(loadoutMap, "selected_hero_talents", selectedHeroTalents)
+
+			return selectedTalents, selectedHeroTalents
+		}
+	}
+
+	return selectedTalents, selectedHeroTalents
+}
+
+func processTalents(loadoutMap map[string]interface{}, key string, selected map[int]SelectedTalentInfo) {
+	talents, ok := loadoutMap[key].([]interface{})
+	if !ok {
+		return
+	}
+
+	for _, talent := range talents {
+		t, ok := talent.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		id, ok := t["id"].(float64)
+		if !ok {
+			continue
+		}
+
+		rank, ok := t["rank"].(float64)
+		if !ok {
+			continue
+		}
+
+		selectedEntryID := 0
+		if tooltipData, ok := t["tooltip"].(map[string]interface{}); ok {
+			if talentData, ok := tooltipData["talent"].(map[string]interface{}); ok {
+				if talentID, ok := talentData["id"].(float64); ok {
+					selectedEntryID = int(talentID)
+				}
+			}
+		}
+
+		if rank > 0 {
+			selected[int(id)] = SelectedTalentInfo{
+				Rank:            int(rank),
+				SelectedEntryID: selectedEntryID,
+			}
+			log.Printf("Added selected talent: id=%d, rank=%d, selectedEntryID=%d, type=%s", int(id), int(rank), selectedEntryID, key)
+		}
+	}
+}
+
+func getEncodedLoadoutText(data map[string]interface{}, targetSpecID int) string {
+	specializations, ok := data["specializations"].([]interface{})
+	if !ok {
 		return ""
 	}
 
 	for _, spec := range specializations {
 		specMap, ok := spec.(map[string]interface{})
 		if !ok {
+			continue
+		}
+
+		specInfo, ok := specMap["specialization"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		specID, ok := specInfo["id"].(float64)
+		if !ok || int(specID) != targetSpecID {
 			continue
 		}
 
@@ -96,18 +201,15 @@ func getEncodedLoadoutText(data map[string]interface{}) string {
 				log.Printf("talent_loadout_code not found or incorrect type in active loadout")
 				return ""
 			}
-
 			return talentLoadoutCode
 		}
 	}
 
-	log.Printf("No active loadout found")
 	return ""
 }
 
-// transformSingleTalent transforms a single talent node from the Blizzard API into a struct.
-func transformSingleTalent(dbNode talents.TalentNode, rank int) *profile.TalentNode {
-	return &profile.TalentNode{
+func transformSingleTalent(dbNode talents.TalentNode, selectedInfo SelectedTalentInfo) profile.TalentNode {
+	transformed := profile.TalentNode{
 		NodeID:    dbNode.NodeID,
 		NodeType:  dbNode.NodeType,
 		Name:      dbNode.Name,
@@ -120,23 +222,74 @@ func transformSingleTalent(dbNode talents.TalentNode, rank int) *profile.TalentN
 		FreeNode:  dbNode.FreeNode,
 		Next:      convertInt64ArrayToIntSlice(dbNode.Next),
 		Prev:      convertInt64ArrayToIntSlice(dbNode.Prev),
-		Entries:   transformTalentEntries(dbNode.Entries),
-		Rank:      rank,
+		Rank:      selectedInfo.Rank,
+	}
+
+	if dbNode.Type == "choice" {
+		for _, entry := range dbNode.Entries {
+			if entry.DefinitionID == selectedInfo.SelectedEntryID {
+				transformed.Entries = []profile.TalentEntry{transformTalentEntry(entry)}
+				break
+			}
+		}
+	} else if selectedInfo.Rank > 0 {
+		transformed.Entries = transformTalentEntries(dbNode.Entries)
+	}
+
+	return transformed
+}
+
+func transformHeroTalents(dbNodes []talents.HeroNode, selectedHeroTalents map[int]SelectedTalentInfo) []profile.HeroTalent {
+	transformed := make([]profile.HeroTalent, 0)
+	for _, dbNode := range dbNodes {
+		selectedInfo, isSelected := selectedHeroTalents[dbNode.NodeID]
+		if isSelected {
+			transformed = append(transformed, transformHeroTalent(dbNode, selectedInfo))
+		}
+	}
+	return transformed
+}
+
+func transformHeroTalent(dbNode talents.HeroNode, selectedInfo SelectedTalentInfo) profile.HeroTalent {
+	return profile.HeroTalent{
+		ID:      dbNode.NodeID,
+		Name:    dbNode.Name,
+		Type:    dbNode.Type,
+		PosX:    dbNode.PosX,
+		PosY:    dbNode.PosY,
+		Rank:    selectedInfo.Rank,
+		Entries: transformHeroEntriesToProfileEntries(dbNode.Entries),
 	}
 }
 
-// filterTalentsByType filters the talents by node type
+func transformHeroEntriesToProfileEntries(entries []talents.HeroEntry) []profile.HeroEntry {
+	transformed := make([]profile.HeroEntry, len(entries))
+	for i, entry := range entries {
+		transformed[i] = profile.HeroEntry{
+			EntryID:      entry.EntryID,
+			DefinitionID: entry.DefinitionID,
+			MaxRanks:     entry.MaxRanks,
+			Type:         entry.Type,
+			Name:         entry.Name,
+			SpellID:      entry.SpellID,
+			Icon:         entry.Icon,
+			Index:        entry.Index,
+		}
+	}
+	return transformed
+}
+
 func filterTalentsByType(talents []profile.TalentNode, nodeType string) []profile.TalentNode {
 	filtered := make([]profile.TalentNode, 0)
 	for _, talent := range talents {
 		if talent.NodeType == nodeType {
 			filtered = append(filtered, talent)
+			log.Printf("Filtered talent: NodeID=%d, Name=%s, Type=%s, Rank=%d", talent.NodeID, talent.Name, talent.NodeType, talent.Rank)
 		}
 	}
 	return filtered
 }
 
-// getTalentTreeFromDB retrieves the talent tree from the database
 func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, error) {
 	var talentTree talents.TalentTree
 	err := db.Where("trait_tree_id = ? AND spec_id = ?", treeID, specID).
@@ -157,15 +310,109 @@ func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, 
 	return &talentTree, nil
 }
 
-// getSelectedTalents extracts the selected talents from Blizzard data
-func getSelectedTalents(data map[string]interface{}, key string) map[int]int {
-	selected := make(map[int]int)
-	log.Printf("Getting selected talents for key: %s", key)
+func sortTalentNodes(nodes []profile.TalentNode) {
+	sort.Slice(nodes, func(i, j int) bool {
+		// sort by posY (top to bottom)
+		if nodes[i].PosY != nodes[j].PosY {
+			return nodes[i].PosY < nodes[j].PosY
+		}
+		// if posY is equal, sort by posX (left to right)
+		if nodes[i].PosX != nodes[j].PosX {
+			return nodes[i].PosX < nodes[j].PosX
+		}
+		// if posX and posY are equal, use NodeID as final criteria
+		return nodes[i].NodeID < nodes[j].NodeID
+	})
+}
 
-	specializations, ok := data["specializations"].([]interface{})
+func convertInt64ArrayToIntSlice(arr pq.Int64Array) []int {
+	result := make([]int, len(arr))
+	for i, v := range arr {
+		result[i] = int(v)
+	}
+	return result
+}
+
+func transformTalentEntry(entry talents.TalentEntry) profile.TalentEntry {
+	return profile.TalentEntry{
+		EntryID:      entry.EntryID,
+		DefinitionID: entry.DefinitionID,
+		MaxRanks:     entry.MaxRanks,
+		Type:         entry.Type,
+		Name:         entry.Name,
+		SpellID:      entry.SpellID,
+		Icon:         entry.Icon,
+		Index:        entry.Index,
+	}
+}
+
+func transformTalentEntries(entries []talents.TalentEntry) []profile.TalentEntry {
+	transformed := make([]profile.TalentEntry, len(entries))
+	for i, entry := range entries {
+		transformed[i] = transformTalentEntry(entry)
+	}
+	return transformed
+}
+
+func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB, specID int, talentTreeID int) []profile.SubTreeNode {
+	selectedHeroTalentTree := extractSelectedHeroTalentTree(data)
+	if selectedHeroTalentTree == nil {
+		log.Println("Selected hero talent tree is nil")
+		return []profile.SubTreeNode{}
+	}
+
+	subTreeID, ok := selectedHeroTalentTree["id"].(float64)
 	if !ok {
-		log.Printf("Specializations not found or incorrect type")
-		return selected
+		log.Println("Failed to extract subTreeID")
+		return []profile.SubTreeNode{}
+	}
+
+	log.Printf("Fetching SubTreeNode for specID: %d, talentTreeID: %d, subTreeID: %f", specID, talentTreeID, subTreeID)
+
+	var subTreeNode talents.SubTreeNode
+	err := db.Where("spec_id = ? AND talent_tree_id = ?", specID, talentTreeID).First(&subTreeNode).Error
+	if err != nil {
+		log.Printf("Error fetching SubTreeNode: %v", err)
+		return []profile.SubTreeNode{}
+	}
+
+	var subTreeEntries []talents.SubTreeEntry
+	err = db.Where("sub_tree_node_id = ? AND trait_sub_tree_id = ?", subTreeNode.SubTreeNodeID, int(subTreeID)).
+		Find(&subTreeEntries).Error
+	if err != nil {
+		log.Printf("Error fetching SubTreeEntries: %v", err)
+		return []profile.SubTreeNode{}
+	}
+
+	if len(subTreeEntries) == 0 {
+		log.Println("No SubTreeEntries found")
+		return []profile.SubTreeNode{}
+	}
+
+	log.Printf("Found SubTreeNode: %+v", subTreeNode)
+
+	transformed := transformSubTreeNode(subTreeNode, subTreeEntries)
+	log.Printf("Transformed SubTreeNode: %+v", transformed)
+
+	return []profile.SubTreeNode{transformed}
+}
+
+func transformSubTreeNode(dbNode talents.SubTreeNode, dbEntries []talents.SubTreeEntry) profile.SubTreeNode {
+	return profile.SubTreeNode{
+		ID:      dbNode.SubTreeNodeID,
+		Name:    dbNode.Name,
+		Type:    dbNode.Type,
+		PosX:    dbNode.PosX,
+		PosY:    dbNode.PosY,
+		Entries: transformSubTreeEntries(dbEntries),
+	}
+}
+
+func extractSelectedHeroTalentTree(data map[string]interface{}) map[string]interface{} {
+	specializations, ok := data["specializations"].([]interface{})
+	if !ok || len(specializations) == 0 {
+		log.Println("No specializations found")
+		return nil
 	}
 
 	for _, spec := range specializations {
@@ -175,7 +422,7 @@ func getSelectedTalents(data map[string]interface{}, key string) map[int]int {
 		}
 
 		loadouts, ok := specMap["loadouts"].([]interface{})
-		if !ok {
+		if !ok || len(loadouts) == 0 {
 			continue
 		}
 
@@ -185,172 +432,37 @@ func getSelectedTalents(data map[string]interface{}, key string) map[int]int {
 				continue
 			}
 
-			talents, ok := loadoutMap[key].([]interface{})
-			if !ok {
+			isActive, ok := loadoutMap["is_active"].(bool)
+			if !ok || !isActive {
 				continue
 			}
 
-			for _, talent := range talents {
-				t, ok := talent.(map[string]interface{})
-				if !ok {
-					continue
-				}
-
-				id, ok := t["id"].(float64)
-				if !ok {
-					continue
-				}
-
-				rank, ok := t["rank"].(float64)
-				if !ok {
-					continue
-				}
-
-				selected[int(id)] = int(rank)
-				log.Printf("Added talent: id=%d, rank=%d", int(id), int(rank))
+			selectedTree, ok := loadoutMap["selected_hero_talent_tree"].(map[string]interface{})
+			if !ok {
+				log.Println("No selected_hero_talent_tree found in active loadout")
+				continue
 			}
+
+			log.Printf("Found selected hero talent tree: %+v", selectedTree)
+			return selectedTree
 		}
 	}
 
-	return selected
+	log.Println("No active loadout or selected hero talent tree found")
+	return nil
 }
 
-// getSelectedHeroTalentTree extracts the selected hero talent tree from Blizzard data
-func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB) profile.SubTreeNode {
-	var selectedTree map[string]interface{}
-	if specializations, ok := data["specializations"].([]interface{}); ok && len(specializations) > 0 {
-		if spec, ok := specializations[0].(map[string]interface{}); ok {
-			if loadouts, ok := spec["loadouts"].([]interface{}); ok && len(loadouts) > 0 {
-				if loadout, ok := loadouts[0].(map[string]interface{}); ok {
-					selectedTree = loadout["selected_hero_talent_tree"].(map[string]interface{})
-				}
-			}
-		}
-	}
-
-	if selectedTree == nil {
-		log.Println("No selected hero talent tree found")
-		return profile.SubTreeNode{}
-	}
-
-	subTreeNodeID := int(selectedTree["id"].(float64))
-
-	var subTreeEntries []talents.SubTreeEntry
-	err := db.Where("trait_sub_tree_id = ?", subTreeNodeID).Find(&subTreeEntries).Error
-	if err != nil {
-		log.Printf("Error fetching sub tree entries for TraitSubTreeID %d: %v", subTreeNodeID, err)
-		return profile.SubTreeNode{}
-	}
-
-	if len(subTreeEntries) == 0 {
-		log.Printf("No sub tree entries found for TraitSubTreeID: %d", subTreeNodeID)
-		return profile.SubTreeNode{}
-	}
-
-	log.Printf("Found %d sub tree entries for TraitSubTreeID: %d", len(subTreeEntries), subTreeNodeID)
-
-	return profile.SubTreeNode{
-		SubTreeNodeID: subTreeNodeID,
-		Name:          selectedTree["name"].(string),
-		Type:          "subtree",
-		Entries:       transformSubTreeEntries(subTreeEntries),
-	}
-}
-
-// transformHeroTalents transforms hero nodes into hero talents
-func transformHeroTalents(dbNodes []talents.HeroNode, selectedTalents map[int]int) []profile.HeroTalent {
-	var transformedHeroTalents []profile.HeroTalent
-	for _, dbNode := range dbNodes {
-		rank := selectedTalents[dbNode.NodeID]
-		if rank > 0 {
-			heroTalent := profile.HeroTalent{
-				ID:             dbNode.NodeID,
-				Type:           dbNode.Type,
-				Name:           dbNode.Name,
-				TraitSubTreeID: dbNode.SubTreeID,
-				PosX:           dbNode.PosX,
-				PosY:           dbNode.PosY,
-				Nodes:          convertInt64ArrayToIntSlice(dbNode.Next),
-				Rank:           rank,
-				Entries:        transformHeroEntries(dbNode.Entries),
-			}
-			transformedHeroTalents = append(transformedHeroTalents, heroTalent)
-		}
-	}
-	return transformedHeroTalents
-}
-
-// transformHeroEntries transforms database hero entries to profile hero nodes
-func transformHeroEntries(dbEntries []talents.HeroEntry) []profile.HeroEntry {
-	var transformedEntries []profile.HeroEntry
-	for _, entry := range dbEntries {
-		transformedEntry := profile.HeroEntry{
-			ID:        entry.EntryID,
-			Name:      entry.Name,
-			Type:      entry.Type,
-			MaxRanks:  entry.MaxRanks,
-			EntryNode: true,
-			FreeNode:  true,
-			SpellID:   entry.SpellID,
-			Icon:      entry.Icon,
-		}
-		transformedEntries = append(transformedEntries, transformedEntry)
-	}
-	return transformedEntries
-}
-
-// transformTalentEntries transforms database talent entries to profile talent entries
-func transformTalentEntries(dbEntries []talents.TalentEntry) []profile.TalentEntry {
-	var transformedEntries []profile.TalentEntry
-	for _, entry := range dbEntries {
-		transformedEntry := profile.TalentEntry{
-			EntryID:      entry.EntryID,
-			DefinitionID: entry.DefinitionID,
-			MaxRanks:     entry.MaxRanks,
-			Type:         entry.Type,
-			Name:         entry.Name,
-			SpellID:      entry.SpellID,
-			Icon:         entry.Icon,
-			Index:        entry.Index,
-		}
-		transformedEntries = append(transformedEntries, transformedEntry)
-	}
-	return transformedEntries
-}
-
-// transformSubTreeEntries transforms database subtree entries to profile subtree entries
 func transformSubTreeEntries(dbEntries []talents.SubTreeEntry) []profile.SubTreeEntry {
-	var transformedEntries []profile.SubTreeEntry
-	for _, entry := range dbEntries {
-		transformedEntry := profile.SubTreeEntry{
-			EntryID:         entry.EntryID,
+	transformed := make([]profile.SubTreeEntry, len(dbEntries))
+	for i, entry := range dbEntries {
+		transformed[i] = profile.SubTreeEntry{
+			ID:              entry.EntryID,
 			Type:            entry.Type,
 			Name:            entry.Name,
 			TraitSubTreeID:  entry.TraitSubTreeID,
 			AtlasMemberName: entry.AtlasMemberName,
 			Nodes:           convertInt64ArrayToIntSlice(entry.Nodes),
 		}
-		transformedEntries = append(transformedEntries, transformedEntry)
 	}
-
-	return transformedEntries
-}
-
-// convertInt64ArrayToIntSlice converts pq.Int64Array to []int
-func convertInt64ArrayToIntSlice(arr pq.Int64Array) []int {
-	result := make([]int, len(arr))
-	for i, v := range arr {
-		result[i] = int(v)
-	}
-	return result
-}
-
-// sortTalentNodes sorts the talent nodes by their position in the tree
-func sortTalentNodes(nodes []profile.TalentNode) {
-	sort.Slice(nodes, func(i, j int) bool {
-		if nodes[i].PosY == nodes[j].PosY {
-			return nodes[i].PosX < nodes[j].PosX
-		}
-		return nodes[i].PosY < nodes[j].PosY
-	})
+	return transformed
 }

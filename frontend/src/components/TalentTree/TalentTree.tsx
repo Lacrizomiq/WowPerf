@@ -1,7 +1,7 @@
 import React from "react";
 import { TalentNode } from "@/types/talents";
 import ClassTalents from "./ClassTalents";
-import SpecTalents from "./SpecTalents";
+import SpecTalents from "./SpecTalent";
 import HeroSpecTalents from "./HeroTalent";
 import { useGetBlizzardTalentTree } from "@/hooks/useBlizzardApi";
 
