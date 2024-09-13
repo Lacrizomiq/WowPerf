@@ -176,7 +176,7 @@ export default function CharacterTalent({
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
   return (
-    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
+    <div className="p-6 bg-[#002440] shadow-lg m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -186,9 +186,7 @@ export default function CharacterTalent({
         }
       `}</style>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gradient-glow">
-          Talent Build Summary
-        </h2>
+        <h2 className="text-2xl font-bold">Talent Build Summary</h2>
         <div className="flex gap-4">
           <button
             onClick={toggleDisplayMode}

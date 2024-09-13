@@ -88,7 +88,7 @@ export default function CharacterLayout({
           locale="en_GB"
         />
         <div className="bg-[#002440] flex justify-center p-5 mt-5 rounded-t-xl">
-          <nav className="flex justify-center  bg-[#002440] border-2 border-[#003660] w-fit">
+          <nav className="flex justify-center bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
             {[
               { name: "Gear", icon: <Shield size={20} />, key: "gear" },
               {
@@ -106,16 +106,20 @@ export default function CharacterLayout({
                 icon: <Sword size={20} />,
                 key: "raid-progression",
               },
-            ].map((tab) => (
+            ].map((tab, index, array) => (
               <button
                 key={tab.key}
                 onClick={() => setSelectedTab(tab.key)}
-                className={`flex items-center space-x-2 px-6 py-3  transition-all bg-[#002440] justify-center border-2 border-[#003660]
+                className={`flex items-center space-x-2 px-6 py-3 transition-all bg-[#002440] justify-center
                 ${
                   selectedTab === tab.key
                     ? "bg-[#003660]"
                     : "hover:bg-[#003660] hover:bg-opacity-50"
-                }`}
+                }
+                ${index === 0 ? "rounded-l-full" : ""}
+                ${index === array.length - 1 ? "rounded-r-full" : ""}
+                ${index !== 0 ? "border-l border-[#003660]" : ""}
+      `}
               >
                 {tab.icon}
                 <span>{tab.name}</span>

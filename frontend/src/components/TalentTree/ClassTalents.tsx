@@ -24,7 +24,7 @@ const ClassTalents: React.FC<ClassTalentsProps> = ({
           alt={className}
           width={32}
           height={32}
-          className="mr-2"
+          className="mr-2 rounded-full"
           unoptimized
         />
         <span>{className} Talents</span>

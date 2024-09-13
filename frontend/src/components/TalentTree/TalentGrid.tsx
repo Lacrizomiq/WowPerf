@@ -43,7 +43,7 @@ const TalentGrid: React.FC<TalentGridProps> = ({
           minY={minY}
           scaleFactor={scaleFactor}
           padding={padding}
-          isSelected={selectedTalents.some((t) => t.id === talent.id)} // Add this prop
+          isSelected={selectedTalents.some((t) => t.id === talent.id)}
         />
       ))}
     </div>
@@ -83,7 +83,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className={`relative ${isSelected ? "glow-effect" : ""}`}>
+      <div className={`relative ${isSelected ? "" : ""}`}>
         <Image
           src={
             imageError
@@ -93,13 +93,15 @@ const TalentIcon: React.FC<TalentIconProps> = ({
           alt={talent.name}
           width={cellSize}
           height={cellSize}
-          className={`rounded-full border-2 ${
-            isSelected ? "border-yellow-400" : "border-gray-700 opacity-50"
+          className={`rounded-full border-2  ${
+            isSelected
+              ? "border-yellow-400 glow-effect"
+              : "border-gray-700 opacity-50"
           }`}
           onError={() => setImageError(true)}
         />
         {isSelected && (
-          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded">
+          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
             {talent.rank}/{talent.maxRanks}
           </div>
         )}
