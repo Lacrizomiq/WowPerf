@@ -125,7 +125,8 @@ export default function CharacterTalent({
   };
 
   const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
-    const subTreeName = talentLoadout.sub_tree_nodes?.[0]?.name ?? "Unknown";
+    const subTreeName =
+      talentLoadout.sub_tree_nodes?.[0]?.entries?.[0]?.name ?? "Unknown";
     const subtreeIcon =
       talentLoadout.sub_tree_nodes?.[0]?.entries?.[0]?.atlasMemberName;
     const iconUrl = subtreeIcon

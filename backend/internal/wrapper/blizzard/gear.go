@@ -2,6 +2,7 @@ package wrapper
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"wowperf/internal/models"
@@ -158,6 +159,8 @@ func transformSingleItem(item interface{}, gameDataService *blizzard.GameDataSer
 	}
 
 	enchant := getEnchant(itemMap)
+	enchantName := getEnchantName(itemMap)
+	stats := getItemStats(itemMap)
 	bonusList := getBonusList(itemMap)
 	gems := getGems(itemMap)
 
@@ -176,6 +179,8 @@ func transformSingleItem(item interface{}, gameDataService *blizzard.GameDataSer
 		IconURL:     iconURL,
 		Name:        name,
 		Enchant:     enchant,
+		EnchantName: enchantName,
+		Stats:       stats,
 		Gems:        gems,
 		Bonuses:     bonusList,
 		IsTwoHand:   isTwoHand,
@@ -272,4 +277,45 @@ func getItemQualityInt(quality string) int {
 	default:
 		return 1
 	}
+}
+
+// getEnchantName retrieves the display string for an enchantment.
+func getEnchantName(itemMap map[string]interface{}) string {
+	if enchantments, ok := itemMap["enchantments"].([]interface{}); ok && len(enchantments) > 0 {
+		if enchantment, ok := enchantments[0].(map[string]interface{}); ok {
+			if displayString, ok := enchantment["display_string"].(string); ok {
+				re := regexp.MustCompile(`\+(\d+)\s+([A-Za-z\s]+)`)
+				matches := re.FindStringSubmatch(displayString)
+				if len(matches) == 3 {
+					return "+" + matches[1] + " " + strings.TrimSpace(matches[2])
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// getItemStats retrieves the stats for an item.
+func getItemStats(itemMap map[string]interface{}) []models.ItemStat {
+	var stats []models.ItemStat
+	if statsData, ok := itemMap["stats"].([]interface{}); ok {
+		for _, statData := range statsData {
+			if stat, ok := statData.(map[string]interface{}); ok {
+				if isNegated, ok := stat["is_negated"].(bool); ok && isNegated {
+					continue
+				}
+				if statType, ok := stat["type"].(map[string]interface{}); ok {
+					if statName, ok := statType["name"].(string); ok {
+						if value, ok := stat["value"].(float64); ok {
+							stats = append(stats, models.ItemStat{
+								Type:  statName,
+								Value: int(value),
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	return stats
 }

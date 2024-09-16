@@ -39,10 +39,17 @@ interface EquipmentData {
       name: string;
       slot: string;
       enchant?: number;
+      enchant_name?: string;
+      stats?: ItemStat[];
       gems?: number[];
       bonuses?: number[];
     };
   };
+}
+
+interface ItemStat {
+  Type: string;
+  Value: number;
 }
 
 const gearOrder = [
@@ -85,6 +92,8 @@ export default function CharacterGear({
     namespace,
     locale
   );
+
+  console.log(characterData);
 
   useEffect(() => {
     if (
@@ -137,8 +146,46 @@ export default function CharacterGear({
     }
   };
 
+  function ItemDisplay({
+    item,
+  }: {
+    item: EquipmentData["items"][string] & { slot: string };
+  }) {
+    return (
+      <div className="relative flex items-center bg-deep-blue border-2  p-2 h-20 w-full">
+        <a
+          href={`https://www.wowhead.com/item=${item.item_id}`}
+          data-wowhead={getWowheadParams(item, item.slot)}
+          className="block cursor-pointer flex-shrink-0"
+          data-wh-icon-size="medium"
+        >
+          <Image
+            src={item.icon_url}
+            alt={item.name}
+            width={48}
+            height={48}
+            className="rounded-md border-2 border-gray-700"
+          />
+        </a>
+        <div className="ml-2 text-white text-sm flex-grow overflow-hidden">
+          <span
+            className={`${getItemQualityClass(
+              item.item_quality
+            )} truncate block`}
+          >
+            {item.name}
+          </span>
+          <div className="truncate">
+            <span>{item.enchant_name}</span>
+          </div>
+          <div className="text-xs">{item.item_level}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4 ">
+    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -151,89 +198,44 @@ export default function CharacterGear({
       <div className="text-blue-200 mb-4">
         {characterData.item_level_equipped.toFixed(1)} item lvl (Equipped)
       </div>
-      {/* Container for the gear layout */}
-      <div className="flex flex-col items-center">
-        <div className="flex justify-between w-full max-w-5xl">
-          <div className="flex flex-col gap-2">
-            {/* Left column (upper body gear) */}
-            {orderedGear.slice(0, 7).map((item) => (
-              <div
-                key={item.slot}
-                className="relative flex items-center bg-deep-blue rounded-md"
-              >
-                <a
-                  href={`https://www.wowhead.com/item=${item.item_id}`}
-                  data-wowhead={getWowheadParams(item, item.slot)}
-                  className="block cursor-pointer"
-                  data-wh-icon-size="medium"
-                >
-                  <Image
-                    src={item.icon_url}
-                    alt={item.name}
-                    width={48}
-                    height={48}
-                    className="rounded-md border-2 border-gray-700"
-                  />
-                </a>
-                <div className="ml-2 text-white text-sm">
-                  <span className={getItemQualityClass(item.item_quality)}>
-                    {item.name}
-                  </span>
-                  <div className="text-xs">{item.item_level}</div>
-                </div>
-              </div>
-            ))}
-          </div>
 
-          {/* Center column (character image) */}
-          <div className="flex flex-col items-center justify-center">
-            {characterProfile && characterProfile.main_raw_url ? (
-              <Image
-                src={characterProfile.main_raw_url}
-                alt="Character"
-                width={450}
-                height={450}
-                className=" scale-150"
-                priority
-              />
-            ) : (
-              <div className="text-red-500">No character image found</div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            {/* Right column (lower body gear) */}
-            {orderedGear.slice(7).map((item) => (
-              <div
-                key={item.slot}
-                className="relative flex items-center bg-deep-blue rounded-md"
-              >
-                <a
-                  href={`https://www.wowhead.com/item=${item.item_id}`}
-                  data-wowhead={getWowheadParams(item, item.slot)}
-                  className="block cursor-pointer"
-                  data-wh-icon-size="medium"
-                >
-                  <Image
-                    src={item.icon_url}
-                    alt={item.name}
-                    width={48}
-                    height={48}
-                    className="rounded-md border-2 border-gray-700"
-                  />
-                </a>
-                <div className="ml-2 text-white text-sm">
-                  <div>
-                    <span className={getItemQualityClass(item.item_quality)}>
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="text-xs">{item.item_level}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Armor */}
+      <h2 className="text-xl font-bold text-white mb-4">Armor</h2>
+      <div className="flex flex-col md:flex-row space-x-0 md:space-x-4 space-y-4 md:space-y-0 mb-8">
+        <div className="flex flex-col w-full md:w-1/2">
+          {orderedGear.slice(0, 5).map((item) => (
+            <ItemDisplay key={item.slot} item={item} />
+          ))}
         </div>
+        <div className="flex flex-col w-full md:w-1/2">
+          {orderedGear.slice(5, 10).map((item) => (
+            <ItemDisplay key={item.slot} item={item} />
+          ))}
+        </div>
+      </div>
+
+      {/* Fingers */}
+      <h2 className="text-xl font-bold text-white mb-4">Fingers</h2>
+      <div className="flex flex-col md:flex-row space-x-0 md:space-x-4 space-y-4 md:space-y-0 mb-8">
+        {orderedGear.slice(10, 12).map((item) => (
+          <ItemDisplay key={item.slot} item={item} />
+        ))}
+      </div>
+
+      {/* Trinkets */}
+      <h2 className="text-xl font-bold text-white mb-4">Trinkets</h2>
+      <div className="flex flex-col md:flex-row space-x-0 md:space-x-4 space-y-4 md:space-y-0 mb-8">
+        {orderedGear.slice(12, 14).map((item) => (
+          <ItemDisplay key={item.slot} item={item} />
+        ))}
+      </div>
+
+      {/* Weapon */}
+      <h2 className="text-xl font-bold text-white mb-4">Weapon</h2>
+      <div className="flex flex-col md:flex-row space-x-0 md:space-x-4 space-y-4 md:space-y-0">
+        {orderedGear.slice(14).map((item) => (
+          <ItemDisplay key={item.slot} item={item} />
+        ))}
       </div>
     </div>
   );
