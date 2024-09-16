@@ -9,6 +9,7 @@ import (
 	mythicplus "wowperf/internal/models/mythicplus"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SeasonData struct {
@@ -86,14 +87,14 @@ func SeedSeasons(db *gorm.DB, filePath string) error {
 			EndsCN:    parseTime(s.Ends.CN),
 		}
 
-		if err := db.FirstOrCreate(&season, mythicplus.Season{Slug: s.Slug}).Error; err != nil {
+		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&season).Error; err != nil {
 			return fmt.Errorf("error creating season %s: %v", s.Name, err)
 		}
 
 		for _, d := range s.Dungeons {
 			dungeon := mythicplus.Dungeon{
 				ID:              d.ID,
-				ChallengeModeID: &d.ChallengeModeID,
+				ChallengeModeID: d.ChallengeModeID,
 				Slug:            d.Slug,
 				Name:            d.Name,
 				ShortName:       d.ShortName,
@@ -101,18 +102,20 @@ func SeedSeasons(db *gorm.DB, filePath string) error {
 				Icon:            &d.Icon,
 			}
 
-			if err := db.FirstOrCreate(&dungeon, mythicplus.Dungeon{ID: d.ID}).Error; err != nil {
+			if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&dungeon).Error; err != nil {
 				return fmt.Errorf("error creating dungeon %s: %v", d.Name, err)
 			}
 
+			// Delete existing KeyStoneUpgrades for this dungeon
 			if err := db.Where("challenge_mode_id = ?", d.ChallengeModeID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
 				return fmt.Errorf("error deleting old keystone upgrades for dungeon %s: %v", d.Name, err)
 			}
 
+			// Create new KeyStoneUpgrades
 			for _, ku := range d.KeystoneUpgrades {
 				keyStoneUpgrade := mythicplus.KeyStoneUpgrade{
-					ChallengeModeID:    &d.ChallengeModeID,
-					QualifyingDuration: ku.QualifyingDuration,
+					ChallengeModeID:    d.ChallengeModeID,
+					QualifyingDuration: int64(ku.QualifyingDuration),
 					UpgradeLevel:       ku.UpgradeLevel,
 				}
 

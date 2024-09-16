@@ -1,39 +1,101 @@
 import React from "react";
 import Image from "next/image";
-import { TalentNode } from "@/types/talents";
+
+interface TalentNode {
+  id: number;
+  name: string;
+  posX: number;
+  posY: number;
+  entries: { icon: string }[];
+  rank: number;
+  maxRanks: number;
+  next?: number[];
+}
 
 interface TalentGridProps {
   talents: TalentNode[];
   selectedTalents: TalentNode[];
 }
+
 const TalentGrid: React.FC<TalentGridProps> = ({
   talents,
   selectedTalents,
 }) => {
-  const cellSize = 40;
-  const padding = 10;
-  const scaleFactor = 0.1; // Adjust this value to scale the grid
+  const cellSize = 6; // Taille en pourcentage
+  const iconRadiusPercent = cellSize / 2;
 
   const minX = Math.min(...talents.map((t) => t.posX));
   const minY = Math.min(...talents.map((t) => t.posY));
   const maxX = Math.max(...talents.map((t) => t.posX));
   const maxY = Math.max(...talents.map((t) => t.posY));
 
-  const gridWidth = (maxX - minX) * scaleFactor + cellSize + padding * 2;
-  const gridHeight = (maxY - minY) * scaleFactor + cellSize + padding * 2;
-
   const gridStyle: React.CSSProperties = {
     position: "relative",
-    width: `${gridWidth}px`,
-    height: `${gridHeight}px`,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    width: "100%",
+    paddingTop: `${((maxY - minY) / (maxX - minX)) * 100}%`,
     borderRadius: "8px",
-    padding: `${padding}px`,
     margin: "0 auto",
+    overflow: "visible",
   };
 
+  const connections = talents.flatMap(
+    (talent) =>
+      talent.next?.map((nextId) => ({
+        from: talent.id,
+        to: nextId,
+      })) || []
+  );
+
   return (
-    <div style={gridStyle} className="p-20 talent-grid">
+    <div style={gridStyle} className="talent-grid">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        {connections.map((conn, index) => {
+          const fromTalent = talents.find((t) => t.id === conn.from);
+          const toTalent = talents.find((t) => t.id === conn.to);
+
+          if (!fromTalent || !toTalent) return null;
+
+          const fromX = ((fromTalent.posX - minX) / (maxX - minX)) * 100;
+          const fromY = ((fromTalent.posY - minY) / (maxY - minY)) * 100;
+          const toX = ((toTalent.posX - minX) / (maxX - minX)) * 100;
+          const toY = ((toTalent.posY - minY) / (maxY - minY)) * 100;
+
+          const deltaX = toX - fromX;
+          const deltaY = toY - fromY;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+          const unitX = deltaX / distance;
+          const unitY = deltaY / distance;
+
+          const adjustedFromX = fromX + unitX * iconRadiusPercent;
+          const adjustedFromY = fromY + unitY * iconRadiusPercent;
+          const adjustedToX = toX - unitX * iconRadiusPercent;
+          const adjustedToY = toY - unitY * iconRadiusPercent;
+
+          return (
+            <line
+              key={index}
+              x1={`${adjustedFromX}`}
+              y1={`${adjustedFromY}`}
+              x2={`${adjustedToX}`}
+              y2={`${adjustedToY}`}
+              stroke="white"
+              strokeWidth="0.2"
+              vectorEffect="non-scaling-stroke"
+            />
+          );
+        })}
+      </svg>
       {talents.map((talent) => (
         <TalentIcon
           key={talent.id}
@@ -41,21 +103,22 @@ const TalentGrid: React.FC<TalentGridProps> = ({
           cellSize={cellSize}
           minX={minX}
           minY={minY}
-          scaleFactor={scaleFactor}
-          padding={padding}
-          isSelected={selectedTalents.some((t) => t.id === talent.id)} // Add this prop
+          maxX={maxX}
+          maxY={maxY}
+          isSelected={selectedTalents.some((t) => t.id === talent.id)}
         />
       ))}
     </div>
   );
 };
+
 interface TalentIconProps {
   talent: TalentNode;
   cellSize: number;
   minX: number;
   minY: number;
-  scaleFactor: number;
-  padding: number;
+  maxX: number;
+  maxY: number;
   isSelected: boolean;
 }
 
@@ -64,18 +127,21 @@ const TalentIcon: React.FC<TalentIconProps> = ({
   cellSize,
   minX,
   minY,
-  scaleFactor,
-  padding,
+  maxX,
+  maxY,
   isSelected,
 }) => {
   const [imageError, setImageError] = React.useState(false);
 
+  const normalizedPosX = (talent.posX - minX) / (maxX - minX);
+  const normalizedPosY = (talent.posY - minY) / (maxY - minY);
+
   const iconStyle: React.CSSProperties = {
     position: "absolute",
-    left: `${(talent.posX - minX) * scaleFactor + padding}px`,
-    top: `${(talent.posY - minY) * scaleFactor + padding}px`,
-    width: `${cellSize}px`,
-    height: `${cellSize}px`,
+    left: `calc(${normalizedPosX * 100}% - ${cellSize / 2}%)`,
+    top: `calc(${normalizedPosY * 100}% - ${cellSize / 2}%)`,
+    width: `${cellSize}%`,
+    height: `${cellSize}%`,
   };
 
   return (
@@ -83,7 +149,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className={`relative ${isSelected ? "glow-effect" : ""}`}>
+      <div className="relative" style={{ width: "100%", height: "100%" }}>
         <Image
           src={
             imageError
@@ -91,15 +157,17 @@ const TalentIcon: React.FC<TalentIconProps> = ({
               : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
           }
           alt={talent.name}
-          width={cellSize}
-          height={cellSize}
+          layout="fill"
+          objectFit="contain"
           className={`rounded-full border-2 ${
-            isSelected ? "border-yellow-400" : "border-gray-700 opacity-50"
+            isSelected
+              ? "border-yellow-400 glow-effect"
+              : "border-gray-700 opacity-50"
           }`}
           onError={() => setImageError(true)}
         />
         {isSelected && (
-          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded">
+          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
             {talent.rank}/{talent.maxRanks}
           </div>
         )}

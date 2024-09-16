@@ -52,6 +52,26 @@ body {
   );
 }
 
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+.bg-deep-blue {
+  background-color: #001830;
+}
+
+.bg-gradient-purple {
+  background: linear-gradient(135deg, #182b5f, #260955);
+}
+
+.bg-gradient-blue {
+  background: linear-gradient(
+    135deg,
+    var(--color-royal-blue),
+    rgba(65, 105, 225, 0.5)
+  );
+}
+
 .text-gradient-glow {
   background: linear-gradient(
     to right,

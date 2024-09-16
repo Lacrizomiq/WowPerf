@@ -23,41 +23,40 @@ export default function CharacterSummary({
     error,
   } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
 
-  if (isLoading) return <div>Loading character data...</div>;
-  if (error) return <div>Error loading character data: {error.message}</div>;
-  if (!character) return <div>No character data found</div>;
+  if (isLoading)
+    return <div className="text-center p-4">Loading character data...</div>;
+  if (error)
+    return (
+      <div className="text-center p-4 text-red-500">
+        Error loading character data: {error.message}
+      </div>
+    );
+  if (!character)
+    return <div className="text-center p-4">No character data found</div>;
 
   return (
-    <div>
-      <div className="flex p-4 bg-gradient-dark">
-        <div className="mr-4  bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg glow-effect">
-          {character.inset_avatar_url && (
-            <Image
-              src={character.inset_avatar_url}
-              alt="World of Warcraft Logo"
-              width={196}
-              height={196}
-              className="object-cover"
-              priority
-            />
-          )}
-        </div>
-        <div>
-          <h2
-            className={`text-4xl font-bold class-color--${character.tree_id}`}
-          >
-            {character.name}
-          </h2>
-          <p className="text-blue-100">
-            {character.region.toUpperCase()} - {character.realm}
-          </p>
-          <div className="flex gap-2">
-            <p className="text-blue-400">{character.race}</p>
-            <p>
-              {character.active_spec_name} {character.class}
-            </p>
-          </div>
-        </div>
+    <div className="bg-[#002440] rounded-xl p-5 flex items-center space-x-5">
+      <div className="relative">
+        {character.avatar_url && (
+          <Image
+            src={character.avatar_url}
+            alt={character.name}
+            width={96}
+            height={96}
+            className="rounded-full border-2 border-blue-400"
+          />
+        )}
+      </div>
+      <div>
+        <h1 className={`text-2xl font-bold class-color--${character.tree_id}`}>
+          {character.name}
+        </h1>
+        <p className="text-gray-400">
+          {region.toUpperCase()} - {character.realm}
+        </p>
+        <p className="text-gray-400">
+          {character.race} {character.active_spec_name} {character.class}
+        </p>
       </div>
     </div>
   );

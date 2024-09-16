@@ -8,6 +8,7 @@ import CharacterTalent from "@/components/Character/CharacterTalent";
 import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import RaidOverview from "@/components/Raids/RaidOverview";
+import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 
 export default function CharacterLayout({
   params,
@@ -75,25 +76,59 @@ export default function CharacterLayout({
   };
 
   return (
-    <main className="bg-gradient-dark">
-      <Header />
-      <CharacterSummary
-        region={region}
-        realm={realm}
-        name={name}
-        namespace={`profile-${region}`}
-        locale="en_GB"
-      />
-      <nav className="flex space-x-4 items-center justify-center font-bold p-4 text-white">
-        <button onClick={() => setSelectedTab("gear")}>Gear</button>
-        <button onClick={() => setSelectedTab("talents")}>Talents</button>
-        <button onClick={() => setSelectedTab("mythic-plus")}>Mythic+</button>
-        <button onClick={() => setSelectedTab("raid-progression")}>
-          Raids
-        </button>
-      </nav>
+    <div className="min-h-screen p-5 bg-[#000c1a] text-white">
+      <div className="max-w-7xl mx-auto">
+        <Header />
 
-      <div>{renderContent()}</div>
-    </main>
+        <CharacterSummary
+          region={region}
+          realm={realm}
+          name={name}
+          namespace={`profile-${region}`}
+          locale="en_GB"
+        />
+        <div className="bg-[#002440] flex justify-center p-5 mt-5 rounded-t-xl">
+          <nav className="flex justify-center bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
+            {[
+              { name: "Gear", icon: <Shield size={20} />, key: "gear" },
+              {
+                name: "Talents",
+                icon: <ScrollText size={20} />,
+                key: "talents",
+              },
+              {
+                name: "Mythic+",
+                icon: <Hourglass size={20} />,
+                key: "mythic-plus",
+              },
+              {
+                name: "Raids",
+                icon: <Sword size={20} />,
+                key: "raid-progression",
+              },
+            ].map((tab, index, array) => (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedTab(tab.key)}
+                className={`flex items-center space-x-2 px-6 py-3 transition-all bg-[#002440] justify-center
+                ${
+                  selectedTab === tab.key
+                    ? "bg-[#003660]"
+                    : "hover:bg-[#003660] hover:bg-opacity-50"
+                }
+                ${index === 0 ? "rounded-l-full" : ""}
+                ${index === array.length - 1 ? "rounded-r-full" : ""}
+                ${index !== 0 ? "border-l border-[#003660]" : ""}
+      `}
+              >
+                {tab.icon}
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="bg-[#002440] rounded-b-xl p-5">{renderContent()}</div>
+      </div>
+    </div>
   );
 }

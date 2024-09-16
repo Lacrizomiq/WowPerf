@@ -102,7 +102,7 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-xl glow-effect p-4">
+      <div className="mb-6 shadow-2xl glow-effect p-4">
         <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center pb-4">
           <Image
             src={icon}
@@ -124,11 +124,11 @@ export default function CharacterTalent({
     );
   };
 
-  {
-    /* const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
-    const subTreeName = talentLoadout.sub_tree_nodes[0]?.name;
+  const renderHeroTalentsGroup = (heroTalents: HeroTalent[]) => {
+    const subTreeName =
+      talentLoadout.sub_tree_nodes?.[0]?.entries?.[0]?.name ?? "Unknown";
     const subtreeIcon =
-      talentLoadout.sub_tree_nodes[0]?.entries[0]?.atlasMemberName;
+      talentLoadout.sub_tree_nodes?.[0]?.entries?.[0]?.atlasMemberName;
     const iconUrl = subtreeIcon
       ? `https://wow.zamimg.com/images/wow/TextureAtlas/live/${subtreeIcon}.webp`
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
@@ -154,8 +154,7 @@ export default function CharacterTalent({
         </div>
       </div>
     );
-  };*/
-  }
+  };
 
   const getTalentCalculatorUrl = () => {
     if (
@@ -178,7 +177,7 @@ export default function CharacterTalent({
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
   return (
-    <div className="p-6 bg-gradient-dark shadow-lg rounded-lg glow-effect m-12 max-w-6xl mx-auto">
+    <div className="p-6 shadow-lg m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -188,13 +187,11 @@ export default function CharacterTalent({
         }
       `}</style>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gradient-glow">
-          Talent Build Summary
-        </h2>
+        <h2 className="text-2xl font-bold">Talent Build Summary</h2>
         <div className="flex gap-4">
           <button
             onClick={toggleDisplayMode}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
@@ -205,7 +202,7 @@ export default function CharacterTalent({
               rel="noopener noreferrer"
               className="font-bold flex items-center gap-2 align-center hover:text-blue-300"
             >
-              Talent Calculator <SquareArrowOutUpRight className="ml-2" />
+              Talent Calculator <SquareArrowOutUpRight className="px-1" />
             </a>
           )}
         </div>
@@ -228,7 +225,7 @@ export default function CharacterTalent({
           </div>
           {talentLoadout.hero_talents.length > 0 && (
             <div className="flex-1">
-              {/* {renderHeroTalentsGroup(talentLoadout.hero_talents)} */}
+              {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
         </div>
@@ -303,7 +300,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
               unoptimized
             />
             {talent.rank > 0 && (
-              <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+              <div className="absolute bottom-0 right-0 bg-opacity-70 text-white text-xs font-bold px-1 rounded">
                 {talent.rank}/{talent.maxRanks}
               </div>
             )}

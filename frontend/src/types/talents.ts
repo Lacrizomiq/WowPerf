@@ -9,6 +9,7 @@ export interface TalentEntry {
   spellId: number;
   icon: string;
   index: number;
+  atlasMemberName?: string;
 }
 
 export interface TalentNode {

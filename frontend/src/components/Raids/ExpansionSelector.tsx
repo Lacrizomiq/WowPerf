@@ -20,12 +20,16 @@ const ExpansionSelector: React.FC<ExpansionSelectorProps> = ({
 
   return (
     <Select onValueChange={onExpansionChange} value={currentExpansion}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[200px] bg-gradient-purple  text-white border-none">
         <SelectValue placeholder="Select an expansion" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="bg-gradient-purple  text-white">
         {availableExpansions.map((expansion) => (
-          <SelectItem key={expansion} value={expansion}>
+          <SelectItem
+            key={expansion}
+            value={expansion}
+            className="hover:bg-gradient-purple"
+          >
             {expansion}
           </SelectItem>
         ))}

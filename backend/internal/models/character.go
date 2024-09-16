@@ -136,16 +136,23 @@ type Gear struct {
 }
 
 type Item struct {
-	ItemID      int     `json:"item_id"`
-	ItemLevel   float64 `json:"item_level"`
-	ItemQuality int     `json:"item_quality"`
-	IsTwoHand   bool    `json:"is_two_hand"`
-	IconName    string  `json:"icon_name"`
-	IconURL     string  `json:"icon_url"`
-	Name        string  `json:"name"`
-	Enchant     *int    `json:"enchant,omitempty"`
-	Gems        []int   `json:"gems,omitempty"`
-	Bonuses     []int   `json:"bonuses,omitempty"`
+	ItemID      int        `json:"item_id"`
+	ItemLevel   float64    `json:"item_level"`
+	ItemQuality int        `json:"item_quality"`
+	IsTwoHand   bool       `json:"is_two_hand"`
+	IconName    string     `json:"icon_name"`
+	IconURL     string     `json:"icon_url"`
+	Name        string     `json:"name"`
+	Enchant     *int       `json:"enchant,omitempty"`
+	EnchantName string     `json:"enchant_name,omitempty"`
+	Gems        []int      `json:"gems,omitempty"`
+	Bonuses     []int      `json:"bonuses,omitempty"`
+	Stats       []ItemStat `json:"stats,omitempty"`
+}
+
+type ItemStat struct {
+	Type  string `json:"type"`
+	Value int    `json:"value"`
 }
 
 type Guild struct {

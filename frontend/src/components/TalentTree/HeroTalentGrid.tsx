@@ -6,34 +6,30 @@ interface TalentGridProps {
   talents: HeroTalent[];
   selectedHeroTalentTree: HeroTalent[];
 }
+
 const HeroTalentGrid: React.FC<TalentGridProps> = ({
   talents,
   selectedHeroTalentTree,
 }) => {
-  const cellSize = 40;
-  const padding = 10;
-  const scaleFactor = 0.1;
-
+  const cellSize = 5; // Taille en pourcentage
   const minX = Math.min(...talents.map((t) => t.posX));
   const minY = Math.min(...talents.map((t) => t.posY));
   const maxX = Math.max(...talents.map((t) => t.posX));
   const maxY = Math.max(...talents.map((t) => t.posY));
 
-  const gridWidth = (maxX - minX) * scaleFactor + cellSize + padding * 2;
-  const gridHeight = (maxY - minY) * scaleFactor + cellSize + padding * 2;
+  const aspectRatio = (maxY - minY) / (maxX - minX);
 
   const gridStyle: React.CSSProperties = {
     position: "relative",
-    width: `${gridWidth}px`,
-    height: `${gridHeight}px`,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    width: "100%",
+    paddingTop: `${aspectRatio * 100}%`,
     borderRadius: "8px",
-    padding: `${padding}px`,
     margin: "0 auto",
+    overflow: "visible",
   };
 
   return (
-    <div style={gridStyle} className="p-20 talent-grid">
+    <div style={gridStyle} className="talent-grid">
       {talents.map((talent) => (
         <TalentIcon
           key={talent.id}
@@ -41,21 +37,22 @@ const HeroTalentGrid: React.FC<TalentGridProps> = ({
           cellSize={cellSize}
           minX={minX}
           minY={minY}
-          scaleFactor={scaleFactor}
-          padding={padding}
-          isSelected={selectedHeroTalentTree.some((t) => t.id === talent.id)} // Add this prop
+          maxX={maxX}
+          maxY={maxY}
+          isSelected={selectedHeroTalentTree.some((t) => t.id === talent.id)}
         />
       ))}
     </div>
   );
 };
+
 interface TalentIconProps {
   talent: HeroTalent;
   cellSize: number;
   minX: number;
   minY: number;
-  scaleFactor: number;
-  padding: number;
+  maxX: number;
+  maxY: number;
   isSelected: boolean;
 }
 
@@ -64,43 +61,50 @@ const TalentIcon: React.FC<TalentIconProps> = ({
   cellSize,
   minX,
   minY,
-  scaleFactor,
-  padding,
+  maxX,
+  maxY,
   isSelected,
 }) => {
   const [imageError, setImageError] = React.useState(false);
 
+  const normalizedPosX = (talent.posX - minX) / (maxX - minX);
+  const normalizedPosY = (talent.posY - minY) / (maxY - minY);
+
   const iconStyle: React.CSSProperties = {
     position: "absolute",
-    left: `${(talent.posX - minX) * scaleFactor + padding}px`,
-    top: `${(talent.posY - minY) * scaleFactor + padding}px`,
-    width: `${cellSize}px`,
-    height: `${cellSize}px`,
+    left: `calc(${normalizedPosX * 100}% - ${cellSize / 2}%)`,
+    top: `calc(${normalizedPosY * 100}% - ${cellSize / 2}%)`,
+    width: `36px`,
+    height: `36px`,
   };
+
+  const talentEntry = talent.entries[0];
 
   return (
     <div
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className={`relative ${isSelected ? "glow-effect" : ""}`}>
+      <div className="relative" style={{ width: "100%", height: "100%" }}>
         <Image
           src={
             imageError
               ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+              : `https://wow.zamimg.com/images/wow/icons/large/${talentEntry.icon}.jpg`
           }
           alt={talent.name}
-          width={cellSize}
-          height={cellSize}
+          layout="fill"
+          objectFit="contain"
           className={`rounded-full border-2 ${
-            isSelected ? "border-yellow-400" : "border-gray-700 opacity-50"
+            isSelected
+              ? "border-yellow-400 glow-effect"
+              : "border-gray-700 opacity-50"
           }`}
           onError={() => setImageError(true)}
         />
         {isSelected && (
-          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded">
-            {talent.rank}
+          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
+            {talent.rank}/{talentEntry.maxRanks}
           </div>
         )}
       </div>

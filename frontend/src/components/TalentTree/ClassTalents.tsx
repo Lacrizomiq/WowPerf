@@ -17,19 +17,21 @@ const ClassTalents: React.FC<ClassTalentsProps> = ({
   classIcon,
 }) => {
   return (
-    <div className="mb-8">
-      <h3 className="text-xl font-bold mb-2 text-center text-gradient-glow flex items-center justify-center">
+    <div className="">
+      <h3 className="text-xl font-bold mb-8 text-center text-gradient-glow flex items-center justify-center">
         <Image
           src={classIcon}
           alt={className}
           width={32}
           height={32}
-          className="mr-2"
+          className="mr-2 rounded-full"
           unoptimized
         />
         <span>{className} Talents</span>
       </h3>
-      <TalentGrid talents={talents} selectedTalents={selectedTalents} />
+      <div className="mb-6 shadow-2xl border-4 p-12" style={{ width: "100%" }}>
+        <TalentGrid talents={talents} selectedTalents={selectedTalents} />
+      </div>
     </div>
   );
 };

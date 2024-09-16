@@ -6,12 +6,14 @@ interface StaticRaidsListProps {
   raids: StaticRaid[];
   raidProgressionData: RaidProgressionData | null;
   onRaidSelect: (raid: StaticRaid) => void;
+  selectedRaid: StaticRaid | null;
 }
 
 const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
   raids,
   raidProgressionData,
   onRaidSelect,
+  selectedRaid,
 }) => {
   const getDifficultyInfo = (raidId: number) => {
     if (!raidProgressionData) return "";
@@ -46,18 +48,29 @@ const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
       {raids.map((raid) => (
         <div
           key={raid.ID}
-          className="bg-deep-blue p-4 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors duration-200 flex flex-col items-center"
+          className={`rounded-xl overflow-hidden bg-gradient-purple shadow-lg cursor-pointer transition-all duration-300 ${
+            selectedRaid?.ID === raid.ID
+              ? "ring-2 ring-blue-500 shadow-2xl scale-105"
+              : "hover:shadow-xl"
+          }`}
           onClick={() => onRaidSelect(raid)}
         >
-          <Image
-            src={raid.MediaURL}
-            alt={raid.Name}
-            width={200}
-            height={200}
-            className="rounded-md mb-2"
-          />
-          <h3 className="font-bold text-lg mb-2 text-center">{raid.Name}</h3>
-          <p className="text-sm text-center">{getDifficultyInfo(raid.ID)}</p>
+          <div className="h-48 bg-gray-300 relative">
+            <Image
+              src={raid.MediaURL}
+              alt={raid.Name}
+              layout="fill"
+              className="object-cover mb-2"
+            />
+          </div>
+          <div className="p-4">
+            <h3 className="font-bold text-lg mb-2 text-center text-white">
+              {raid.Name}
+            </h3>
+            <p className="text-sm text-center text-gradient-glow">
+              {getDifficultyInfo(raid.ID)}
+            </p>
+          </div>
         </div>
       ))}
     </div>
