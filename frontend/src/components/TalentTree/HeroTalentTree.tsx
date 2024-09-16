@@ -1,7 +1,8 @@
 import React from "react";
 import { HeroTalent } from "@/types/talents";
-import HeroSpecTalents from "./HeroTalent";
+import HeroTalentGrid from "@/components/TalentTree/HeroTalentGrid";
 import { useGetBlizzardTalentTree } from "@/hooks/useBlizzardApi";
+import Image from "next/image";
 
 interface TalentTreeProps {
   talentTreeId: number;
@@ -30,31 +31,43 @@ const HeroTalentTree: React.FC<TalentTreeProps> = ({
     error,
   } = useGetBlizzardTalentTree(talentTreeId, specId, region, namespace, locale);
 
-  console.log("Talent Data:", talentData);
-
   if (isLoading) return <div>Loading talents...</div>;
   if (error)
     return <div>Error loading talents: {(error as Error).message}</div>;
 
   const heroTalents = talentData?.heroNodes || [];
-  const heroTalentsName = talentData.subTreeNodes[0]?.entries[0]?.name;
+  const heroTalentsName = talentData.subTreeNodes[0]?.entries[0]?.name || "";
   const heroTalentsIcon =
-    talentData.subTreeNodes[0]?.entries[0]?.atlasMemberName;
+    talentData.subTreeNodes[0]?.entries[0]?.atlasMemberName || "";
   const iconUrl = heroTalentsIcon
     ? `https://wow.zamimg.com/images/wow/TextureAtlas/live/${heroTalentsIcon}.webp`
     : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
   return (
-    <div className="talent-tree p-4 bg-gradient-dark shadow-lg rounded-lg overflow-auto">
+    <div className="p-4 shadow-lg rounded-lg overflow-auto">
       <div className="flex flex-col space-y-2">
-        <HeroSpecTalents
-          talents={heroTalents}
-          selectedHeroTalentTree={selectedHeroTalentTree.filter(
-            (r) => r.rank > 0
-          )}
-          HeroTalentName={heroTalentsName || ""}
-          heroTalentIcon={iconUrl || ""}
-        />
+        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+          <Image
+            src={iconUrl}
+            alt="Hero Talents"
+            width={40}
+            height={40}
+            className="mr-2"
+            unoptimized
+          />
+          <span>{heroTalentsName} Hero Talents</span>
+        </h3>
+        <div
+          className="mb-6 shadow-2xl border-4 p-12"
+          style={{ width: "100%" }}
+        >
+          <HeroTalentGrid
+            talents={heroTalents}
+            selectedHeroTalentTree={selectedHeroTalentTree.filter(
+              (r) => r.rank > 0
+            )}
+          />
+        </div>
       </div>
     </div>
   );

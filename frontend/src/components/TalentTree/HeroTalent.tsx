@@ -29,10 +29,12 @@ const HeroSpecTalent: React.FC<HeroTalentProps> = ({
         />
         <span>{HeroTalentName} Hero Talents</span>
       </h3>
-      <HeroTalentGrid
-        talents={talents}
-        selectedHeroTalentTree={selectedHeroTalentTree}
-      />
+      <div className="mb-6 shadow-2xl border-4 p-12" style={{ width: "100%" }}>
+        <HeroTalentGrid
+          talents={talents}
+          selectedHeroTalentTree={selectedHeroTalentTree}
+        />
+      </div>
     </div>
   );
 };

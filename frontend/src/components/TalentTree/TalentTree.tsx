@@ -51,7 +51,7 @@ const TalentTree: React.FC<TalentTreeProps> = ({
   console.log("Filtered Spec Talents:", filteredSpecTalents);
 
   return (
-    <div className="talent-tree p-4 bg-[#002440] shadow-lg rounded-lg overflow-auto">
+    <div className="p-4 shadow-lg rounded-lg overflow-auto">
       <div className="flex flex-col space-y-2">
         <ClassTalents
           talents={filteredClassTalents}
