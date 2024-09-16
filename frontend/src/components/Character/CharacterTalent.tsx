@@ -300,7 +300,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
               unoptimized
             />
             {talent.rank > 0 && (
-              <div className="absolute bottom-0 right-0 bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+              <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
                 {talent.rank}/{talent.maxRanks}
               </div>
             )}

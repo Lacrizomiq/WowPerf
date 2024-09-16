@@ -22,7 +22,7 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
         return (
           <div
             key={dungeon.ID}
-            className={`rounded-xl overflow-hidden bg-gradient-purple  shadow-lg cursor-pointer transition-all duration-300 ${
+            className={`rounded-xl overflow-hidden bg-black bg-opacity-40 shadow-lg cursor-pointer transition-all duration-300 ${
               selectedDungeon?.ID === dungeon.ID
                 ? "ring-2 ring-blue-500 shadow-2xl scale-105"
                 : "hover:shadow-xl hover:scale-105"
@@ -44,7 +44,7 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
               </h3>
               {run ? (
                 <div className="text-center">
-                  <p className="text-blue-300">Level: {run.KeystoneLevel}</p>
+                  <p className="text-blue-100">Level: {run.KeystoneLevel}</p>
                 </div>
               ) : (
                 <p className="text-center text-blue-300">

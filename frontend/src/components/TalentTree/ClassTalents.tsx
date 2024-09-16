@@ -17,8 +17,8 @@ const ClassTalents: React.FC<ClassTalentsProps> = ({
   classIcon,
 }) => {
   return (
-    <div className="">
-      <h3 className="text-xl font-bold mb-8 text-center text-gradient-glow flex items-center justify-center">
+    <div className="border-2 border-black shadow-2xl w-full mb-6 rounded-lg">
+      <h3 className="text-xl p-4 font-bold text-center text-white bg-black bg-opacity-70 flex items-center justify-center">
         <Image
           src={classIcon}
           alt={className}
@@ -29,7 +29,7 @@ const ClassTalents: React.FC<ClassTalentsProps> = ({
         />
         <span>{className} Talents</span>
       </h3>
-      <div className="mb-6 shadow-2xl border-4 p-12" style={{ width: "100%" }}>
+      <div className="p-12">
         <TalentGrid talents={talents} selectedTalents={selectedTalents} />
       </div>
     </div>
