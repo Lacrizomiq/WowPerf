@@ -43,14 +43,14 @@ type SeasonalAffix struct {
 type Dungeon struct {
 	*gorm.Model      `json:"-"`
 	ID               uint   `gorm:"primaryKey"`
-	ChallengeModeID  *uint  `gorm:"uniqueIndex"`
+	ChallengeModeID  uint   `gorm:"uniqueIndex"`
 	Slug             string `gorm:"uniqueIndex"`
 	Name             string
 	ShortName        string
 	MediaURL         string
 	Icon             *string
-	KeyStoneUpgrades []KeyStoneUpgrade `gorm:"foreignKey:ChallengeModeID;references:ChallengeModeID"`
 	Seasons          []Season          `gorm:"many2many:season_dungeons;"`
+	KeyStoneUpgrades []KeyStoneUpgrade `gorm:"foreignKey:ChallengeModeID;references:ChallengeModeID"`
 }
 
 // SeasonDungeon represents a season-dungeon relationship in the Mythic+ dungeon pool
@@ -71,8 +71,8 @@ type Affix struct {
 
 // KeyStoneUpgrades represents the number of keystone upgrades for a dungeon
 type KeyStoneUpgrade struct {
-	*gorm.Model        `json:"-"`
-	ChallengeModeID    *uint `gorm:"index"`
-	QualifyingDuration int
+	gorm.Model         `json:"-"`
+	ChallengeModeID    uint
+	QualifyingDuration int64
 	UpgradeLevel       int
 }

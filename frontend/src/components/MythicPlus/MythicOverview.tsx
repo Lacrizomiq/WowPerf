@@ -79,9 +79,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   return (
     <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gradient-glow">
-          Mythic+ Dungeons
-        </h2>
+        <h2 className="text-2xl font-bold text-white">Mythic+ Dungeons</h2>
         <SeasonsSelector
           seasons={seasons}
           onSeasonChange={handleSeasonChange}
