@@ -208,23 +208,27 @@ export default function CharacterTalent({
         </div>
       </div>
       {displayMode === "list" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            {renderTalentGroup(
-              talentLoadout.class_talents,
-              `${characterClass} Talents`,
-              talentLoadout.class_icon
-            )}
-          </div>
-          <div>
-            {renderTalentGroup(
-              talentLoadout.spec_talents,
-              `${activeSpecName} Talents`,
-              talentLoadout.spec_icon
-            )}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              {renderTalentGroup(
+                talentLoadout.class_talents,
+                `${characterClass} Talents`,
+                talentLoadout.class_icon
+              )}
+            </div>
+            <div>
+              {renderTalentGroup(
+                talentLoadout.spec_talents,
+                `${activeSpecName} Talents`,
+                talentLoadout.spec_icon
+              )}
+            </div>
           </div>
           {talentLoadout.hero_talents.length > 0 && (
-            <div>{renderHeroTalentsGroup(talentLoadout.hero_talents)}</div>
+            <div className="w-full">
+              {renderHeroTalentsGroup(talentLoadout.hero_talents)}
+            </div>
           )}
         </div>
       ) : (
@@ -328,35 +332,33 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative w-full pb-[100%]">
       <a
         href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
         data-wowhead={`spell=${talent.entries[0].spellId}`}
-        className="block cursor-pointer talent active relative"
+        className="absolute inset-0 block cursor-pointer talent active"
         data-wh-icon-size="medium"
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="relative w-8 h-8 sm:w-10 sm:h-10">
-          <Image
-            src={
-              imageError
-                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-                : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
-            }
-            alt={talent.name}
-            width={40}
-            height={40}
-            className="w-full h-full rounded-md border-2 border-gray-700"
-            onError={() => setImageError(true)}
-            unoptimized
-          />
-          {talent.rank > 0 && (
-            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-              {talent.rank}/{talent.entries[0].maxRanks}
-            </div>
-          )}
-        </div>
+        <Image
+          src={
+            imageError
+              ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+          }
+          alt={talent.name}
+          layout="fill"
+          objectFit="cover"
+          className="rounded-md border-2 border-gray-700"
+          onError={() => setImageError(true)}
+          unoptimized
+        />
+        {talent.rank > 0 && (
+          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+            {talent.rank}/{talent.entries[0].maxRanks}
+          </div>
+        )}
       </a>
     </div>
   );
