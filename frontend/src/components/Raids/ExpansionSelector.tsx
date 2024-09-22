@@ -20,10 +20,10 @@ const ExpansionSelector: React.FC<ExpansionSelectorProps> = ({
 
   return (
     <Select onValueChange={onExpansionChange} value={currentExpansion}>
-      <SelectTrigger className="w-[200px] bg-gradient-purple  text-white border-none">
+      <SelectTrigger className="w-[200px] bg-deep-blue shadow-2xl text-white border-none">
         <SelectValue placeholder="Select an expansion" />
       </SelectTrigger>
-      <SelectContent className="bg-gradient-purple  text-white">
+      <SelectContent className="bg-deep-blue  text-white">
         {availableExpansions.map((expansion) => (
           <SelectItem
             key={expansion}

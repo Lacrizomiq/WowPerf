@@ -112,7 +112,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
             onError={() => setImageError(true)}
           />
           {isSelected && (
-            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
+            <div className="absolute bottom-0 right-0 bg-deep-blue text-white text-[8px] font-bold px-1 rounded-full">
               {talent.rank}/{selectedEntry.maxRanks}
             </div>
           )}

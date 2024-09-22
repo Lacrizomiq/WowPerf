@@ -53,7 +53,11 @@ body {
 }
 
 .bg-gradient-dark {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
+}
+
+.border-gradient-dark {
+  border: 4px solid linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
 }
 
 .bg-deep-blue {

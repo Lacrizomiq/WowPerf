@@ -17,8 +17,8 @@ const SpecTalents: React.FC<SpecTalentsProps> = ({
   specIcon,
 }) => {
   return (
-    <div className="border-2 border-black shadow-2xl w-full mb-6 rounded-lg">
-      <h3 className="text-xl p-4 font-bold text-center text-white bg-black bg-opacity-70 flex items-center justify-center">
+    <div className="border-2 border-[#001830] shadow-2xl w-full mb-6 rounded-lg">
+      <h3 className="text-xl p-4 font-bold text-center text-white bg-deep-blue flex items-center justify-center">
         <Image
           src={specIcon}
           alt={specName}

@@ -83,7 +83,7 @@ const MiniSearchBar = () => {
             <select
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-2 py-1 rounded text-black"
+              className="w-full px-2 py-1 rounded text-black "
             >
               <option value="" disabled>
                 Select Region

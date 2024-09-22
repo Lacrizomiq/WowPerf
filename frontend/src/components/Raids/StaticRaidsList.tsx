@@ -48,9 +48,9 @@ const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
       {raids.map((raid) => (
         <div
           key={raid.ID}
-          className={`rounded-xl overflow-hidden bg-black bg-opacity-40 shadow-lg cursor-pointer transition-all duration-300 ${
+          className={`rounded-xl overflow-hidden bg-deep-blue shadow-lg cursor-pointer transition-all duration-300 ${
             selectedRaid?.ID === raid.ID
-              ? "ring-2 ring-blue-500 shadow-2xl scale-105"
+              ? "ring-2 ring-[#001830] shadow-2xl scale-105"
               : "hover:shadow-xl"
           }`}
           onClick={() => onRaidSelect(raid)}
@@ -67,7 +67,7 @@ const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
             <h3 className="font-bold text-lg mb-2 text-center text-white">
               {raid.Name}
             </h3>
-            <p className="text-sm text-center text-gradient-glow">
+            <p className="text-sm text-center text-white">
               {getDifficultyInfo(raid.ID)}
             </p>
           </div>
