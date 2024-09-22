@@ -45,8 +45,8 @@ const HeroTalentTree: React.FC<TalentTreeProps> = ({
 
   return (
     <div className="p-4 shadow-lg rounded-lg overflow-auto">
-      <div className="flex flex-col space-y-2">
-        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+      <div className="flex flex-col border-2 border-black shadow-2xl rounded-lg overflow-hidden">
+        <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
           <Image
             src={iconUrl}
             alt="Hero Talents"
@@ -57,12 +57,8 @@ const HeroTalentTree: React.FC<TalentTreeProps> = ({
           />
           <span>{heroTalentsName} Hero Talents</span>
         </h3>
-        <div
-          className="mb-6 shadow-2xl border-4 p-12"
-          style={{ width: "100%" }}
-        >
+        <div className="px-40 py-20">
           <HeroTalentGrid
-            talents={heroTalents}
             selectedHeroTalentTree={selectedHeroTalentTree.filter(
               (r) => r.rank > 0
             )}

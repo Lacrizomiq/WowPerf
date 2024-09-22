@@ -102,8 +102,8 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-2xl glow-effect p-4">
-        <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center pb-4">
+      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg">
+        <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
           <Image
             src={icon}
             alt={title}
@@ -115,7 +115,7 @@ export default function CharacterTalent({
           <span>{title}</span>
         </h3>
 
-        <div className="grid grid-cols-6 gap-2 mb-4">
+        <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2 p-4">
           {selectedTalents.map((talent) => (
             <TalentIcon key={talent.id} talent={talent} />
           ))}
@@ -134,8 +134,8 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6 shadow-xl glow-effect p-4">
-        <h3 className="text-lg font-semibold text-gradient-glow mb-4 pb-4 items-center flex justify-center">
+      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg">
+        <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
           <Image
             src={iconUrl}
             alt="Hero Talents"
@@ -147,7 +147,7 @@ export default function CharacterTalent({
           <span>{subTreeName} Hero Talents</span>
         </h3>
 
-        <div className="grid grid-cols-7 gap-2 mb-4">
+        <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2 p-4">
           {heroTalents.map((talent) => (
             <HeroTalentIcon key={talent.id} talent={talent} />
           ))}
@@ -177,7 +177,7 @@ export default function CharacterTalent({
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
   return (
-    <div className="p-6 shadow-lg m-4">
+    <div className="p-4 sm:p-6 shadow-lg m-2 sm:m-4">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -186,12 +186,12 @@ export default function CharacterTalent({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Talent Build Summary</h2>
-        <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
+        <h2 className="text-xl sm:text-2xl font-bold">Talent Build Summary</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <button
             onClick={toggleDisplayMode}
-            className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg"
+            className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
@@ -200,31 +200,33 @@ export default function CharacterTalent({
               href={talentCalculatorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold flex items-center gap-2 align-center hover:text-blue-300"
+              className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center"
             >
-              Talent Calculator <SquareArrowOutUpRight className="px-1" />
+              Talent Calculator <SquareArrowOutUpRight className="ml-2" />
             </a>
           )}
         </div>
       </div>
       {displayMode === "list" ? (
-        <div className="flex flex-col md:flex-col gap-4">
-          <div className="flex-1">
-            {renderTalentGroup(
-              talentLoadout.class_talents,
-              `${characterClass} Talents`,
-              talentLoadout.class_icon
-            )}
-          </div>
-          <div className="flex-1">
-            {renderTalentGroup(
-              talentLoadout.spec_talents,
-              `${activeSpecName} Talents`,
-              talentLoadout.spec_icon
-            )}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              {renderTalentGroup(
+                talentLoadout.class_talents,
+                `${characterClass} Talents`,
+                talentLoadout.class_icon
+              )}
+            </div>
+            <div>
+              {renderTalentGroup(
+                talentLoadout.spec_talents,
+                `${activeSpecName} Talents`,
+                talentLoadout.spec_icon
+              )}
+            </div>
           </div>
           {talentLoadout.hero_talents.length > 0 && (
-            <div className="flex-1">
+            <div className="w-full">
               {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
@@ -269,45 +271,40 @@ interface TalentIconProps {
 const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
-  // Vérifier si le talent a des entrées
   const hasEntries = talent.entries && talent.entries.length > 0;
   const spellId = hasEntries ? talent.entries[0].spellId : undefined;
   const icon = hasEntries ? talent.entries[0].icon : "inv_misc_questionmark";
 
   return (
-    <div className="relative">
+    <div className="relative w-full pb-[100%]">
+      {" "}
+      {/* Aspect ratio 1:1 */}
       {spellId ? (
         <a
           href={`https://www.wowhead.com/spell=${spellId}`}
           data-wowhead={`spell=${spellId}`}
-          className="block cursor-pointer talent active relative"
+          className="absolute inset-0 block cursor-pointer talent active"
           data-wh-icon-size="medium"
           target="_blank"
           rel="noopener noreferrer"
         >
-          <div className="relative w-10 h-10">
-            <Image
-              src={
-                imageError
-                  ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-                  : `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`
-              }
-              alt={talent.name}
-              width={40}
-              height={40}
-              className="w-full h-full rounded-md border-2 border-gray-700"
-              onError={() => setImageError(true)}
-              unoptimized
-            />
-            {talent.rank > 0 && (
-              <div className="absolute bottom-0 right-0 bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-                {talent.rank}/{talent.maxRanks}
-              </div>
-            )}
-          </div>
+          <Image
+            src={`https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`}
+            alt={talent.name}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-md border-2 border-gray-700"
+            onError={() => setImageError(true)}
+            unoptimized
+          />
+          {talent.rank > 0 && (
+            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+              {talent.rank}/{talent.maxRanks}
+            </div>
+          )}
         </a>
       ) : (
-        <div className="relative w-10 h-10">
+        <div className="relative w-8 h-8 sm:w-10 sm:h-10">
           <Image
             src="https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
             alt={talent.name}
@@ -335,35 +332,33 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative w-full pb-[100%]">
       <a
         href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
         data-wowhead={`spell=${talent.entries[0].spellId}`}
-        className="block cursor-pointer talent active relative"
+        className="absolute inset-0 block cursor-pointer talent active"
         data-wh-icon-size="medium"
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="relative w-10 h-10">
-          <Image
-            src={
-              imageError
-                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-                : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
-            }
-            alt={talent.name}
-            width={40}
-            height={40}
-            className="w-full h-full rounded-md border-2 border-gray-700"
-            onError={() => setImageError(true)}
-            unoptimized
-          />
-          {talent.rank > 0 && (
-            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-              {talent.rank}/{talent.entries[0].maxRanks}
-            </div>
-          )}
-        </div>
+        <Image
+          src={
+            imageError
+              ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+          }
+          alt={talent.name}
+          layout="fill"
+          objectFit="cover"
+          className="rounded-md border-2 border-gray-700"
+          onError={() => setImageError(true)}
+          unoptimized
+        />
+        {talent.rank > 0 && (
+          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
+            {talent.rank}/{talent.entries[0].maxRanks}
+          </div>
+        )}
       </a>
     </div>
   );

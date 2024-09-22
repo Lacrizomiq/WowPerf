@@ -149,7 +149,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className="relative" style={{ width: "100%", height: "100%" }}>
+      <div className="relative" style={{ width: "90%", height: "90%" }}>
         <Image
           src={
             imageError

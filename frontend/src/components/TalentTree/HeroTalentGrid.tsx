@@ -3,26 +3,22 @@ import Image from "next/image";
 import { HeroTalent } from "@/types/talents";
 
 interface TalentGridProps {
-  talents: HeroTalent[];
   selectedHeroTalentTree: HeroTalent[];
 }
 
 const HeroTalentGrid: React.FC<TalentGridProps> = ({
-  talents,
   selectedHeroTalentTree,
 }) => {
-  const cellSize = 5; // Taille en pourcentage
-  const minX = Math.min(...talents.map((t) => t.posX));
-  const minY = Math.min(...talents.map((t) => t.posY));
-  const maxX = Math.max(...talents.map((t) => t.posX));
-  const maxY = Math.max(...talents.map((t) => t.posY));
-
-  const aspectRatio = (maxY - minY) / (maxX - minX);
+  const cellSize = 6; // Taille en pourcentage
+  const minX = Math.min(...selectedHeroTalentTree.map((t) => t.posX));
+  const minY = Math.min(...selectedHeroTalentTree.map((t) => t.posY));
+  const maxX = Math.max(...selectedHeroTalentTree.map((t) => t.posX));
+  const maxY = Math.max(...selectedHeroTalentTree.map((t) => t.posY));
 
   const gridStyle: React.CSSProperties = {
     position: "relative",
-    width: "100%",
-    paddingTop: `${aspectRatio * 100}%`,
+    width: "80%",
+    paddingTop: `${((maxY - minY) / (maxX - minX)) * 50}%`,
     borderRadius: "8px",
     margin: "0 auto",
     overflow: "visible",
@@ -30,7 +26,7 @@ const HeroTalentGrid: React.FC<TalentGridProps> = ({
 
   return (
     <div style={gridStyle} className="talent-grid">
-      {talents.map((talent) => (
+      {selectedHeroTalentTree.map((talent) => (
         <TalentIcon
           key={talent.id}
           talent={talent}
@@ -85,7 +81,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className="relative" style={{ width: "100%", height: "100%" }}>
+      <div className="relative" style={{ width: "150%", height: "150%" }}>
         <Image
           src={
             imageError
@@ -94,7 +90,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
           }
           alt={talent.name}
           layout="fill"
-          objectFit="contain"
+          objectFit="cover"
           className={`rounded-full border-2 ${
             isSelected
               ? "border-yellow-400 glow-effect"

@@ -17,23 +17,20 @@ const HeroSpecTalent: React.FC<HeroTalentProps> = ({
   heroTalentIcon,
 }) => {
   return (
-    <div className="mb-6">
-      <h3 className="text-lg font-semibold text-gradient-glow mb-4 items-center flex justify-center">
+    <div className="border-4 shadow-2xl w-full">
+      <h3 className="text-xl p-4 font-bold text-center text-white bg-black bg-opacity-70 flex items-center justify-center border-b-4">
         <Image
           src={heroTalentIcon}
-          alt="Hero Talents"
+          alt={HeroTalentName}
           width={40}
           height={40}
-          className="mr-2"
+          className="mr-2 rounded-full"
           unoptimized
         />
-        <span>{HeroTalentName} Hero Talents</span>
+        <span className="text-xl">{HeroTalentName} Hero Talents</span>
       </h3>
-      <div className="mb-6 shadow-2xl border-4 p-12" style={{ width: "100%" }}>
-        <HeroTalentGrid
-          talents={talents}
-          selectedHeroTalentTree={selectedHeroTalentTree}
-        />
+      <div className="p-12">
+        <HeroTalentGrid selectedHeroTalentTree={selectedHeroTalentTree} />
       </div>
     </div>
   );

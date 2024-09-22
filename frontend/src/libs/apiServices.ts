@@ -32,12 +32,6 @@ export const getBlizzardCharacterMythicPlusBestRuns = async (
   locale: string,
   seasonId: string
 ) => {
-  if (seasonId === "13") {
-    // TWW Season 1
-    console.log("Using static data for TWW Season 1");
-    return null; // Return null for TWW Season 1
-  }
-
   try {
     const { data } = await api.get(
       `/blizzard/characters/${realmSlug}/${characterName}/mythic-keystone-profile/season/${seasonId}`,
