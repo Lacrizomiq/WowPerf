@@ -291,9 +291,8 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
           <Image
             src={`https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`}
             alt={talent.name}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-md border-2 border-gray-700"
+            fill
+            className="rounded-md border-2 border-gray-700 object-cover"
             onError={() => setImageError(true)}
             unoptimized
           />
@@ -351,9 +350,8 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
               : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
           }
           alt={talent.name}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-md border-2 border-gray-700"
+          fill
+          className="rounded-md border-2 border-gray-700 object-cover"
           onError={() => setImageError(true)}
           unoptimized
         />

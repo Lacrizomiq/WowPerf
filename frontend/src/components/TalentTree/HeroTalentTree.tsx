@@ -97,7 +97,7 @@ const HeroTalentTree: React.FC<TalentTreeProps> = ({
           />
           <span>{heroTalentsName} Hero Talents</span>
         </h3>
-        <div className="px-40 py-20">
+        <div className="px-20 py-8 pb-20">
           <HeroTalentGrid
             selectedHeroTalentTree={combinedHeroTalents.filter(
               (t: HeroTalent) => t.rank > 0
