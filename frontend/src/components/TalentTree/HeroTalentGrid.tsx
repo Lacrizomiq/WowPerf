@@ -35,7 +35,7 @@ const HeroTalentGrid: React.FC<TalentGridProps> = ({
           minY={minY}
           maxX={maxX}
           maxY={maxY}
-          isSelected={selectedHeroTalentTree.some((t) => t.id === talent.id)}
+          isSelected={true}
         />
       ))}
     </div>
@@ -74,7 +74,9 @@ const TalentIcon: React.FC<TalentIconProps> = ({
     height: `36px`,
   };
 
-  const talentEntry = talent.entries[0];
+  // Utiliser le talent sélectionné ou le premier si c'est un choix multiple
+  const selectedEntry =
+    talent.entries.find((entry) => entry.id === talent.id) || talent.entries[0];
 
   return (
     <div
@@ -86,7 +88,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
           src={
             imageError
               ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talentEntry.icon}.jpg`
+              : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
           }
           alt={talent.name}
           layout="fill"
@@ -100,7 +102,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
         />
         {isSelected && (
           <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
-            {talent.rank}/{talentEntry.maxRanks}
+            {talent.rank}/{selectedEntry.maxRanks}
           </div>
         )}
       </div>

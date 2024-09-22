@@ -6,7 +6,7 @@ interface TalentNode {
   name: string;
   posX: number;
   posY: number;
-  entries: { icon: string }[];
+  entries: { icon: string; spellId: number }[];
   rank: number;
   maxRanks: number;
   next?: number[];
@@ -96,18 +96,22 @@ const TalentGrid: React.FC<TalentGridProps> = ({
           );
         })}
       </svg>
-      {talents.map((talent) => (
-        <TalentIcon
-          key={talent.id}
-          talent={talent}
-          cellSize={cellSize}
-          minX={minX}
-          minY={minY}
-          maxX={maxX}
-          maxY={maxY}
-          isSelected={selectedTalents.some((t) => t.id === talent.id)}
-        />
-      ))}
+      {talents.map((talent) => {
+        const selectedTalent = selectedTalents.find((t) => t.id === talent.id);
+        return (
+          <TalentIcon
+            key={talent.id}
+            talent={talent}
+            cellSize={cellSize}
+            minX={minX}
+            minY={minY}
+            maxX={maxX}
+            maxY={maxY}
+            isSelected={!!selectedTalent}
+            selectedRank={selectedTalent?.rank || 0}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -120,6 +124,7 @@ interface TalentIconProps {
   maxX: number;
   maxY: number;
   isSelected: boolean;
+  selectedRank: number;
 }
 
 const TalentIcon: React.FC<TalentIconProps> = ({
@@ -130,8 +135,14 @@ const TalentIcon: React.FC<TalentIconProps> = ({
   maxX,
   maxY,
   isSelected,
+  selectedRank,
 }) => {
   const [imageError, setImageError] = React.useState(false);
+
+  const selectedEntry =
+    isSelected && talent.entries.length > 1
+      ? talent.entries[selectedRank - 1]
+      : talent.entries[0];
 
   const normalizedPosX = (talent.posX - minX) / (maxX - minX);
   const normalizedPosY = (talent.posY - minY) / (maxY - minY);
@@ -154,7 +165,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
           src={
             imageError
               ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+              : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
           }
           alt={talent.name}
           layout="fill"
@@ -168,7 +179,7 @@ const TalentIcon: React.FC<TalentIconProps> = ({
         />
         {isSelected && (
           <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
-            {talent.rank}/{talent.maxRanks}
+            {selectedRank}/{talent.maxRanks}
           </div>
         )}
       </div>

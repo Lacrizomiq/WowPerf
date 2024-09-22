@@ -331,11 +331,14 @@ interface HeroTalentIconProps {
 const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
+  const selectedEntry =
+    talent.entries.find((entry) => entry.id === talent.id) || talent.entries[0];
+
   return (
     <div className="relative w-full pb-[80%]">
       <a
-        href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
-        data-wowhead={`spell=${talent.entries[0].spellId}`}
+        href={`https://www.wowhead.com/spell=${selectedEntry.spellId}`}
+        data-wowhead={`spell=${selectedEntry.spellId}`}
         className="absolute inset-0 block cursor-pointer talent active"
         data-wh-icon-size="medium"
         target="_blank"
@@ -345,7 +348,7 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
           src={
             imageError
               ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+              : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
           }
           alt={talent.name}
           layout="fill"
@@ -356,7 +359,7 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
         />
         {talent.rank > 0 && (
           <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-            {talent.rank}/{talent.entries[0].maxRanks}
+            {talent.rank}/{selectedEntry.maxRanks}
           </div>
         )}
       </a>

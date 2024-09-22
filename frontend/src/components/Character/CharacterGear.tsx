@@ -175,9 +175,6 @@ export default function CharacterGear({
           >
             {item.name}
           </span>
-          <div className="truncate">
-            <span>{item.enchant_name}</span>
-          </div>
           <div className="text-xs">{item.item_level}</div>
         </div>
       </div>
