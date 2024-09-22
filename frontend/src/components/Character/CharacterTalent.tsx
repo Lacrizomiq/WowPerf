@@ -134,7 +134,7 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg">
+      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg md:w-1/2">
         <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
           <Image
             src={iconUrl}
@@ -226,7 +226,7 @@ export default function CharacterTalent({
             </div>
           </div>
           {talentLoadout.hero_talents.length > 0 && (
-            <div className="w-full">
+            <div className="">
               {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
@@ -332,7 +332,7 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="relative w-full pb-[100%]">
+    <div className="relative w-full pb-[80%]">
       <a
         href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
         data-wowhead={`spell=${talent.entries[0].spellId}`}
