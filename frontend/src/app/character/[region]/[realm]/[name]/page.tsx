@@ -27,68 +27,10 @@ export default function CharacterLayout({
   useWowheadTooltips();
 
   const renderContent = () => {
-    switch (selectedTab) {
-      case "gear":
-        return (
-          <CharacterGear
-            region={region}
-            realm={realm}
-            name={name}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-          />
-        );
-      case "talents":
-        return (
-          <CharacterTalent
-            region={region}
-            realm={realm}
-            name={name}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-          />
-        );
-      case "mythic-plus":
-        return (
-          <MythicDungeonOverview
-            characterName={name}
-            realmSlug={realm}
-            region={region}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-            seasonSlug={seasonSlug || "season-tww-1"}
-          />
-        );
-      case "raid-progression":
-        return (
-          <RaidOverview
-            characterName={name}
-            realmSlug={realm}
-            region={region}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-            expansion={expansion || "TWW"}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="min-h-screen p-5 bg-[#000c1a] text-white">
-      <div className="max-w-7xl mx-auto">
-        <Header />
-
-        <CharacterSummary
-          region={region}
-          realm={realm}
-          name={name}
-          namespace={`profile-${region}`}
-          locale="en_GB"
-        />
-        <div className="bg-[#002440] flex justify-center p-5 mt-5 rounded-t-xl">
-          <nav className="flex justify-center bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
+    return (
+      <>
+        <div className="flex justify-center p-5 mt-5 rounded-xl">
+          <nav className="flex justify-center mt-5 bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
             {[
               { name: "Gear", icon: <Shield size={20} />, key: "gear" },
               {
@@ -127,7 +69,80 @@ export default function CharacterLayout({
             ))}
           </nav>
         </div>
-        <div className="bg-[#002440] rounded-b-xl p-5">{renderContent()}</div>
+        <div className="rounded-xl mt-5">
+          {(() => {
+            switch (selectedTab) {
+              case "gear":
+                return (
+                  <CharacterGear
+                    region={region}
+                    realm={realm}
+                    name={name}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                  />
+                );
+              case "talents":
+                return (
+                  <CharacterTalent
+                    region={region}
+                    realm={realm}
+                    name={name}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                  />
+                );
+              case "mythic-plus":
+                return (
+                  <MythicDungeonOverview
+                    characterName={name}
+                    realmSlug={realm}
+                    region={region}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                    seasonSlug={seasonSlug || "season-tww-1"}
+                  />
+                );
+              case "raid-progression":
+                return (
+                  <RaidOverview
+                    characterName={name}
+                    realmSlug={realm}
+                    region={region}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                    expansion={expansion || "TWW"}
+                  />
+                );
+              default:
+                return null;
+            }
+          })()}
+        </div>
+      </>
+    );
+  };
+
+  const backgroundStyle = {
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warlock-affliction.jpg')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  };
+
+  return (
+    <div className="min-h-screen p-1 bg-[#090909] text-white ">
+      <div className="max-w-7xl mx-auto p-5" style={backgroundStyle}>
+        <Header />
+
+        <CharacterSummary
+          region={region}
+          realm={realm}
+          name={name}
+          namespace={`profile-${region}`}
+          locale="en_GB"
+        />
+        <div className="rounded-xl mt-5 shadow-2xl">{renderContent()}</div>
       </div>
     </div>
   );
