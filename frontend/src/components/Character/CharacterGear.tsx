@@ -164,7 +164,7 @@ export default function CharacterGear({
             alt={item.name}
             width={48}
             height={48}
-            className="rounded-md border-2 border-gray-700"
+            className="rounded-md border-2 border-gray-700 glow-effect"
           />
         </a>
         <div className="ml-2 text-white text-sm flex-grow overflow-hidden">

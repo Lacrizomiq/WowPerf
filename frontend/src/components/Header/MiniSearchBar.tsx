@@ -66,10 +66,7 @@ const MiniSearchBar = () => {
   };
 
   return (
-    <div
-      className="relative border-2 border-blue-400 rounded-xl p-2"
-      ref={dropdownRef}
-    >
+    <div className="relative  p-2" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center text-white hover:text-blue-300 transition-colors"

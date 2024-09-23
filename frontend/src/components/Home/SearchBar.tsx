@@ -51,7 +51,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="py-8 bg-gradient-dark">
+    <div className="py-8 bg-[#002440]">
       <div className="container mx-auto px-4">
         <form
           onSubmit={handleSubmit}

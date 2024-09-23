@@ -50,7 +50,7 @@ const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
           key={raid.ID}
           className={`rounded-xl overflow-hidden bg-deep-blue shadow-lg cursor-pointer transition-all duration-300 ${
             selectedRaid?.ID === raid.ID
-              ? "ring-2 ring-[#001830] shadow-2xl scale-105"
+              ? "ring-2 ring-[#001830] shadow-2xl scale-105 glow-effect"
               : "hover:shadow-xl"
           }`}
           onClick={() => onRaidSelect(raid)}

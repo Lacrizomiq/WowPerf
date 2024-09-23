@@ -26,7 +26,7 @@ const RaidDetails: React.FC<RaidDetailsProps> = ({
   }
 
   return (
-    <div className="bg-deep-blue p-4 rounded-lg mt-8">
+    <div className="bg-deep-blue p-8 rounded-lg mt-8 glow-effect">
       <h2 className="text-2xl font-bold mb-4 text-white">{staticRaid.Name}</h2>
       {raidProgress.modes.map((mode: RaidMode) => (
         <div key={mode.difficulty} className="mb-4">

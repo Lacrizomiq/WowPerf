@@ -5,7 +5,7 @@ import FeaturedContent from "@/components/Home/FeaturedContent";
 
 export default function Home() {
   return (
-    <main className="bg-gradient-dark">
+    <main className="bg-[#002440]">
       <Header />
       <Hero />
       <SearchBar />

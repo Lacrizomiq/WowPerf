@@ -102,7 +102,7 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg">
+      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg glow-effect">
         <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
           <Image
             src={icon}
@@ -134,7 +134,7 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg md:w-1/2">
+      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg md:w-1/2 glow-effect">
         <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
           <Image
             src={iconUrl}
@@ -191,7 +191,7 @@ export default function CharacterTalent({
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <button
             onClick={toggleDisplayMode}
-            className="bg-deep-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto shadow-2xl"
+            className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
@@ -200,7 +200,7 @@ export default function CharacterTalent({
               href={talentCalculatorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-deep-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
+              className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl "
             >
               Talent Calculator <SquareArrowOutUpRight className="ml-2" />
             </a>

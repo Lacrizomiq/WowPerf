@@ -20,7 +20,7 @@ const DungeonDetails: React.FC<DungeonDetailsProps> = ({ run, region }) => {
   }, [run]);
 
   return (
-    <div className="mt-8 p-6 bg-deep-blue rounded-lg">
+    <div className="mt-8 p-6 bg-deep-blue rounded-lg glow-effect">
       <h2 className="text-2xl font-bold mb-4">
         Detailed run for {run.Dungeon.Name}
       </h2>

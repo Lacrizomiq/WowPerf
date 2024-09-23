@@ -32,10 +32,10 @@ const SeasonsSelector: React.FC<SeasonsSelectorProps> = ({
   return (
     <>
       <Select onValueChange={onSeasonChange} value={selectedSeason.slug}>
-        <SelectTrigger className="w-[200px] bg-deep-blue shadow-2xl text-white border-none">
+        <SelectTrigger className="w-[200px] bg-gradient-blue shadow-2xl text-white border-none">
           <SelectValue placeholder="Select a season" />
         </SelectTrigger>
-        <SelectContent className="bg-deep-blue text-white">
+        <SelectContent className="bg-gradient-blue text-white">
           {seasons.map((season) => (
             <SelectItem
               key={season.slug}
