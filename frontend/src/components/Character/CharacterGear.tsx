@@ -164,7 +164,7 @@ export default function CharacterGear({
             alt={item.name}
             width={48}
             height={48}
-            className="rounded-md border-2 border-gray-700"
+            className="rounded-md border-2 border-gray-700 glow-effect"
           />
         </a>
         <div className="ml-2 text-white text-sm flex-grow overflow-hidden">
@@ -175,9 +175,6 @@ export default function CharacterGear({
           >
             {item.name}
           </span>
-          <div className="truncate">
-            <span>{item.enchant_name}</span>
-          </div>
           <div className="text-xs">{item.item_level}</div>
         </div>
       </div>
@@ -185,7 +182,7 @@ export default function CharacterGear({
   }
 
   return (
-    <div className="p-6 bg-[#002440] rounded-xl shadow-lg m-4">
+    <div className="p-2  rounded-xl shadow-lg m-2">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;

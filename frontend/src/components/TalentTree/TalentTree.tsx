@@ -16,6 +16,11 @@ interface TalentTreeProps {
   selectedTalents: TalentNode[];
 }
 
+interface TalentEntry {
+  spellId: number;
+  // Ajoutez ici d'autres propriétés si nécessaire
+}
+
 const TalentTree: React.FC<TalentTreeProps> = ({
   talentTreeId,
   specId,
@@ -39,33 +44,61 @@ const TalentTree: React.FC<TalentTreeProps> = ({
   const classTalents = talentData?.classNodes || [];
   const specTalents = talentData?.specNodes || [];
 
-  // Filter out hero talents and ensure we only have class and spec talents
-  const filteredClassTalents = classTalents.filter(
-    (talent: TalentNode) => talent.nodeType === "class"
-  );
-  const filteredSpecTalents = specTalents.filter(
-    (talent: TalentNode) => talent.nodeType === "spec"
-  );
+  const findTreeTalent = (selectedTalent: TalentNode) => {
+    return [...classTalents, ...specTalents].find(
+      (t) =>
+        t.id === selectedTalent.id ||
+        (t.entries &&
+          t.entries.some(
+            (entry: TalentEntry) => entry.spellId === selectedTalent.id
+          ))
+    );
+  };
 
-  console.log("Filtered Class Talents:", filteredClassTalents);
-  console.log("Filtered Spec Talents:", filteredSpecTalents);
+  const combineTalents = (
+    treeTalents: TalentNode[],
+    selectedTalents: TalentNode[]
+  ) => {
+    const combined = [...treeTalents];
+    selectedTalents.forEach((selectedTalent) => {
+      const treeTalent = findTreeTalent(selectedTalent);
+      if (treeTalent) {
+        const index = combined.findIndex((t) => t.id === treeTalent.id);
+        if (index !== -1) {
+          combined[index] = { ...treeTalent, ...selectedTalent };
+        }
+      } else {
+        combined.push(selectedTalent);
+      }
+    });
+    return combined;
+  };
+
+  const combinedClassTalents = combineTalents(
+    classTalents,
+    selectedTalents.filter((t) => t.nodeType === "class")
+  );
+  const combinedSpecTalents = combineTalents(
+    specTalents,
+    selectedTalents.filter((t) => t.nodeType === "spec")
+  );
 
   return (
     <div className="p-4 shadow-lg rounded-lg overflow-auto">
       <div className="flex flex-col space-y-2">
         <ClassTalents
-          talents={filteredClassTalents}
+          talents={combinedClassTalents}
           className={className}
+          classIcon={talentData?.classIcon || ""}
           selectedTalents={selectedTalents.filter(
             (t) => t.nodeType === "class"
           )}
-          classIcon={talentData?.classIcon || ""}
         />
         <SpecTalents
-          talents={filteredSpecTalents}
+          talents={combinedSpecTalents}
           specName={specName}
-          selectedTalents={selectedTalents.filter((t) => t.nodeType === "spec")}
           specIcon={talentData?.specIcon || ""}
+          selectedTalents={selectedTalents.filter((t) => t.nodeType === "spec")}
         />
       </div>
     </div>

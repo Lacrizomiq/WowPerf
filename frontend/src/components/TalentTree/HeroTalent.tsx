@@ -17,8 +17,8 @@ const HeroSpecTalent: React.FC<HeroTalentProps> = ({
   heroTalentIcon,
 }) => {
   return (
-    <div className="border-4 shadow-2xl w-full">
-      <h3 className="text-xl p-4 font-bold text-center text-white bg-black bg-opacity-70 flex items-center justify-center border-b-4">
+    <div className="border-4 border-[#001830] shadow-2xl w-full">
+      <h3 className="text-xl p-4 font-bold text-center text-white bg-deep-blue flex items-center justify-center border-b-4">
         <Image
           src={heroTalentIcon}
           alt={HeroTalentName}

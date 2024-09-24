@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { eu, us, tw, kr } from "@/data/realms"; // Assurez-vous d'importer vos objets de données de royaume
+import { eu, us, tw, kr } from "@/data/realms";
 
 interface Realm {
   id: number;
@@ -17,23 +17,28 @@ export default function SearchBar() {
   const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
+  const sortedRealms = useMemo(() => {
+    let selectedRealms: Realm[] = [];
     switch (region) {
       case "eu":
-        setRealms(eu.realms);
+        selectedRealms = eu.realms;
         break;
       case "us":
-        setRealms(us.realms);
+        selectedRealms = us.realms;
         break;
       case "tw":
-        setRealms(tw.realms);
+        selectedRealms = tw.realms;
         break;
       case "kr":
-        setRealms(kr.realms);
+        selectedRealms = kr.realms;
         break;
       default:
-        setRealms([]);
+        selectedRealms = [];
     }
+    return selectedRealms.sort((a, b) => a.name.localeCompare(b.name));
+  }, [region]);
+
+  useEffect(() => {
     setRealm(""); // Reset realm when region changes
   }, [region]);
 
@@ -46,7 +51,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="py-8 bg-gradient-dark">
+    <div className="py-8 bg-[#002440]">
       <div className="container mx-auto px-4">
         <form
           onSubmit={handleSubmit}
@@ -74,7 +79,7 @@ export default function SearchBar() {
             <option value="" disabled>
               Select Realm
             </option>
-            {realms.map((realm) => (
+            {sortedRealms.map((realm) => (
               <option key={realm.id} value={realm.slug}>
                 {realm.name}
               </option>

@@ -66,10 +66,7 @@ const MiniSearchBar = () => {
   };
 
   return (
-    <div
-      className="relative border-2 border-blue-400 rounded-xl p-2"
-      ref={dropdownRef}
-    >
+    <div className="relative  p-2" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center text-white hover:text-blue-300 transition-colors"
@@ -83,7 +80,7 @@ const MiniSearchBar = () => {
             <select
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-2 py-1 rounded text-black"
+              className="w-full px-2 py-1 rounded text-black "
             >
               <option value="" disabled>
                 Select Region

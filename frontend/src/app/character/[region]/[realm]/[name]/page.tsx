@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "@/components/Header/Header";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
@@ -9,6 +9,8 @@ import CharacterGear from "@/components/Character/CharacterGear";
 import MythicDungeonOverview from "@/components/MythicPlus/MythicOverview";
 import RaidOverview from "@/components/Raids/RaidOverview";
 import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
+import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import "@/app/globals.css";
 
 export default function CharacterLayout({
   params,
@@ -19,76 +21,36 @@ export default function CharacterLayout({
     name: string;
     seasonSlug: string;
     expansion?: string;
+    namespace: string;
+    locale: string;
   };
 }) {
   const { region, realm, name, seasonSlug, expansion } = params;
   const [selectedTab, setSelectedTab] = useState<string>("gear");
 
+  const {
+    data: characterProfile,
+    isLoading,
+    error,
+  } = useGetBlizzardCharacterProfile(
+    region,
+    realm,
+    name,
+    `profile-${region}`,
+    "en_GB"
+  );
+
   useWowheadTooltips();
 
+  console.log("Character Profile Loading:", isLoading);
+  console.log("Character Profile Error:", error);
+  console.log("Character Profile Data:", characterProfile);
+
   const renderContent = () => {
-    switch (selectedTab) {
-      case "gear":
-        return (
-          <CharacterGear
-            region={region}
-            realm={realm}
-            name={name}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-          />
-        );
-      case "talents":
-        return (
-          <CharacterTalent
-            region={region}
-            realm={realm}
-            name={name}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-          />
-        );
-      case "mythic-plus":
-        return (
-          <MythicDungeonOverview
-            characterName={name}
-            realmSlug={realm}
-            region={region}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-            seasonSlug={seasonSlug || "season-tww-1"}
-          />
-        );
-      case "raid-progression":
-        return (
-          <RaidOverview
-            characterName={name}
-            realmSlug={realm}
-            region={region}
-            namespace={`profile-${region}`}
-            locale="en_GB"
-            expansion={expansion || "TWW"}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="min-h-screen p-5 bg-[#000c1a] text-white">
-      <div className="max-w-7xl mx-auto">
-        <Header />
-
-        <CharacterSummary
-          region={region}
-          realm={realm}
-          name={name}
-          namespace={`profile-${region}`}
-          locale="en_GB"
-        />
-        <div className="bg-[#002440] flex justify-center p-5 mt-5 rounded-t-xl">
-          <nav className="flex justify-center bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
+    return (
+      <>
+        <div className="flex justify-center p-5 mt-5 rounded-xl">
+          <nav className="flex justify-center mt-5 bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
             {[
               { name: "Gear", icon: <Shield size={20} />, key: "gear" },
               {
@@ -118,8 +80,7 @@ export default function CharacterLayout({
                 }
                 ${index === 0 ? "rounded-l-full" : ""}
                 ${index === array.length - 1 ? "rounded-r-full" : ""}
-                ${index !== 0 ? "border-l border-[#003660]" : ""}
-      `}
+                ${index !== 0 ? "border-l border-[#003660]" : ""}`}
               >
                 {tab.icon}
                 <span>{tab.name}</span>
@@ -127,7 +88,102 @@ export default function CharacterLayout({
             ))}
           </nav>
         </div>
-        <div className="bg-[#002440] rounded-b-xl p-5">{renderContent()}</div>
+        <div className="rounded-xl mt-5">
+          {(() => {
+            switch (selectedTab) {
+              case "gear":
+                return (
+                  <CharacterGear
+                    region={region}
+                    realm={realm}
+                    name={name}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                  />
+                );
+              case "talents":
+                return (
+                  <CharacterTalent
+                    region={region}
+                    realm={realm}
+                    name={name}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                  />
+                );
+              case "mythic-plus":
+                return (
+                  <MythicDungeonOverview
+                    characterName={name}
+                    realmSlug={realm}
+                    region={region}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                    seasonSlug={seasonSlug || "season-tww-1"}
+                  />
+                );
+              case "raid-progression":
+                return (
+                  <RaidOverview
+                    characterName={name}
+                    realmSlug={realm}
+                    region={region}
+                    namespace={`profile-${region}`}
+                    locale="en_GB"
+                    expansion={expansion || "TWW"}
+                  />
+                );
+              default:
+                return null;
+            }
+          })()}
+        </div>
+      </>
+    );
+  };
+
+  const backgroundStyle = {
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  };
+
+  const defaultBackgroundClass = "bg-deep-blue";
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-1 bg-[#090909] text-white">Loading...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-1 bg-[#090909] text-white">
+        Error: {error.message}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-1 bg-[#0a0a0a] text-white">
+      <div
+        className={`max-w-7xl mx-auto p-5 ${
+          characterProfile?.spec_id
+            ? `bg-spec-${characterProfile.spec_id}`
+            : defaultBackgroundClass
+        }`}
+        style={backgroundStyle}
+      >
+        <Header />
+
+        <CharacterSummary
+          region={region}
+          realm={realm}
+          name={name}
+          namespace={`profile-${region}`}
+          locale="en_GB"
+        />
+        <div className="rounded-xl mt-5 shadow-2xl">{renderContent()}</div>
       </div>
     </div>
   );

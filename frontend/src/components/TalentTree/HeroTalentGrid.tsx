@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { HeroTalent } from "@/types/talents";
+import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 
 interface TalentGridProps {
   selectedHeroTalentTree: HeroTalent[];
@@ -35,7 +36,7 @@ const HeroTalentGrid: React.FC<TalentGridProps> = ({
           minY={minY}
           maxX={maxX}
           maxY={maxY}
-          isSelected={selectedHeroTalentTree.some((t) => t.id === talent.id)}
+          isSelected={true}
         />
       ))}
     </div>
@@ -63,6 +64,8 @@ const TalentIcon: React.FC<TalentIconProps> = ({
 }) => {
   const [imageError, setImageError] = React.useState(false);
 
+  useWowheadTooltips();
+
   const normalizedPosX = (talent.posX - minX) / (maxX - minX);
   const normalizedPosY = (talent.posY - minY) / (maxY - minY);
 
@@ -74,35 +77,46 @@ const TalentIcon: React.FC<TalentIconProps> = ({
     height: `36px`,
   };
 
-  const talentEntry = talent.entries[0];
+  // Utiliser le talent sélectionné ou le premier si c'est un choix multiple
+  const selectedEntry =
+    talent.entries.find((entry) => entry.id === talent.id) || talent.entries[0];
 
   return (
     <div
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className="relative" style={{ width: "150%", height: "150%" }}>
-        <Image
-          src={
-            imageError
-              ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talentEntry.icon}.jpg`
-          }
-          alt={talent.name}
-          layout="fill"
-          objectFit="cover"
-          className={`rounded-full border-2 ${
-            isSelected
-              ? "border-yellow-400 glow-effect"
-              : "border-gray-700 opacity-50"
-          }`}
-          onError={() => setImageError(true)}
-        />
-        {isSelected && (
-          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
-            {talent.rank}/{talentEntry.maxRanks}
-          </div>
-        )}
+      <div className="relative" style={{ width: "180%", height: "180%" }}>
+        <a
+          href={`https://www.wowhead.com/spell=${selectedEntry.spellId}`}
+          data-wowhead={`spell=${selectedEntry.spellId}`}
+          className="absolute inset-0 block cursor-pointer talent active"
+          data-wh-icon-size="medium"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            src={
+              imageError
+                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+                : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
+            }
+            alt={talent.name}
+            fill
+            sizes="(max-width: 768px) 20px, 30px"
+            className={`rounded-full border-2 ${
+              isSelected
+                ? "border-yellow-400 glow-effect"
+                : "border-gray-700 opacity-50"
+            }`}
+            onError={() => setImageError(true)}
+          />
+          {isSelected && (
+            <div className="absolute bottom-0 right-0 bg-deep-blue text-white text-[8px] font-bold px-1 rounded-full">
+              {talent.rank}/{selectedEntry.maxRanks}
+            </div>
+          )}
+        </a>
       </div>
     </div>
   );

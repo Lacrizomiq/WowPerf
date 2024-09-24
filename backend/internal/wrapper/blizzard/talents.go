@@ -15,6 +15,9 @@ import (
 type SelectedTalentInfo struct {
 	Rank            int
 	SelectedEntryID int
+	SpellID         int
+	SpellName       string
+	Description     string
 }
 
 // TransformCharacterTalents transforms character talent data using Blizzard API data and the local database.
@@ -140,10 +143,27 @@ func processTalents(loadoutMap map[string]interface{}, key string, selected map[
 		}
 
 		selectedEntryID := 0
+		spellID := 0
+		spellName := ""
+		description := ""
+
 		if tooltipData, ok := t["tooltip"].(map[string]interface{}); ok {
 			if talentData, ok := tooltipData["talent"].(map[string]interface{}); ok {
 				if talentID, ok := talentData["id"].(float64); ok {
 					selectedEntryID = int(talentID)
+				}
+				if name, ok := talentData["name"].(string); ok {
+					spellName = name
+				}
+			}
+			if spellTooltip, ok := tooltipData["spell_tooltip"].(map[string]interface{}); ok {
+				if desc, ok := spellTooltip["description"].(string); ok {
+					description = desc
+				}
+				if spell, ok := spellTooltip["spell"].(map[string]interface{}); ok {
+					if spellIDFloat, ok := spell["id"].(float64); ok {
+						spellID = int(spellIDFloat)
+					}
 				}
 			}
 		}
@@ -152,8 +172,11 @@ func processTalents(loadoutMap map[string]interface{}, key string, selected map[
 			selected[int(id)] = SelectedTalentInfo{
 				Rank:            int(rank),
 				SelectedEntryID: selectedEntryID,
+				SpellID:         spellID,
+				SpellName:       spellName,
+				Description:     description,
 			}
-			log.Printf("Added selected talent: id=%d, rank=%d, selectedEntryID=%d, type=%s", int(id), int(rank), selectedEntryID, key)
+			log.Printf("Added selected talent: id=%d, rank=%d, selectedEntryID=%d, spellID=%d, spellName=%s", int(id), int(rank), selectedEntryID, spellID, spellName)
 		}
 	}
 }
@@ -251,31 +274,72 @@ func transformHeroTalents(dbNodes []talents.HeroNode, selectedHeroTalents map[in
 }
 
 func transformHeroTalent(dbNode talents.HeroNode, selectedInfo SelectedTalentInfo) profile.HeroTalent {
-	return profile.HeroTalent{
-		ID:      dbNode.NodeID,
-		Name:    dbNode.Name,
-		Type:    dbNode.Type,
-		PosX:    dbNode.PosX,
-		PosY:    dbNode.PosY,
-		Rank:    selectedInfo.Rank,
-		Entries: transformHeroEntriesToProfileEntries(dbNode.Entries),
+	transformed := profile.HeroTalent{
+		ID:   dbNode.NodeID,
+		Name: dbNode.Name,
+		Type: dbNode.Type,
+		PosX: dbNode.PosX,
+		PosY: dbNode.PosY,
+		Rank: selectedInfo.Rank,
 	}
-}
 
-func transformHeroEntriesToProfileEntries(entries []talents.HeroEntry) []profile.HeroEntry {
-	transformed := make([]profile.HeroEntry, len(entries))
-	for i, entry := range entries {
-		transformed[i] = profile.HeroEntry{
-			EntryID:      entry.EntryID,
-			DefinitionID: entry.DefinitionID,
-			MaxRanks:     entry.MaxRanks,
-			Type:         entry.Type,
-			Name:         entry.Name,
-			SpellID:      entry.SpellID,
-			Icon:         entry.Icon,
-			Index:        entry.Index,
+	if dbNode.Type == "choice" {
+		// Pour les talents de type "choice", on cherche l'entrée correspondante
+		for _, entry := range dbNode.Entries {
+			if entry.DefinitionID == selectedInfo.SelectedEntryID {
+				transformed.Entries = []profile.HeroEntry{
+					{
+						EntryID:      entry.EntryID,
+						DefinitionID: entry.DefinitionID,
+						MaxRanks:     entry.MaxRanks,
+						Type:         entry.Type, // Utiliser le type de la base de données
+						Name:         selectedInfo.SpellName,
+						SpellID:      selectedInfo.SpellID,
+						Icon:         entry.Icon, // Utiliser l'icône de la base de données
+						Index:        entry.Index,
+					},
+				}
+				break
+			}
+		}
+		// Si aucune entrée correspondante n'est trouvée, on utilise les informations de l'API
+		if len(transformed.Entries) == 0 {
+			transformed.Entries = []profile.HeroEntry{
+				{
+					EntryID:      selectedInfo.SelectedEntryID,
+					DefinitionID: selectedInfo.SelectedEntryID,
+					MaxRanks:     1,         // Valeur par défaut
+					Type:         "passive", // Valeur par défaut, à ajuster si nécessaire
+					Name:         selectedInfo.SpellName,
+					SpellID:      selectedInfo.SpellID,
+					Icon:         "", // Malheureusement, nous n'avons pas cette information de l'API
+					Index:        0,  // Valeur par défaut
+				},
+			}
+		}
+	} else {
+		// Pour les talents de type "single" ou autres, on inclut toutes les entrées de la base de données
+		transformed.Entries = make([]profile.HeroEntry, len(dbNode.Entries))
+		for i, entry := range dbNode.Entries {
+			transformed.Entries[i] = profile.HeroEntry{
+				EntryID:      entry.EntryID,
+				DefinitionID: entry.DefinitionID,
+				MaxRanks:     entry.MaxRanks,
+				Type:         entry.Type,
+				Name:         entry.Name,
+				SpellID:      entry.SpellID,
+				Icon:         entry.Icon,
+				Index:        entry.Index,
+			}
 		}
 	}
+
+	// Si aucune entrée n'a été trouvée, on log un avertissement
+	if len(transformed.Entries) == 0 {
+		log.Printf("Warning: No matching entries found in DB for hero talent ID %d", dbNode.NodeID)
+		transformed.Entries = []profile.HeroEntry{} // Initialiser avec un slice vide plutôt que null
+	}
+
 	return transformed
 }
 

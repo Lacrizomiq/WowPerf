@@ -20,7 +20,7 @@ const DungeonDetails: React.FC<DungeonDetailsProps> = ({ run, region }) => {
   }, [run]);
 
   return (
-    <div className="mt-8 p-6 bg-deep-blue rounded-lg">
+    <div className="mt-8 p-6 bg-deep-blue rounded-lg glow-effect">
       <h2 className="text-2xl font-bold mb-4">
         Detailed run for {run.Dungeon.Name}
       </h2>
@@ -32,25 +32,26 @@ const DungeonDetails: React.FC<DungeonDetailsProps> = ({ run, region }) => {
           <p>Completed: {new Date(run.CompletedTimestamp).toDateString()}</p>
         </div>
         <div>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex flex-wrap gap-1">
             {run.Affixes.map((affix) => (
-              <li key={affix.ID} className="flex flex-col items-center gap-2">
+              <li key={affix.ID} className="flex flex-col items-center w-24">
                 <a
                   href={affix.WowheadURL}
                   data-wowhead={`affix=${affix.ID}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex flex-col items-center"
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <Image
-                      src={`https://wow.zamimg.com/images/wow/icons/large/${affix.Icon}.jpg`}
-                      alt={affix.Name}
-                      width={44}
-                      height={44}
-                      unoptimized
-                    />
-                    <span>{affix.Name}</span>
-                  </div>
+                  <Image
+                    src={`https://wow.zamimg.com/images/wow/icons/large/${affix.Icon}.jpg`}
+                    alt={affix.Name}
+                    width={44}
+                    height={44}
+                    unoptimized
+                  />
+                  <span className="text-xs text-center mt-1 break-words">
+                    {affix.Name}
+                  </span>
                 </a>
               </li>
             ))}

@@ -102,8 +102,8 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg">
-        <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
+      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg glow-effect">
+        <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
           <Image
             src={icon}
             alt={title}
@@ -134,8 +134,8 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-black rounded-lg">
-        <h3 className="text-lg font-semibold text-white bg-black bg-opacity-70 p-4 items-center flex justify-center">
+      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg md:w-1/2 glow-effect">
+        <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
           <Image
             src={iconUrl}
             alt="Hero Talents"
@@ -191,7 +191,7 @@ export default function CharacterTalent({
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <button
             onClick={toggleDisplayMode}
-            className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto"
+            className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
@@ -200,7 +200,7 @@ export default function CharacterTalent({
               href={talentCalculatorUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-purple hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center"
+              className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl "
             >
               Talent Calculator <SquareArrowOutUpRight className="ml-2" />
             </a>
@@ -226,7 +226,7 @@ export default function CharacterTalent({
             </div>
           </div>
           {talentLoadout.hero_talents.length > 0 && (
-            <div className="w-full">
+            <div className="">
               {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
@@ -291,9 +291,8 @@ const TalentIcon: React.FC<TalentIconProps> = ({ talent }) => {
           <Image
             src={`https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`}
             alt={talent.name}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-md border-2 border-gray-700"
+            fill
+            className="rounded-md border-2 border-gray-700 object-cover"
             onError={() => setImageError(true)}
             unoptimized
           />
@@ -331,11 +330,14 @@ interface HeroTalentIconProps {
 const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
   const [imageError, setImageError] = useState(false);
 
+  const selectedEntry =
+    talent.entries.find((entry) => entry.id === talent.id) || talent.entries[0];
+
   return (
-    <div className="relative w-full pb-[100%]">
+    <div className="relative w-full pb-[80%]">
       <a
-        href={`https://www.wowhead.com/spell=${talent.entries[0].spellId}`}
-        data-wowhead={`spell=${talent.entries[0].spellId}`}
+        href={`https://www.wowhead.com/spell=${selectedEntry.spellId}`}
+        data-wowhead={`spell=${selectedEntry.spellId}`}
         className="absolute inset-0 block cursor-pointer talent active"
         data-wh-icon-size="medium"
         target="_blank"
@@ -345,18 +347,17 @@ const HeroTalentIcon: React.FC<HeroTalentIconProps> = ({ talent }) => {
           src={
             imageError
               ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
+              : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
           }
           alt={talent.name}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-md border-2 border-gray-700"
+          fill
+          className="rounded-md border-2 border-gray-700 object-cover"
           onError={() => setImageError(true)}
           unoptimized
         />
         {talent.rank > 0 && (
           <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs font-bold px-1 rounded">
-            {talent.rank}/{talent.entries[0].maxRanks}
+            {talent.rank}/{selectedEntry.maxRanks}
           </div>
         )}
       </a>

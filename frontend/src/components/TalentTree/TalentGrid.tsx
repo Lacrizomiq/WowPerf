@@ -1,12 +1,13 @@
 import React from "react";
 import Image from "next/image";
+import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 
 interface TalentNode {
   id: number;
   name: string;
   posX: number;
   posY: number;
-  entries: { icon: string }[];
+  entries: { icon: string; spellId: number }[];
   rank: number;
   maxRanks: number;
   next?: number[];
@@ -96,18 +97,22 @@ const TalentGrid: React.FC<TalentGridProps> = ({
           );
         })}
       </svg>
-      {talents.map((talent) => (
-        <TalentIcon
-          key={talent.id}
-          talent={talent}
-          cellSize={cellSize}
-          minX={minX}
-          minY={minY}
-          maxX={maxX}
-          maxY={maxY}
-          isSelected={selectedTalents.some((t) => t.id === talent.id)}
-        />
-      ))}
+      {talents.map((talent) => {
+        const selectedTalent = selectedTalents.find((t) => t.id === talent.id);
+        return (
+          <TalentIcon
+            key={talent.id}
+            talent={talent}
+            cellSize={cellSize}
+            minX={minX}
+            minY={minY}
+            maxX={maxX}
+            maxY={maxY}
+            isSelected={!!selectedTalent}
+            selectedRank={selectedTalent?.rank || 0}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -120,6 +125,7 @@ interface TalentIconProps {
   maxX: number;
   maxY: number;
   isSelected: boolean;
+  selectedRank: number;
 }
 
 const TalentIcon: React.FC<TalentIconProps> = ({
@@ -130,8 +136,16 @@ const TalentIcon: React.FC<TalentIconProps> = ({
   maxX,
   maxY,
   isSelected,
+  selectedRank,
 }) => {
   const [imageError, setImageError] = React.useState(false);
+
+  useWowheadTooltips();
+
+  const selectedEntry =
+    isSelected && talent.entries.length > 1
+      ? talent.entries[selectedRank - 1]
+      : talent.entries[0];
 
   const normalizedPosX = (talent.posX - minX) / (maxX - minX);
   const normalizedPosY = (talent.posY - minY) / (maxY - minY);
@@ -149,28 +163,37 @@ const TalentIcon: React.FC<TalentIconProps> = ({
       className={`talent-icon ${isSelected ? "selected" : "unselected"}`}
       style={iconStyle}
     >
-      <div className="relative" style={{ width: "90%", height: "90%" }}>
-        <Image
-          src={
-            imageError
-              ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
-              : `https://wow.zamimg.com/images/wow/icons/large/${talent.entries[0].icon}.jpg`
-          }
-          alt={talent.name}
-          layout="fill"
-          objectFit="contain"
-          className={`rounded-full border-2 ${
-            isSelected
-              ? "border-yellow-400 glow-effect"
-              : "border-gray-700 opacity-50"
-          }`}
-          onError={() => setImageError(true)}
-        />
-        {isSelected && (
-          <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
-            {talent.rank}/{talent.maxRanks}
-          </div>
-        )}
+      <div className="relative" style={{ width: "120%", height: "90%" }}>
+        <a
+          href={`https://www.wowhead.com/spell=${selectedEntry.spellId}`}
+          data-wowhead={`spell=${selectedEntry.spellId}`}
+          className="absolute inset-0 block cursor-pointer talent active"
+          data-wh-icon-size="medium"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            src={
+              imageError
+                ? "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg"
+                : `https://wow.zamimg.com/images/wow/icons/large/${selectedEntry.icon}.jpg`
+            }
+            alt={talent.name}
+            fill
+            sizes="(max-width: 768px) 20px, 30px"
+            className={`rounded-full border-2 ${
+              isSelected
+                ? "border-yellow-400 glow-effect"
+                : "border-gray-700 opacity-50"
+            }`}
+            onError={() => setImageError(true)}
+          />
+          {isSelected && (
+            <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[8px] font-bold px-1 rounded-full">
+              {selectedRank}/{talent.maxRanks}
+            </div>
+          )}
+        </a>
       </div>
     </div>
   );

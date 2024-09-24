@@ -53,7 +53,11 @@ body {
 }
 
 .bg-gradient-dark {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
+}
+
+.border-gradient-dark {
+  border: 4px solid linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
 }
 
 .bg-deep-blue {
@@ -61,7 +65,7 @@ body {
 }
 
 .bg-gradient-purple {
-  background: linear-gradient(135deg, #182b5f, #260955);
+  background: linear-gradient(135deg, #182b5f, #43168a);
 }
 
 .bg-gradient-blue {
@@ -92,58 +96,269 @@ body {
   text-shadow: 0 0 10px var(--color-electric-blue);
 }
 
+/* Class colors */
+
+/* Priest */
 .class-color--795 {
   color: #fff !important;
 }
 
+.bg-spec-256 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-discipline.jpg");
+}
+
+.bg-spec-257 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-holy.jpg");
+}
+
+.bg-spec-258 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-shadow.jpg");
+}
+
+/* Death Knight */
 .class-color--750 {
   color: #c41f3b !important;
 }
 
+.bg-spec-250 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-death-knight-blood.jpg");
+}
+
+.bg-spec-251 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-death-knight-frost.jpg");
+}
+
+.bg-spec-252 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-death-knight-unholy.jpg");
+}
+
+/* Evoker */
 .class-color--872 {
   color: #33937f !important;
 }
 
+.bg-spec-1467 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-evoker-devastation.jpg");
+}
+
+.bg-spec-1468 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-evoker-preservation.jpg");
+}
+
+.bg-spec-1473 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-evoker-augmentation.jpg");
+}
+
+/* Warrior */
 .class-color--850 {
   color: #c79c6e !important;
 }
 
+.bg-spec-71 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warrior-arms.jpg");
+}
+
+.bg-spec-72 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warrior-fury.jpg");
+}
+
+.bg-spec-73 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warrior-protection.jpg");
+}
+
+/* Druid */
 .class-color--793 {
   color: #ff7d0a !important;
 }
 
+.bg-spec-102 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-druid-balance.jpg");
+}
+
+.bg-spec-103 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-druid-feral.jpg");
+}
+
+.bg-spec-104 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-druid-guardian.jpg");
+}
+
+.bg-spec-105 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-druid-restoration.jpg");
+}
+
+/* Warlock */
 .class-color--720 {
   color: #9482c9 !important;
 }
 
+.bg-spec-265 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warlock-affliction.jpg");
+}
+
+.bg-spec-266 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warlock-demonology.jpg");
+}
+
+.bg-spec-267 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warlock-destruction.jpg");
+}
+
+/* Monk */
 .class-color--1000 {
   color: #00ff96 !important;
 }
 
+.bg-spec-268 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-monk-brewmaster.jpg");
+}
+
+.bg-spec-270 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-monk-mistweaver.jpg");
+}
+
+.bg-spec-269 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-monk-windwalker.jpg");
+}
+
+/* Demon Hunter */
 .class-color--854 {
   color: #a330c9 !important;
 }
 
+.bg-spec-577 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-demon-hunter-havoc.jpg");
+}
+
+.bg-spec-581 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-demon-hunter-vengeance.jpg");
+}
+
+/* Shaman */
 .class-color--786 {
   color: #0070de !important;
 }
 
+.bg-spec-262 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-shaman-elemental.jpg");
+}
+
+.bg-spec-263 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-shaman-enhancement.jpg");
+}
+
+.bg-spec-264 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-shaman-restoration.jpg");
+}
+
+/* Paladin */
 .class-color--790 {
   color: #f58cba !important;
 }
 
+.bg-spec-65 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-paladin-holy.jpg");
+}
+
+.bg-spec-66 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-paladin-protection.jpg");
+}
+
+.bg-spec-70 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-paladin-retribution.jpg");
+}
+
+/* Hunter */
 .class-color--774 {
   color: #abd473 !important;
 }
 
+.bg-spec-253 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-hunter-beast-mastery.jpg");
+}
+
+.bg-spec-254 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-hunter-marksmanship.jpg");
+}
+
+.bg-spec-255 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-hunter-survival.jpg");
+}
+
+/* Rogue */
 .class-color--852 {
   color: #fff569 !important;
 }
 
+.bg-spec-259 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-rogue-assassination.jpg");
+}
+
+.bg-spec-260 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-rogue-outlaw.jpg");
+}
+
+.bg-spec-261 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-rogue-subtlety.jpg");
+}
+
+/* Mage */
 .class-color--658 {
   color: #69ccf0 !important;
 }
 
+.bg-spec-62 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-mage-arcane.jpg");
+}
+
+.bg-spec-63 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-mage-fire.jpg");
+}
+
+.bg-spec-64 {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-mage-frost.jpg");
+}
+
+/* Item Quality */
 .item-quality--4 {
   color: #a335ee;
 }
