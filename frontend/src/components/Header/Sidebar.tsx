@@ -3,7 +3,25 @@ import { Home, Search, Book, Settings, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
 
-const SidebarItem = ({ icon: Icon, label, isExpanded, onClick }) => (
+interface Realm {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface SidebarItemProps {
+  icon: React.ElementType;
+  label: string;
+  isExpanded: boolean;
+  onClick: () => void;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({
+  icon: Icon,
+  label,
+  isExpanded,
+  onClick,
+}) => (
   <div
     className={`flex items-center p-4 mt-1 hover:bg-blue-700 transition-all duration-300 cursor-pointer ${
       isExpanded ? "justify-start" : "justify-center"
@@ -15,13 +33,17 @@ const SidebarItem = ({ icon: Icon, label, isExpanded, onClick }) => (
   </div>
 );
 
-const Sidebar = ({ setMainMargin }) => {
+interface SidebarProps {
+  setMainMargin: (margin: number) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [region, setRegion] = useState("");
   const [realm, setRealm] = useState("");
   const [character, setCharacter] = useState("");
-  const [realms, setRealms] = useState([]);
+  const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -49,7 +71,7 @@ const Sidebar = ({ setMainMargin }) => {
     setMainMargin(isExpanded ? 64 : 240);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (region && realm && character) {
       router.push(`/character/${region}/${realm}/${character.toLowerCase()}`);
@@ -82,7 +104,7 @@ const Sidebar = ({ setMainMargin }) => {
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full px-2 py-1 mb-2 rounded text-black"
+            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
           >
             <option value="" disabled>
               Select Region
@@ -95,7 +117,7 @@ const Sidebar = ({ setMainMargin }) => {
           <select
             value={realm}
             onChange={(e) => setRealm(e.target.value)}
-            className="w-full px-2 py-1 mb-2 rounded text-black"
+            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
             disabled={!region}
           >
             <option value="" disabled>
@@ -112,7 +134,7 @@ const Sidebar = ({ setMainMargin }) => {
             placeholder="Character Name"
             value={character}
             onChange={(e) => setCharacter(e.target.value)}
-            className="w-full px-2 py-1 mb-2 rounded text-black"
+            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
           />
           <button
             type="submit"
