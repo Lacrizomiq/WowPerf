@@ -165,7 +165,7 @@ export default function CharacterLayout({
   }
 
   return (
-    <div className="min-h-screen p-1 bg-[#090909] text-white">
+    <div className="min-h-screen p-1 bg-[#0a0a0a] text-white">
       <div
         className={`max-w-7xl mx-auto p-5 ${
           characterProfile?.spec_id
