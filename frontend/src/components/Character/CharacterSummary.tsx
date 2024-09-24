@@ -48,8 +48,8 @@ export default function CharacterSummary({
           <Image
             src={character.avatar_url}
             alt={character.name}
-            width={96}
-            height={96}
+            width={76}
+            height={76}
             className={`rounded-full border-2 border-class-color--${character.tree_id}`}
           />
         )}

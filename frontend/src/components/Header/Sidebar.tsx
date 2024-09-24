@@ -87,81 +87,87 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
       onMouseEnter={() => !isExpanded && toggleSidebar()}
       onMouseLeave={() => isExpanded && toggleSidebar()}
     >
-      <SidebarItem
-        icon={Home}
-        label="Home"
-        isExpanded={isExpanded}
-        onClick={toggleSidebar}
-      />
-      <SidebarItem
-        icon={Search}
-        label="Search"
-        isExpanded={isExpanded}
-        onClick={() => setSearchOpen(!searchOpen)}
-      />
-      {isExpanded && searchOpen && (
-        <form onSubmit={handleSubmit} className="px-4 py-2">
-          <select
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-          >
-            <option value="" disabled>
-              Select Region
-            </option>
-            <option value="eu">EU</option>
-            <option value="us">US</option>
-            <option value="kr">KR</option>
-            <option value="tw">TW</option>
-          </select>
-          <select
-            value={realm}
-            onChange={(e) => setRealm(e.target.value)}
-            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-            disabled={!region}
-          >
-            <option value="" disabled>
-              Select Realm
-            </option>
-            {realms.map((realm) => (
-              <option key={realm.id} value={realm.slug}>
-                {realm.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="Character Name"
-            value={character}
-            onChange={(e) => setCharacter(e.target.value)}
-            className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
+      <div className="flex flex-col justify-between h-full">
+        <div>
+          <SidebarItem
+            icon={Home}
+            label="Home"
+            isExpanded={isExpanded}
+            onClick={toggleSidebar}
           />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
-          >
-            Search
-          </button>
-        </form>
-      )}
-      <SidebarItem
-        icon={Book}
-        label="Guides"
-        isExpanded={isExpanded}
-        onClick={toggleSidebar}
-      />
-      <SidebarItem
-        icon={LogIn}
-        label="Login"
-        isExpanded={isExpanded}
-        onClick={toggleSidebar}
-      />
-      <SidebarItem
-        icon={UserPlus}
-        label="Register"
-        isExpanded={isExpanded}
-        onClick={toggleSidebar}
-      />
+          <SidebarItem
+            icon={Search}
+            label="Search"
+            isExpanded={isExpanded}
+            onClick={() => setSearchOpen(!searchOpen)}
+          />
+          {isExpanded && searchOpen && (
+            <form onSubmit={handleSubmit} className="px-4 py-2">
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
+              >
+                <option value="" disabled>
+                  Select Region
+                </option>
+                <option value="eu">EU</option>
+                <option value="us">US</option>
+                <option value="kr">KR</option>
+                <option value="tw">TW</option>
+              </select>
+              <select
+                value={realm}
+                onChange={(e) => setRealm(e.target.value)}
+                className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
+                disabled={!region}
+              >
+                <option value="" disabled>
+                  Select Realm
+                </option>
+                {realms.map((realm) => (
+                  <option key={realm.id} value={realm.slug}>
+                    {realm.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Character Name"
+                value={character}
+                onChange={(e) => setCharacter(e.target.value)}
+                className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
+              />
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
+              >
+                Search
+              </button>
+            </form>
+          )}
+          <SidebarItem
+            icon={Book}
+            label="Guides"
+            isExpanded={isExpanded}
+            onClick={toggleSidebar}
+          />
+        </div>
+        <div>
+          <SidebarItem
+            icon={LogIn}
+            label="Login"
+            isExpanded={isExpanded}
+            onClick={toggleSidebar}
+          />
+          <SidebarItem
+            icon={UserPlus}
+            label="Register"
+            isExpanded={isExpanded}
+            onClick={toggleSidebar}
+          />
+        </div>
+      </div>
     </div>
   );
 };
