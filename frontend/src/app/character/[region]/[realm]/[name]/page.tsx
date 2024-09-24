@@ -11,7 +11,7 @@ import RaidOverview from "@/components/Raids/RaidOverview";
 import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import "@/app/globals.css";
-
+import Sidebar from "@/components/Header/Sidebar";
 export default function CharacterLayout({
   params,
 }: {
@@ -27,7 +27,7 @@ export default function CharacterLayout({
 }) {
   const { region, realm, name, seasonSlug, expansion } = params;
   const [selectedTab, setSelectedTab] = useState<string>("gear");
-
+  const [mainMargin, setMainMargin] = useState(64);
   const {
     data: characterProfile,
     isLoading,
@@ -165,25 +165,29 @@ export default function CharacterLayout({
   }
 
   return (
-    <div className="min-h-screen p-1 bg-[#0a0a0a] text-white">
+    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
+      <Sidebar setMainMargin={setMainMargin} />
       <div
-        className={`max-w-7xl mx-auto p-5 ${
-          characterProfile?.spec_id
-            ? `bg-spec-${characterProfile.spec_id}`
-            : defaultBackgroundClass
-        }`}
-        style={backgroundStyle}
+        className="flex-1 transition-all duration-300"
+        style={{ marginLeft: `${mainMargin}px` }}
       >
-        <Header />
-
-        <CharacterSummary
-          region={region}
-          realm={realm}
-          name={name}
-          namespace={`profile-${region}`}
-          locale="en_GB"
-        />
-        <div className="rounded-xl mt-5 shadow-2xl">{renderContent()}</div>
+        <div
+          className={`max-w-7xl mx-auto p-5 ${
+            characterProfile?.spec_id
+              ? `bg-spec-${characterProfile.spec_id}`
+              : defaultBackgroundClass
+          }`}
+          style={backgroundStyle}
+        >
+          <CharacterSummary
+            region={region}
+            realm={realm}
+            name={name}
+            namespace={`profile-${region}`}
+            locale="en_GB"
+          />
+          <div className="rounded-xl mt-5 shadow-2xl">{renderContent()}</div>
+        </div>
       </div>
     </div>
   );
