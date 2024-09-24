@@ -343,36 +343,6 @@ func transformHeroTalent(dbNode talents.HeroNode, selectedInfo SelectedTalentInf
 	return transformed
 }
 
-func transformHeroEntry(entry talents.HeroEntry) profile.HeroEntry {
-	return profile.HeroEntry{
-		EntryID:      entry.EntryID,
-		DefinitionID: entry.DefinitionID,
-		MaxRanks:     entry.MaxRanks,
-		Type:         entry.Type,
-		Name:         entry.Name,
-		SpellID:      entry.SpellID,
-		Icon:         entry.Icon,
-		Index:        entry.Index,
-	}
-}
-
-func transformHeroEntriesToProfileEntries(entries []talents.HeroEntry) []profile.HeroEntry {
-	transformed := make([]profile.HeroEntry, len(entries))
-	for i, entry := range entries {
-		transformed[i] = profile.HeroEntry{
-			EntryID:      entry.EntryID,
-			DefinitionID: entry.DefinitionID,
-			MaxRanks:     entry.MaxRanks,
-			Type:         entry.Type,
-			Name:         entry.Name,
-			SpellID:      entry.SpellID,
-			Icon:         entry.Icon,
-			Index:        entry.Index,
-		}
-	}
-	return transformed
-}
-
 func filterTalentsByType(talents []profile.TalentNode, nodeType string) []profile.TalentNode {
 	filtered := make([]profile.TalentNode, 0)
 	for _, talent := range talents {
