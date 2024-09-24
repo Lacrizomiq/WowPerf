@@ -35,7 +35,7 @@ export default function CharacterSummary({
     return <div className="text-center p-4">No character data found</div>;
 
   const backgroundStyle = {
-    backgroundColor: "rgba(0, 36, 64, 0.9)", // Couleur de fond avec opacité
+    backgroundColor: "rgba(0, 36, 64, 0.9)",
   };
 
   return (
