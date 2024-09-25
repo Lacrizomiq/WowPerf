@@ -14,6 +14,7 @@ interface SidebarItemProps {
   label: string;
   isExpanded: boolean;
   onClick: () => void;
+  route?: string;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -21,17 +22,29 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   label,
   isExpanded,
   onClick,
-}) => (
-  <div
-    className={`flex items-center p-4 mt-1 hover:bg-blue-700 transition-all duration-300 cursor-pointer ${
-      isExpanded ? "justify-start" : "justify-center"
-    }`}
-    onClick={onClick}
-  >
-    <Icon size={24} />
-    {isExpanded && <span className="ml-4">{label}</span>}
-  </div>
-);
+  route,
+}) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (route) {
+      router.push(route);
+    }
+    onClick();
+  };
+
+  return (
+    <div
+      className={`flex items-center p-4 mt-1 hover:bg-blue-700 transition-all duration-300 cursor-pointer ${
+        isExpanded ? "justify-start" : "justify-center"
+      }`}
+      onClick={handleClick}
+    >
+      <Icon size={24} />
+      {isExpanded && <span className="ml-4">{label}</span>}
+    </div>
+  );
+};
 
 interface SidebarProps {
   setMainMargin: (margin: number) => void;
@@ -94,6 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
             label="Home"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
+            route="/"
           />
           <SidebarItem
             icon={Search}
