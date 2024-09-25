@@ -100,7 +100,7 @@ const PartyMember: React.FC<PartyMemberProps> = ({ member, region }) => {
         href={characterUrl}
         className="flex items-center space-x-2 hover:bg-opacity-50 transition-colors duration-200"
       >
-        <div className="w-12 h-12 bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden shadow-lg glow-effect">
+        <div className="w-12 h-12 bg-deep-blue bg-opacity-50 rounded-lg overflow-hidden">
           {character && character.avatar_url ? (
             <Image
               src={character.avatar_url}
@@ -122,7 +122,7 @@ const PartyMember: React.FC<PartyMemberProps> = ({ member, region }) => {
             {member.CharacterName}
           </p>
           <p className="text-sm">
-            {member.Specialization} {member.RaceName}
+            {member.Specialization} {character?.class}
           </p>
         </div>
       </Link>

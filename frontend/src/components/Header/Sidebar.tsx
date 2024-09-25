@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home, Search, Book, Settings, LogIn, UserPlus } from "lucide-react";
+import { Home, Search, Sword, Hourglass, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
 
@@ -147,8 +147,14 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
             </form>
           )}
           <SidebarItem
-            icon={Book}
-            label="Guides"
+            icon={Hourglass}
+            label="Mythic +"
+            isExpanded={isExpanded}
+            onClick={toggleSidebar}
+          />
+          <SidebarItem
+            icon={Sword}
+            label="Raids"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
           />

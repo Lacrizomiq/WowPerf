@@ -186,7 +186,7 @@ export default function CharacterTalent({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
+      <div className="flex pb-2 flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
         <h2 className="text-xl sm:text-2xl font-bold">Talent Build Summary</h2>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <button

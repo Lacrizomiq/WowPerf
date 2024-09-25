@@ -49,45 +49,6 @@ export default function CharacterLayout({
   const renderContent = () => {
     return (
       <>
-        <div className="flex justify-center p-5 mt-5 rounded-xl">
-          <nav className="flex justify-center mt-5 bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
-            {[
-              { name: "Gear", icon: <Shield size={20} />, key: "gear" },
-              {
-                name: "Talents",
-                icon: <ScrollText size={20} />,
-                key: "talents",
-              },
-              {
-                name: "Mythic+",
-                icon: <Hourglass size={20} />,
-                key: "mythic-plus",
-              },
-              {
-                name: "Raids",
-                icon: <Sword size={20} />,
-                key: "raid-progression",
-              },
-            ].map((tab, index, array) => (
-              <button
-                key={tab.key}
-                onClick={() => setSelectedTab(tab.key)}
-                className={`flex items-center space-x-2 px-6 py-3 transition-all bg-[#002440] justify-center
-                ${
-                  selectedTab === tab.key
-                    ? "bg-[#003660]"
-                    : "hover:bg-[#003660] hover:bg-opacity-50"
-                }
-                ${index === 0 ? "rounded-l-full" : ""}
-                ${index === array.length - 1 ? "rounded-r-full" : ""}
-                ${index !== 0 ? "border-l border-[#003660]" : ""}`}
-              >
-                {tab.icon}
-                <span>{tab.name}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
         <div className="rounded-xl mt-5">
           {(() => {
             switch (selectedTab) {
@@ -171,14 +132,7 @@ export default function CharacterLayout({
         className="flex-1 transition-all duration-300"
         style={{ marginLeft: `${mainMargin}px` }}
       >
-        <div
-          className={`max-w-7xl mx-auto p-5 ${
-            characterProfile?.spec_id
-              ? `bg-spec-${characterProfile.spec_id}`
-              : defaultBackgroundClass
-          }`}
-          style={backgroundStyle}
-        >
+        <div className="max-w-7xl mx-auto p-5">
           <CharacterSummary
             region={region}
             realm={realm}
@@ -186,7 +140,56 @@ export default function CharacterLayout({
             namespace={`profile-${region}`}
             locale="en_GB"
           />
-          <div className="rounded-xl mt-5 shadow-2xl">{renderContent()}</div>
+
+          <div className="flex justify-center p-5 mt-5 rounded-xl">
+            <nav className="flex justify-center mt-5 bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
+              {[
+                { name: "Gear", icon: <Shield size={20} />, key: "gear" },
+                {
+                  name: "Talents",
+                  icon: <ScrollText size={20} />,
+                  key: "talents",
+                },
+                {
+                  name: "Mythic+",
+                  icon: <Hourglass size={20} />,
+                  key: "mythic-plus",
+                },
+                {
+                  name: "Raids",
+                  icon: <Sword size={20} />,
+                  key: "raid-progression",
+                },
+              ].map((tab, index, array) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setSelectedTab(tab.key)}
+                  className={`flex items-center space-x-2 px-6 py-3 transition-all bg-[#002440] justify-center
+                ${
+                  selectedTab === tab.key
+                    ? "bg-[#003660]"
+                    : "hover:bg-[#003660] hover:bg-opacity-50"
+                }
+                ${index === 0 ? "rounded-l-full" : ""}
+                ${index === array.length - 1 ? "rounded-r-full" : ""}
+                ${index !== 0 ? "border-l border-[#003660]" : ""}`}
+                >
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div
+            className={`max-w-7xl mx-auto rounded-2xl shadow-2xl ${
+              characterProfile?.spec_id
+                ? `bg-spec-${characterProfile.spec_id}`
+                : defaultBackgroundClass
+            }`}
+            style={backgroundStyle}
+          >
+            {renderContent()}
+          </div>
         </div>
       </div>
     </div>
