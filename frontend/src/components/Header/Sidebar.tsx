@@ -160,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
               </button>
             </form>
           )}
-          <SidebarItem
+          {/* <SidebarItem
             icon={Hourglass}
             label="Mythic +"
             isExpanded={isExpanded}
@@ -171,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
             label="Raids"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
-          />
+          /> */}
         </div>
         <div>
           <SidebarItem

@@ -8,6 +8,7 @@ import (
 	"wowperf/internal/database"
 
 	serviceBlizzard "wowperf/internal/services/blizzard"
+	serviceRaiderio "wowperf/internal/services/raiderio"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -35,12 +36,22 @@ func main() {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
+	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
 	if err != nil {
 		log.Fatalf("Failed to initialize blizzard service: %v", err)
 	}
 
-	rioHandler := raiderio.NewHandler()
+	// Raider.io Service
+	rioService, err := serviceRaiderio.NewRaiderIOService()
+	if err != nil {
+		log.Fatalf("Failed to initialize raiderio service: %v", err)
+	}
+
+	// Raider.io Handler
+	rioHandler := raiderio.NewHandler(rioService)
+
+	// Blizzard Handler
 	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
 
 	r := gin.Default()
@@ -53,9 +64,7 @@ func main() {
 	r.Use(cors.New(config))
 
 	// Raider.io API
-	r.GET("/characters", rioHandler.GetCharacterProfile)
-	r.GET("/characters/mythic-plus-scores", rioHandler.GetCharacterMythicPlusScores)
-	r.GET("/characters/raid-progression", rioHandler.GetCharacterRaidProgression)
+	rioHandler.RegisterRoutes(r)
 
 	// Blizzard API
 	blizzardHandler.RegisterRoutes(r)

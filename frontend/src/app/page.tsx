@@ -16,7 +16,7 @@ export default function Home() {
         style={{ marginLeft: `${mainMargin}px` }}
       >
         <Hero />
-        <FeaturedContent />
+        {/* <FeaturedContent /> */}
       </div>
     </main>
   );
