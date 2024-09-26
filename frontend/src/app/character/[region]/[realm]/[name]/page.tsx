@@ -11,7 +11,6 @@ import RaidOverview from "@/components/Raids/RaidOverview";
 import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import "@/app/globals.css";
-import Sidebar from "@/components/Header/Sidebar";
 export default function CharacterLayout({
   params,
 }: {
@@ -27,7 +26,6 @@ export default function CharacterLayout({
 }) {
   const { region, realm, name, seasonSlug, expansion } = params;
   const [selectedTab, setSelectedTab] = useState<string>("gear");
-  const [mainMargin, setMainMargin] = useState(64);
   const {
     data: characterProfile,
     isLoading,
@@ -127,11 +125,7 @@ export default function CharacterLayout({
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0a] text-white">
-      <Sidebar setMainMargin={setMainMargin} />
-      <div
-        className="flex-1 transition-all duration-300"
-        style={{ marginLeft: `${mainMargin}px` }}
-      >
+      <div className="flex-1 transition-all duration-300">
         <div className="max-w-7xl mx-auto p-5">
           <CharacterSummary
             region={region}
