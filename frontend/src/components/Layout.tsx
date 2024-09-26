@@ -11,10 +11,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [mainMargin, setMainMargin] = useState(64);
 
   return (
-    <div className="flex h-screen bg-[#002440]">
+    <div className="flex min-h-screen bg-[#002440]">
       <Sidebar setMainMargin={setMainMargin} />
       <main
-        className="flex-1 transition-all duration-300 h-full overflow-hidden"
+        className="flex-1 transition-all duration-300 overflow-y-auto"
         style={{ marginLeft: `${mainMargin}px` }}
       >
         {children}

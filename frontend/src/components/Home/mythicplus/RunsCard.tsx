@@ -4,6 +4,7 @@ import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import { Dungeon } from "@/types/mythicPlusRuns";
 import Image from "next/image";
 import { Star } from "lucide-react";
+import Link from "next/link";
 
 interface RunsCardProps {
   season: string;
@@ -20,6 +21,12 @@ interface RosterMember {
     class: {
       id: number;
       name: string;
+      slug: string;
+    };
+    realm: {
+      altSlug: string;
+    };
+    region: {
       slug: string;
     };
     spec: {
@@ -92,7 +99,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
         return (
           <div
             key={ranking.run.keystone_run_id}
-            className="flex bg-deep-blue bg-opacity-80 rounded-xl overflow-hidden shadow-lg"
+            className="flex bg-deep-blue bg-opacity-80 rounded-2xl overflow-hidden shadow-2xl glow-effect"
           >
             <div className="w-1/3 relative">
               <Image
@@ -107,7 +114,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
                 </h2>
                 <div className="flex items-center">
                   <span className="text-white text-4xl font-bold">
-                    {ranking.run.mythic_level}
+                    +{ranking.run.mythic_level}
                   </span>
                   <div className="ml-2">
                     {[...Array(ranking.run.num_chests)].map((_, i) => (
@@ -131,8 +138,11 @@ const RunsCard: React.FC<RunsCardProps> = ({
                   </p>
                 </div>
                 <p className="text-white mb-2">
-                  Time: {(ranking.run.clear_time_ms / 1000 / 60).toFixed(2)}{" "}
-                  minutes
+                  Time: {(ranking.run.clear_time_ms / 1000 / 60).toFixed(2)} min
+                </p>
+                <p className="text-white mb-2">
+                  Completed at:{" "}
+                  {new Date(ranking.run.completed_at).toLocaleString()}
                 </p>
                 <p className="text-white mb-4">
                   Affixes:{" "}
@@ -158,15 +168,21 @@ const RunsCard: React.FC<RunsCardProps> = ({
                           height={24}
                         />
                       </div>
-                      <p
-                        className={`font-bold ${
-                          member.character.class.slug
-                            ? `class-color--${member.character.class.slug}`
-                            : ""
-                        }`}
+                      <Link
+                        href={`/character/${member.character.region.slug}/${
+                          member.character.realm.altSlug
+                        }/${member.character.name.toLowerCase()}`}
                       >
-                        {member.character.name}
-                      </p>
+                        <p
+                          className={`font-bold ${
+                            member.character.class.slug
+                              ? `class-color--${member.character.class.slug}`
+                              : ""
+                          }`}
+                        >
+                          {member.character.name}
+                        </p>
+                      </Link>
                       <p className="text-white text-xs">
                         {member.character.spec.name}
                       </p>

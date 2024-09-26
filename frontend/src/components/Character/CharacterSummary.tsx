@@ -34,8 +34,22 @@ export default function CharacterSummary({
   if (!character)
     return <div className="text-center p-4">No character data found</div>;
 
+  const backgroundStyle = {
+    backgroundSize: "cover",
+    backgroundPosition: "top",
+  };
+
+  const defaultBackgroundClass = "bg-deep-blue";
+
   return (
-    <div className=" p-5 flex items-center bg-deep-blue space-x-5 shadow-2xl rounded-2xl">
+    <div
+      className={`p-5 flex items-center bg-deep-blue space-x-5 shadow-2xl rounded-2xl ${
+        character?.spec_id
+          ? `bg-spec-${character.spec_id}`
+          : defaultBackgroundClass
+      }`}
+      style={backgroundStyle}
+    >
       <div className="relative">
         {character.avatar_url && (
           <Image
