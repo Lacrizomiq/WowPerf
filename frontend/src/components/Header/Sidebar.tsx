@@ -160,18 +160,19 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
               </button>
             </form>
           )}
-          {/* <SidebarItem
+          <SidebarItem
             icon={Hourglass}
             label="Mythic +"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
+            route="/mythic-plus"
           />
           <SidebarItem
             icon={Sword}
             label="Raids"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
-          /> */}
+          />
         </div>
         <div>
           <SidebarItem
