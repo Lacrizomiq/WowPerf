@@ -29,7 +29,7 @@ const MythicPlusBestRuns: React.FC = () => {
   };
 
   return (
-    <div className="p-6 rounded-xl shadow-lg m-4">
+    <div className="p-6 rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-6">
         Mythic+ Best Runs Leaderboard for TWW Season 1
       </h2>
