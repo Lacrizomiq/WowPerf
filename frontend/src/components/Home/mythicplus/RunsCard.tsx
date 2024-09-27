@@ -168,13 +168,13 @@ const RunsCard: React.FC<RunsCardProps> = ({
                       )}
                     </button>
                   </div>
-                  <p className="text-white mb-2">
+                  <p className="text-white text-sm mb-2">
                     Time: {(ranking.run.clear_time_ms / 1000 / 60).toFixed(2)}{" "}
                     min
                   </p>
-                  <p className="text-white mb-2">
+                  <p className="text-white text-sm mb-2">
                     Completed at:{" "}
-                    {new Date(ranking.run.completed_at).toLocaleString()}
+                    {new Date(ranking.run.completed_at).toUTCString()}
                   </p>
                   <p className="text-white mb-4">
                     Affixes:{" "}

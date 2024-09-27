@@ -42,7 +42,10 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
   return (
     <div className="p-4 bg-deep-blue-light rounded-lg">
       <h3 className="text-2xl font-bold mb-4 text-white">Run Details</h3>
-
+      <p className="text-gray-200 text-sm mb-4">
+        Here you can see the details of the mythic plus run, including the gear,
+        talents and score of each player during that key.
+      </p>
       <div className="flex flex-col gap-4">
         {runDetails.roster.map((member: Roster) => (
           <div
@@ -62,7 +65,7 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
               </div>
               <div className="flex flex-col gap-2">
                 <p className="text-white">
-                  Item Level: {member.items.item_level_equipped}
+                  Item Level: {member.items.item_level_equipped.toFixed(1)}
                 </p>
                 <p className="text-white">Score: {member.ranks.score}</p>
               </div>
@@ -78,7 +81,7 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
               <summary className="cursor-pointer text-white">
                 Talents Details
               </summary>
-              <div className="mt-2 bg-black bg-opacity-30 rounded-lg p-2 border-2 border-gray-600">
+              <div className="mt-2 bg-black bg-opacity-30 rounded-lg p-2 border-2 border-gray-600 shadow-xl">
                 <iframe
                   src={`https://www.raidbots.com/simbot/render/talents/${member.character.talentLoadout.loadoutText}?width=900&level=80`}
                   width="100%"
