@@ -47,7 +47,7 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
         {runDetails.roster.map((member: Roster) => (
           <div
             key={member.character.id}
-            className="bg-deep-blue-lighter rounded-lg p-4 bg-black bg-opacity-30"
+            className="bg-deep-blue-lighter rounded-lg p-4 bg-black bg-opacity-30 shadow-2xl"
           >
             <div className="flex items-center mb-2 justify-between">
               <div>
@@ -73,14 +73,14 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
               </summary>
               <RunsDetailsGear items={member.items.items} />
             </details>
-            {/* Vous pouvez ajouter ici un autre details pour les talents */}
+
             <details className="mt-4">
               <summary className="cursor-pointer text-white">
                 Talents Details
               </summary>
-              <div className="mt-2">
+              <div className="mt-2 bg-black bg-opacity-30 rounded-lg p-2 border-2 border-gray-600">
                 <iframe
-                  src={`https://www.raidbots.com/simbot/render/talents/${member.character.talentLoadout.loadoutText}?width=900&level=80&hideHeader=1`}
+                  src={`https://www.raidbots.com/simbot/render/talents/${member.character.talentLoadout.loadoutText}?width=900&level=80`}
                   width="100%"
                   height="600px"
                 ></iframe>

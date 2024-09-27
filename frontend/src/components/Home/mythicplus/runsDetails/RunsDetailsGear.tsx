@@ -49,13 +49,16 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
   };
 
   return (
-    <div className="flex flex-row gap-2">
-      <div className="mt-4 flex flex-wrap flex-col gap-2 px-2 mb-2">
+    <div className="flex flex-row gap-2 mt-4 mb-4 justify-center items-center border-2 rounded-xl border-gray-600 p-2 bg-black bg-opacity-30">
+      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-gray-600">
         {gearOrder.slice(0, 8).map((slot) => {
           const item = items[slot];
           if (!item) return null;
           return (
-            <div key={slot} className="flex items-center space-x-2">
+            <div
+              key={slot}
+              className="flex items-center space-x-2 border border-gray-600"
+            >
               <a
                 href={`https://www.wowhead.com/item=${item.item_id}`}
                 data-wowhead={getWowheadParams(item)}
@@ -69,7 +72,9 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
                 />
               </a>
               <span
-                className={`text-sm ${getItemQualityClass(item.item_quality)}`}
+                className={`text-sm px-1 ${getItemQualityClass(
+                  item.item_quality
+                )}`}
               >
                 {item.name} ({item.item_level})
               </span>
@@ -77,12 +82,15 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
           );
         })}
       </div>
-      <div className="mt-4 flex flex-wrap flex-col gap-2 px-2 mb-2">
+      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-gray-600">
         {gearOrder.slice(8, 16).map((slot) => {
           const item = items[slot];
           if (!item) return null;
           return (
-            <div key={slot} className="flex items-center space-x-2">
+            <div
+              key={slot}
+              className="flex items-center space-x-2 border border-gray-600 "
+            >
               <a
                 href={`https://www.wowhead.com/item=${item.item_id}`}
                 data-wowhead={getWowheadParams(item)}
@@ -96,7 +104,9 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
                 />
               </a>
               <span
-                className={`text-sm ${getItemQualityClass(item.item_quality)}`}
+                className={`text-sm px-1 ${getItemQualityClass(
+                  item.item_quality
+                )}`}
               >
                 {item.name} ({item.item_level})
               </span>
