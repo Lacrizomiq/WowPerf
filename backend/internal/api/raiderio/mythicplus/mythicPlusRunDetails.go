@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"wowperf/internal/services/raiderio"
 	raiderioMythicPlus "wowperf/internal/services/raiderio/mythicplus"
+	raiderioMythicPlusWrapper "wowperf/internal/wrapper/raiderio"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,11 +35,19 @@ func (h *MythicPlusRunDetailsHandler) GetMythicPlusRunDetails(c *gin.Context) {
 		return
 	}
 
-	runDetails, err := raiderioMythicPlus.GetMythicPlusRunsDetails(h.Service, season, id)
+	// Get the raw data from the Raider.io Mythic Plus Runs Detail API
+	rawRunDetails, err := raiderioMythicPlus.GetMythicPlusRunsDetails(h.Service, season, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, runDetails)
+	// Transform the raw data into a more usable format with the wrapper
+	transformedRunDetails, err := raiderioMythicPlusWrapper.TransformMythicPlusRun(rawRunDetails)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, transformedRunDetails)
 }
