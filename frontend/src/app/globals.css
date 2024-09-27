@@ -72,7 +72,7 @@ body {
   background: linear-gradient(
     135deg,
     var(--color-royal-blue),
-    rgba(65, 105, 225, 0.5)
+    rgba(9, 32, 85, 0.5)
   );
 }
 
@@ -103,6 +103,10 @@ body {
   color: #fff !important;
 }
 
+.class-color--priest {
+  color: #fff !important;
+}
+
 .bg-spec-256 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-discipline.jpg");
@@ -120,6 +124,10 @@ body {
 
 /* Death Knight */
 .class-color--750 {
+  color: #c41f3b !important;
+}
+
+.class-color--death-knight {
   color: #c41f3b !important;
 }
 
@@ -143,6 +151,10 @@ body {
   color: #33937f !important;
 }
 
+.class-color--evoker {
+  color: #33937f !important;
+}
+
 .bg-spec-1467 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-evoker-devastation.jpg");
@@ -163,6 +175,10 @@ body {
   color: #c79c6e !important;
 }
 
+.class-color--warrior {
+  color: #c79c6e !important;
+}
+
 .bg-spec-71 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warrior-arms.jpg");
@@ -180,6 +196,10 @@ body {
 
 /* Druid */
 .class-color--793 {
+  color: #ff7d0a !important;
+}
+
+.class-color--druid {
   color: #ff7d0a !important;
 }
 
@@ -208,6 +228,10 @@ body {
   color: #9482c9 !important;
 }
 
+.class-color--warlock {
+  color: #9482c9 !important;
+}
+
 .bg-spec-265 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-warlock-affliction.jpg");
@@ -225,6 +249,10 @@ body {
 
 /* Monk */
 .class-color--1000 {
+  color: #00ff96 !important;
+}
+
+.class-color--monk {
   color: #00ff96 !important;
 }
 
@@ -248,6 +276,10 @@ body {
   color: #a330c9 !important;
 }
 
+.class-color--demon-hunter {
+  color: #a330c9 !important;
+}
+
 .bg-spec-577 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-demon-hunter-havoc.jpg");
@@ -260,6 +292,10 @@ body {
 
 /* Shaman */
 .class-color--786 {
+  color: #0070de !important;
+}
+
+.class-color--shaman {
   color: #0070de !important;
 }
 
@@ -283,6 +319,10 @@ body {
   color: #f58cba !important;
 }
 
+.class-color--paladin {
+  color: #f58cba !important;
+}
+
 .bg-spec-65 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-paladin-holy.jpg");
@@ -300,6 +340,10 @@ body {
 
 /* Hunter */
 .class-color--774 {
+  color: #abd473 !important;
+}
+
+.class-color--hunter {
   color: #abd473 !important;
 }
 
@@ -323,6 +367,10 @@ body {
   color: #fff569 !important;
 }
 
+.class-color--rogue {
+  color: #fff569 !important;
+}
+
 .bg-spec-259 {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-rogue-assassination.jpg");
@@ -340,6 +388,10 @@ body {
 
 /* Mage */
 .class-color--658 {
+  color: #69ccf0 !important;
+}
+
+.class-color--mage {
   color: #69ccf0 !important;
 }
 

@@ -14,7 +14,6 @@ export default function SearchBar() {
   const [region, setRegion] = useState("");
   const [realm, setRealm] = useState("");
   const [character, setCharacter] = useState("");
-  const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
 
   const sortedRealms = useMemo(() => {
@@ -51,16 +50,13 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="py-8 bg-[#002440]">
-      <div className="container mx-auto px-4">
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4"
-        >
+    <div className="w-full max-w-3xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex space-x-4">
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full md:w-1/6 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600 appearance-none cursor-pointer"
+            className="w-1/2 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white appearance-none cursor-pointer"
           >
             <option value="" disabled>
               Select Region
@@ -73,7 +69,7 @@ export default function SearchBar() {
           <select
             value={realm}
             onChange={(e) => setRealm(e.target.value)}
-            className="w-full md:w-1/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600 appearance-none cursor-pointer"
+            className="w-1/2 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white appearance-none cursor-pointer"
             disabled={!region}
           >
             <option value="" disabled>
@@ -85,21 +81,23 @@ export default function SearchBar() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="flex space-x-4">
           <input
             type="text"
             placeholder="Character Name"
             value={character}
             onChange={(e) => setCharacter(e.target.value)}
-            className="w-full md:w-1/3 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-gray-600"
+            className="w-3/4 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-deep-blue text-white"
           />
           <button
             type="submit"
-            className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 glow-effect"
+            className="w-1/4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 glow-effect"
           >
             Search
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

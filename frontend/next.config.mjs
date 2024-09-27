@@ -15,6 +15,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "assets.rpglogs.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.raiderio.net",
+      },
     ],
   },
 };

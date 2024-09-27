@@ -35,12 +35,19 @@ export default function CharacterSummary({
     return <div className="text-center p-4">No character data found</div>;
 
   const backgroundStyle = {
-    backgroundColor: "rgba(0, 36, 64, 0.9)",
+    backgroundSize: "cover",
+    backgroundPosition: "top",
   };
+
+  const defaultBackgroundClass = "bg-deep-blue";
 
   return (
     <div
-      className="rounded-xl p-5 flex items-center space-x-5 shadow-2xl"
+      className={`p-5 flex items-center bg-deep-blue space-x-5 shadow-2xl rounded-2xl ${
+        character?.spec_id
+          ? `bg-spec-${character.spec_id}`
+          : defaultBackgroundClass
+      }`}
       style={backgroundStyle}
     >
       <div className="relative">
@@ -48,8 +55,8 @@ export default function CharacterSummary({
           <Image
             src={character.avatar_url}
             alt={character.name}
-            width={96}
-            height={96}
+            width={76}
+            height={76}
             className={`rounded-full border-2 border-class-color--${character.tree_id}`}
           />
         )}
