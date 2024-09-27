@@ -25,6 +25,7 @@ interface RosterMember {
     };
     realm: {
       altSlug: string;
+      slug: string;
     };
     region: {
       slug: string;
@@ -170,7 +171,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
                       </div>
                       <Link
                         href={`/character/${member.character.region.slug}/${
-                          member.character.realm.altSlug
+                          member.character.realm.slug
                         }/${member.character.name.toLowerCase()}`}
                       >
                         <p
