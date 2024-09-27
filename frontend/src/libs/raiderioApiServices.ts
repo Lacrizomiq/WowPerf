@@ -18,3 +18,19 @@ export const getRaiderioMythicPlusBestRuns = async (
     throw error;
   }
 };
+
+// getRaiderioMythicPlusRunDetails retrieves the details of a specific mythic plus run by its ID
+export const getRaiderioMythicPlusRunDetails = async (
+  season: string,
+  id: number
+) => {
+  try {
+    const response = await api.get(`/mythic-plus/run-details`, {
+      params: { season, id },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error in getRaiderioMythicPlusRunDetails:", error);
+    throw error;
+  }
+};

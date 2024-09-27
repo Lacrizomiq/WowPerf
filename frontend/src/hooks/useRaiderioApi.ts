@@ -19,3 +19,15 @@ export const useGetRaiderioMythicPlusBestRuns = (
       ),
   });
 };
+
+// useGetRaiderioMythicPlusRunDetails retrieves the details of a specific mythic plus run by its ID
+export const useGetRaiderioMythicPlusRunDetails = (
+  season: string,
+  id: number
+) => {
+  return useQuery({
+    queryKey: ["raiderio-mythic-plus-run-details", season, id],
+    queryFn: () =>
+      raiderioApiServices.getRaiderioMythicPlusRunDetails(season, id),
+  });
+};
