@@ -1,0 +1,89 @@
+"http://localhost:8080/blizzard/data/mythic-keystone/season/index?region=eu&namespace=dynamic-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/?namespace=dynamic-eu"
+    }
+  },
+  "current_season": {
+    "id": 12,
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/12?namespace=dynamic-eu"
+    }
+  },
+  "seasons": [
+    {
+      "id": 1,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/1?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 2,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/2?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 3,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/3?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 4,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/4?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 5,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/5?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 6,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/6?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 7,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/7?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 8,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/8?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 9,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/9?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 10,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/10?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 11,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/11?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 12,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/12?namespace=dynamic-eu"
+      }
+    }
+  ]
+}

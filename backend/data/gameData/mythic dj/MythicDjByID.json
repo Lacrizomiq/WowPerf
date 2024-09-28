@@ -1,0 +1,40 @@
+"http://localhost:8080/blizzard/data/mythic-keystone/505?region=eu&namespace=dynamic-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/505?namespace=dynamic-eu"
+    }
+  },
+  "dungeon": {
+    "id": 1270,
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/journal-instance/1270?namespace=static-11.0.2_55938-eu"
+    },
+    "name": "The Dawnbreaker"
+  },
+  "id": 505,
+  "is_tracked": false,
+  "keystone_upgrades": [
+    {
+      "qualifying_duration": 1800000,
+      "upgrade_level": 1
+    },
+    {
+      "qualifying_duration": 1440000,
+      "upgrade_level": 2
+    },
+    {
+      "qualifying_duration": 1080000,
+      "upgrade_level": 3
+    }
+  ],
+  "map": {
+    "id": 2662,
+    "name": "The Dawnbreaker"
+  },
+  "name": "The Dawnbreaker",
+  "zone": {
+    "slug": "the-dawnbreaker"
+  }
+}

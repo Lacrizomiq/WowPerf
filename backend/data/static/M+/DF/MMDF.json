@@ -1,0 +1,464 @@
+{
+  "seasons": [
+    {
+      "slug": "season-df-4",
+      "name": "DF Season 4",
+      "short_name": "DF4",
+      "seasonal_affix": null,
+      "starts": {
+        "us": "2024-04-23T15:00:00Z",
+        "eu": "2024-04-24T04:00:00Z",
+        "tw": "2024-04-24T23:00:00Z",
+        "kr": "2024-04-24T23:00:00Z",
+        "cn": "2024-04-24T23:00:00Z"
+      },
+      "ends": {
+        "us": "2024-07-23T15:00:00Z",
+        "eu": "2024-07-24T04:00:00Z",
+        "tw": "2024-07-24T23:00:00Z",
+        "kr": "2024-07-24T23:00:00Z",
+        "cn": "2024-07-24T23:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 1201,
+          "challenge_mode_id": 402,
+          "slug": "algethar-academy",
+          "name": "Algeth'ar Academy",
+          "short_name": "AA",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/algethar-academy-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1920000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1536000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1152000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1196,
+          "challenge_mode_id": 405,
+          "slug": "brackenhide-hollow",
+          "name": "Brackenhide Hollow",
+          "short_name": "BH",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/brackenhide-hollow-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2100000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1680000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1260000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1204,
+          "challenge_mode_id": 406,
+          "slug": "halls-of-infusion",
+          "name": "Halls of Infusion",
+          "short_name": "HOI",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/halls-of-infusion-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2100000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1680000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1260000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1199,
+          "challenge_mode_id": 404,
+          "slug": "neltharus",
+          "name": "Neltharus",
+          "short_name": "NELT",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/neltharus-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1980000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1584000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1188000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1202,
+          "challenge_mode_id": 399,
+          "slug": "ruby-life-pools",
+          "name": "Ruby Life Pools",
+          "short_name": "RLP",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/ruby-life-pools-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1800000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1440000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1080000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1203,
+          "challenge_mode_id": 401,
+          "slug": "the-azure-vault",
+          "name": "The Azure Vault",
+          "short_name": "AV",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-azure-vault-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2250000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1800000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1350000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1198,
+          "challenge_mode_id": 400,
+          "slug": "the-nokhud-offensive",
+          "name": "The Nokhud Offensive",
+          "short_name": "NO",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-nokhud-offensive-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2400000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1920000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1440000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1197,
+          "challenge_mode_id": 403,
+          "slug": "uldaman-legacy-of-tyr",
+          "name": "Uldaman: Legacy of Tyr",
+          "short_name": "ULD",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/uldaman-legacy-of-tyr-small.jpg",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2100000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1680000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1260000,
+              "upgrade_level": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "season-df-3",
+      "name": "DF Season 3",
+      "short_name": "DF3",
+      "seasonal_affix": null,
+      "starts": {
+        "us": "2023-11-14T15:00:00Z",
+        "eu": "2023-11-15T04:00:00Z",
+        "tw": "2023-11-15T23:00:00Z",
+        "kr": "2023-11-15T23:00:00Z",
+        "cn": "2023-11-15T23:00:00Z"
+      },
+      "ends": {
+        "us": "2024-04-23T15:00:00Z",
+        "eu": "2024-04-24T04:00:00Z",
+        "tw": "2024-04-24T23:00:00Z",
+        "kr": "2024-04-24T23:00:00Z",
+        "cn": "2024-04-24T23:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 968,
+          "challenge_mode_id": 244,
+          "slug": "ataldazar",
+          "name": "Atal'Dazar",
+          "short_name": "AD",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/ataldazar-small.jpg"
+        },
+        {
+          "id": 740,
+          "challenge_mode_id": 199,
+          "slug": "black-rook-hold",
+          "name": "Black Rook Hold",
+          "short_name": "BRH",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/black-rook-hold-small.jpg"
+        },
+        {
+          "id": 1209,
+          "challenge_mode_id": 463,
+          "slug": "doti-galakronds-fall",
+          "name": "DOTI: Galakrond's Fall",
+          "short_name": "FALL",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/dawn-of-the-infinite-small.jpg"
+        },
+        {
+          "id": 111209,
+          "challenge_mode_id": 464,
+          "slug": "doti-murozonds-rise",
+          "name": "DOTI: Murozond's Rise",
+          "short_name": "RISE",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/dawn-of-the-infinite-small.jpg"
+        },
+        {
+          "id": 762,
+          "challenge_mode_id": 198,
+          "slug": "darkheart-thicket",
+          "name": "Darkheart Thicket",
+          "short_name": "DHT",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/darkheart-thicket-small.jpg"
+        },
+        {
+          "id": 556,
+          "challenge_mode_id": 168,
+          "slug": "everbloom",
+          "name": "The Everbloom",
+          "short_name": "EB",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-everbloom-small.jpg"
+        },
+        {
+          "id": 65,
+          "challenge_mode_id": 456,
+          "slug": "throne-of-the-tides",
+          "name": "Throne of the Tides",
+          "short_name": "TOTT",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/throne-of-the-tides-small.jpg"
+        },
+        {
+          "id": 1021,
+          "challenge_mode_id": 248,
+          "slug": "waycrest-manor",
+          "name": "Waycrest Manor",
+          "short_name": "WM",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/waycrest-manor-small.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "season-df-2",
+      "name": "DF Season 2",
+      "short_name": "DF2",
+      "seasonal_affix": null,
+      "starts": {
+        "us": "2023-05-09T15:00:00Z",
+        "eu": "2023-05-10T04:00:00Z",
+        "tw": "2023-05-10T23:00:00Z",
+        "kr": "2023-05-10T23:00:00Z",
+        "cn": "2023-05-10T23:00:00Z"
+      },
+      "ends": {
+        "us": "2023-11-14T15:00:00Z",
+        "eu": "2023-11-15T04:00:00Z",
+        "tw": "2023-11-15T23:00:00Z",
+        "kr": "2023-11-15T23:00:00Z",
+        "cn": "2023-11-15T23:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 1196,
+          "challenge_mode_id": 405,
+          "slug": "brackenhide-hollow",
+          "name": "Brackenhide Hollow",
+          "short_name": "BH",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/brackenhide-hollow-small.jpg"
+        },
+        {
+          "id": 1001,
+          "challenge_mode_id": 245,
+          "slug": "freehold",
+          "name": "Freehold",
+          "short_name": "FH",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/freehold-small.jpg"
+        },
+        {
+          "id": 1204,
+          "challenge_mode_id": 406,
+          "slug": "halls-of-infusion",
+          "name": "Halls of Infusion",
+          "short_name": "HOI",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/halls-of-infusion-small.jpg"
+        },
+        {
+          "id": 767,
+          "challenge_mode_id": 206,
+          "slug": "neltharions-lair",
+          "name": "Neltharion's Lair",
+          "short_name": "NL",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/neltharions-lair-small.jpg"
+        },
+        {
+          "id": 1199,
+          "challenge_mode_id": 404,
+          "slug": "neltharus",
+          "name": "Neltharus",
+          "short_name": "NELT",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/neltharus-small.jpg"
+        },
+        {
+          "id": 1022,
+          "challenge_mode_id": 251,
+          "slug": "the-underrot",
+          "name": "The Underrot",
+          "short_name": "UNDR",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-underrot-small.jpg"
+        },
+        {
+          "id": 68,
+          "challenge_mode_id": 438,
+          "slug": "the-vortex-pinnacle",
+          "name": "The Vortex Pinnacle",
+          "short_name": "VP",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-vortex-pinnacle-small.jpg"
+        },
+        {
+          "id": 1197,
+          "challenge_mode_id": 403,
+          "slug": "uldaman-legacy-of-tyr",
+          "name": "Uldaman: Legacy of Tyr",
+          "short_name": "ULD",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/uldaman-legacy-of-tyr-small.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "season-df-1",
+      "name": "DF Season 1",
+      "short_name": "DF1",
+      "seasonal_affix": {
+        "id": 132,
+        "name": "Thundering",
+        "icon": "spell_shaman_thunderstorm"
+      },
+      "starts": {
+        "us": "2022-11-28T23:00:00Z",
+        "eu": "2022-11-28T23:00:00Z",
+        "tw": "2022-11-28T23:00:00Z",
+        "kr": "2022-11-28T23:00:00Z",
+        "cn": "2022-11-28T23:00:00Z"
+      },
+      "ends": {
+        "us": "2023-05-09T15:00:00Z",
+        "eu": "2023-05-10T04:00:00Z",
+        "tw": "2023-05-10T23:00:00Z",
+        "kr": "2023-05-10T23:00:00Z",
+        "cn": "2023-05-10T23:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 1201,
+          "challenge_mode_id": 402,
+          "slug": "algethar-academy",
+          "name": "Algeth'ar Academy",
+          "short_name": "AA",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/algethar-academy-small.jpg"
+        },
+        {
+          "id": 800,
+          "challenge_mode_id": 210,
+          "slug": "court-of-stars",
+          "name": "Court of Stars",
+          "short_name": "COS",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/court-of-stars-small.jpg"
+        },
+        {
+          "id": 721,
+          "challenge_mode_id": 200,
+          "slug": "halls-of-valor",
+          "name": "Halls of Valor",
+          "short_name": "HOV",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/halls-of-valor-small.jpg"
+        },
+        {
+          "id": 1202,
+          "challenge_mode_id": 399,
+          "slug": "ruby-life-pools",
+          "name": "Ruby Life Pools",
+          "short_name": "RLP",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/ruby-life-pools-small.jpg"
+        },
+        {
+          "id": 537,
+          "challenge_mode_id": 165,
+          "slug": "shadowmoon-burial-grounds",
+          "name": "Shadowmoon Burial Grounds",
+          "short_name": "SBG",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/shadowmoon-burial-grounds-small.jpg"
+        },
+        {
+          "id": 313,
+          "challenge_mode_id": 2,
+          "slug": "temple-of-the-jade-serpent",
+          "name": "Temple of the Jade Serpent",
+          "short_name": "TJS",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/temple-of-the-jade-serpent-small.jpg"
+        },
+        {
+          "id": 1203,
+          "challenge_mode_id": 401,
+          "slug": "the-azure-vault",
+          "name": "The Azure Vault",
+          "short_name": "AV",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-azure-vault-small.jpg"
+        },
+        {
+          "id": 1198,
+          "challenge_mode_id": 400,
+          "slug": "the-nokhud-offensive",
+          "name": "The Nokhud Offensive",
+          "short_name": "NO",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-nokhud-offensive-small.jpg"
+        }
+      ]
+    }
+  ]
+}

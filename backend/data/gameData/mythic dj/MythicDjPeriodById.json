@@ -1,0 +1,12 @@
+"http://localhost:8080/blizzard/data/mythic-keystone/period/972?region=eu&namespace=dynamic-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/972?namespace=dynamic-eu"
+    }
+  },
+  "end_timestamp": 1724212799000,
+  "id": 972,
+  "start_timestamp": 1723608000000
+}

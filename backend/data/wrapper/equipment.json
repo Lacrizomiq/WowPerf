@@ -1,0 +1,177 @@
+"endpoint":"http://localhost:8080/blizzard/characters/silvermoon/tirranø/equipment?region=eu&namespace=profile-eu&locale=en_GB"
+{
+  "item_level_equipped": 482.9375,
+  "item_level_total": 0,
+  "items": {
+    "back": {
+      "item_id": 218080,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_cape_cloth_legiondungeon_c_03",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cape_cloth_legiondungeon_c_03.jpg",
+      "name": "Dalaran Defender's Cloak",
+      "enchant": 6598,
+      "bonuses": [10341, 11311, 10871, 1602, 8767]
+    },
+    "chest": {
+      "item_id": 217221,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_plate_raiddeathknightemerald_d_01_chest",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_plate_raiddeathknightemerald_d_01_chest.jpg",
+      "name": "Casket of the Risen Nightmare",
+      "enchant": 6625,
+      "bonuses": [10341, 8096, 10865, 1472]
+    },
+    "feet": {
+      "item_id": 218065,
+      "item_level": 493,
+      "item_quality": 4,
+      "icon_name": "inv_boot_plate_legiondungeon_c_03",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_boot_plate_legiondungeon_c_03.jpg",
+      "name": "Dalaran Defender's Boots",
+      "enchant": 6613,
+      "bonuses": [10313, 8902, 10872, 1615, 8767]
+    },
+    "finger_1": {
+      "item_id": 223634,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_10_jewelcrafting_rings_ring3_color2",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_10_jewelcrafting_rings_ring3_color2.jpg",
+      "name": "Ring of Returning Memories",
+      "enchant": 6550,
+      "bonuses": [10341, 10532, 11311, 1537, 8767]
+    },
+    "finger_2": {
+      "item_id": 223635,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_jewelry_ring_99",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_jewelry_ring_99.jpg",
+      "name": "Dalaran Defender's Favor",
+      "enchant": 6550,
+      "bonuses": [10341, 10532, 11311, 1537, 8767]
+    },
+    "hands": {
+      "item_id": 217222,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_plate_raiddeathknightemerald_d_01_glove",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_plate_raiddeathknightemerald_d_01_glove.jpg",
+      "name": "Thorns of the Risen Nightmare",
+      "bonuses": [6652, 10341, 8096, 10866, 1472]
+    },
+    "head": {
+      "item_id": 217223,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_plate_raiddeathknightemerald_d_01_helm",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_plate_raiddeathknightemerald_d_01_helm.jpg",
+      "name": "Piercing Gaze of the Risen Nightmare",
+      "bonuses": [6652, 10532, 10341, 8096, 10867, 1472]
+    },
+    "legs": {
+      "item_id": 217224,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_plate_raiddeathknightemerald_d_01_pant",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_plate_raiddeathknightemerald_d_01_pant.jpg",
+      "name": "Greaves of the Risen Nightmare",
+      "enchant": 6490,
+      "bonuses": [10341, 8096, 10868, 1472]
+    },
+    "main_hand": {
+      "item_id": 219251,
+      "item_level": 502,
+      "item_quality": 4,
+      "icon_name": "inv_sword_1h_naga_c_01",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_sword_1h_naga_c_01.jpg",
+      "name": "Dalaran Defender's Sabre",
+      "enchant": 3368,
+      "bonuses": [11311, 10348, 1608, 8767]
+    },
+    "neck": {
+      "item_id": 223636,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_jewelry_necklace_36",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_jewelry_necklace_36.jpg",
+      "name": "Remembrancer's Radiant Jewels",
+      "bonuses": [10341, 11311, 1537, 8767]
+    },
+    "off_hand": {
+      "item_id": 219251,
+      "item_level": 496,
+      "item_quality": 4,
+      "icon_name": "inv_sword_1h_naga_c_01",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_sword_1h_naga_c_01.jpg",
+      "name": "Dalaran Defender's Sabre",
+      "enchant": 3370,
+      "bonuses": [11311, 10346, 1602, 8767]
+    },
+    "shirt": {
+      "item_id": 167185,
+      "item_level": 1,
+      "item_quality": 2,
+      "icon_name": "inv_shirt_black_01",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_shirt_black_01.jpg",
+      "name": "Ebon Filigreed Shirt"
+    },
+    "shoulder": {
+      "item_id": 217225,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_plate_raiddeathknightemerald_d_01_shoulder",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_plate_raiddeathknightemerald_d_01_shoulder.jpg",
+      "name": "Skewers of the Risen Nightmare",
+      "bonuses": [10341, 8096, 10869, 1472]
+    },
+    "tabard": {
+      "item_id": 52252,
+      "item_level": 32,
+      "item_quality": 4,
+      "icon_name": "inv_shirt_guildtabard_01",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_shirt_guildtabard_01.jpg",
+      "name": "Tabard of the Lightbringer"
+    },
+    "trinket_1": {
+      "item_id": 223513,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_stone_15",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_stone_15.jpg",
+      "name": "Faded Ebony Scale",
+      "bonuses": [10341, 11311, 3209, 8767]
+    },
+    "trinket_2": {
+      "item_id": 136978,
+      "item_level": 476,
+      "item_quality": 4,
+      "icon_name": "inv_7_0raid_trinket_010c",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_7_0raid_trinket_010c.jpg",
+      "name": "Ember of Nullification",
+      "bonuses": [9571, 9639, 6652, 9144, 9849, 8767]
+    },
+    "waist": {
+      "item_id": 218068,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_belt_plate_legiondungeon_c_03",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_belt_plate_legiondungeon_c_03.jpg",
+      "name": "Dalaran Defender's Clasp",
+      "enchant": 6905,
+      "bonuses": [10341, 10532, 11311, 10871, 1602, 8767]
+    },
+    "wrist": {
+      "item_id": 218069,
+      "item_level": 480,
+      "item_quality": 4,
+      "icon_name": "inv_bracer_plate_legiondungeon_c_03",
+      "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_bracer_plate_legiondungeon_c_03.jpg",
+      "name": "Dalaran Defender's Bracers",
+      "enchant": 6580,
+      "bonuses": [10341, 10532, 11311, 10871, 1602, 8767]
+    }
+  }
+}

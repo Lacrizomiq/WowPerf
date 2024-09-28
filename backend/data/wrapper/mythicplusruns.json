@@ -1,0 +1,416 @@
+"endpoint":"http://localhost:8080/blizzard/characters/silvermoon/ouimagatée/mythic-keystone-profile/season/12?region=eu&namespace=profile-eu&locale=en_GB"
+
+[
+  {
+    "CompletedTimestamp": "2024-04-29T20:31:14Z",
+    "DungeonID": 1196,
+    "Dungeon": {
+      "ID": 1196,
+      "ChallengeModeID": 405,
+      "Slug": "brackenhide-hollow",
+      "Name": "Brackenhide Hollow",
+      "ShortName": "BH",
+      "MediaURL": "https://render.worldofwarcraft.com/eu/zones/brackenhide-hollow-small.jpg",
+      "Icon": "",
+      "KeyStoneUpgrades": null,
+      "Seasons": [
+        {
+          "Slug": "season-df-4",
+          "Name": "DF Season 4",
+          "ShortName": "DF4",
+          "Dungeons": null
+        }
+      ]
+    },
+    "ShortName": "BH",
+    "Duration": 1295998,
+    "IsCompletedWithinTime": true,
+    "KeyStoneUpgrades": 0,
+    "KeystoneLevel": 2,
+    "MythicRating": 98.78573,
+    "SeasonID": 12,
+    "Season": {
+      "Slug": "season-df-4",
+      "Name": "DF Season 4",
+      "ShortName": "DF4",
+      "Dungeons": null
+    },
+    "Affixes": [
+      {
+        "ID": 9,
+        "Name": "Tyrannical",
+        "Icon": "achievement_boss_archaedas",
+        "WowheadURL": "https://wowhead.com/affix=9"
+      }
+    ],
+    "Members": [
+      {
+        "CharacterID": 204820513,
+        "CharacterName": "Ouimagatée",
+        "RealmID": 549,
+        "RealmSlug": "silvermoon",
+        "EquippedItemLevel": 479,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 258,
+        "Specialization": "Shadow"
+      },
+      {
+        "CharacterID": 178031670,
+        "CharacterName": "Redbullies",
+        "RealmID": 1306,
+        "RealmSlug": "tarren-mill",
+        "EquippedItemLevel": 488,
+        "RaceID": 1,
+        "RaceName": "Human",
+        "SpecializationID": 250,
+        "Specialization": "Blood"
+      },
+      {
+        "CharacterID": 185783401,
+        "CharacterName": "Cyuuse",
+        "RealmID": 626,
+        "RealmSlug": "ragnaros",
+        "EquippedItemLevel": 480,
+        "RaceID": 28,
+        "RaceName": "Highmountain Tauren",
+        "SpecializationID": 253,
+        "Specialization": "Beast Mastery"
+      },
+      {
+        "CharacterID": 186800957,
+        "CharacterName": "Cukibéb",
+        "RealmID": 626,
+        "RealmSlug": "ragnaros",
+        "EquippedItemLevel": 498,
+        "RaceID": 70,
+        "RaceName": "Dracthyr",
+        "SpecializationID": 1468,
+        "Specialization": "Preservation"
+      },
+      {
+        "CharacterID": 185646604,
+        "CharacterName": "Halluu",
+        "RealmID": 626,
+        "RealmSlug": "ragnaros",
+        "EquippedItemLevel": 494,
+        "RaceID": 10,
+        "RaceName": "Blood Elf",
+        "SpecializationID": 577,
+        "Specialization": "Havoc"
+      }
+    ]
+  },
+  {
+    "CompletedTimestamp": "2024-05-05T17:15:55Z",
+    "DungeonID": 1202,
+    "Dungeon": {
+      "ID": 1202,
+      "ChallengeModeID": 399,
+      "Slug": "ruby-life-pools",
+      "Name": "Ruby Life Pools",
+      "ShortName": "RLP",
+      "MediaURL": "https://render.worldofwarcraft.com/eu/zones/ruby-life-pools-small.jpg",
+      "Icon": "",
+      "KeyStoneUpgrades": null,
+      "Seasons": [
+        {
+          "Slug": "season-df-4",
+          "Name": "DF Season 4",
+          "ShortName": "DF4",
+          "Dungeons": null
+        }
+      ]
+    },
+    "ShortName": "RLP",
+    "Duration": 1216496,
+    "IsCompletedWithinTime": true,
+    "KeyStoneUpgrades": 0,
+    "KeystoneLevel": 2,
+    "MythicRating": 98.05211,
+    "SeasonID": 12,
+    "Season": {
+      "Slug": "season-df-4",
+      "Name": "DF Season 4",
+      "ShortName": "DF4",
+      "Dungeons": null
+    },
+    "Affixes": [
+      {
+        "ID": 10,
+        "Name": "Fortified",
+        "Icon": "ability_toughness",
+        "WowheadURL": "https://wowhead.com/affix=10"
+      }
+    ],
+    "Members": [
+      {
+        "CharacterID": 178867444,
+        "CharacterName": "Commandojoe",
+        "RealmID": 506,
+        "RealmSlug": "draenor",
+        "EquippedItemLevel": 493,
+        "RaceID": 2,
+        "RaceName": "Orc",
+        "SpecializationID": 250,
+        "Specialization": "Blood"
+      },
+      {
+        "CharacterID": 204820513,
+        "CharacterName": "Ouimagatée",
+        "RealmID": 549,
+        "RealmSlug": "silvermoon",
+        "EquippedItemLevel": 490,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 258,
+        "Specialization": "Shadow"
+      },
+      {
+        "CharacterID": 122686278,
+        "CharacterName": "Myrkar",
+        "RealmID": 1127,
+        "RealmSlug": "confrérie-du-thorium",
+        "EquippedItemLevel": 487,
+        "RaceID": 11,
+        "RaceName": "Draenei",
+        "SpecializationID": 264,
+        "Specialization": "Restoration"
+      },
+      {
+        "CharacterID": 214975715,
+        "CharacterName": "Grisendem",
+        "RealmID": 1301,
+        "RealmSlug": "outland",
+        "EquippedItemLevel": 497,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 577,
+        "Specialization": "Havoc"
+      },
+      {
+        "CharacterID": 260157668,
+        "CharacterName": "Corallia",
+        "RealmID": 628,
+        "RealmSlug": "sylvanas",
+        "EquippedItemLevel": 486,
+        "RaceID": 52,
+        "RaceName": "Dracthyr",
+        "SpecializationID": 1467,
+        "Specialization": "Devastation"
+      }
+    ]
+  },
+  {
+    "CompletedTimestamp": "2024-05-07T21:02:48Z",
+    "DungeonID": 1203,
+    "Dungeon": {
+      "ID": 1203,
+      "ChallengeModeID": 401,
+      "Slug": "the-azure-vault",
+      "Name": "The Azure Vault",
+      "ShortName": "AV",
+      "MediaURL": "https://render.worldofwarcraft.com/eu/zones/the-azure-vault-small.jpg",
+      "Icon": "",
+      "KeyStoneUpgrades": null,
+      "Seasons": [
+        {
+          "Slug": "season-df-4",
+          "Name": "DF Season 4",
+          "ShortName": "DF4",
+          "Dungeons": null
+        }
+      ]
+    },
+    "ShortName": "AV",
+    "Duration": 1708625,
+    "IsCompletedWithinTime": true,
+    "KeyStoneUpgrades": 0,
+    "KeystoneLevel": 8,
+    "MythicRating": 149.00764,
+    "SeasonID": 12,
+    "Season": {
+      "Slug": "season-df-4",
+      "Name": "DF Season 4",
+      "ShortName": "DF4",
+      "Dungeons": null
+    },
+    "Affixes": [
+      {
+        "ID": 134,
+        "Name": "Entangling",
+        "Icon": "inv_misc_root_01",
+        "WowheadURL": "https://wowhead.com/affix=134"
+      },
+      {
+        "ID": 10,
+        "Name": "Fortified",
+        "Icon": "ability_toughness",
+        "WowheadURL": "https://wowhead.com/affix=10"
+      }
+    ],
+    "Members": [
+      {
+        "CharacterID": 204820513,
+        "CharacterName": "Ouimagatée",
+        "RealmID": 549,
+        "RealmSlug": "silvermoon",
+        "EquippedItemLevel": 501,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 258,
+        "Specialization": "Shadow"
+      },
+      {
+        "CharacterID": 210622975,
+        "CharacterName": "Hesile",
+        "RealmID": 1305,
+        "RealmSlug": "kazzak",
+        "EquippedItemLevel": 495,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 261,
+        "Specialization": "Subtlety"
+      },
+      {
+        "CharacterID": 189746584,
+        "CharacterName": "Chillybom",
+        "RealmID": 625,
+        "RealmSlug": "twisting-nether",
+        "EquippedItemLevel": 507,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 105,
+        "Specialization": "Restoration"
+      },
+      {
+        "CharacterID": 179999104,
+        "CharacterName": "Swgginator",
+        "RealmID": 1306,
+        "RealmSlug": "tarren-mill",
+        "EquippedItemLevel": 493,
+        "RaceID": 3,
+        "RaceName": "Dwarf",
+        "SpecializationID": 266,
+        "Specialization": "Demonology"
+      },
+      {
+        "CharacterID": 181888228,
+        "CharacterName": "Lubaba",
+        "RealmID": 1306,
+        "RealmSlug": "tarren-mill",
+        "EquippedItemLevel": 502,
+        "RaceID": 6,
+        "RaceName": "Tauren",
+        "SpecializationID": 104,
+        "Specialization": "Guardian"
+      }
+    ]
+  },
+  {
+    "CompletedTimestamp": "2024-05-12T19:30:18Z",
+    "DungeonID": 1197,
+    "Dungeon": {
+      "ID": 1197,
+      "ChallengeModeID": 403,
+      "Slug": "uldaman-legacy-of-tyr",
+      "Name": "Uldaman: Legacy of Tyr",
+      "ShortName": "ULD",
+      "MediaURL": "https://render.worldofwarcraft.com/eu/zones/uldaman-legacy-of-tyr-small.jpg",
+      "Icon": "",
+      "KeyStoneUpgrades": null,
+      "Seasons": [
+        {
+          "Slug": "season-df-4",
+          "Name": "DF Season 4",
+          "ShortName": "DF4",
+          "Dungeons": null
+        }
+      ]
+    },
+    "ShortName": "ULD",
+    "Duration": 1607507,
+    "IsCompletedWithinTime": true,
+    "KeyStoneUpgrades": 0,
+    "KeystoneLevel": 8,
+    "MythicRating": 148.9315,
+    "SeasonID": 12,
+    "Season": {
+      "Slug": "season-df-4",
+      "Name": "DF Season 4",
+      "ShortName": "DF4",
+      "Dungeons": null
+    },
+    "Affixes": [
+      {
+        "ID": 136,
+        "Name": "Incorporeal",
+        "Icon": "achievement_boss_anomalus",
+        "WowheadURL": "https://wowhead.com/affix=136"
+      },
+      {
+        "ID": 9,
+        "Name": "Tyrannical",
+        "Icon": "achievement_boss_archaedas",
+        "WowheadURL": "https://wowhead.com/affix=9"
+      }
+    ],
+    "Members": [
+      {
+        "CharacterID": 184242936,
+        "CharacterName": "Nazaniel",
+        "RealmID": 1382,
+        "RealmSlug": "sanguino",
+        "EquippedItemLevel": 513,
+        "RaceID": 1,
+        "RaceName": "Human",
+        "SpecializationID": 65,
+        "Specialization": "Holy"
+      },
+      {
+        "CharacterID": 204820513,
+        "CharacterName": "Ouimagatée",
+        "RealmID": 549,
+        "RealmSlug": "silvermoon",
+        "EquippedItemLevel": 503,
+        "RaceID": 4,
+        "RaceName": "Night Elf",
+        "SpecializationID": 258,
+        "Specialization": "Shadow"
+      },
+      {
+        "CharacterID": 256308491,
+        "CharacterName": "Феррокс",
+        "RealmID": 1604,
+        "RealmSlug": "soulflayer",
+        "EquippedItemLevel": 508,
+        "RaceID": 70,
+        "RaceName": "Dracthyr",
+        "SpecializationID": 1467,
+        "Specialization": "Devastation"
+      },
+      {
+        "CharacterID": 255957633,
+        "CharacterName": "Аргэнт",
+        "RealmID": 1604,
+        "RealmSlug": "soulflayer",
+        "EquippedItemLevel": 518,
+        "RaceID": 5,
+        "RaceName": "Undead",
+        "SpecializationID": 250,
+        "Specialization": "Blood"
+      },
+      {
+        "CharacterID": 260119361,
+        "CharacterName": "Гсарус",
+        "RealmID": 1604,
+        "RealmSlug": "soulflayer",
+        "EquippedItemLevel": 515,
+        "RaceID": 31,
+        "RaceName": "Zandalari Troll",
+        "SpecializationID": 70,
+        "Specialization": "Retribution"
+      }
+    ]
+  }
+]

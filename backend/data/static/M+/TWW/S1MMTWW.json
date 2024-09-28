@@ -1,0 +1,210 @@
+{
+  "seasons": [
+    {
+      "slug": "season-tww-1",
+      "name": "TWW Season 1",
+      "short_name": "TWW1",
+      "seasonal_affix": null,
+      "starts": {
+        "us": "2024-08-26T22:00:00Z",
+        "eu": "2024-08-26T22:00:00Z",
+        "tw": "2024-08-26T22:00:00Z",
+        "kr": "2024-08-26T22:00:00Z",
+        "cn": "2024-08-26T22:00:00Z"
+      },
+      "ends": {
+        "us": "2026-01-01T00:00:00Z",
+        "eu": "2026-01-01T00:00:00Z",
+        "tw": "2026-01-01T00:00:00Z",
+        "kr": "2026-01-01T00:00:00Z",
+        "cn": "2026-01-01T00:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 1271,
+          "challenge_mode_id": 503,
+          "slug": "arakara-city-of-echoes",
+          "name": "Ara-Kara, City of Echoes",
+          "short_name": "ARAK",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/ara-kara-city-of-echoes-small.jpg",
+          "icon": "inv_achievement_dungeon_arak-ara",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1800000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1440000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1080000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1274,
+          "challenge_mode_id": 502,
+          "slug": "city-of-threads",
+          "name": "City of Threads",
+          "short_name": "COT",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/city-of-threads-small.jpg",
+          "icon": "inv_achievement_dungeon_cityofthreads",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2100000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1680000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1260000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 71,
+          "challenge_mode_id": 507,
+          "slug": "grim-batol",
+          "name": "Grim Batol",
+          "short_name": "GB",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/grim-batol-small.jpg",
+          "icon": "achievement_dungeon_grimbatol",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2040000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1632000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1224000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1184,
+          "challenge_mode_id": 375,
+          "slug": "mists-of-tirna-scithe",
+          "name": "Mists of Tirna Scithe",
+          "short_name": "MISTS",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/mists-of-tirna-scithe-small.jpg",
+          "icon": "achievement_dungeon_mistsoftirnascithe",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1800000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1440000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1080000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1023,
+          "challenge_mode_id": 353,
+          "slug": "siege-of-boralus",
+          "name": "Siege of Boralus",
+          "short_name": "SIEGE",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/siege-of-boralus-small.jpg",
+          "icon": "achievement_dungeon_siegeofboralus",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 2040000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1632000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1224000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1270,
+          "challenge_mode_id": 505,
+          "slug": "the-dawnbreaker",
+          "name": "The Dawnbreaker",
+          "short_name": "DAWN",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-dawnbreaker-small.jpg",
+          "icon": "inv_achievement_dungeon_dawnbreaker",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1800000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1440000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1080000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1182,
+          "challenge_mode_id": 376,
+          "slug": "the-necrotic-wake",
+          "name": "The Necrotic Wake",
+          "short_name": "NW",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-necrotic-wake-small.jpg",
+          "icon": "achievement_dungeon_theneroticwake",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1920000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1536000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1152000,
+              "upgrade_level": 3
+            }
+          ]
+        },
+        {
+          "id": 1269,
+          "challenge_mode_id": 501,
+          "slug": "the-stonevault",
+          "name": "The Stonevault",
+          "short_name": "SV",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-stonevault-small.jpg",
+          "icon": "inv_achievement_dungeon_stonevault",
+          "keystone_upgrades": [
+            {
+              "qualifying_duration": 1980000,
+              "upgrade_level": 1
+            },
+            {
+              "qualifying_duration": 1584000,
+              "upgrade_level": 2
+            },
+            {
+              "qualifying_duration": 1188000,
+              "upgrade_level": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

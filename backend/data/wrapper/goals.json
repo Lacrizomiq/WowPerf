@@ -1,0 +1,69 @@
+{
+  "display_col": 18,
+  "display_row": 3,
+  "id": 81040,
+  "node_type": {
+    "id": 0,
+    "type": "ACTIVE"
+  },
+  "ranks": [
+    {
+      "rank": 1,
+      "tooltip": {
+        "spell_tooltip": {
+          "cast_time": "2 sec cast",
+          "cooldown": "10 sec cooldown",
+          "description": "Blanket the target area in healing rains, restoring 12,298 health to up to 5 allies over 10 sec.",
+          "power_cost": "10,800 Mana",
+          "range": "40 yd range",
+          "spell": {
+            "id": 73920,
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/spell/73920?namespace=static-11.0.0_55478-us"
+            },
+            "name": "Healing Rain"
+          }
+        },
+        "talent": {
+          "id": 106911,
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/talent/106911?namespace=static-11.0.0_55478-us"
+          },
+          "name": "Healing Rain"
+        }
+      }
+    }
+  ],
+  "raw_position_x": 12000,
+  "raw_position_y": 1800
+}
+
+{
+  "node": {
+    "id": 81040,
+    "treeId": 786,
+    "type": 0,
+    "entries": [
+      {
+        "id": 101923,
+        "traitDefinitionId": 106911,
+        "type": 1,
+        "maxRanks": 1,
+        "spell": {
+          "id": 73920,
+          "name": "Healing Rain",
+          "icon": "spell_nature_giftofthewaterspirit",
+          "school": 8,
+          "hasCooldown": true
+        }
+      }
+    ],
+    "important": false,
+    "posX": 12000,
+    "posY": 1800,
+    "row": 8,
+    "col": 16
+  },
+  "entryIndex": 0,
+  "rank": 1
+}

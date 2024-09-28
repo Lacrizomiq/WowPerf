@@ -1,0 +1,298 @@
+{
+  "affix_details": [
+    {
+      "id": 135,
+      "name": "Afflicted",
+      "icon": "spell_misc_emotionsad",
+      "description": "While in combat, afflicted souls periodically appear and seek the aid of players.",
+      "wowhead_url": "https://wowhead.com/affix=135"
+    },
+    {
+      "id": 11,
+      "name": "Bursting",
+      "icon": "ability_ironmaidens_whirlofblood",
+      "description": "When slain, non-boss enemies explode, causing all players to suffer damage over 4 sec. This effect stacks.",
+      "wowhead_url": "https://wowhead.com/affix=11"
+    },
+    {
+      "id": 9,
+      "name": "Tyrannical",
+      "icon": "achievement_boss_archaedas",
+      "description": "Bosses have 30% more health. Bosses and their minions inflict up to 15% increased damage.",
+      "wowhead_url": "https://wowhead.com/affix=9"
+    },
+    {
+      "id": 136,
+      "name": "Incorporeal",
+      "icon": "achievement_boss_anomalus",
+      "description": "While in combat, incorporeal beings periodically appear and attempt to weaken players.",
+      "wowhead_url": "https://wowhead.com/affix=136"
+    },
+    {
+      "id": 7,
+      "name": "Bolstering",
+      "icon": "ability_warrior_battleshout",
+      "description": "When any non-boss enemy dies, its death cry empowers nearby allies, temporarily increasing their damage by 20%.",
+      "wowhead_url": "https://wowhead.com/affix=7"
+    },
+    {
+      "id": 152,
+      "name": "Challenger's Peril",
+      "icon": "achievement_challengemode_everbloom_hourglass",
+      "description": "Dying subtracts 15 seconds from time remaining.",
+      "wowhead_url": "https://wowhead.com/affix=152"
+    },
+    {
+      "id": 160,
+      "name": "Xal'atath's Bargain: Devour",
+      "icon": "inv_ability_voidweaverpriest_entropicrift",
+      "description": "While in combat, Xal'atath tears open rifts that devour the essence of players.",
+      "wowhead_url": "https://wowhead.com/affix=160"
+    },
+    {
+      "id": 10,
+      "name": "Fortified",
+      "icon": "ability_toughness",
+      "description": "Non-boss enemies have 20% more health and inflict up to 20% increased damage.",
+      "wowhead_url": "https://wowhead.com/affix=10"
+    },
+    {
+      "id": 148,
+      "name": "Xal'atath's Bargain: Ascendant",
+      "icon": "inv_nullstone_cosmicvoid",
+      "description": "While in combat, Xal'atath rains down orbs of cosmic energy that empower enemies or players.",
+      "wowhead_url": "https://wowhead.com/affix=148"
+    },
+    {
+      "id": 158,
+      "name": "Xal'atath's Bargain: Voidbound",
+      "icon": "inv_cosmicvoid_buff",
+      "description": "While in combat, Xal'atath summons a Void Emissary that empowers nearby enemies.",
+      "wowhead_url": "https://wowhead.com/affix=158"
+    },
+    {
+      "id": 147,
+      "name": "Xal'atath's Guile",
+      "icon": "ability_racial_chillofnight",
+      "description": "Xal'atath betrays players, revoking her bargains and increasing the health and damage of enemies by 20%",
+      "wowhead_url": "https://wowhead.com/affix=147"
+    },
+    {
+      "id": 123,
+      "name": "Spiteful",
+      "icon": "spell_holy_prayerofshadowprotection",
+      "description": "Fiends rise from the corpses of non-boss enemies and pursue random players.",
+      "wowhead_url": "https://wowhead.com/affix=123"
+    },
+    {
+      "id": 8,
+      "name": "Sanguine",
+      "icon": "spell_shadow_bloodboil",
+      "description": "When slain, non-boss enemies leave behind a lingering pool of ichor that heals their allies and damages players",
+      "wowhead_url": "https://wowhead.com/affix=8"
+    },
+    {
+      "id": 6,
+      "name": "Raging",
+      "icon": "ability_warrior_focusedrage",
+      "description": "Non-boss enemies enrage at 30% health remaining, temporarily granting immunity to crowd control effects.",
+      "wowhead_url": "https://wowhead.com/affix=6"
+    },
+    {
+      "id": 159,
+      "name": "Xal'atath's Bargain: Oblivion",
+      "icon": "spell_priest_void-blast",
+      "description": "While in combat, Xal'atath manifests crystals from the void that can be absorbed by enemies or players.",
+      "wowhead_url": "https://wowhead.com/affix=159"
+    },
+    {
+      "id": 134,
+      "name": "Entangling",
+      "icon": "inv_misc_root_01",
+      "description": "While in combat, entangling vines periodically appear and snare players.",
+      "wowhead_url": "https://wowhead.com/affix=134"
+    },
+    {
+      "id": 3,
+      "name": "Volcanic",
+      "icon": "spell_shaman_lavasurge",
+      "description": "While in combat, enemies periodically cause gouts of flame to erupt beneath the feet of distant players.",
+      "wowhead_url": "https://wowhead.com/affix=3"
+    },
+    {
+      "id": 153,
+      "name": "Xal'atath's Bargain: Frenzied",
+      "icon": "spell_shadow_unholyfrenzy",
+      "description": "Non-boss enemies become frenzied at 30% health remaining, increasing their Haste by 40%, but increasing their damage taken by 20%.",
+      "wowhead_url": "https://wowhead.com/affix=153"
+    },
+    {
+      "id": 124,
+      "name": "Storming",
+      "icon": "spell_nature_cyclone",
+      "description": "While in combat, enemies periodically summon damaging whirlwinds.",
+      "wowhead_url": "https://wowhead.com/affix=124"
+    },
+    {
+      "id": 13,
+      "name": "Explosive",
+      "icon": "spell_fire_felflamering_red",
+      "description": "While in combat, enemies periodically summon Explosive Orbs that will detonate if not destroyed.",
+      "wowhead_url": "https://wowhead.com/affix=13"
+    },
+    {
+      "id": 4,
+      "name": "Necrotic",
+      "icon": "spell_deathknight_necroticplague",
+      "description": "All enemies' melee attacks apply a stacking blight that inflicts damage over time and reduces healing received.",
+      "wowhead_url": "https://wowhead.com/affix=4"
+    },
+    {
+      "id": 12,
+      "name": "Grievous",
+      "icon": "ability_backstab",
+      "description": "Injured players suffer increasing damage over time until healed.",
+      "wowhead_url": "https://wowhead.com/affix=12"
+    },
+    {
+      "id": 16,
+      "name": "Infested",
+      "icon": "achievement_nazmir_boss_ghuun",
+      "description": "Some non-boss enemies have been infested with a Spawn of G'huun.",
+      "wowhead_url": "https://wowhead.com/affix=16"
+    },
+    {
+      "id": 120,
+      "name": "Awakened",
+      "icon": "trade_archaeology_nerubian_obelisk",
+      "description": "Obelisks throughout the dungeon allow players to enter Ny'alotha and confront powerful servants of N'Zoth.",
+      "wowhead_url": "https://wowhead.com/affix=120"
+    },
+    {
+      "id": 132,
+      "name": "Thundering",
+      "icon": "shaman_pvp_leaderclan",
+      "description": "Enemies have 5% more health. While in combat, players are periodically overcharged with primal power from Raszageth's unending storm. This power comes with great risk, and failure to discharge it quickly can have stunning consequences.",
+      "wowhead_url": "https://wowhead.com/affix=132"
+    },
+    {
+      "id": 2,
+      "name": "Skittish",
+      "icon": "spell_magic_lesserinvisibilty",
+      "description": "Enemies pay far less attention to threat generated by tanks.",
+      "wowhead_url": "https://wowhead.com/affix=2"
+    },
+    {
+      "id": 5,
+      "name": "Teeming",
+      "icon": "spell_nature_massteleport",
+      "description": "Additional non-boss enemies are present throughout the dungeon.",
+      "wowhead_url": "https://wowhead.com/affix=5"
+    },
+    {
+      "id": 121,
+      "name": "Prideful",
+      "icon": "spell_animarevendreth_buff",
+      "description": "Players overflow with pride as they defeat non-boss enemies, eventually forming a Manifestation of Pride. Defeating this Manifestation greatly empowers players.",
+      "wowhead_url": "https://wowhead.com/affix=121"
+    },
+    {
+      "id": 119,
+      "name": "Beguiling",
+      "icon": "spell_shadow_mindshear",
+      "description": "Azshara's Emissaries are present throughout the dungeon.",
+      "wowhead_url": "https://wowhead.com/affix=119"
+    },
+    {
+      "id": 130,
+      "name": "Encrypted",
+      "icon": "spell_progenitor_orb",
+      "description": "Enemies throughout the dungeon possess relics of the First Ones. Destroy the relics to summon the First Ones' Automa and gain powerful bonuses, based on the order in which they were destroyed.",
+      "wowhead_url": "https://wowhead.com/affix=130"
+    },
+    {
+      "id": 14,
+      "name": "Quaking",
+      "icon": "spell_nature_earthquake",
+      "description": "Periodically, all players emit a shockwave, inflicting damage and interrupting nearby allies.",
+      "wowhead_url": "https://wowhead.com/affix=14"
+    },
+    {
+      "id": 122,
+      "name": "Inspiring",
+      "icon": "spell_holy_prayerofspirit",
+      "description": "Some non-boss enemies have an inspiring presence that strengthens their allies.",
+      "wowhead_url": "https://wowhead.com/affix=122"
+    },
+    {
+      "id": 131,
+      "name": "Shrouded",
+      "icon": "spell_shadow_nethercloak",
+      "description": "Nathrezim infiltrators have disguised themselves among enemies throughout the dungeon. Cartel Ta will reward you handsomely for assisting in their capture.",
+      "wowhead_url": "https://wowhead.com/affix=131"
+    },
+    {
+      "id": 128,
+      "name": "Tormented",
+      "icon": "spell_animamaw_orb",
+      "description": "Servants of the Jailer can be found throughout the dungeon and grant powerful boons when defeated. If a servant is not dealt with, they empower the final boss.",
+      "wowhead_url": "https://wowhead.com/affix=128"
+    },
+    {
+      "id": 117,
+      "name": "Reaping",
+      "icon": "ability_racial_embraceoftheloa_bwonsomdi",
+      "description": "Non-boss enemies are empowered by Bwonsamdi and periodically seek vengeance from beyond the grave.",
+      "wowhead_url": "https://wowhead.com/affix=117"
+    },
+    {
+      "id": 129,
+      "name": "Infernal",
+      "icon": "inv_infernalbrimstone",
+      "description": "Infernal Beacons can be found near some bosses. Activating a Beacon or engaging a nearby boss will trigger a Legion invasion.",
+      "wowhead_url": "https://wowhead.com/affix=129"
+    },
+    {
+      "id": 1,
+      "name": "Overflowing",
+      "icon": "inv_misc_volatilewater",
+      "description": "Healing in excess of a target's maximum health is instead converted to a heal absorption effect.",
+      "wowhead_url": "https://wowhead.com/affix=1"
+    },
+    {
+      "id": 137,
+      "name": "Shielding",
+      "icon": "paladin_holy",
+      "description": "While in combat, enemies periodically summon Shielding Orbs that shield nearby enemies if not destroyed.",
+      "wowhead_url": "https://wowhead.com/affix=137"
+    },
+    {
+      "id": 133,
+      "name": "Focused",
+      "icon": "ability_mage_timewarp",
+      "description": "Non-boss enemies with mana have 30% increased Haste, but take 10% increased Frost and Fire damage.",
+      "wowhead_url": "https://wowhead.com/affix=133"
+    },
+    {
+      "id": 144,
+      "name": "Thorned",
+      "icon": "ability_demonhunter_demonspikes2",
+      "description": "Non-boss enemies without mana inflict Physical damage to their attackers when attacked, but take 10% increased Holy and Shadow damage.",
+      "wowhead_url": "https://wowhead.com/affix=144"
+    },
+    {
+      "id": 145,
+      "name": "Reckless",
+      "icon": "ability_warrior_sunder",
+      "description": "Non-boss enemies without mana ignore 20% armor with their attacks, but their armor is reduced by 30% and they take 10% increased Arcane damage.",
+      "wowhead_url": "https://wowhead.com/affix=145"
+    },
+    {
+      "id": 146,
+      "name": "Attuned",
+      "icon": "spell_arcane_arcanepotency_nightborne",
+      "description": "Non-boss enemies with mana inflict 20% increased magic damage, but take 10% increased Nature damage and 30% increased damage from Bleed effects.",
+      "wowhead_url": "https://wowhead.com/affix=146"
+    }
+  ]
+}
