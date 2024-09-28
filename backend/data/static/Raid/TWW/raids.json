@@ -1,0 +1,69 @@
+{
+  "raids": [
+    {
+      "id": 1273,
+      "slug": "nerubar-palace",
+      "name": "Nerub-ar Palace",
+      "short_name": "NP",
+      "expansion": "TWW",
+      "mediaUrl": "https://render.worldofwarcraft.com/eu/zones/nerub-ar-palace-small.jpg",
+      "icon": "inv_achievement_raidnerubian_queenansurek",
+      "starts": {
+        "us": "2024-09-10T15:00:00Z",
+        "eu": "2024-09-11T04:00:00Z",
+        "tw": "2024-09-11T23:00:00Z",
+        "kr": "2024-09-11T23:00:00Z",
+        "cn": "2024-09-11T23:00:00Z"
+      },
+      "ends": {
+        "us": "2030-01-01T00:00:00Z",
+        "eu": "2030-01-01T00:00:00Z",
+        "tw": "2030-01-01T00:00:00Z",
+        "kr": "2030-01-01T00:00:00Z",
+        "cn": "2030-01-01T00:00:00Z"
+      },
+      "encounters": [
+        {
+          "id": 2607,
+          "slug": "ulgrax-the-devourer",
+          "name": "Ulgrax the Devourer"
+        },
+        {
+          "id": 2611,
+          "slug": "the-bloodbound-horror",
+          "name": "The Bloodbound Horror"
+        },
+        {
+          "id": 2599,
+          "slug": "sikran",
+          "name": "Sikran"
+        },
+        {
+          "id": 2609,
+          "slug": "rashanan",
+          "name": "Rasha'nan"
+        },
+        {
+          "id": 2612,
+          "slug": "broodtwister-ovinax",
+          "name": "Broodtwister Ovi'nax"
+        },
+        {
+          "id": 2601,
+          "slug": "nexus-princess-kyveza",
+          "name": "Nexus-Princess Ky'veza"
+        },
+        {
+          "id": 2608,
+          "slug": "the-silken-court",
+          "name": "The Silken Court"
+        },
+        {
+          "id": 2602,
+          "slug": "queen-ansurek",
+          "name": "Queen Ansurek"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+"http://localhost:8080/blizzard/data/mythic-keystone/season/12?region=eu&namespace=dynamic-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/12?namespace=dynamic-eu"
+    }
+  },
+  "id": 12,
+  "periods": [
+    {
+      "id": 956,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/956?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 957,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/957?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 958,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/958?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 959,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/959?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 960,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/960?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 961,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/961?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 962,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/962?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 963,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/963?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 964,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/964?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 965,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/965?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 966,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/966?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 967,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/967?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 968,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/968?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 969,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/969?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 970,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/970?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 971,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/971?namespace=dynamic-eu"
+      }
+    },
+    {
+      "id": 972,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/972?namespace=dynamic-eu"
+      }
+    }
+  ],
+  "season_name": "Mythic+ Dungeons (Dragonflight Season 4)",
+  "start_timestamp": 1713931200000
+}

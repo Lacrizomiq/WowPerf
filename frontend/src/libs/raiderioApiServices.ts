@@ -34,3 +34,20 @@ export const getRaiderioMythicPlusRunDetails = async (
     throw error;
   }
 };
+
+// getRaiderioRaidLeaderboard retrieves the leaderboard of a specific raid by season and region
+export const getRaiderioRaidLeaderboard = async (
+  raid: string,
+  difficulty: string,
+  region: string
+) => {
+  try {
+    const response = await api.get(`/raids/leaderboard`, {
+      params: { raid, difficulty, region },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error in getRaiderioRaidLeaderboard:", error);
+    throw error;
+  }
+};

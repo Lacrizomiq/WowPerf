@@ -1,0 +1,209 @@
+{
+  "raids": [
+    {
+      "id": 1208,
+      "slug": "aberrus-the-shadowed-crucible",
+      "name": "Aberrus, the Shadowed Crucible",
+      "short_name": "ATSC",
+      "expansion": "DF",
+      "mediaUrl": "https://render.worldofwarcraft.com/eu/zones/aberrus-the-shadowed-crucible-small.jpg",
+      "icon": "inv_achievement_raiddragon_raid",
+      "starts": {
+        "us": "2023-05-09T15:00:00Z",
+        "eu": "2023-05-10T04:00:00Z",
+        "tw": "2023-05-10T23:00:00Z",
+        "kr": "2023-05-10T23:00:00Z",
+        "cn": "2023-05-10T23:00:00Z"
+      },
+      "ends": {
+        "us": "2023-11-14T15:00:00Z",
+        "eu": "2023-11-15T04:00:00Z",
+        "tw": "2023-11-15T23:00:00Z",
+        "kr": "2023-11-15T23:00:00Z",
+        "cn": "2023-11-15T23:00:00Z"
+      },
+      "encounters": [
+        {
+          "id": 197026,
+          "slug": "kazzara-the-hellforged",
+          "name": "Kazzara, the Hellforged"
+        },
+        {
+          "id": 197028,
+          "slug": "the-amalgamation-chamber",
+          "name": "The Amalgamation Chamber"
+        },
+        {
+          "id": 197029,
+          "slug": "the-forgotten-experiments",
+          "name": "The Forgotten Experiments"
+        },
+        {
+          "id": 197027,
+          "slug": "assault-of-the-zaqali",
+          "name": "Assault of the Zaqali"
+        },
+        {
+          "id": 197030,
+          "slug": "rashok-the-elder",
+          "name": "Rashok, the Elder"
+        },
+        {
+          "id": 197031,
+          "slug": "the-vigilant-steward-zskarn",
+          "name": "The Vigilant Steward, Zskarn"
+        },
+        {
+          "id": 197032,
+          "slug": "magmorax",
+          "name": "Magmorax"
+        },
+        {
+          "id": 197033,
+          "slug": "echo-of-neltharion",
+          "name": "Echo of Neltharion"
+        },
+        {
+          "id": 197034,
+          "slug": "scalecommander-sarkareth",
+          "name": "Scalecommander Sarkareth"
+        }
+      ]
+    },
+    {
+      "id": 1207,
+      "slug": "amirdrassil-the-dreams-hope",
+      "name": "Amirdrassil, the Dream's Hope",
+      "short_name": "ATDH",
+      "expansion": "DF",
+      "mediaUrl": "https://render.worldofwarcraft.com/eu/zones/amirdrassil-the-dreams-hope-small.jpg",
+      "icon": "inv_achievement_raidemeralddream_raid",
+      "starts": {
+        "us": "2023-11-14T15:00:00Z",
+        "eu": "2023-11-15T04:00:00Z",
+        "tw": "2023-11-15T23:00:00Z",
+        "kr": "2023-11-15T23:00:00Z",
+        "cn": "2023-11-15T23:00:00Z"
+      },
+      "ends": {
+        "us": "2024-04-23T15:00:00Z",
+        "eu": "2024-04-24T04:00:00Z",
+        "tw": "2024-04-24T23:00:00Z",
+        "kr": "2024-04-24T23:00:00Z",
+        "cn": "2024-04-24T23:00:00Z"
+      },
+      "encounters": [
+        {
+          "id": 197052,
+          "slug": "gnarlroot",
+          "name": "Gnarlroot"
+        },
+        {
+          "id": 197053,
+          "slug": "igira-the-cruel",
+          "name": "Igira the Cruel"
+        },
+        {
+          "id": 197054,
+          "slug": "volcoross",
+          "name": "Volcoross"
+        },
+        {
+          "id": 197055,
+          "slug": "council-of-dreams",
+          "name": "Council of Dreams"
+        },
+        {
+          "id": 197056,
+          "slug": "larodar-keeper-of-the-flame",
+          "name": "Larodar, Keeper of the Flame"
+        },
+        {
+          "id": 197057,
+          "slug": "nymue-weaver-of-the-cycle",
+          "name": "Nymue, Weaver of the Cycle"
+        },
+        {
+          "id": 197059,
+          "slug": "smolderon",
+          "name": "Smolderon"
+        },
+        {
+          "id": 197058,
+          "slug": "tindral-sageswift-seer-of-the-flame",
+          "name": "Tindral Sageswift, Seer of the Flame"
+        },
+        {
+          "id": 197060,
+          "slug": "fyrakk-the-blazing",
+          "name": "Fyrakk the Blazing"
+        }
+      ]
+    },
+    {
+      "id": 1200,
+      "slug": "vault-of-the-incarnates",
+      "name": "Vault of the Incarnates",
+      "short_name": "VOTI",
+      "expansion": "DF",
+      "mediaUrl": "https://render.worldofwarcraft.com/eu/zones/vault-of-the-incarnates-small.jpg",
+      "icon": "achievement_raidprimalist_raid",
+      "starts": {
+        "us": "2022-12-13T15:00:00Z",
+        "eu": "2022-12-14T04:00:00Z",
+        "tw": "2022-12-14T23:00:00Z",
+        "kr": "2022-12-14T23:00:00Z",
+        "cn": "2022-12-14T23:00:00Z"
+      },
+      "ends": {
+        "us": "2023-05-09T15:00:00Z",
+        "eu": "2023-05-10T04:00:00Z",
+        "tw": "2023-05-10T23:00:00Z",
+        "kr": "2023-05-10T23:00:00Z",
+        "cn": "2023-05-10T23:00:00Z"
+      },
+      "encounters": [
+        {
+          "id": 184972,
+          "slug": "eranog",
+          "name": "Eranog"
+        },
+        {
+          "id": 190496,
+          "slug": "terros",
+          "name": "Terros"
+        },
+        {
+          "id": 187771,
+          "slug": "the-primal-council",
+          "name": "The Primal Council"
+        },
+        {
+          "id": 187967,
+          "slug": "sennarth-the-cold-breath",
+          "name": "Sennarth, The Cold Breath"
+        },
+        {
+          "id": 189813,
+          "slug": "dathea-ascended",
+          "name": "Dathea, Ascended"
+        },
+        {
+          "id": 184986,
+          "slug": "kurog-grimtotem",
+          "name": "Kurog Grimtotem"
+        },
+        {
+          "id": 190245,
+          "slug": "broodkeeper-diurna",
+          "name": "Broodkeeper Diurna"
+        },
+        {
+          "id": 193909,
+          "slug": "raszageth-the-stormeater",
+          "name": "Raszageth the Storm-Eater"
+        }
+      ]
+    }
+  ]
+}

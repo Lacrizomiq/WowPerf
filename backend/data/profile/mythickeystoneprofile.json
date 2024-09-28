@@ -1,0 +1,79 @@
+"http://localhost:8080/blizzard/characters/silvermoon/ouimagatée/mythic-keystone-profile?region=eu&namespace=profile-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile?namespace=profile-eu"
+    }
+  },
+  "character": {
+    "id": 204820513,
+    "key": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e?namespace=profile-eu"
+    },
+    "name": "Ouimagatée",
+    "realm": {
+      "id": 549,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+      },
+      "name": "Silvermoon",
+      "slug": "silvermoon"
+    }
+  },
+  "current_mythic_rating": {
+    "color": {
+      "a": 0,
+      "b": 255,
+      "g": 255,
+      "r": 255
+    },
+    "rating": 742.1654
+  },
+  "current_period": {
+    "period": {
+      "id": 970,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/period/970?namespace=dynamic-eu"
+      }
+    }
+  },
+  "seasons": [
+    {
+      "id": 11,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/11?namespace=profile-eu"
+      }
+    },
+    {
+      "id": 12,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/12?namespace=profile-eu"
+      }
+    },
+    {
+      "id": 10,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/10?namespace=profile-eu"
+      }
+    },
+    {
+      "id": 9,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/9?namespace=profile-eu"
+      }
+    },
+    {
+      "id": 7,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/7?namespace=profile-eu"
+      }
+    },
+    {
+      "id": 8,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/mythic-keystone-profile/season/8?namespace=profile-eu"
+      }
+    }
+  ]
+}

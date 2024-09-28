@@ -1,0 +1,1551 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/tirran%C3%B8/mythic-keystone-profile/season/13?namespace=profile-eu"
+    }
+  },
+  "best_runs": [
+    {
+      "completed_timestamp": 1726651012000,
+      "dungeon": {
+        "id": 376,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/376?namespace=dynamic-eu"
+        },
+        "name": "The Necrotic Wake"
+      },
+      "duration": 1944418,
+      "is_completed_within_time": false,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        },
+        {
+          "id": 152,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/152?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Challenger's Peril"
+        }
+      ],
+      "keystone_level": 7,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 238,
+          "g": 53,
+          "r": 163
+        },
+        "rating": 248.29802
+      },
+      "members": [
+        {
+          "character": {
+            "id": 171969787,
+            "name": "Soultaker",
+            "realm": {
+              "id": 545,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/545?namespace=dynamic-eu"
+              },
+              "slug": "chogall"
+            }
+          },
+          "equipped_item_level": 608,
+          "race": {
+            "id": 10,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/10?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood Elf"
+          },
+          "specialization": {
+            "id": 64,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/64?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Frost"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 605,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 173656316,
+            "name": "Jnrlæge",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 610,
+          "race": {
+            "id": 9,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/9?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Goblin"
+          },
+          "specialization": {
+            "id": 256,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/256?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Discipline"
+          }
+        },
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 604,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 178819796,
+            "name": "Vallkyree",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 608,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 265,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/265?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Affliction"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 248.29802
+      }
+    },
+    {
+      "completed_timestamp": 1726669607000,
+      "dungeon": {
+        "id": 505,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/505?namespace=dynamic-eu"
+        },
+        "name": "The Dawnbreaker"
+      },
+      "duration": 1561651,
+      "is_completed_within_time": true,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 6,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 238,
+          "g": 53,
+          "r": 163
+        },
+        "rating": 241.0151
+      },
+      "members": [
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 606,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 217369637,
+            "name": "Lifewarding",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 603,
+          "race": {
+            "id": 34,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/34?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dark Iron Dwarf"
+          },
+          "specialization": {
+            "id": 264,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/264?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Restoration"
+          }
+        },
+        {
+          "character": {
+            "id": 210622975,
+            "name": "Hesile",
+            "realm": {
+              "id": 1305,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1305?namespace=dynamic-eu"
+              },
+              "slug": "kazzak"
+            }
+          },
+          "equipped_item_level": 608,
+          "race": {
+            "id": 4,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/4?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Night Elf"
+          },
+          "specialization": {
+            "id": 260,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/260?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Outlaw"
+          }
+        },
+        {
+          "character": {
+            "id": 217558667,
+            "name": "Elòò",
+            "realm": {
+              "id": 539,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/539?namespace=dynamic-eu"
+              },
+              "slug": "archimonde"
+            }
+          },
+          "equipped_item_level": 606,
+          "race": {
+            "id": 4,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/4?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Night Elf"
+          },
+          "specialization": {
+            "id": 62,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/62?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Arcane"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 241.0151
+      }
+    },
+    {
+      "completed_timestamp": 1726737378000,
+      "dungeon": {
+        "id": 353,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/353?namespace=dynamic-eu"
+        },
+        "name": "Siege of Boralus"
+      },
+      "duration": 1809203,
+      "is_completed_within_time": true,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 6,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 238,
+          "g": 53,
+          "r": 163
+        },
+        "rating": 238.23479
+      },
+      "members": [
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 217611897,
+            "name": "Gawga",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 613,
+          "race": {
+            "id": 3,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/3?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dwarf"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 217523024,
+            "name": "Shnyhai",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 605,
+          "race": {
+            "id": 4,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/4?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Night Elf"
+          },
+          "specialization": {
+            "id": 259,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/259?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Assassination"
+          }
+        },
+        {
+          "character": {
+            "id": 217102268,
+            "name": "Pigroaster",
+            "realm": {
+              "id": 1305,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1305?namespace=dynamic-eu"
+              },
+              "slug": "kazzak"
+            }
+          },
+          "equipped_item_level": 608,
+          "race": {
+            "id": 70,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/70?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dracthyr"
+          },
+          "specialization": {
+            "id": 1468,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/1468?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Preservation"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 238.23479
+      }
+    },
+    {
+      "completed_timestamp": 1726661448000,
+      "dungeon": {
+        "id": 502,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/502?namespace=dynamic-eu"
+        },
+        "name": "City of Threads"
+      },
+      "duration": 2512671,
+      "is_completed_within_time": false,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 6,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 221,
+          "g": 112,
+          "r": 0
+        },
+        "rating": 212.63087
+      },
+      "members": [
+        {
+          "character": {
+            "id": 191750456,
+            "name": "Judojørgen",
+            "realm": {
+              "id": 626,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/626?namespace=dynamic-eu"
+              },
+              "slug": "ragnaros"
+            }
+          },
+          "equipped_item_level": 604,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 269,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/269?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Windwalker"
+          }
+        },
+        {
+          "character": {
+            "id": 178819796,
+            "name": "Vallkyree",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 610,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 266,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/266?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Demonology"
+          }
+        },
+        {
+          "character": {
+            "id": 185009200,
+            "name": "Vandpistolen",
+            "realm": {
+              "id": 626,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/626?namespace=dynamic-eu"
+              },
+              "slug": "ragnaros"
+            }
+          },
+          "equipped_item_level": 603,
+          "race": {
+            "id": 84,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/84?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Earthen"
+          },
+          "specialization": {
+            "id": 264,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/264?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Restoration"
+          }
+        },
+        {
+          "character": {
+            "id": 176740681,
+            "name": "Kûrt",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 603,
+          "race": {
+            "id": 5,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/5?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Undead"
+          },
+          "specialization": {
+            "id": 259,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/259?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Assassination"
+          }
+        },
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 606,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 212.63087
+      }
+    },
+    {
+      "completed_timestamp": 1726643546000,
+      "dungeon": {
+        "id": 502,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/502?namespace=dynamic-eu"
+        },
+        "name": "City of Threads"
+      },
+      "duration": 1151107,
+      "is_completed_within_time": true,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        }
+      ],
+      "keystone_level": 2,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 221,
+          "g": 112,
+          "r": 0
+        },
+        "rating": 212.63087
+      },
+      "members": [
+        {
+          "character": {
+            "id": 181789156,
+            "name": "Mizury",
+            "realm": {
+              "id": 625,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/625?namespace=dynamic-eu"
+              },
+              "slug": "twisting-nether"
+            }
+          },
+          "equipped_item_level": 601,
+          "race": {
+            "id": 6,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/6?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Tauren"
+          },
+          "specialization": {
+            "id": 259,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/259?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Assassination"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 605,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 602,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 184047700,
+            "name": "Poepskun",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 599,
+          "race": {
+            "id": 70,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/70?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dracthyr"
+          },
+          "specialization": {
+            "id": 1468,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/1468?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Preservation"
+          }
+        },
+        {
+          "character": {
+            "id": 129345828,
+            "name": "Rünik",
+            "realm": {
+              "id": 625,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/625?namespace=dynamic-eu"
+              },
+              "slug": "twisting-nether"
+            }
+          },
+          "equipped_item_level": 602,
+          "race": {
+            "id": 10,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/10?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood Elf"
+          },
+          "specialization": {
+            "id": 269,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/269?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Windwalker"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 180
+      }
+    },
+    {
+      "completed_timestamp": 1726734074000,
+      "dungeon": {
+        "id": 507,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/507?namespace=dynamic-eu"
+        },
+        "name": "Grim Batol"
+      },
+      "duration": 2118903,
+      "is_completed_within_time": false,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 5,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 221,
+          "g": 112,
+          "r": 0
+        },
+        "rating": 203.54958
+      },
+      "members": [
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 174046948,
+            "name": "Shorînâ",
+            "realm": {
+              "id": 581,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/581?namespace=dynamic-eu"
+              },
+              "slug": "blackrock"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 70,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/70?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dracthyr"
+          },
+          "specialization": {
+            "id": 1468,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/1468?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Preservation"
+          }
+        },
+        {
+          "character": {
+            "id": 168903018,
+            "name": "Kabôom",
+            "realm": {
+              "id": 581,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/581?namespace=dynamic-eu"
+              },
+              "slug": "blackrock"
+            }
+          },
+          "equipped_item_level": 601,
+          "race": {
+            "id": 5,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/5?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Undead"
+          },
+          "specialization": {
+            "id": 254,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/254?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Marksmanship"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 607,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        },
+        {
+          "character": {
+            "id": 133295061,
+            "name": "Fex",
+            "realm": {
+              "id": 581,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/581?namespace=dynamic-eu"
+              },
+              "slug": "blackrock"
+            }
+          },
+          "equipped_item_level": 601,
+          "race": {
+            "id": 10,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/10?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood Elf"
+          },
+          "specialization": {
+            "id": 577,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/577?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Havoc"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 203.54958
+      }
+    },
+    {
+      "completed_timestamp": 1726649046000,
+      "dungeon": {
+        "id": 375,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/375?namespace=dynamic-eu"
+        },
+        "name": "Mists of Tirna Scithe"
+      },
+      "duration": 1445325,
+      "is_completed_within_time": true,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 5,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 238,
+          "g": 53,
+          "r": 163
+        },
+        "rating": 227.38907
+      },
+      "members": [
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 604,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 166594578,
+            "name": "Caliweed",
+            "realm": {
+              "id": 580,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/580?namespace=dynamic-eu"
+              },
+              "slug": "blackmoore"
+            }
+          },
+          "equipped_item_level": 597,
+          "race": {
+            "id": 37,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/37?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Mechagnome"
+          },
+          "specialization": {
+            "id": 270,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/270?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Mistweaver"
+          }
+        },
+        {
+          "character": {
+            "id": 123526612,
+            "name": "Ninjanex",
+            "realm": {
+              "id": 506,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/506?namespace=dynamic-eu"
+              },
+              "slug": "draenor"
+            }
+          },
+          "equipped_item_level": 609,
+          "race": {
+            "id": 27,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/27?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Nightborne"
+          },
+          "specialization": {
+            "id": 259,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/259?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Assassination"
+          }
+        },
+        {
+          "character": {
+            "id": 215252546,
+            "name": "Ðnzo",
+            "realm": {
+              "id": 1305,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1305?namespace=dynamic-eu"
+              },
+              "slug": "kazzak"
+            }
+          },
+          "equipped_item_level": 610,
+          "race": {
+            "id": 3,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/3?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dwarf"
+          },
+          "specialization": {
+            "id": 254,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/254?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Marksmanship"
+          }
+        },
+        {
+          "character": {
+            "id": 175677911,
+            "name": "Sayarah",
+            "realm": {
+              "id": 580,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/580?namespace=dynamic-eu"
+              },
+              "slug": "blackmoore"
+            }
+          },
+          "equipped_item_level": 604,
+          "race": {
+            "id": 3,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/3?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dwarf"
+          },
+          "specialization": {
+            "id": 64,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/64?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Frost"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 227.38907
+      }
+    },
+    {
+      "completed_timestamp": 1726655093000,
+      "dungeon": {
+        "id": 503,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/dungeon/503?namespace=dynamic-eu"
+        },
+        "name": "Ara-Kara, City of Echoes"
+      },
+      "duration": 1148784,
+      "is_completed_within_time": true,
+      "keystone_affixes": [
+        {
+          "id": 148,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/148?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Xal'atath's Bargain: Ascendant"
+        },
+        {
+          "id": 9,
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/9?namespace=static-11.0.2_55938-eu"
+          },
+          "name": "Tyrannical"
+        }
+      ],
+      "keystone_level": 6,
+      "map_rating": {
+        "color": {
+          "a": 1,
+          "b": 238,
+          "g": 53,
+          "r": 163
+        },
+        "rating": 248.567
+      },
+      "members": [
+        {
+          "character": {
+            "id": 120884702,
+            "name": "Niifty",
+            "realm": {
+              "id": 580,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/580?namespace=dynamic-eu"
+              },
+              "slug": "blackmoore"
+            }
+          },
+          "equipped_item_level": 609,
+          "race": {
+            "id": 8,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/8?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Troll"
+          },
+          "specialization": {
+            "id": 103,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/103?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Feral"
+          }
+        },
+        {
+          "character": {
+            "id": 204891181,
+            "name": "Tirranø",
+            "realm": {
+              "id": 549,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+              },
+              "slug": "silvermoon"
+            }
+          },
+          "equipped_item_level": 604,
+          "race": {
+            "id": 1,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/1?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Human"
+          },
+          "specialization": {
+            "id": 250,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/250?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Blood"
+          }
+        },
+        {
+          "character": {
+            "id": 178819796,
+            "name": "Vallkyree",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 609,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 265,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/265?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Affliction"
+          }
+        },
+        {
+          "character": {
+            "id": 183367368,
+            "name": "Zhanya",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 605,
+          "race": {
+            "id": 3,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/3?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Dwarf"
+          },
+          "specialization": {
+            "id": 264,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/264?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Restoration"
+          }
+        },
+        {
+          "character": {
+            "id": 177117571,
+            "name": "Krankin",
+            "realm": {
+              "id": 1306,
+              "key": {
+                "href": "https://eu.api.blizzard.com/data/wow/realm/1306?namespace=dynamic-eu"
+              },
+              "slug": "tarren-mill"
+            }
+          },
+          "equipped_item_level": 605,
+          "race": {
+            "id": 2,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-race/2?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Orc"
+          },
+          "specialization": {
+            "id": 263,
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/playable-specialization/263?namespace=static-11.0.2_55938-eu"
+            },
+            "name": "Enhancement"
+          }
+        }
+      ],
+      "mythic_rating": {
+        "color": {
+          "a": 1,
+          "b": 0,
+          "g": 128,
+          "r": 255
+        },
+        "rating": 248.567
+      }
+    }
+  ],
+  "character": {
+    "id": 204891181,
+    "key": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/tirran%C3%B8?namespace=profile-eu"
+    },
+    "name": "Tirranø",
+    "realm": {
+      "id": 549,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+      },
+      "name": "Silvermoon",
+      "slug": "silvermoon"
+    }
+  },
+  "mythic_rating": {
+    "color": {
+      "a": 1,
+      "b": 0,
+      "g": 255,
+      "r": 30
+    },
+    "rating": 1619.6843
+  },
+  "season": {
+    "id": 13,
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/mythic-keystone/season/13?namespace=dynamic-eu"
+    }
+  }
+}

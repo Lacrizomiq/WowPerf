@@ -1,0 +1,28 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://us.api.blizzard.com/data/wow/talent/132670?namespace=static-11.0.0_55478-us"
+    }
+  },
+  "id": 132670,
+  "playable_class": {
+    "id": 7,
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/playable-class/7?namespace=static-11.0.0_55478-us"
+    },
+    "name": "Shaman"
+  },
+  "rank_descriptions": [
+    {
+      "description": "Heals the friendly target for 12,793, then jumps up to 15 yards to heal the 3 most injured nearby allies. Healing is reduced by 30% with each jump.",
+      "rank": 1
+    }
+  ],
+  "spell": {
+    "id": 1064,
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/spell/1064?namespace=static-11.0.0_55478-us"
+    },
+    "name": "Chain Heal"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/keystone-affix/147?namespace=static-11.0.2_55938-eu"
+    }
+  },
+  "description": "Xal'atath betrays players, revoking her bargains and increasing the health and damage of enemies by 20%",
+  "id": 147,
+  "media": {
+    "id": 147,
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/media/keystone-affix/147?namespace=static-11.0.2_55938-eu"
+    }
+  },
+  "name": "Xal'atath's Guile"
+}

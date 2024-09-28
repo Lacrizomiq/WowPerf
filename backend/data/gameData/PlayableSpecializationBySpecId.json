@@ -1,0 +1,206 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://us.api.blizzard.com/data/wow/playable-specialization/264?namespace=static-11.0.0_55478-us"
+    }
+  },
+  "gender_description": {
+    "female": "A healer who calls upon ancestral spirits and the cleansing power of water to mend allies' wounds.\r\n\r\nPreferred Weapon: Mace, Dagger, and Shield",
+    "male": "A healer who calls upon ancestral spirits and the cleansing power of water to mend allies' wounds.\r\n\r\nPreferred Weapon: Mace, Dagger, and Shield"
+  },
+  "hero_talent_trees": [
+    {
+      "id": 74,
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/talent-tree/1034/hero-talent/74?namespace=static-11.0.0_55478-us"
+      },
+      "name": "Totemic"
+    },
+    {
+      "id": 54,
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/talent-tree/786/hero-talent/54?namespace=static-11.0.0_55478-us"
+      },
+      "name": "Totemic"
+    },
+    {
+      "id": 56,
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/talent-tree/786/hero-talent/56?namespace=static-11.0.0_55478-us"
+      },
+      "name": "Farseer"
+    },
+    {
+      "id": 75,
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/talent-tree/1034/hero-talent/75?namespace=static-11.0.0_55478-us"
+      },
+      "name": "Farseer"
+    }
+  ],
+  "id": 264,
+  "media": {
+    "id": 264,
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/media/playable-specialization/264?namespace=static-11.0.0_55478-us"
+    }
+  },
+  "name": "Restoration",
+  "playable_class": {
+    "id": 7,
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/playable-class/7?namespace=static-11.0.0_55478-us"
+    },
+    "name": "Shaman"
+  },
+  "power_type": {
+    "id": 0,
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/power-type/0?namespace=static-11.0.0_55478-us"
+    },
+    "name": "Mana"
+  },
+  "primary_stat_type": {
+    "name": "Intellect",
+    "type": "INTELLECT"
+  },
+  "pvp_talents": [
+    {
+      "spell_tooltip": {
+        "cast_time": "Passive",
+        "description": "Primordial Wave summons a totem at your feet for 15 sec that increases the critical effect of damage and healing spells of all nearby allies within 46 yards by 20% for 15 sec.\r\n"
+      },
+      "talent": {
+        "id": 707,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/707?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Totem of Wrath"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Instant",
+        "cooldown": "45 sec cooldown",
+        "description": "Summons a totem at your feet for 15 sec.\r\n\r\nWhenever enemies within 23 yards of the totem deal direct damage, the totem will deal 100% of the damage dealt back to attacker. ",
+        "power_cost": "1,500 Mana",
+        "range": "40 yd range"
+      },
+      "talent": {
+        "id": 708,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/708?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Counterstrike Totem"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Passive",
+        "description": "When you successfully Purge a beneficial effect, the enemy suffers 3,318 Nature damage over 3 sec."
+      },
+      "talent": {
+        "id": 714,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/714?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Electrocute"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Instant",
+        "cooldown": "30 sec cooldown",
+        "description": "Summons a totem at your feet that will redirect all harmful spells cast within 34 yards on a nearby party or raid member to itself. Will not redirect area of effect spells. Lasts 3 sec.",
+        "power_cost": "2,950 Mana"
+      },
+      "talent": {
+        "id": 715,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/715?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Grounding Totem"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Passive",
+        "description": "Healing Rain is now instant, 30% more effective, and costs 45% less mana. "
+      },
+      "talent": {
+        "id": 3755,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/3755?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Rain Dance"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Passive",
+        "description": "Healing Tide Totem's cooldown is reduced by 45 sec and it heals for 25% more each time it pulses."
+      },
+      "talent": {
+        "id": 5388,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/5388?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Living Tide"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Instant",
+        "cooldown": "30 sec cooldown",
+        "description": "Unleash your Elemental Shield's energy on an enemy target:\r\n\r\nightning Shield: Knocks them away.\r\n\r\narth Shield: Roots them in place for 2 sec.\r\n\r\nater Shield: Summons a whirlpool for 6 sec, reducing damage and healing by 50% while they stand within it.",
+        "range": "20 yd range"
+      },
+      "talent": {
+        "id": 5437,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/5437?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Unleash Shield"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Instant",
+        "cooldown": "1.5 min cooldown",
+        "description": "Summons a totem with 4% of your health at the target location for 6 sec that forms a circuit of electricity that enemies cannot pass through.",
+        "range": "30 yd range"
+      },
+      "talent": {
+        "id": 5567,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/5567?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Static Field Totem"
+      }
+    },
+    {
+      "spell_tooltip": {
+        "cast_time": "Instant",
+        "cooldown": "2 min cooldown",
+        "description": "Burrow beneath the ground, becoming unattackable, removing movement impairing effects, and increasing your movement speed by 50% for 5 sec.\r\n\r\nWhen the effect ends, enemies within 6 yards are knocked in the air and take 36,498 Physical damage."
+      },
+      "talent": {
+        "id": 5576,
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/pvp-talent/5576?namespace=static-11.0.0_55478-us"
+        },
+        "name": "Burrow"
+      }
+    }
+  ],
+  "role": {
+    "name": "Healer",
+    "type": "HEALER"
+  },
+  "spec_talent_tree": {
+    "key": {
+      "href": "https://us.api.blizzard.com/data/wow/talent-tree/786/playable-specialization/264?namespace=static-11.0.0_55478-us"
+    },
+    "name": "Restoration"
+  }
+}

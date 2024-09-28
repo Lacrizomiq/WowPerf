@@ -1,0 +1,15 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://us.api.blizzard.com/data/wow/media/playable-specialization/264?namespace=static-11.0.0_55478-us"
+    }
+  },
+  "assets": [
+    {
+      "file_data_id": 136052,
+      "key": "icon",
+      "value": "https://render.worldofwarcraft.com/us/icons/56/spell_nature_magicimmunity.jpg"
+    }
+  ],
+  "id": 264
+}

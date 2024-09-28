@@ -1,0 +1,15 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/media/keystone-affix/147?namespace=static-11.0.2_55938-eu"
+    }
+  },
+  "assets": [
+    {
+      "file_data_id": 1723989,
+      "key": "icon",
+      "value": "https://render.worldofwarcraft.com/eu/icons/56/ability_racial_chillofnight.jpg"
+    }
+  ],
+  "id": 147
+}
