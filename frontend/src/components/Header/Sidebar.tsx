@@ -172,6 +172,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
             label="Raids"
             isExpanded={isExpanded}
             onClick={toggleSidebar}
+            route="/raids"
           />
         </div>
         <div>

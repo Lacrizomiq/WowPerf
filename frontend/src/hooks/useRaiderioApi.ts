@@ -31,3 +31,16 @@ export const useGetRaiderioMythicPlusRunDetails = (
       raiderioApiServices.getRaiderioMythicPlusRunDetails(season, id),
   });
 };
+
+// useGetRaiderioRaidLeaderboard retrieves the leaderboard of a specific raid by season and region
+export const useGetRaiderioRaidLeaderboard = (
+  raid: string,
+  difficulty: string,
+  region: string
+) => {
+  return useQuery({
+    queryKey: ["raiderio-raid-leaderboard", raid, difficulty, region],
+    queryFn: () =>
+      raiderioApiServices.getRaiderioRaidLeaderboard(raid, difficulty, region),
+  });
+};
