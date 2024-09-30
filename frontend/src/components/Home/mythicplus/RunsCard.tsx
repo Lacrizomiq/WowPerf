@@ -211,7 +211,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
                           <p
                             className={`font-bold ${
                               member.character.class.slug
-                                ? `class-color--${member.character.class.slug}`
+                                ? `class-color--${member.character.class.slug} hover:underline hover:decoration-current`
                                 : ""
                             }`}
                           >
