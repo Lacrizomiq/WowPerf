@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
+	"time"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
-
 	"wowperf/internal/database"
+	"wowperf/pkg/cache"
 
+	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 
@@ -22,12 +24,18 @@ func main() {
 		return
 	}
 
+	// Init Cache
+	cache.InitCache()
+
+	// Wait for Redis to be ready
+	waitForRedis()
+
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Utiliser la nouvelle fonction de migration
+	// Use the new migration function
 	if err := database.Migrate(db); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -47,6 +55,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize raiderio service: %v", err)
 	}
+
+	// Cache Updater
+	startCacheUpdater(blizzardService, rioService)
 
 	// Raider.io Handler
 	rioHandler := raiderio.NewHandler(rioService)
@@ -70,4 +81,21 @@ func main() {
 	blizzardHandler.RegisterRoutes(r)
 
 	log.Fatal(r.Run(":8080"))
+}
+
+func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *serviceRaiderio.RaiderIOService) {
+	raidsRaiderioCache.StartRaidLeaderboardCacheUpdater(rioService)
+}
+
+func waitForRedis() {
+	for i := 0; i < 30; i++ {
+		err := cache.Ping()
+		if err == nil {
+			log.Println("Redis is ready")
+			return
+		}
+		log.Println("Waiting for Redis to be ready")
+		time.Sleep(time.Second)
+	}
+	log.Println("Redis is not ready")
 }

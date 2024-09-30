@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 
 interface RegionSelectorProps {
-  regions: string[];
+  regions: { value: string; label: string }[];
   onRegionChange: (region: string) => void;
   selectedRegion: string;
 }
@@ -33,11 +33,11 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({
         </SelectItem>
         {regions.map((region) => (
           <SelectItem
-            key={region}
-            value={region}
+            key={region.value}
+            value={region.value}
             className="hover:bg-gradient-purple"
           >
-            {region}
+            {region.label}
           </SelectItem>
         ))}
       </SelectContent>

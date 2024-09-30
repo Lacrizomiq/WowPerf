@@ -36,11 +36,26 @@ export const useGetRaiderioMythicPlusRunDetails = (
 export const useGetRaiderioRaidLeaderboard = (
   raid: string,
   difficulty: string,
-  region: string
+  region: string,
+  limit: number,
+  page: number
 ) => {
   return useQuery({
-    queryKey: ["raiderio-raid-leaderboard", raid, difficulty, region],
+    queryKey: [
+      "raiderio-raid-leaderboard",
+      raid,
+      difficulty,
+      region,
+      limit,
+      page,
+    ],
     queryFn: () =>
-      raiderioApiServices.getRaiderioRaidLeaderboard(raid, difficulty, region),
+      raiderioApiServices.getRaiderioRaidLeaderboard(
+        raid,
+        difficulty,
+        region,
+        limit,
+        page
+      ),
   });
 };

@@ -3,6 +3,8 @@ import { MythicPlusRun, Roster } from "@/types/runsDetails";
 import { useGetRaiderioMythicPlusRunDetails } from "@/hooks/useRaiderioApi";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import RunsDetailsGear from "./RunsDetailsGear";
+import { SquareArrowOutUpRight } from "lucide-react";
+import Link from "next/link";
 
 interface RunsDetailsProps {
   season: string;
@@ -54,11 +56,22 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
           >
             <div className="flex items-center mb-2 justify-between">
               <div>
-                <h5
-                  className={`font-bold class-color--${member.character.class.slug}`}
+                <Link
+                  href={`/character/${member.character.region.slug}/${
+                    member.character.realm.slug
+                  }/${member.character.name.toLowerCase()}`}
                 >
-                  {member.character.name}
-                </h5>
+                  <p
+                    className={`font-bold flex items-center ${
+                      member.character.class.slug
+                        ? `class-color--${member.character.class.slug} hover:underline hover:decoration-current`
+                        : ""
+                    }`}
+                  >
+                    {member.character.name}
+                    <SquareArrowOutUpRight className="w-4 h-4 ml-2" />
+                  </p>
+                </Link>
                 <p className="text-white text-sm">
                   {member.character.spec.name} {member.character.class.name}
                 </p>
