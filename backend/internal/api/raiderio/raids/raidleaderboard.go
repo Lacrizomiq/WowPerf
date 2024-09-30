@@ -2,6 +2,7 @@ package raiderio
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,6 +12,7 @@ import (
 	raiderioRaid "wowperf/internal/services/raiderio/raids"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 type RaidLeaderboardHandler struct {
@@ -65,6 +67,10 @@ func (h *RaidLeaderboardHandler) GetRaidLeaderboard(c *gin.Context) {
 	if err == nil {
 		c.JSON(http.StatusOK, leaderboard)
 		return
+	}
+
+	if err != redis.Nil {
+		log.Println("Error getting from cache", err)
 	}
 
 	leaderboard, err = raiderioRaid.GetRaidLeaderboard(h.Service, raid, difficulty, region, limit, page)

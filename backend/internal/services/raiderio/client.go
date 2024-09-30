@@ -22,7 +22,7 @@ type RaiderIOService struct {
 func NewRaiderIOClient() (*RaiderIOClient, error) {
 	client := &RaiderIOClient{
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		baseURL: apiURL,
 	}

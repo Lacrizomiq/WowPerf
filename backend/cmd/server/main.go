@@ -8,7 +8,9 @@ import (
 	"wowperf/internal/database"
 	"wowperf/pkg/cache"
 
+	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
 	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
+
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 
@@ -85,6 +87,7 @@ func main() {
 
 func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *serviceRaiderio.RaiderIOService) {
 	raidsRaiderioCache.StartRaidLeaderboardCacheUpdater(rioService)
+	mythicPlusRaiderioCache.StartMythicPlusBestRunsCacheUpdater(rioService)
 }
 
 func waitForRedis() {
