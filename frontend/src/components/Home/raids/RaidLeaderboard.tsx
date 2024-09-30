@@ -6,6 +6,14 @@ import LeaderBoardCards from "./LeaderboardCards";
 import { StaticRaid } from "@/types/raids";
 import Image from "next/image";
 
+const regions = [
+  { value: "us", label: "US" },
+  { value: "eu", label: "EU" },
+  { value: "tw", label: "TW" },
+  { value: "kr", label: "KR" },
+  { value: "cn", label: "CN" },
+];
+
 const RaidLeaderboard: React.FC = () => {
   const [region, setRegion] = useState("world");
   const [selectedRaid, setSelectedRaid] = useState<StaticRaid | null>(null);
@@ -33,6 +41,10 @@ const RaidLeaderboard: React.FC = () => {
     setSelectedRaid(raid);
   };
 
+  const handleRegionChange = (newRegion: string) => {
+    setRegion(newRegion);
+  };
+
   return (
     <div className="relative w-full h-full">
       {isMounted && (
@@ -56,8 +68,8 @@ const RaidLeaderboard: React.FC = () => {
 
           <div className="flex space-x-4 mb-6">
             <RegionSelector
-              regions={["US", "EU", "TW", "KR", "CN"]}
-              onRegionChange={setRegion}
+              regions={regions}
+              onRegionChange={handleRegionChange}
               selectedRegion={region}
             />
             {raidsData && (
@@ -78,9 +90,11 @@ const RaidLeaderboard: React.FC = () => {
           )}
 
           <LeaderBoardCards
-            raid="nerubar-palace"
+            raid={selectedRaid?.Slug || "nerubar-palace"}
             difficulty="mythic"
             region={region}
+            limit={20}
+            page={0}
           />
         </div>
       </div>

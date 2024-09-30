@@ -39,11 +39,13 @@ export const getRaiderioMythicPlusRunDetails = async (
 export const getRaiderioRaidLeaderboard = async (
   raid: string,
   difficulty: string,
-  region: string
+  region: string,
+  limit: number,
+  page: number
 ) => {
   try {
     const response = await api.get(`/raids/leaderboard`, {
-      params: { raid, difficulty, region },
+      params: { raid, difficulty, region, limit, page },
     });
     return response.data;
   } catch (error) {

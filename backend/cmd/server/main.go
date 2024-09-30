@@ -4,9 +4,10 @@ import (
 	"log"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
-
 	"wowperf/internal/database"
+	"wowperf/pkg/cache"
 
+	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 
@@ -21,6 +22,8 @@ func main() {
 		log.Println("Error loading .env file")
 		return
 	}
+
+	cache.InitCache()
 
 	db, err := database.InitDB()
 	if err != nil {
@@ -48,6 +51,9 @@ func main() {
 		log.Fatalf("Failed to initialize raiderio service: %v", err)
 	}
 
+	// Cache Updater
+	startCacheUpdater(blizzardService, rioService)
+
 	// Raider.io Handler
 	rioHandler := raiderio.NewHandler(rioService)
 
@@ -70,4 +76,8 @@ func main() {
 	blizzardHandler.RegisterRoutes(r)
 
 	log.Fatal(r.Run(":8080"))
+}
+
+func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *serviceRaiderio.RaiderIOService) {
+	raidsRaiderioCache.StartRaidLeaderboardCacheUpdater(rioService)
 }

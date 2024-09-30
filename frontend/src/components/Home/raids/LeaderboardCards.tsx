@@ -1,76 +1,116 @@
 import React from "react";
 import Image from "next/image";
 import { useGetRaiderioRaidLeaderboard } from "@/hooks/useRaiderioApi";
-import { ProgressionItem, GuildProgression } from "@/types/raidLeaderboard";
+import {
+  RaidRankings,
+  RaidRanking,
+  EncounterDefeated,
+  EncounterPulled,
+} from "@/types/raidLeaderboard";
 
 interface LeaderBoardCardsProps {
   raid: string;
   difficulty: string;
   region: string;
+  limit: number;
+  page: number;
 }
 
 const LeaderBoardCards: React.FC<LeaderBoardCardsProps> = ({
   raid,
   difficulty,
   region,
+  limit,
+  page,
 }) => {
   const { data, isLoading, error } = useGetRaiderioRaidLeaderboard(
     raid,
     difficulty,
-    region
+    region,
+    limit,
+    page
   );
 
   if (isLoading)
     return <div className="text-white">Loading leaderboard data...</div>;
   if (error)
     return <div className="text-red-500">Error loading leaderboard data.</div>;
-  if (!data || !data.progression)
+  if (!data || !data.raidRankings)
     return <div className="text-white">No leaderboard data available.</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {data.progression.map((item: ProgressionItem, index: number) => (
-        <div key={index} className="bg-gray-800 rounded-lg shadow-lg p-4">
-          <h3 className="text-xl font-bold mb-2 text-white">
-            Boss {item.progress}
-          </h3>
-          <p className="text-sm mb-4 text-gray-300">
-            Total Guilds: {item.totalGuilds}
-          </p>
-          {item.guilds.map(
-            (guildProgression: GuildProgression, guildIndex: number) => (
-              <div key={guildIndex} className="mb-4 last:mb-0">
-                <div className="flex items-center mb-2">
-                  {guildProgression.guild.logo && (
-                    <Image
-                      src={guildProgression.guild.logo}
-                      alt={`${guildProgression.guild.name} logo`}
-                      width={40}
-                      height={40}
-                      className="rounded-full mr-2"
-                    />
-                  )}
-                  <div>
-                    <h4 className="font-semibold text-white">
-                      {guildProgression.guild.name}
-                    </h4>
-                    <p className="text-sm text-gray-300">
-                      {guildProgression.guild.realm.name}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-300">
-                  Defeated at:{" "}
-                  {new Date(guildProgression.defeatedAt).toLocaleString()}
+    <div className="space-y-4">
+      {data.raidRankings.map((ranking: RaidRanking, index: number) => (
+        <div
+          key={index}
+          className="bg-deep-blue bg-opacity-80 rounded-2xl overflow-hidden shadow-2xl glow-effect px-6 py-4"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              {ranking.guild.logo && (
+                <Image
+                  src={ranking.guild.logo}
+                  alt={`${ranking.guild.name} logo`}
+                  width={60}
+                  height={60}
+                  className="rounded-full mr-4"
+                />
+              )}
+              <div>
+                <h3 className="text-2xl font-bold text-white">
+                  {ranking.guild.name}
+                </h3>
+                <p className="text-gray-300">
+                  {ranking.guild.realm.name} - {ranking.guild.region.name}
                 </p>
-                {guildProgression.streamers.count > 0 && (
-                  <p className="text-sm text-blue-400">
-                    Live Streamers: {guildProgression.streamers.count}
-                  </p>
-                )}
               </div>
-            )
-          )}
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-bold text-white">
+                {ranking.encountersDefeated.length}/8M
+              </p>
+              <p className="text-xl font-bold text-white">
+                Rank: {ranking.rank}
+              </p>
+              <p className="text-gray-300">Region Rank: {ranking.regionRank}</p>
+            </div>
+          </div>
+          {/*
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-2">
+                Encounters Defeated
+              </h4>
+              <ul className="space-y-2">
+                {ranking.encountersDefeated.map(
+                  (encounter: EncounterDefeated, eIndex: number) => (
+                    <li key={eIndex} className="text-gray-300">
+                      {encounter.slug}:{" "}
+                      {new Date(encounter.firstDefeated).toLocaleString()}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-2">
+                Encounters Pulled
+              </h4>
+              <ul className="space-y-2">
+                {ranking.encountersPulled.map(
+                  (encounter: EncounterPulled, eIndex: number) => (
+                    <li key={eIndex} className="text-gray-300">
+                      {encounter.slug}: {encounter.numPulls} pulls
+                      {encounter.isDefeated
+                        ? " (Defeated)"
+                        : ` (Best: ${encounter.bestPercent}%)`}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          </div>
+          */}
         </div>
       ))}
     </div>

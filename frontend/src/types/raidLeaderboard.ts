@@ -1,73 +1,59 @@
-export interface RaidLeaderboard {
-  progression: ProgressionItem[];
+// Raid Rankings Interfaces
+
+export interface RaidRankings {
+  raidRankings: RaidRanking[];
 }
 
-export interface ProgressionItem {
-  guilds: GuildProgression[];
-  progress: number;
-  totalGuilds: number;
-}
-
-export interface GuildProgression {
-  defeatedAt: string;
+export interface RaidRanking {
+  rank: number;
+  regionRank: number;
   guild: Guild;
-  recruitmentProfiles: RecruitmentProfile[];
-  streamers: Streamers;
+  encountersDefeated: EncounterDefeated[];
+  encountersPulled: EncounterPulled[];
 }
 
 export interface Guild {
-  faction: string;
   id: number;
   name: string;
-  path: string;
+  faction: string;
   realm: Realm;
   region: Region;
-  color?: string;
-  logo?: string;
-  alt_name?: string;
+  path: string;
+  logo: string;
+  color: string;
 }
 
 export interface Realm {
-  altName: string | null;
-  altSlug: string;
-  connectedRealmId: number;
   id: number;
-  isConnected: boolean;
-  locale: string;
-  name: string;
-  realmType: string;
-  slug: string;
+  connectedRealmId: number;
+  wowRealmId: number;
   wowConnectedRealmId: number;
-  wowRealmId: number | null;
+  name: string;
+  altName: string | null;
+  slug: string;
+  altSlug: string;
+  locale: string;
+  isConnected: boolean;
+  realmType: string;
 }
 
 export interface Region {
   name: string;
-  short_name: string;
   slug: string;
+  short_name: string;
 }
 
-export interface RecruitmentProfile {
-  activity_type: string;
-  entity_type: string;
-  recruitment_profile_id: number;
+export interface EncounterDefeated {
+  slug: string;
+  lastDefeated: string;
+  firstDefeated: string;
 }
 
-export interface Streamers {
-  count: number;
-  stream: Stream | null;
-}
-
-export interface Stream {
-  community_ids: any[];
-  game_id: string;
-  id: string;
-  language: string;
-  name: string;
-  started_at: string;
-  thumbnail_url: string;
-  title: string;
-  type: string;
-  user_id: string;
-  viewer_count: number;
+export interface EncounterPulled {
+  id: number;
+  slug: string;
+  numPulls: number;
+  pullStartedAt: string;
+  bestPercent: number;
+  isDefeated: boolean;
 }
