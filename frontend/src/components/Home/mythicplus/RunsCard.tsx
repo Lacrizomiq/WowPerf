@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useGetRaiderioMythicPlusBestRuns } from "@/hooks/useRaiderioApi";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import { useGetRaiderioMythicPlusRunDetails } from "@/hooks/useRaiderioApi";
@@ -56,6 +54,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
   page,
 }) => {
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null);
+  const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   const { data: dungeonData } =
     useGetBlizzardMythicDungeonPerSeason("season-tww-1");
@@ -81,6 +80,15 @@ const RunsCard: React.FC<RunsCardProps> = ({
     }
     return {};
   }, [dungeonData]);
+
+  useEffect(() => {
+    if (selectedRunId && cardRefs.current[selectedRunId]) {
+      cardRefs.current[selectedRunId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selectedRunId]);
 
   const sortRoster = (roster: RosterMember[]) => {
     const roleOrder: { [key: string]: number } = { tank: 1, healer: 2, dps: 3 };
@@ -111,6 +119,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
         return (
           <div
             key={ranking.run.keystone_run_id}
+            ref={(el) => (cardRefs.current[ranking.run.keystone_run_id] = el)}
             className="bg-deep-blue bg-opacity-80 rounded-2xl overflow-hidden shadow-2xl glow-effect"
           >
             <div className="flex">
