@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	mythicplus "wowperf/internal/models/mythicplus"
+	raiderioMythicPlus "wowperf/internal/models/raiderio/mythicrundetails"
 	raids "wowperf/internal/models/raids"
 	talents "wowperf/internal/models/talents"
 
@@ -20,7 +21,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// Mythic+ migrations
-	if err := db.AutoMigrate(&mythicplus.Dungeon{}, &mythicplus.Season{}, &mythicplus.Affix{}); err != nil {
+	if err := db.AutoMigrate(&mythicplus.Dungeon{}, &mythicplus.Season{}, &mythicplus.Affix{}, &raiderioMythicPlus.DungeonStats{}); err != nil {
 		return err
 	}
 
@@ -65,24 +66,6 @@ END $$;
 		return fmt.Errorf("failed to add foreign key constraint: %v", err)
 	}
 
-	// Raids migrations
-	if err := db.AutoMigrate(&raids.Raid{}); err != nil {
-		return err
-	}
-
-	// Talents migrations
-	if err := db.AutoMigrate(
-		&talents.TalentTree{},
-		&talents.TalentNode{},
-		&talents.TalentEntry{},
-		&talents.HeroNode{},
-		&talents.HeroEntry{},
-		&talents.SubTreeNode{},
-		&talents.SubTreeEntry{},
-	); err != nil {
-		return err
-	}
-
 	// Helper function to check and add/update constraints
 	addOrUpdateConstraint := func(tableName, constraintName, constraintDefinition string) error {
 		var constraintExists int64
@@ -116,6 +99,7 @@ END $$;
 		{"sub_tree_nodes", "uni_sub_tree_nodes_id_tree_spec", "UNIQUE (sub_tree_node_id, talent_tree_id, spec_id)"},
 		{"hero_nodes", "uni_hero_nodes_node_tree_spec", "UNIQUE (node_id, talent_tree_id, spec_id)"},
 		{"hero_entries", "uni_hero_entries_entry_node_tree_spec", "UNIQUE (entry_id, node_id, talent_tree_id, spec_id)"},
+		{"dungeon_stats", "uni_dungeon_stats_season_region_dungeon", "UNIQUE (season, region, dungeon_slug)"}, // Nouvelle contrainte
 	}
 
 	for _, c := range constraints {

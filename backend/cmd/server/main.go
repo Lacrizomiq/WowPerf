@@ -10,6 +10,7 @@ import (
 
 	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
 	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
+	raiderioMythicPlus "wowperf/internal/services/raiderio/mythicplus"
 
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
@@ -62,7 +63,7 @@ func main() {
 	startCacheUpdater(blizzardService, rioService)
 
 	// Raider.io Handler
-	rioHandler := raiderio.NewHandler(rioService)
+	rioHandler := raiderio.NewHandler(rioService, db)
 
 	// Blizzard Handler
 	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
@@ -82,6 +83,20 @@ func main() {
 	// Blizzard API
 	blizzardHandler.RegisterRoutes(r)
 
+	// Start Dungeon Stats Update
+	go func() {
+		log.Println("Starting initial dungeon stats update...")
+		if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
+			log.Printf("Error updating dungeon stats: %v", err)
+		} else {
+			log.Println("Initial dungeon stats update completed successfully")
+		}
+
+		log.Println("Starting weekly dungeon stats update...")
+		raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
+	}()
+
+	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))
 }
 
