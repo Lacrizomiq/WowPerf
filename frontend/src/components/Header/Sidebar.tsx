@@ -8,6 +8,8 @@ import {
   UserPlus,
   ChevronUp,
   ChevronDown,
+  ChartColumnDecreasing,
+  BicepsFlexed,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
@@ -24,6 +26,7 @@ interface SidebarItemProps {
   isExpanded: boolean;
   onClick: () => void;
   route?: string;
+  chevron?: React.ReactNode;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -32,6 +35,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   isExpanded,
   onClick,
   route,
+  chevron,
 }) => {
   const router = useRouter();
 
@@ -45,12 +49,17 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   return (
     <div
       className={`flex items-center p-4 mt-1 hover:bg-blue-700 transition-all duration-300 cursor-pointer ${
-        isExpanded ? "justify-start" : "justify-center"
+        isExpanded ? "justify-between" : "justify-center"
       }`}
       onClick={handleClick}
     >
-      <Icon size={24} />
-      {isExpanded && <span className="ml-4">{label}</span>}
+      <div className="flex items-center">
+        <Icon size={24} />
+        {isExpanded && <span className="ml-4">{label}</span>}
+      </div>
+      {isExpanded && chevron && (
+        <div className="flex items-center">{chevron}</div>
+      )}
     </div>
   );
 };
@@ -170,32 +179,30 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
               </button>
             </form>
           )}
-          <div className="flex flex-col justify-between">
+          <div className="flex flex-col">
             <SidebarItem
               icon={Hourglass}
               label="Mythic +"
               isExpanded={isExpanded}
               onClick={() => setMythicPlusExpanded(!mythicPlusExpanded)}
-            />
-            {isExpanded && (
-              <span className="flex items-center justify-end">
-                {mythicPlusExpanded ? (
+              chevron={
+                mythicPlusExpanded ? (
                   <ChevronUp size={16} />
                 ) : (
                   <ChevronDown size={16} />
-                )}
-              </span>
-            )}
+                )
+              }
+            />
             {isExpanded && mythicPlusExpanded && (
               <div className="pl-8">
                 <SidebarItem
-                  icon={() => <></>}
+                  icon={BicepsFlexed}
                   label="Best Runs"
                   isExpanded={isExpanded}
                   onClick={() => router.push("/mythic-plus/best-runs")}
                 />
                 <SidebarItem
-                  icon={() => <></>}
+                  icon={ChartColumnDecreasing}
                   label="Statistics"
                   isExpanded={isExpanded}
                   onClick={() => router.push("/mythic-plus/statistics")}

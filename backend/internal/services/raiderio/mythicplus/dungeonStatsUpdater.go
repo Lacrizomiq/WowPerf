@@ -46,6 +46,8 @@ func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error
 						}
 
 						dbStats.RoleStats = stats.RoleStats
+						dbStats.SpecStats = stats.SpecStats
+						dbStats.LevelStats = stats.LevelStats
 						dbStats.UpdatedAt = time.Now()
 
 						if result.Error == gorm.ErrRecordNotFound {

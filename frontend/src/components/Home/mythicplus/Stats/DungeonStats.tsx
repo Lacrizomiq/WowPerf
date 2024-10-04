@@ -29,6 +29,8 @@ const DungeonStats: React.FC = () => {
     error,
   } = useGetDungeonStats(season, region);
 
+  console.log("stats data ", statsData);
+
   const { data: dungeonData } = useGetBlizzardMythicDungeonPerSeason(season);
 
   const [dungeons, setDungeons] = useState<Dungeon[]>([]);
@@ -53,6 +55,13 @@ const DungeonStats: React.FC = () => {
       <div className="text-white">No data available for this dungeon.</div>
     );
 
+  const getLevelRange = (levelStats: Record<string, number>) => {
+    const levels = Object.keys(levelStats).map(Number);
+    const minLevel = Math.min(...levels);
+    const maxLevel = Math.max(...levels);
+    return `+${minLevel} / +${maxLevel}`;
+  };
+
   const prepareChartData = (role: string) => {
     const roleStats = currentDungeonStats?.RoleStats || {};
     const classStats =
@@ -72,14 +81,11 @@ const DungeonStats: React.FC = () => {
   };
 
   const roles = ["tank", "healer", "dps"];
-  const colors = {
-    tank: "#F58CBA",
-    healer: "#33937F",
-    dps: "#C41F3B",
-  };
+
+  console.log("statsData", statsData);
 
   return (
-    <div className="p-4 bg-deep-blue bg-opacity-80 rounded-lg">
+    <div className="p-4 bg-[#0a0a0a] bg-opacity-80">
       <h2 className="text-2xl font-bold text-white mb-4">
         Dungeon Statistics for{" "}
         {dungeon
@@ -102,12 +108,33 @@ const DungeonStats: React.FC = () => {
         />
       </div>
 
-      <div className="space-y-8 pt-4">
+      <div className="p-4">
+        <p>
+          Last update:{" "}
+          {new Intl.DateTimeFormat("en-US", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }).format(new Date(statsData[0].updated_at))}
+        </p>
+      </div>
+
+      <div className="p-4 bg-deep-blue rounded-lg mb-4">
+        <h3 className="text-xl font-bold text-white mb-2">
+          Mythic+ KeystoneLevel Range
+        </h3>
+        <p className="text-white text-lg">
+          {getLevelRange(currentDungeonStats.LevelStats)}
+        </p>
+      </div>
+
+      <div className="space-y-8 pt-4 ">
         {roles.map((role) => {
           const chartData = prepareChartData(role);
           if (chartData.length === 0) {
             return (
-              <div key={role} className="bg-black bg-opacity-50 p-4 rounded-lg">
+              <div key={role} className="p-4 rounded-lg">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">
                   {role}
                 </h3>
@@ -116,7 +143,7 @@ const DungeonStats: React.FC = () => {
             );
           }
           return (
-            <div key={role} className="bg-black bg-opacity-50 p-4 rounded-lg">
+            <div key={role} className="bg-deep-blue p-4 rounded-lg">
               <h3 className="text-xl font-bold text-white mb-4 capitalize">
                 {role} - Total:{" "}
                 {chartData.reduce((sum, entry) => sum + entry.count, 0)} players

@@ -17,7 +17,17 @@ export type DungeonStat = {
   region: string;
   dungeon_slug: string;
   RoleStats: RoleStats;
+  SpecStats: SpecStats;
+  LevelStats: LevelStats;
   updated_at: string;
+};
+
+export type SpecStats = {
+  [specName: string]: number;
+};
+
+export type LevelStats = {
+  [level: number]: number;
 };
 
 export type DungeonStatsResponse = DungeonStat[];

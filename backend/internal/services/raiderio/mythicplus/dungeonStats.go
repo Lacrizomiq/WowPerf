@@ -2,6 +2,7 @@ package raiderioMythicPlus
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"wowperf/internal/services/raiderio"
 )
@@ -9,6 +10,8 @@ import (
 type DungeonStats struct {
 	DungeonName string
 	RoleStats   map[string]map[string]int
+	SpecStats   map[string]map[string]int
+	LevelStats  map[int]int
 }
 
 // GetDungeonStats retrieves the dungeon statistics for a given dungeon slug, specially the class composition of the runs
@@ -16,15 +19,20 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 	stats := &DungeonStats{
 		DungeonName: dungeonSlug,
 		RoleStats:   make(map[string]map[string]int),
+		SpecStats:   make(map[string]map[string]int),
+		LevelStats:  make(map[int]int),
 	}
 
 	var wg sync.WaitGroup
 	errors := make(chan error, 2)
 
-	for page := 0; page <= 1; page++ {
+	for page := 0; page <= 2; page++ {
 		wg.Add(1)
 		go func(page int) {
 			defer wg.Done()
+
+			log.Printf("Requesting page %d for %s %s", page, season, region)
+
 			runs, err := GetMythicPlusBestRuns(s, season, region, dungeonSlug, page)
 			if err != nil {
 				errors <- err
@@ -43,7 +51,17 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 					continue
 				}
 
-				roster, ok := run["run"].(map[string]interface{})["roster"].([]interface{})
+				runDetails, ok := run["run"].(map[string]interface{})
+				if !ok {
+					continue
+				}
+
+				mythicLevel, ok := runDetails["mythic_level"].(float64)
+				if ok {
+					stats.LevelStats[int(mythicLevel)]++
+				}
+
+				roster, ok := runDetails["roster"].([]interface{})
 				if !ok {
 					continue
 				}
@@ -69,10 +87,25 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 						continue
 					}
 
+					spec, ok := character["spec"].(map[string]interface{})
+					if !ok {
+						continue
+					}
+
+					specName, ok := spec["name"].(string)
+					if !ok {
+						continue
+					}
+
 					if stats.RoleStats[role] == nil {
 						stats.RoleStats[role] = make(map[string]int)
 					}
 					stats.RoleStats[role][class]++
+
+					if stats.SpecStats[class] == nil {
+						stats.SpecStats[class] = make(map[string]int)
+					}
+					stats.SpecStats[class][specName]++
 				}
 			}
 		}(page)
