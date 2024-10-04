@@ -59,3 +59,11 @@ export const useGetRaiderioRaidLeaderboard = (
       ),
   });
 };
+
+// useGetDungeonStats retrieves the dungeon stats of a specific season and region
+export const useGetDungeonStats = (season: string, region: string) => {
+  return useQuery({
+    queryKey: ["dungeon-stats", season, region],
+    queryFn: () => raiderioApiServices.getDungeonStats(season, region),
+  });
+};

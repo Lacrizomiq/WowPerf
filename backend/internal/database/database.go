@@ -13,10 +13,7 @@ import (
 
 const (
 	staticMythicPlusPath = "./static/M+/"
-)
-
-const (
-	staticRaidsPath = "./static/Raid/"
+	staticRaidsPath      = "./static/Raid/"
 )
 
 func SeedDatabase(db *gorm.DB) error {

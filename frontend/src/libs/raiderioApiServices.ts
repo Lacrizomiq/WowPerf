@@ -53,3 +53,16 @@ export const getRaiderioRaidLeaderboard = async (
     throw error;
   }
 };
+
+// getDungeonStats retrieves the dungeon stats of a specific season and region
+export const getDungeonStats = async (season: string, region: string) => {
+  try {
+    const response = await api.get(`/mythic-plus/dungeon-stats`, {
+      params: { season, region },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error in getDungeonStats:", error);
+    throw error;
+  }
+};
