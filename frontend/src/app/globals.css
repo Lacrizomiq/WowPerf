@@ -32,6 +32,20 @@
   --input: 217.2 32.6% 17.5%;
   --ring: 224.3 76.3% 48%;
   --radius: 0.5rem;
+
+  --color-warrior: #c79c6e;
+  --color-paladin: #f58cba;
+  --color-hunter: #abd473;
+  --color-rogue: #fff569;
+  --color-priest: #ffffff;
+  --color-death-knight: #c41f3b;
+  --color-shaman: #0070de;
+  --color-mage: #69ccf0;
+  --color-warlock: #9482c9;
+  --color-monk: #00ff96;
+  --color-druid: #ff7d0a;
+  --color-demon-hunter: #a330c9;
+  --color-evoker: #33937f;
 }
 
 @media (prefers-color-scheme: dark) {

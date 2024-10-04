@@ -3,7 +3,7 @@
 import React from "react";
 import MythicPlusBestRuns from "@/components/Home/mythicplus/MythicBestRuns";
 
-const MythicPlusPage = () => {
+const MythicPlusBestRunsPage = () => {
   return (
     <>
       <MythicPlusBestRuns />
@@ -12,4 +12,4 @@ const MythicPlusPage = () => {
   );
 };
 
-export default MythicPlusPage;
+export default MythicPlusBestRunsPage;

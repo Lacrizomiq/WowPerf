@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Home, Search, Sword, Hourglass, LogIn, UserPlus } from "lucide-react";
+import {
+  Home,
+  Search,
+  Sword,
+  Hourglass,
+  LogIn,
+  UserPlus,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
 
@@ -58,6 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
   const [character, setCharacter] = useState("");
   const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
+  const [mythicPlusExpanded, setMythicPlusExpanded] = useState(false);
 
   useEffect(() => {
     switch (region) {
@@ -160,13 +170,39 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
               </button>
             </form>
           )}
-          <SidebarItem
-            icon={Hourglass}
-            label="Mythic +"
-            isExpanded={isExpanded}
-            onClick={toggleSidebar}
-            route="/mythic-plus"
-          />
+          <div className="flex flex-col justify-between">
+            <SidebarItem
+              icon={Hourglass}
+              label="Mythic +"
+              isExpanded={isExpanded}
+              onClick={() => setMythicPlusExpanded(!mythicPlusExpanded)}
+            />
+            {isExpanded && (
+              <span className="flex items-center justify-end">
+                {mythicPlusExpanded ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+              </span>
+            )}
+            {isExpanded && mythicPlusExpanded && (
+              <div className="pl-8">
+                <SidebarItem
+                  icon={() => <></>}
+                  label="Best Runs"
+                  isExpanded={isExpanded}
+                  onClick={() => router.push("/mythic-plus/best-runs")}
+                />
+                <SidebarItem
+                  icon={() => <></>}
+                  label="Statistics"
+                  isExpanded={isExpanded}
+                  onClick={() => router.push("/mythic-plus/statistics")}
+                />
+              </div>
+            )}
+          </div>
           <SidebarItem
             icon={Sword}
             label="Raids"

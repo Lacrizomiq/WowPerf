@@ -1,7 +1,4 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
-import { useGetRaiderioMythicPlusBestRuns } from "@/hooks/useRaiderioApi";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import RunsCard from "./RunsCard";
 import DungeonSelector from "./Selector/DungeonSelector";
