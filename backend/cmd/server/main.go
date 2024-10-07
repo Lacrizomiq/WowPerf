@@ -2,11 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
 	"wowperf/internal/database"
 	"wowperf/pkg/cache"
+
+	apiAuth "wowperf/internal/api/auth"
+	authService "wowperf/internal/services/auth"
 
 	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
 	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
@@ -47,6 +51,16 @@ func main() {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
+	// Services
+
+	// Auth Service
+	tokenExpiry := 24 * time.Hour
+	jwtKey := os.Getenv("JWT_KEY")
+	if jwtKey == "" {
+		log.Fatalf("JWT_KEY is not set")
+	}
+	authService := authService.NewAuthService(db, jwtKey, cache.GetRedisClient(), tokenExpiry)
+
 	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
 	if err != nil {
@@ -62,6 +76,10 @@ func main() {
 	// Cache Updater
 	startCacheUpdater(blizzardService, rioService)
 
+	// Handlers
+	// Auth Handler
+	authHandler := apiAuth.NewAuthHandler(authService)
+
 	// Raider.io Handler
 	rioHandler := raiderio.NewHandler(rioService, db)
 
@@ -76,6 +94,11 @@ func main() {
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 
 	r.Use(cors.New(config))
+
+	// API
+
+	// Auth API
+	authHandler.RegisterRoutes(r)
 
 	// Raider.io API
 	rioHandler.RegisterRoutes(r)
