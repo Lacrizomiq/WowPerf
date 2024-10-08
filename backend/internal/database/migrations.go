@@ -27,8 +27,17 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	// Migrate User model
 	if err := db.AutoMigrate(&models.User{}); err != nil {
-		return err
+		return fmt.Errorf("failed to migrate User model: %v", err)
+	}
+
+	// Add unique constraints
+	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)").Error; err != nil {
+		return fmt.Errorf("failed to create unique index on username: %v", err)
+	}
+	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)").Error; err != nil {
+		return fmt.Errorf("failed to create unique index on email: %v", err)
 	}
 
 	// Create KeyStoneUpgrade table without foreign key constraint

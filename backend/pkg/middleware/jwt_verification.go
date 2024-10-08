@@ -20,22 +20,9 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// Check if token is blacklisted
-		blacklisted, err := authService.IsTokenBlacklisted(tokenString)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check token status"})
-			c.Abort()
-			return
-		}
-		if blacklisted {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
-			c.Abort()
-			return
-		}
-
 		// Validate the token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return authService.JWTKey, nil
+			return authService.AccessSecret, nil
 		})
 
 		if err != nil || !token.Valid {
@@ -47,6 +34,26 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		jti, ok := claims["jti"].(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid jti in token"})
+			c.Abort()
+			return
+		}
+
+		// Check if token is blacklisted
+		blacklisted, err := authService.IsTokenBlacklisted(jti)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check token status"})
+			c.Abort()
+			return
+		}
+		if blacklisted {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
 			c.Abort()
 			return
 		}

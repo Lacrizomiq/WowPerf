@@ -8,6 +8,7 @@ import (
 	"wowperf/internal/api/raiderio"
 	"wowperf/internal/database"
 	"wowperf/pkg/cache"
+	"wowperf/pkg/middleware"
 
 	apiAuth "wowperf/internal/api/auth"
 	authService "wowperf/internal/services/auth"
@@ -16,13 +17,26 @@ import (
 	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
 	raiderioMythicPlus "wowperf/internal/services/raiderio/mythicplus"
 
+	models "wowperf/internal/models/raiderio/mythicrundetails"
+
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
+
+func checkUpdateState(db *gorm.DB) {
+	var state models.UpdateState
+	result := db.First(&state)
+	if result.Error != nil {
+		log.Printf("Error fetching update state: %v", result.Error)
+		return
+	}
+	log.Printf("Current update state: Last update was %v ago", time.Since(state.LastUpdateTime))
+}
 
 func main() {
 	err := godotenv.Load()
@@ -54,12 +68,14 @@ func main() {
 	// Services
 
 	// Auth Service
-	tokenExpiry := 24 * time.Hour
-	jwtKey := os.Getenv("JWT_KEY")
-	if jwtKey == "" {
-		log.Fatalf("JWT_KEY is not set")
+	accessExpiry := 15 * time.Minute
+	refreshExpiry := 7 * 24 * time.Hour
+	accessSecret := os.Getenv("ACCESS_SECRET")
+	refreshSecret := os.Getenv("REFRESH_SECRET")
+	if accessSecret == "" || refreshSecret == "" {
+		log.Fatal("ACCESS_SECRET and REFRESH_SECRET must be set in the environment")
 	}
-	authService := authService.NewAuthService(db, jwtKey, cache.GetRedisClient(), tokenExpiry)
+	authService := authService.NewAuthService(db, accessSecret, refreshSecret, accessExpiry, refreshExpiry)
 
 	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
@@ -106,18 +122,31 @@ func main() {
 	// Blizzard API
 	blizzardHandler.RegisterRoutes(r)
 
-	// Start Dungeon Stats Update
+	checkUpdateState(db)
+
 	go func() {
 		log.Println("Checking if dungeon stats update is needed...")
 		if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
-			log.Printf("Error updating dungeon stats: %v", err)
+			log.Printf("Error during dungeon stats update check: %v", err)
 		} else {
 			log.Println("Dungeon stats update check completed")
 		}
+		checkUpdateState(db)
 
 		log.Println("Setting up weekly dungeon stats update...")
 		raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
 	}()
+
+	// Protected Routes
+	protected := r.Group("/user")
+	protected.Use(middleware.JWTAuth(authService))
+	{
+		// Add your protected routes here
+		protected.GET("/profile", func(c *gin.Context) {
+			userID, _ := c.Get("user_id")
+			c.JSON(200, gin.H{"message": "Profile accessed", "user_id": userID})
+		})
+	}
 
 	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))

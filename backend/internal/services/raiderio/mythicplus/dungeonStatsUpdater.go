@@ -10,13 +10,19 @@ import (
 	"gorm.io/gorm"
 )
 
+const updateInterval = 7 * 24 * time.Hour // 7 jours
+
 func isDungeonStatsEmpty(db *gorm.DB) bool {
 	var count int64
-	db.Model(&models.DungeonStats{}).Count(&count)
+	err := db.Model(&models.DungeonStats{}).Count(&count).Error
+	if err != nil {
+		log.Printf("Error checking if dungeon stats are empty: %v", err)
+		return true // Assume empty if there's an error
+	}
+	log.Printf("Found %d dungeon stats records", count)
 	return count == 0
 }
 
-// checkAndSetUpdateLock checks if an update is already in progress and sets a lock if not
 func checkAndSetUpdateLock(db *gorm.DB) bool {
 	if isDungeonStatsEmpty(db) {
 		log.Println("No dungeon stats found in database. Forcing update.")
@@ -24,21 +30,35 @@ func checkAndSetUpdateLock(db *gorm.DB) bool {
 	}
 
 	var state models.UpdateState
-	if err := db.First(&state).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			db.Create(&models.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)})
-			return true
+	result := db.First(&state)
+
+	if result.Error == gorm.ErrRecordNotFound {
+		log.Println("No update state found. Creating initial state and forcing update.")
+		newState := models.UpdateState{LastUpdateTime: time.Now().Add(-updateInterval)}
+		if err := db.Create(&newState).Error; err != nil {
+			log.Printf("Error creating initial update state: %v", err)
+			return false
 		}
-		log.Printf("Error fetching update state: %v", err)
+		return true
+	} else if result.Error != nil {
+		log.Printf("Error fetching update state: %v", result.Error)
 		return false
 	}
 
-	if time.Since(state.LastUpdateTime) < 24*time.Hour {
-		return false
+	timeSinceLastUpdate := time.Since(state.LastUpdateTime)
+	log.Printf("Time since last update: %v", timeSinceLastUpdate)
+
+	if timeSinceLastUpdate >= updateInterval {
+		log.Println("Update interval exceeded. Performing update.")
+		if err := db.Model(&state).Update("LastUpdateTime", time.Now()).Error; err != nil {
+			log.Printf("Error updating last update time: %v", err)
+			return false
+		}
+		return true
 	}
 
-	db.Model(&state).Update("LastUpdateTime", time.Now())
-	return true
+	log.Println("Update not needed at this time.")
+	return false
 }
 
 // UpdateDungeonStats updates the dungeon stats in the database
@@ -113,18 +133,15 @@ func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error
 }
 
 // StartWeeklyDungeonStatsUpdate starts a ticker that updates the dungeon stats once a week
+
 func StartWeeklyDungeonStatsUpdate(db *gorm.DB, rioService *raiderio.RaiderIOService) {
-	ticker := time.NewTicker(7 * 24 * time.Hour) // Une fois par semaine
+	ticker := time.NewTicker(updateInterval)
 	go func() {
 		for range ticker.C {
-			if CheckAndSetUpdateLock(db) {
-				if err := UpdateDungeonStats(db, rioService); err != nil {
-					log.Printf("Error updating dungeon stats: %v", err)
-				} else {
-					log.Println("Weekly dungeon stats update completed successfully")
-				}
+			if err := UpdateDungeonStats(db, rioService); err != nil {
+				log.Printf("Error updating dungeon stats: %v", err)
 			} else {
-				log.Println("Skipping weekly update as it was recently completed or is in progress.")
+				log.Println("Weekly dungeon stats update completed successfully")
 			}
 		}
 	}()
