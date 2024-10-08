@@ -10,8 +10,46 @@ import (
 	"gorm.io/gorm"
 )
 
+func isDungeonStatsEmpty(db *gorm.DB) bool {
+	var count int64
+	db.Model(&models.DungeonStats{}).Count(&count)
+	return count == 0
+}
+
+// checkAndSetUpdateLock checks if an update is already in progress and sets a lock if not
+func checkAndSetUpdateLock(db *gorm.DB) bool {
+	if isDungeonStatsEmpty(db) {
+		log.Println("No dungeon stats found in database. Forcing update.")
+		return true
+	}
+
+	var state models.UpdateState
+	if err := db.First(&state).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			db.Create(&models.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)})
+			return true
+		}
+		log.Printf("Error fetching update state: %v", err)
+		return false
+	}
+
+	if time.Since(state.LastUpdateTime) < 24*time.Hour {
+		return false
+	}
+
+	db.Model(&state).Update("LastUpdateTime", time.Now())
+	return true
+}
+
 // UpdateDungeonStats updates the dungeon stats in the database
 func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error {
+	if !checkAndSetUpdateLock(db) {
+		log.Println("Dungeon stats update is not needed at this time. Skipping.")
+		return nil
+	}
+
+	log.Println("Starting dungeon stats update...")
+
 	seasons := []string{"season-tww-1"}
 	regions := []string{"world", "us", "eu", "tw", "kr", "cn"}
 	dungeonSlugs := []string{"all", "arakara-city-of-echoes", "city-of-threads", "grim-batol", "mists-of-tirna-scithe", "siege-of-boralus", "the-dawnbreaker", "the-necrotic-wake", "the-stonevault"}
@@ -76,12 +114,23 @@ func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error
 
 // StartWeeklyDungeonStatsUpdate starts a ticker that updates the dungeon stats once a week
 func StartWeeklyDungeonStatsUpdate(db *gorm.DB, rioService *raiderio.RaiderIOService) {
-	ticker := time.NewTicker(7 * 24 * time.Hour) // Once a week
+	ticker := time.NewTicker(7 * 24 * time.Hour) // Une fois par semaine
 	go func() {
 		for range ticker.C {
-			if err := UpdateDungeonStats(db, rioService); err != nil {
-				log.Printf("Error updating dungeon stats: %v", err)
+			if CheckAndSetUpdateLock(db) {
+				if err := UpdateDungeonStats(db, rioService); err != nil {
+					log.Printf("Error updating dungeon stats: %v", err)
+				} else {
+					log.Println("Weekly dungeon stats update completed successfully")
+				}
+			} else {
+				log.Println("Skipping weekly update as it was recently completed or is in progress.")
 			}
 		}
 	}()
+}
+
+// CheckAndSetUpdateLock is an exported version of checkAndSetUpdateLock
+func CheckAndSetUpdateLock(db *gorm.DB) bool {
+	return checkAndSetUpdateLock(db)
 }

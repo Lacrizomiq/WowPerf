@@ -19,12 +19,24 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 	}
 }
 
+type SignUpInput struct {
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
 // SignUp creates a new user
 func (h *AuthHandler) SignUp(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var input SignUpInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	user := models.User{
+		Username: input.Username,
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
 	if err := h.AuthService.SignUp(&user); err != nil {

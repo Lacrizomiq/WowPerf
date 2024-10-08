@@ -3,6 +3,8 @@ package database
 import (
 	"fmt"
 	"strings"
+
+	"wowperf/internal/models"
 	mythicplus "wowperf/internal/models/mythicplus"
 	raiderioMythicPlus "wowperf/internal/models/raiderio/mythicrundetails"
 	raids "wowperf/internal/models/raids"
@@ -22,6 +24,10 @@ func Migrate(db *gorm.DB) error {
 
 	// Mythic+ migrations
 	if err := db.AutoMigrate(&mythicplus.Dungeon{}, &mythicplus.Season{}, &mythicplus.Affix{}, &raiderioMythicPlus.DungeonStats{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&models.User{}); err != nil {
 		return err
 	}
 
@@ -45,6 +51,11 @@ func Migrate(db *gorm.DB) error {
 		&talents.SubTreeNode{},
 		&talents.SubTreeEntry{},
 	); err != nil {
+		return err
+	}
+
+	// UpdateState migration
+	if err := db.AutoMigrate(&raiderioMythicPlus.UpdateState{}); err != nil {
 		return err
 	}
 

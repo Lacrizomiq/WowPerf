@@ -120,7 +120,7 @@ const DungeonStats: React.FC = () => {
         </p>
       </div>
 
-      <div className="p-4 bg-deep-blue rounded-lg mb-4">
+      <div className="p-4 bg-deep-blue rounded-lg mb-4 shadow-2xl">
         <h3 className="text-xl font-bold text-white mb-2">
           Mythic+ KeystoneLevel Range
         </h3>
@@ -134,7 +134,7 @@ const DungeonStats: React.FC = () => {
           const chartData = prepareChartData(role);
           if (chartData.length === 0) {
             return (
-              <div key={role} className="p-4 rounded-lg">
+              <div key={role} className="p-4 rounded-lg ">
                 <h3 className="text-xl font-bold text-white mb-2 capitalize">
                   {role}
                 </h3>
@@ -143,7 +143,7 @@ const DungeonStats: React.FC = () => {
             );
           }
           return (
-            <div key={role} className="bg-deep-blue p-4 rounded-lg">
+            <div key={role} className="bg-deep-blue p-4 rounded-lg shadow-2xl">
               <h3 className="text-xl font-bold text-white mb-4 capitalize">
                 {role} - Total:{" "}
                 {chartData.reduce((sum, entry) => sum + entry.count, 0)} players

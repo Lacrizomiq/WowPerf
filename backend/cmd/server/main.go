@@ -108,14 +108,14 @@ func main() {
 
 	// Start Dungeon Stats Update
 	go func() {
-		log.Println("Starting initial dungeon stats update...")
+		log.Println("Checking if dungeon stats update is needed...")
 		if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
 			log.Printf("Error updating dungeon stats: %v", err)
 		} else {
-			log.Println("Initial dungeon stats update completed successfully")
+			log.Println("Dungeon stats update check completed")
 		}
 
-		log.Println("Starting weekly dungeon stats update...")
+		log.Println("Setting up weekly dungeon stats update...")
 		raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
 	}()
 
