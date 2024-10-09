@@ -1,48 +1,50 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+"use client";
+
+import { useState, useEffect } from "react";
 import { authService } from "@/libs/authService";
-import { useRouter } from "next/navigation";
 
-// Hook to signup a user
-export const useSignup = () => {
-  const router = useRouter();
+export function useAuth() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  return useMutation({
-    mutationFn: authService.signup,
-    onSuccess: () => {
-      router.push("/login");
-    },
-  });
-};
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
-// Hook to login a user
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const checkAuth = async () => {
+    setIsLoading(true);
+    const authStatus = await authService.isAuthenticated();
+    setIsAuthenticated(authStatus);
+    setIsLoading(false);
+  };
 
-  return useMutation({
-    mutationFn: authService.login,
-    onSuccess: (token) => {
-      queryClient.clear();
-      router.push("/");
-    },
-  });
-};
+  const login = async (username: string, password: string) => {
+    try {
+      await authService.login({ username, password });
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  };
 
-// Hook to logout a user
-export const useLogout = () => {
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const signup = async (username: string, email: string, password: string) => {
+    try {
+      await authService.signup({ username, email, password });
+    } catch (error) {
+      console.error("Signup failed:", error);
+      throw error;
+    }
+  };
 
-  return useMutation({
-    mutationFn: authService.logout,
-    onSuccess: () => {
-      queryClient.clear();
-      router.push("/");
-    },
-  });
-};
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
-// Hook to check if the user is authenticated
-export const useIsAuthenticated = () => {
-  return authService.isAuthenticated();
-};
+  return { isAuthenticated, isLoading, login, signup, logout };
+}

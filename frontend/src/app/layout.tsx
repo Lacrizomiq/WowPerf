@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import Layout from "@/components/Layout";
-import { useCSRFToken } from "@/hooks/useCSRFToken";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -17,10 +17,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const csrfToken = useCSRFToken();
   return (
     <html lang="en">
-      <head>{csrfToken && <meta name="csrf-token" content={csrfToken} />}</head>
       <body className={`${inter.className}`}>
         <ReactQueryProvider>
           <Layout>{children}</Layout>

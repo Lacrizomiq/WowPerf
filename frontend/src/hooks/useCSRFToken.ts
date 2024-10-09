@@ -1,22 +1,27 @@
-import { useState, useEffect } from "react";
-import api from "@/libs/api";
+import { useState, useCallback, useEffect } from "react";
+import { authService } from "@/libs/authService";
 
-// useCSRFToken is a hook that fetches the CSRF token from the backend
-export const useCSRFToken = () => {
+export function useCSRFToken() {
   const [csrfToken, setCSRFToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchCSRFToken = async () => {
-      try {
-        const response = await api.get("/auth/csrf");
-        setCSRFToken(response.data.csrf_token);
-      } catch (error) {
-        console.error("Failed to fetch CSRF token:", error);
-      }
-    };
-
-    fetchCSRFToken();
+  const fetchCSRFToken = useCallback(async () => {
+    try {
+      const token = await authService.getCSRFToken();
+      setCSRFToken(token);
+      localStorage.setItem("csrfToken", token);
+    } catch (error) {
+      console.error("Failed to fetch CSRF token:", error);
+    }
   }, []);
 
-  return csrfToken;
-};
+  useEffect(() => {
+    const storedToken = localStorage.getItem("csrfToken");
+    if (storedToken) {
+      setCSRFToken(storedToken);
+    } else {
+      fetchCSRFToken();
+    }
+  }, [fetchCSRFToken]);
+
+  return { csrfToken, fetchCSRFToken };
+}

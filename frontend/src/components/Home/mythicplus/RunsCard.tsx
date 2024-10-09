@@ -119,7 +119,9 @@ const RunsCard: React.FC<RunsCardProps> = ({
         return (
           <div
             key={ranking.run.keystone_run_id}
-            ref={(el) => (cardRefs.current[ranking.run.keystone_run_id] = el)}
+            ref={(el) => {
+              cardRefs.current[ranking.run.keystone_run_id] = el;
+            }}
             className="bg-deep-blue bg-opacity-80 rounded-2xl overflow-hidden shadow-2xl glow-effect"
           >
             <div className="flex">

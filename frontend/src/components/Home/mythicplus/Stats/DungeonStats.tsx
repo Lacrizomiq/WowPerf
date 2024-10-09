@@ -48,8 +48,8 @@ const DungeonStats: React.FC = () => {
     );
 
   const currentDungeonStats =
-    statsData?.find((stat) => stat.dungeon_slug === dungeon) || statsData?.[0];
-
+    statsData?.find((stat: DungeonStat) => stat.dungeon_slug === dungeon) ||
+    statsData?.[0];
   if (!currentDungeonStats)
     return (
       <div className="text-white">No data available for this dungeon.</div>
@@ -67,7 +67,7 @@ const DungeonStats: React.FC = () => {
     const classStats =
       roleStats[role.toLowerCase() as keyof typeof roleStats] || {};
     const total = Object.values(classStats).reduce(
-      (sum, count) => sum + (count as number),
+      (sum: number, count) => sum + (count as number),
       0
     );
     return Object.entries(classStats)

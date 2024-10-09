@@ -1,7 +1,7 @@
 import api from "./api";
 
 interface LoginResponse {
-  token: string;
+  message: string;
 }
 
 interface SignupData {
@@ -15,30 +15,47 @@ interface LoginData {
   password: string;
 }
 
-const AUTH_TOKEN_KEY = "auth_token";
-
 export const authService = {
   async signup(data: SignupData) {
-    await api.post("/auth/signup", data);
+    const csrfToken = localStorage.getItem("csrfToken");
+    await api.post("/auth/signup", data, {
+      headers: { "X-CSRF-Token": csrfToken },
+    });
   },
 
   async login(data: LoginData) {
-    const response = await api.post<LoginResponse>("/auth/login", data);
-    const token = response.data.token;
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
-    return token;
+    const csrfToken = localStorage.getItem("csrfToken");
+    const response = await api.post<LoginResponse>("/auth/login", data, {
+      headers: { "X-CSRF-Token": csrfToken },
+    });
+    return response.data.message;
   },
 
   async logout(): Promise<void> {
-    await api.post("/auth/logout");
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    const csrfToken = localStorage.getItem("csrfToken");
+    await api.post(
+      "/auth/logout",
+      {},
+      {
+        headers: { "X-CSRF-Token": csrfToken },
+      }
+    );
   },
 
-  getToken(): string | null {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      const csrfToken = localStorage.getItem("csrfToken");
+      const response = await api.get("/auth/check", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
   },
 
-  isAuthenticated(): boolean {
-    return !!this.getToken();
+  async getCSRFToken(): Promise<string> {
+    const response = await api.get<{ csrf_token: string }>("/csrf-token");
+    return response.data.csrf_token;
   },
 };

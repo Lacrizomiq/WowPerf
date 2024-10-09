@@ -2,20 +2,19 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"time"
+	authHandler "wowperf/internal/api/auth"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
 	"wowperf/internal/database"
+	auth "wowperf/internal/services/auth"
 	"wowperf/pkg/cache"
 	"wowperf/pkg/middleware"
 
-	apiAuth "wowperf/internal/api/auth"
-	authService "wowperf/internal/services/auth"
-
 	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
 	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
-	raiderioMythicPlus "wowperf/internal/services/raiderio/mythicplus"
 
 	models "wowperf/internal/models/raiderio/mythicrundetails"
 
@@ -24,6 +23,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/csrf"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -70,12 +70,14 @@ func main() {
 	// Auth Service
 	accessExpiry := 15 * time.Minute
 	refreshExpiry := 7 * 24 * time.Hour
-	accessSecret := os.Getenv("ACCESS_SECRET")
-	refreshSecret := os.Getenv("REFRESH_SECRET")
-	if accessSecret == "" || refreshSecret == "" {
-		log.Fatal("ACCESS_SECRET and REFRESH_SECRET must be set in the environment")
+	sessionSecret := os.Getenv("SESSION_SECRET")
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if sessionSecret == "" || jwtSecret == "" {
+		log.Fatal("SESSION_SECRET and JWT_SECRET must be set in the environment")
 	}
-	authService := authService.NewAuthService(db, accessSecret, refreshSecret, accessExpiry, refreshExpiry)
+
+	authService := auth.NewAuthService(db, cache.GetRedisClient(), sessionSecret, jwtSecret, accessExpiry, refreshExpiry)
+	authHandler := authHandler.NewAuthHandler(authService)
 
 	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
@@ -93,8 +95,6 @@ func main() {
 	startCacheUpdater(blizzardService, rioService)
 
 	// Handlers
-	// Auth Handler
-	authHandler := apiAuth.NewAuthHandler(authService)
 
 	// Raider.io Handler
 	rioHandler := raiderio.NewHandler(rioService, db)
@@ -104,8 +104,21 @@ func main() {
 
 	r := gin.Default()
 
-	// CSRF Protection
-	r.Use(middleware.CSRF())
+	// Auth middleware
+	csrfMiddleware := csrf.Protect(
+		[]byte(os.Getenv("CSRF_SECRET")),
+		csrf.Secure(false), // Set to true in production
+		csrf.HttpOnly(true),
+	)
+
+	r.Use(func(c *gin.Context) {
+		log.Println("CSRF middleware called")
+		csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Println("CSRF check passed")
+			c.Request = r
+			c.Next()
+		})).ServeHTTP(c.Writer, c.Request)
+	})
 
 	// CORS
 	config := cors.DefaultConfig()
@@ -131,18 +144,22 @@ func main() {
 
 	checkUpdateState(db)
 
-	go func() {
-		log.Println("Checking if dungeon stats update is needed...")
-		if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
-			log.Printf("Error during dungeon stats update check: %v", err)
-		} else {
-			log.Println("Dungeon stats update check completed")
-		}
-		checkUpdateState(db)
+	/*
+		go func() {
+			log.Println("Checking if dungeon stats update is needed...")
+			if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
+				log.Printf("Error during dungeon stats update check: %v", err)
+			} else {
+				log.Println("Dungeon stats update check completed")
+			}
+			checkUpdateState(db)
 
-		log.Println("Setting up weekly dungeon stats update...")
-		raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
-	}()
+			log.Println("Setting up weekly dungeon stats update...")
+			raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
+		}()
+	*/
+
+	r.GET("/csrf-token", authHandler.CSRFToken)
 
 	// Protected Routes
 	protected := r.Group("/user")

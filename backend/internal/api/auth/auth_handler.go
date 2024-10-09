@@ -1,25 +1,19 @@
 package auth
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"time"
-
 	"wowperf/internal/models"
-	"wowperf/internal/services/auth"
-	"wowperf/pkg/middleware"
+	auth "wowperf/internal/services/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/csrf"
 )
 
-// AuthHandler handles authentication routes
 type AuthHandler struct {
 	AuthService *auth.AuthService
 }
 
-// NewAuthHandler creates a new AuthHandler
 func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 	return &AuthHandler{
 		AuthService: authService,
@@ -30,7 +24,17 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	var userCreate models.UserCreate
 	if err := c.ShouldBindJSON(&userCreate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %v", err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format"})
+		return
+	}
+
+	if err := models.Validate.Struct(userCreate); err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(validationErrors)})
 		return
 	}
 
@@ -41,12 +45,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 
 	if err := h.AuthService.SignUp(&user); err != nil {
-		if err.Error() == "duplicate key value violates unique constraint" {
-			c.JSON(http.StatusConflict, gin.H{"error": "Username or email already exists"})
-		} else {
-			log.Printf("Failed to create user: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
@@ -65,78 +64,100 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessCookie, refreshCookie, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
+	user, token, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	http.SetCookie(c.Writer, accessCookie)
-	http.SetCookie(c.Writer, refreshCookie)
-
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
-}
-
-// Logout invalidates the user's session token
-func (h *AuthHandler) Logout(c *gin.Context) {
-	accessToken, err := c.Cookie("access_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	if err := models.Validate.Struct(loginInput); err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(validationErrors)})
 		return
 	}
 
-	if err := h.AuthService.Logout(accessToken); err != nil {
+	if err := h.AuthService.CreateSession(c.Writer, c.Request, user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
+		return
+	}
+
+	c.SetCookie("jwt", token, int(h.AuthService.AccessExpiry.Seconds()), "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+}
+
+// Logout logs out a user
+func (h *AuthHandler) Logout(c *gin.Context) {
+	token, err := c.Cookie("jwt")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No token found"})
+		return
+	}
+
+	if err := h.AuthService.Logout(token); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
 
-	logoutCookie := h.AuthService.CreateLogoutCookie()
-	http.SetCookie(c.Writer, logoutCookie)
-
+	c.SetCookie("jwt", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 
+// RefreshToken refreshes the access token
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	refreshToken := c.GetHeader("Refresh-Token")
-	if refreshToken == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	tokenPair, err := h.AuthService.RefreshToken(refreshToken)
+	token, err := c.Cookie("jwt")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No token found"})
 		return
 	}
 
-	accessCookie := &http.Cookie{
-		Name:     "access_token",
-		Value:    tokenPair.AccessToken,
-		Expires:  time.Now().Add(h.AuthService.AccessExpiry),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-		Path:     "/",
+	newToken, err := h.AuthService.RefreshToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
 	}
 
-	http.SetCookie(c.Writer, accessCookie)
-
+	c.SetCookie("jwt", newToken, int(h.AuthService.AccessExpiry.Seconds()), "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed successfully"})
-}
-
-func (h *AuthHandler) GetCSRFToken(c *gin.Context) {
-	token := csrf.Token(c.Request)
-	c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 }
 
 // RegisterRoutes registers the routes for the auth handler
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
-		auth.POST("/signup", middleware.CSRF(), h.SignUp)
-		auth.POST("/login", middleware.CSRF(), h.Login)
-		auth.POST("/logout", middleware.CSRF(), h.Logout)
-		auth.POST("/refresh", middleware.CSRF(), h.RefreshToken)
-		auth.GET("/csrf", h.GetCSRFToken)
+		auth.POST("/signup", h.SignUp)
+		auth.POST("/login", h.Login)
+		auth.POST("/logout", h.Logout)
+		auth.POST("/refresh", h.RefreshToken)
 	}
+}
+
+func (h *AuthHandler) CSRFToken(c *gin.Context) {
+	c.Header("X-CSRF-Token", csrf.Token(c.Request))
+	c.JSON(http.StatusOK, gin.H{"csrf_token": csrf.Token(c.Request)})
+}
+
+// formatValidationErrors formats validation errors
+func formatValidationErrors(errors validator.ValidationErrors) map[string]string {
+	errorMap := make(map[string]string)
+	for _, err := range errors {
+		switch err.Tag() {
+		case "required":
+			errorMap[err.Field()] = "This field is required"
+		case "email":
+			errorMap[err.Field()] = "Invalid email format"
+		case "min":
+			errorMap[err.Field()] = "This field must be at least " + err.Param() + " characters long"
+		case "max":
+			errorMap[err.Field()] = "This field must not exceed " + err.Param() + " characters"
+		case "strongpassword":
+			errorMap[err.Field()] = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+		default:
+			errorMap[err.Field()] = "Invalid value"
+		}
+	}
+	return errorMap
 }

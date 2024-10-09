@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -10,9 +11,14 @@ import (
 
 // CSRF is a middleware that protects against CSRF attacks
 func CSRF() gin.HandlerFunc {
+	csrfSecret := os.Getenv("CSRF_SECRET")
+	if csrfSecret == "" {
+		log.Fatal("CSRF_SECRET is not set")
+	}
+
 	return func(c *gin.Context) {
 		csrfMiddleware := csrf.Protect(
-			[]byte(os.Getenv("CSRF_SECRET")),
+			[]byte(csrfSecret),
 			csrf.Secure(true),
 			csrf.HttpOnly(true),
 		)

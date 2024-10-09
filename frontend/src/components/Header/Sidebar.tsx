@@ -5,6 +5,7 @@ import {
   Sword,
   Hourglass,
   LogIn,
+  LogOut,
   UserPlus,
   ChevronUp,
   ChevronDown,
@@ -13,7 +14,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
-
+import CSRFComponent from "@/components/CSRFComponent";
+import { SignupForm } from "../auth/SignupForm";
+import { LoginForm } from "../auth/LoginForm";
+import { useAuth } from "@/hooks/useAuth";
 interface Realm {
   id: number;
   name: string;
@@ -77,6 +81,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
   const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
   const [mythicPlusExpanded, setMythicPlusExpanded] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
+  const { isAuthenticated, login, signup, logout } = useAuth();
 
   useEffect(() => {
     switch (region) {
@@ -111,6 +118,11 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+  };
+
   return (
     <div
       className={`fixed left-0 top-0 h-full pt-2 bg-deep-blue text-white transition-all duration-300 ${
@@ -119,6 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
       onMouseEnter={() => !isExpanded && toggleSidebar()}
       onMouseLeave={() => isExpanded && toggleSidebar()}
     >
+      <CSRFComponent />
       <div className="flex flex-col justify-between h-full">
         <div>
           <SidebarItem
@@ -219,18 +232,30 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
           />
         </div>
         <div>
-          <SidebarItem
-            icon={LogIn}
-            label="Login"
-            isExpanded={isExpanded}
-            onClick={toggleSidebar}
-          />
-          <SidebarItem
-            icon={UserPlus}
-            label="Register"
-            isExpanded={isExpanded}
-            onClick={toggleSidebar}
-          />
+          {isAuthenticated ? (
+            <SidebarItem
+              icon={LogOut}
+              label="Logout"
+              isExpanded={isExpanded}
+              onClick={handleLogout}
+            />
+          ) : (
+            <>
+              <SidebarItem
+                icon={LogIn}
+                label="Login"
+                isExpanded={isExpanded}
+                onClick={() => router.push("/login")}
+              />
+
+              <SidebarItem
+                icon={UserPlus}
+                label="Register"
+                isExpanded={isExpanded}
+                onClick={() => router.push("/signup")}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
