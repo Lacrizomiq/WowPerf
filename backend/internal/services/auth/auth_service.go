@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 	"wowperf/internal/models"
@@ -65,23 +66,43 @@ func (s *AuthService) SignUp(user *models.User) error {
 }
 
 // Login authenticates a user and returns a JWT token pair
-func (s *AuthService) Login(username, password string) (*TokenPair, error) {
+func (s *AuthService) Login(username, password string) (*http.Cookie, *http.Cookie, error) {
 	var user models.User
 	if err := s.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, nil, errors.New("invalid credentials")
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, nil, errors.New("invalid credentials")
 	}
 
 	tokenPair, err := s.createTokenPair(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return tokenPair, nil
+	accessCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenPair.AccessToken,
+		Expires:  time.Now().Add(s.AccessExpiry),
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		Path:     "/",
+	}
+
+	refreshCookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Expires:  time.Now().Add(s.RefreshExpiry),
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		Path:     "/auth/refresh",
+	}
+
+	return accessCookie, refreshCookie, nil
 }
 
 // Logout invalidates the user's session token
@@ -97,6 +118,19 @@ func (s *AuthService) Logout(accessToken string) error {
 	}
 
 	return s.RedisClient.Set(context.Background(), "blacklist:"+jti, "true", s.AccessExpiry).Err()
+}
+
+// CreateLogoutCookie creates a logout cookie
+func (s *AuthService) CreateLogoutCookie() *http.Cookie {
+	return &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+		Path:     "/",
+	}
 }
 
 // RefreshToken refreshes the user's access token

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 	"wowperf/internal/services/auth"
 
 	"github.com/dgrijalva/jwt-go"
@@ -11,14 +10,13 @@ import (
 
 func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		// Extraire le token du cookie au lieu de l'en-tête Authorization
+		tokenString, err := c.Cookie("access_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token cookie is missing"})
 			c.Abort()
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Validate the token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -45,7 +43,7 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		// Check if token is blacklisted
+		// Check if the token is in the blacklist
 		blacklisted, err := authService.IsTokenBlacklisted(jti)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check token status"})

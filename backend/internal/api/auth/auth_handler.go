@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"wowperf/internal/models"
 	"wowperf/internal/services/auth"
+	"wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/csrf"
 )
 
 // AuthHandler handles authentication routes
@@ -62,28 +65,33 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
+	accessCookie, refreshCookie, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	c.JSON(http.StatusOK, tokens)
+	http.SetCookie(c.Writer, accessCookie)
+	http.SetCookie(c.Writer, refreshCookie)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
 // Logout invalidates the user's session token
 func (h *AuthHandler) Logout(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
+	accessToken, err := c.Cookie("access_token")
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	token = token[7:] // Remove "Bearer " prefix
-	if err := h.AuthService.Logout(token); err != nil {
+	if err := h.AuthService.Logout(accessToken); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
+
+	logoutCookie := h.AuthService.CreateLogoutCookie()
+	http.SetCookie(c.Writer, logoutCookie)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
@@ -95,22 +103,40 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	newToken, err := h.AuthService.RefreshToken(refreshToken)
+	tokenPair, err := h.AuthService.RefreshToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, newToken)
+	accessCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenPair.AccessToken,
+		Expires:  time.Now().Add(h.AuthService.AccessExpiry),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
+	}
+
+	http.SetCookie(c.Writer, accessCookie)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed successfully"})
+}
+
+func (h *AuthHandler) GetCSRFToken(c *gin.Context) {
+	token := csrf.Token(c.Request)
+	c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 }
 
 // RegisterRoutes registers the routes for the auth handler
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
-		auth.POST("/signup", h.SignUp)
-		auth.POST("/login", h.Login)
-		auth.POST("/logout", h.Logout)
-		auth.POST("/refresh", h.RefreshToken)
+		auth.POST("/signup", middleware.CSRF(), h.SignUp)
+		auth.POST("/login", middleware.CSRF(), h.Login)
+		auth.POST("/logout", middleware.CSRF(), h.Logout)
+		auth.POST("/refresh", middleware.CSRF(), h.RefreshToken)
+		auth.GET("/csrf", h.GetCSRFToken)
 	}
 }
