@@ -9,6 +9,7 @@ import (
 	"wowperf/internal/api/raiderio"
 	"wowperf/internal/database"
 	auth "wowperf/internal/services/auth"
+
 	"wowperf/pkg/cache"
 	"wowperf/pkg/middleware"
 
@@ -80,7 +81,15 @@ func main() {
 		}
 	}
 
-	authService := auth.NewAuthService(db, jwtSecret, cache.GetRedisClient(), jwtExpiration)
+	authService := auth.NewAuthService(
+		db,
+		jwtSecret,
+		cache.GetRedisClient(),
+		jwtExpiration,
+		os.Getenv("BATTLE_NET_CLIENT_ID"),
+		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
+		os.Getenv("BATTLE_NET_REDIRECT_URL"),
+	)
 	authHandler := authHandler.NewAuthHandler(authService)
 
 	// Blizzard Service

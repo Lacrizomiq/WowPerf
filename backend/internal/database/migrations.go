@@ -32,6 +32,17 @@ func Migrate(db *gorm.DB) error {
 		return fmt.Errorf("failed to migrate User model: %v", err)
 	}
 
+	// Add new columns to User model
+	if err := db.Exec(`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
+        ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
+        ADD COLUMN IF NOT EXISTS encrypted_token BYTEA,
+        ADD COLUMN IF NOT EXISTS battle_net_expires_at TIMESTAMP;
+    `).Error; err != nil {
+		return fmt.Errorf("failed to add new columns to User model: %v", err)
+	}
+
 	// Add unique constraints
 	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)").Error; err != nil {
 		return fmt.Errorf("failed to create unique index on username: %v", err)
