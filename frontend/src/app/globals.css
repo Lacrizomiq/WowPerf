@@ -86,7 +86,7 @@ body {
   background: linear-gradient(
     135deg,
     var(--color-royal-blue),
-    rgba(9, 32, 85, 0.5)
+    rgba(9, 32, 85, 1)
   );
 }
 

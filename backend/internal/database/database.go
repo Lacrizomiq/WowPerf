@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 	mythicplus "wowperf/internal/database/static/mythicplus"
 	raids "wowperf/internal/database/static/raids"
 	talents "wowperf/internal/database/static/talents"
+	models "wowperf/internal/models/raiderio/mythicrundetails"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +20,12 @@ const (
 
 func SeedDatabase(db *gorm.DB) error {
 	log.Println("Starting database seeding...")
+
+	// Initialize UpdateState
+	var updateState models.UpdateState
+	if err := db.FirstOrCreate(&updateState, models.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
+		return fmt.Errorf("error initializing UpdateState: %v", err)
+	}
 
 	// Seed Mythic+ data
 	if err := seedMythicPlusData(db); err != nil {

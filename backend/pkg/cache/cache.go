@@ -23,6 +23,11 @@ func InitCache() {
 	})
 }
 
+// GetRedisClient returns the initialized Redis client
+func GetRedisClient() *redis.Client {
+	return redisClient
+}
+
 // Set sets a value in the cache with the given key and expiration time.
 func Set(key string, value interface{}, expiration time.Duration) error {
 	ctx := context.Background()
