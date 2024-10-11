@@ -30,6 +30,7 @@ export function useAuth() {
     async (username: string, email: string, password: string) => {
       try {
         const response = await authService.signup(username, email, password);
+        setIsAuthenticated(true);
         return response;
       } catch (error) {
         throw error;

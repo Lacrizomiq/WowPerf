@@ -1,22 +1,20 @@
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onLogin: (username: string, password: string) => Promise<string | undefined>;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(username, password);
-      router.push("/");
-    } catch (err) {
-      setError("Invalid credentials. Please try again.");
+    const errorMessage = await onLogin(username, password);
+    if (errorMessage) {
+      setError(errorMessage);
     }
   };
 
@@ -25,7 +23,7 @@ const LoginForm: React.FC = () => {
       <div>
         <label
           htmlFor="username"
-          className="block text-sm font-medium text-gray-300"
+          className="block text-sm font-medium text-gray-300 mb-2"
         >
           Username
         </label>
@@ -41,7 +39,7 @@ const LoginForm: React.FC = () => {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-300"
+          className="block text-sm font-medium text-gray-300 mb-2"
         >
           Password
         </label>

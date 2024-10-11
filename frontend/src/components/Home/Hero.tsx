@@ -25,7 +25,7 @@ export default function Hero() {
         />
       )}
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-        <div className="text-center text-white z-10 max-w-4xl">
+        <div className="text-center text-white z-10 max-w-4xl bg-black/30 p-4 rounded-xl backdrop-blur-sm">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 text-left">
             Elevate your WoW experience
           </h1>

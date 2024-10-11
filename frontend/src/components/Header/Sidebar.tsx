@@ -12,11 +12,12 @@ import {
   ChartColumnDecreasing,
   BicepsFlexed,
   User,
+  LayoutDashboard,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/providers/AuthContext";
 interface Realm {
   id: number;
   name: string;
@@ -80,9 +81,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
   const [realms, setRealms] = useState<Realm[]>([]);
   const router = useRouter();
   const [mythicPlusExpanded, setMythicPlusExpanded] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [signupOpen, setSignupOpen] = useState(false);
-  const { isAuthenticated, login, signup, logout } = useAuth();
+  const [userDropdownExpanded, setUserDropdownExpanded] = useState(false);
+
+  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     switch (region) {
@@ -231,20 +232,43 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
         </div>
         <div>
           {isAuthenticated ? (
-            <>
+            <div className="flex flex-col">
               <SidebarItem
                 icon={User}
-                label="Profile"
+                label="User"
                 isExpanded={isExpanded}
-                onClick={() => router.push("/profile")}
+                onClick={() => setUserDropdownExpanded(!userDropdownExpanded)}
+                chevron={
+                  userDropdownExpanded ? (
+                    <ChevronUp size={16} />
+                  ) : (
+                    <ChevronDown size={16} />
+                  )
+                }
               />
-              <SidebarItem
-                icon={LogOut}
-                label="Logout"
-                isExpanded={isExpanded}
-                onClick={handleLogout}
-              />
-            </>
+              {isExpanded && userDropdownExpanded && (
+                <div className="pl-8">
+                  <SidebarItem
+                    icon={LayoutDashboard}
+                    label="Dashboard"
+                    isExpanded={isExpanded}
+                    onClick={() => router.push("/dashboard")}
+                  />
+                  <SidebarItem
+                    icon={User}
+                    label="Profile"
+                    isExpanded={isExpanded}
+                    onClick={() => router.push("/profile")}
+                  />
+                  <SidebarItem
+                    icon={LogOut}
+                    label="Logout"
+                    isExpanded={isExpanded}
+                    onClick={handleLogout}
+                  />
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <SidebarItem
@@ -253,7 +277,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
                 isExpanded={isExpanded}
                 onClick={() => router.push("/login")}
               />
-
               <SidebarItem
                 icon={UserPlus}
                 label="Register"
