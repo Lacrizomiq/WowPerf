@@ -1,61 +1,59 @@
 import api from "./api";
 
-interface LoginResponse {
-  message: string;
-}
-
-interface SignupData {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface LoginData {
-  username: string;
-  password: string;
-}
-
 export const authService = {
-  async signup(data: SignupData) {
-    const csrfToken = localStorage.getItem("csrfToken");
-    await api.post("/auth/signup", data, {
-      headers: { "X-CSRF-Token": csrfToken },
-    });
-  },
-
-  async login(data: LoginData) {
-    const csrfToken = localStorage.getItem("csrfToken");
-    const response = await api.post<LoginResponse>("/auth/login", data, {
-      headers: { "X-CSRF-Token": csrfToken },
-    });
-    return response.data.message;
-  },
-
-  async logout(): Promise<void> {
-    const csrfToken = localStorage.getItem("csrfToken");
-    await api.post(
-      "/auth/logout",
-      {},
-      {
-        headers: { "X-CSRF-Token": csrfToken },
-      }
-    );
-  },
-
-  async isAuthenticated(): Promise<boolean> {
+  async signup(username: string, email: string, password: string) {
     try {
-      const csrfToken = localStorage.getItem("csrfToken");
-      const response = await api.get("/auth/check", {
-        headers: { "X-CSRF-Token": csrfToken },
+      const response = await api.post("/auth/signup", {
+        username,
+        email,
+        password,
       });
-      return response.status === 200;
+      return response.data;
     } catch (error) {
-      return false;
+      throw error;
     }
   },
 
-  async getCSRFToken(): Promise<string> {
-    const response = await api.get<{ csrf_token: string }>("/csrf-token");
-    return response.data.csrf_token;
+  async login(username: string, password: string) {
+    try {
+      const response = await api.post("/auth/login", { username, password });
+      const { access_token, refresh_token } = response.data;
+      localStorage.setItem("accessToken", access_token);
+      localStorage.setItem("refreshToken", refresh_token);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async logout() {
+    try {
+      await api.post("/auth/logout");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async refreshToken() {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      throw new Error("No refresh token available");
+    }
+    try {
+      const response = await api.post("/auth/refresh", {
+        refresh_token: refreshToken,
+      });
+      const { access_token } = response.data;
+      localStorage.setItem("accessToken", access_token);
+      return access_token;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  isAuthenticated() {
+    return !!localStorage.getItem("accessToken");
   },
 };

@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { LoginForm } from "@/components/auth/LoginForm";
+import LoginForm from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,7 +15,6 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -27,7 +26,7 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
         </div>
-        <LoginForm onLogin={handleLogin} />
+        <LoginForm />
       </div>
     </div>
   );

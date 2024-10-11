@@ -4,38 +4,33 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
+	"strconv"
 	"time"
 	"wowperf/internal/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v8"
-	"github.com/gorilla/sessions"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB            *gorm.DB
-	RedisClient   *redis.Client
-	SessionStore  *sessions.CookieStore
-	JWTSecret     []byte
-	AccessExpiry  time.Duration
-	RefreshExpiry time.Duration
+	DB              *gorm.DB
+	JWTSecret       []byte
+	RedisClient     *redis.Client
+	TokenExpiration time.Duration
 }
 
-func NewAuthService(db *gorm.DB, redisClient *redis.Client, sessionSecret, jwtSecret string, accessExpiry, refreshExpiry time.Duration) *AuthService {
+func NewAuthService(db *gorm.DB, jwtSecret string, redisClient *redis.Client, tokenExpiration time.Duration) *AuthService {
 	return &AuthService{
-		DB:            db,
-		RedisClient:   redisClient,
-		SessionStore:  sessions.NewCookieStore([]byte(sessionSecret)),
-		JWTSecret:     []byte(jwtSecret),
-		AccessExpiry:  accessExpiry,
-		RefreshExpiry: refreshExpiry,
+		DB:              db,
+		JWTSecret:       []byte(jwtSecret),
+		RedisClient:     redisClient,
+		TokenExpiration: tokenExpiration,
 	}
 }
 
-// SignUp creates a new user in the database
 func (s *AuthService) SignUp(user *models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -51,107 +46,102 @@ func (s *AuthService) SignUp(user *models.User) error {
 	return nil
 }
 
-// Login authenticates a user and returns a JWT token pair
-func (s *AuthService) Login(username, password string) (*models.User, string, error) {
+func (s *AuthService) Login(username, password string) (string, string, error) {
 	var user models.User
 	if err := s.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return "", "", errors.New("invalid credentials")
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return "", "", errors.New("invalid credentials")
 	}
 
-	token, err := s.GenerateJWT(user)
+	accessToken, err := s.generateToken(user.ID, s.TokenExpiration)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to generate token: %v", err)
+		return "", "", fmt.Errorf("failed to generate access token: %v", err)
 	}
 
-	return &user, token, nil
+	refreshToken, err := s.generateRefreshToken(user.ID)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate refresh token: %v", err)
+	}
+
+	return accessToken, refreshToken, nil
 }
 
-// Logout blacklists the token and clears the session
-func (s *AuthService) Logout(tokenString string) error {
-	return s.BlacklistToken(tokenString)
-}
-
-// RefreshToken refreshes the access token using the refresh token
-func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
-	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+func (s *AuthService) ValidateToken(tokenString string) (uint, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return s.JWTSecret, nil
 	})
 
-	if err != nil || !token.Valid {
-		return "", errors.New("invalid refresh token")
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", errors.New("invalid token claims")
-	}
-
-	userID, ok := claims["user_id"].(float64)
-	if !ok {
-		return "", errors.New("invalid user ID in token")
-	}
-
-	var user models.User
-	if err := s.DB.First(&user, uint(userID)).Error; err != nil {
-		return "", errors.New("user not found")
-	}
-
-	newToken, err := s.GenerateJWT(user)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate new token: %v", err)
+		return 0, err
 	}
 
-	return newToken, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID := uint(claims["user_id"].(float64))
+		return userID, nil
+	}
+
+	return 0, errors.New("invalid token")
 }
 
-// GenerateJWT generates a JWT token for a user
-func (s *AuthService) GenerateJWT(user models.User) (string, error) {
+func (s *AuthService) BlacklistToken(token string, expiration time.Duration) error {
+	ctx := context.Background()
+	return s.RedisClient.Set(ctx, "blacklist:"+token, true, expiration).Err()
+}
+
+func (s *AuthService) IsTokenBlacklisted(token string) (bool, error) {
+	ctx := context.Background()
+	_, err := s.RedisClient.Get(ctx, "blacklist:"+token).Result()
+	if err == redis.Nil {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *AuthService) generateToken(userID uint, expiration time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(s.AccessExpiry).Unix(),
+		"user_id": userID,
+		"exp":     time.Now().Add(expiration).Unix(),
 	})
 
 	return token.SignedString(s.JWTSecret)
 }
 
-// BlacklistToken blacklists a token by adding it to Redis
-func (s *AuthService) BlacklistToken(tokenString string) error {
-	return s.RedisClient.Set(context.Background(), "blacklist:"+tokenString, "true", s.AccessExpiry).Err()
-}
-
-// IsTokenBlacklisted checks if a token is blacklisted
-func (s *AuthService) IsTokenBlacklisted(tokenString string) (bool, error) {
-	result, err := s.RedisClient.Exists(context.Background(), "blacklist:"+tokenString).Result()
+func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
+	refreshToken := uuid.New().String()
+	ctx := context.Background()
+	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, 7*24*time.Hour).Err()
 	if err != nil {
-		return false, err
+		return "", fmt.Errorf("failed to store refresh token: %v", err)
 	}
-	return result > 0, nil
+	return refreshToken, nil
 }
 
-// CreateSession creates a session for a user
-func (s *AuthService) CreateSession(w http.ResponseWriter, r *http.Request, user *models.User) error {
-	session, _ := s.SessionStore.Get(r, "session-name")
-	session.Values["user_id"] = user.ID
-	return session.Save(r, w)
-}
-
-// GetUserFromSession retrieves the user from the session
-func (s *AuthService) GetUserFromSession(r *http.Request) (*models.User, error) {
-	session, _ := s.SessionStore.Get(r, "session-name")
-	userID, ok := session.Values["user_id"].(uint)
-	if !ok {
-		return nil, errors.New("no user in session")
+func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
+	ctx := context.Background()
+	userIDStr, err := s.RedisClient.Get(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Result()
+	if err != nil {
+		return "", fmt.Errorf("invalid refresh token")
 	}
 
-	var user models.User
-	if err := s.DB.First(&user, userID).Error; err != nil {
-		return nil, err
+	userID, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		return "", fmt.Errorf("invalid user ID in refresh token")
 	}
 
-	return &user, nil
+	newAccessToken, err := s.generateToken(uint(userID), s.TokenExpiration)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate new access token: %v", err)
+	}
+
+	return newAccessToken, nil
 }

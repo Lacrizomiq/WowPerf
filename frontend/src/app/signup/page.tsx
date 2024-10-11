@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { SignupForm } from "@/components/auth/SignupForm";
+import SignupForm from "@/components/auth/SignupForm";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function SignupPage() {
             Create your account
           </h2>
         </div>
-        <SignupForm onSignup={handleSignup} />
+        <SignupForm />
       </div>
     </div>
   );

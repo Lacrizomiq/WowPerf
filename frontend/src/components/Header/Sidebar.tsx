@@ -11,12 +11,11 @@ import {
   ChevronDown,
   ChartColumnDecreasing,
   BicepsFlexed,
+  User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { eu, us, tw, kr } from "@/data/realms";
-import CSRFComponent from "@/components/CSRFComponent";
-import { SignupForm } from "../auth/SignupForm";
-import { LoginForm } from "../auth/LoginForm";
+
 import { useAuth } from "@/hooks/useAuth";
 interface Realm {
   id: number;
@@ -131,7 +130,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
       onMouseEnter={() => !isExpanded && toggleSidebar()}
       onMouseLeave={() => isExpanded && toggleSidebar()}
     >
-      <CSRFComponent />
       <div className="flex flex-col justify-between h-full">
         <div>
           <SidebarItem
@@ -233,12 +231,20 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
         </div>
         <div>
           {isAuthenticated ? (
-            <SidebarItem
-              icon={LogOut}
-              label="Logout"
-              isExpanded={isExpanded}
-              onClick={handleLogout}
-            />
+            <>
+              <SidebarItem
+                icon={User}
+                label="Profile"
+                isExpanded={isExpanded}
+                onClick={() => router.push("/profile")}
+              />
+              <SidebarItem
+                icon={LogOut}
+                label="Logout"
+                isExpanded={isExpanded}
+                onClick={handleLogout}
+              />
+            </>
           ) : (
             <>
               <SidebarItem

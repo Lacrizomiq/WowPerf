@@ -16,15 +16,24 @@ func CSRF() gin.HandlerFunc {
 		log.Fatal("CSRF_SECRET is not set")
 	}
 
-	return func(c *gin.Context) {
-		csrfMiddleware := csrf.Protect(
-			[]byte(csrfSecret),
-			csrf.Secure(true),
-			csrf.HttpOnly(true),
-		)
+	csrfMiddleware := csrf.Protect(
+		[]byte(csrfSecret),
+		csrf.Secure(false), // Set to true in production
+		csrf.HttpOnly(true),
+		csrf.SameSite(csrf.SameSiteLaxMode),
+		csrf.CookieName("csrf_token"),
+		csrf.RequestHeader("X-CSRF-Token"),
+		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("CSRF error: %v", csrf.FailureReason(r))
+			http.Error(w, "CSRF token invalid", http.StatusForbidden)
+		})),
+	)
 
+	return func(c *gin.Context) {
 		csrfHandler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			c.Request = r
+			token := csrf.Token(r)
+			log.Printf("Generated CSRF Token: %s", token)
+			c.Set("csrf_token", token)
 			c.Next()
 		}))
 
@@ -35,7 +44,8 @@ func CSRF() gin.HandlerFunc {
 // CSRFToken returns the CSRF token
 func CSRFToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("csrf_token", csrf.Token(c.Request))
-		c.Next()
+		token := csrf.Token(c.Request)
+		c.Header("X-CSRF-Token", token)
+		c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 	}
 }

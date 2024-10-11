@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 	"time"
 	authHandler "wowperf/internal/api/auth"
@@ -23,7 +22,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/csrf"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
@@ -68,15 +66,21 @@ func main() {
 	// Services
 
 	// Auth Service
-	accessExpiry := 15 * time.Minute
-	refreshExpiry := 7 * 24 * time.Hour
-	sessionSecret := os.Getenv("SESSION_SECRET")
 	jwtSecret := os.Getenv("JWT_SECRET")
-	if sessionSecret == "" || jwtSecret == "" {
-		log.Fatal("SESSION_SECRET and JWT_SECRET must be set in the environment")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET must be set in the environment")
 	}
 
-	authService := auth.NewAuthService(db, cache.GetRedisClient(), sessionSecret, jwtSecret, accessExpiry, refreshExpiry)
+	jwtExpirationStr := os.Getenv("JWT_EXPIRATION")
+	jwtExpiration := 24 * time.Hour // Default to 24 hours
+	if jwtExpirationStr != "" {
+		duration, err := time.ParseDuration(jwtExpirationStr)
+		if err == nil {
+			jwtExpiration = duration
+		}
+	}
+
+	authService := auth.NewAuthService(db, jwtSecret, cache.GetRedisClient(), jwtExpiration)
 	authHandler := authHandler.NewAuthHandler(authService)
 
 	// Blizzard Service
@@ -104,36 +108,22 @@ func main() {
 
 	r := gin.Default()
 
-	// Auth middleware
-	csrfMiddleware := csrf.Protect(
-		[]byte(os.Getenv("CSRF_SECRET")),
-		csrf.Secure(false), // Set to true in production
-		csrf.HttpOnly(true),
-	)
-
-	r.Use(func(c *gin.Context) {
-		log.Println("CSRF middleware called")
-		csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Println("CSRF check passed")
-			c.Request = r
-			c.Next()
-		})).ServeHTTP(c.Writer, c.Request)
-	})
-
 	// CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000"} // Todo : Replace with the actual frontend URL like https://wowperf.com when deployed
+	config.AllowOrigins = []string{"http://localhost:3000"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	config.AllowCredentials = true
 	config.ExposeHeaders = []string{"Content-Length"}
 	config.MaxAge = 12 * time.Hour
 
 	r.Use(cors.New(config))
 
+	r.Use(gin.Logger())
 	// API
 
 	// Auth API
+	r.GET("/csrf-token", middleware.CSRFToken())
 	authHandler.RegisterRoutes(r)
 
 	// Raider.io API
@@ -159,13 +149,11 @@ func main() {
 		}()
 	*/
 
-	r.GET("/csrf-token", authHandler.CSRFToken)
-
 	// Protected Routes
 	protected := r.Group("/user")
-	protected.Use(middleware.JWTAuth(authService))
+	protected.Use(authService.AuthMiddleware())
 	{
-		// Add your protected routes here
+		// Protected Routes will be added here
 		protected.GET("/profile", func(c *gin.Context) {
 			userID, _ := c.Get("user_id")
 			c.JSON(200, gin.H{"message": "Profile accessed", "user_id": userID})

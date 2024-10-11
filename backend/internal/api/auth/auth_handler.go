@@ -2,12 +2,13 @@ package auth
 
 import (
 	"net/http"
+	"strings"
+	"time"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/csrf"
 )
 
 type AuthHandler struct {
@@ -20,7 +21,6 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 	}
 }
 
-// SignUp creates a new user
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	var userCreate models.UserCreate
 	if err := c.ShouldBindJSON(&userCreate); err != nil {
@@ -52,7 +52,6 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
-// Login authenticates a user and returns a JWT token pair
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginInput struct {
 		Username string `json:"username" binding:"required"`
@@ -64,67 +63,58 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
+	accessToken, refreshToken, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	if err := models.Validate.Struct(loginInput); err != nil {
-		validationErrors, ok := err.(validator.ValidationErrors)
-		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error"})
-			return
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(validationErrors)})
-		return
-	}
-
-	if err := h.AuthService.CreateSession(c.Writer, c.Request, user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create session"})
-		return
-	}
-
-	c.SetCookie("jwt", token, int(h.AuthService.AccessExpiry.Seconds()), "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 }
 
-// Logout logs out a user
 func (h *AuthHandler) Logout(c *gin.Context) {
-	token, err := c.Cookie("jwt")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No token found"})
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header is missing"})
 		return
 	}
 
-	if err := h.AuthService.Logout(token); err != nil {
+	bearerToken := strings.Split(authHeader, " ")
+	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid authorization header format"})
+		return
+	}
+
+	token := bearerToken[1]
+
+	// Blacklist the token
+	if err := h.AuthService.BlacklistToken(token, 24*time.Hour); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
 
-	c.SetCookie("jwt", "", -1, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
 
-// RefreshToken refreshes the access token
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	token, err := c.Cookie("jwt")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No token found"})
+	var input struct {
+		RefreshToken string `json:"refresh_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	newToken, err := h.AuthService.RefreshToken(token)
+	newAccessToken, err := h.AuthService.RefreshToken(input.RefreshToken)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}
 
-	c.SetCookie("jwt", newToken, int(h.AuthService.AccessExpiry.Seconds()), "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed successfully"})
+	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
 }
 
-// RegisterRoutes registers the routes for the auth handler
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
@@ -135,29 +125,21 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	}
 }
 
-func (h *AuthHandler) CSRFToken(c *gin.Context) {
-	c.Header("X-CSRF-Token", csrf.Token(c.Request))
-	c.JSON(http.StatusOK, gin.H{"csrf_token": csrf.Token(c.Request)})
+func formatValidationErrors(errors validator.ValidationErrors) []string {
+	var formattedErrors []string
+	for _, err := range errors {
+		formattedErrors = append(formattedErrors, formatValidationError(err))
+	}
+	return formattedErrors
 }
 
-// formatValidationErrors formats validation errors
-func formatValidationErrors(errors validator.ValidationErrors) map[string]string {
-	errorMap := make(map[string]string)
-	for _, err := range errors {
-		switch err.Tag() {
-		case "required":
-			errorMap[err.Field()] = "This field is required"
-		case "email":
-			errorMap[err.Field()] = "Invalid email format"
-		case "min":
-			errorMap[err.Field()] = "This field must be at least " + err.Param() + " characters long"
-		case "max":
-			errorMap[err.Field()] = "This field must not exceed " + err.Param() + " characters"
-		case "strongpassword":
-			errorMap[err.Field()] = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-		default:
-			errorMap[err.Field()] = "Invalid value"
-		}
+func formatValidationError(err validator.FieldError) string {
+	switch err.Tag() {
+	case "required":
+		return err.Field() + " is required"
+	case "email":
+		return err.Field() + " must be a valid email address"
+	default:
+		return err.Field() + " is invalid"
 	}
-	return errorMap
 }
