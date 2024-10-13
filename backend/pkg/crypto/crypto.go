@@ -8,30 +8,41 @@ import (
 	"errors"
 	"io"
 	"os"
+	"sync"
 )
 
 var (
-	key []byte
+	key     []byte
+	keyOnce sync.Once
 )
 
-func init() {
-	encodedKey := os.Getenv("ENCRYPTION_KEY")
-	if encodedKey == "" {
-		panic("ENCRYPTION_KEY environment variable is not set")
-	}
-
+func initKey() error {
 	var err error
-	key, err = base64.StdEncoding.DecodeString(encodedKey)
-	if err != nil {
-		panic("Failed to decode ENCRYPTION_KEY")
-	}
+	keyOnce.Do(func() {
+		encodedKey := os.Getenv("ENCRYPTION_KEY")
+		if encodedKey == "" {
+			err = errors.New("ENCRYPTION_KEY environment variable is not set")
+			return
+		}
 
-	if len(key) != 32 {
-		panic("ENCRYPTION_KEY must be 32 bytes long (256 bits)")
-	}
+		key, err = base64.StdEncoding.DecodeString(encodedKey)
+		if err != nil {
+			return
+		}
+
+		if len(key) != 32 {
+			err = errors.New("ENCRYPTION_KEY must be 32 bytes long (256 bits)")
+			return
+		}
+	})
+	return err
 }
 
 func Encrypt(plaintext []byte) ([]byte, error) {
+	if err := initKey(); err != nil {
+		return nil, err
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -50,6 +61,10 @@ func Encrypt(plaintext []byte) ([]byte, error) {
 }
 
 func Decrypt(ciphertext []byte) ([]byte, error) {
+	if err := initKey(); err != nil {
+		return nil, err
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

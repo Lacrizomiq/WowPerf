@@ -22,6 +22,7 @@ export const authService = {
       localStorage.setItem("refreshToken", refresh_token);
       return response.data;
     } catch (error) {
+      console.error("Error logging in:", error);
       throw error;
     }
   },
@@ -55,5 +56,30 @@ export const authService = {
 
   isAuthenticated() {
     return !!localStorage.getItem("accessToken");
+  },
+
+  async initiateOAuthLogin() {
+    try {
+      const response = await api.get("/auth/battle-net/login");
+      window.location.href = response.data.url;
+    } catch (error) {
+      console.error("Error initiating OAuth login:", error);
+      throw error;
+    }
+  },
+
+  async handleOAuthCallback(code: string, state: string) {
+    try {
+      const response = await api.get("/auth/battle-net/callback", {
+        params: { code, state },
+      });
+      const { access_token, refresh_token } = response.data;
+      localStorage.setItem("accessToken", access_token);
+      localStorage.setItem("refreshToken", refresh_token);
+      return response.data;
+    } catch (error) {
+      console.error("Error handling OAuth callback:", error);
+      throw error;
+    }
   },
 };

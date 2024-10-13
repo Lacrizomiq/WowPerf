@@ -34,12 +34,18 @@ func Migrate(db *gorm.DB) error {
 
 	// Add new columns to User model
 	if err := db.Exec(`
-        ALTER TABLE users 
-        ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
-        ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
-        ADD COLUMN IF NOT EXISTS encrypted_token BYTEA,
-        ADD COLUMN IF NOT EXISTS battle_net_expires_at TIMESTAMP;
-    `).Error; err != nil {
+	ALTER TABLE users 
+	ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
+	ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
+	ADD COLUMN IF NOT EXISTS encrypted_token BYTEA,
+	ADD COLUMN IF NOT EXISTS battle_net_expires_at TIMESTAMP,
+	ADD COLUMN IF NOT EXISTS last_username_change_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+	ALTER TABLE users
+	ALTER COLUMN battle_net_id DROP NOT NULL,
+	ALTER COLUMN battle_tag DROP NOT NULL,
+	ALTER COLUMN battle_net_expires_at DROP NOT NULL;
+`).Error; err != nil {
 		return fmt.Errorf("failed to add new columns to User model: %v", err)
 	}
 
