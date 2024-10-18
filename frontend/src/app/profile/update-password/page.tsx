@@ -9,7 +9,7 @@ const UpdatePasswordPage: React.FC = () => {
   const { changePassword, isChangingPassword } = useUserProfile();
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-gradient-to-br from-[#1a202c] to-[#2d3748] dark:bg-gray-900">
       <Sidebar />
       <main className="flex-1 p-8">
         <ChangePassword

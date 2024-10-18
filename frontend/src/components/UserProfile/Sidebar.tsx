@@ -14,7 +14,7 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-blue-700 dark:bg-gray-800 shadow-md">
+    <aside className="w-64 bg-[#2d3748] dark:bg-gray-800 shadow-md">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6 text-white dark:text-gray-200">
           Account Settings

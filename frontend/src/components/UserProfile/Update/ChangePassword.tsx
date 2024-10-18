@@ -41,15 +41,15 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
   };
 
   return (
-    <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">
+    <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
         Change Password
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="currentPassword"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-white dark:text-gray-300 mb-2"
           >
             Current Password
           </label>
@@ -64,7 +64,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
         <div>
           <label
             htmlFor="newPassword"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-white dark:text-gray-300 mb-2"
           >
             New Password
           </label>
@@ -79,7 +79,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-white dark:text-gray-300 mb-2"
           >
             Confirm New Password
           </label>
