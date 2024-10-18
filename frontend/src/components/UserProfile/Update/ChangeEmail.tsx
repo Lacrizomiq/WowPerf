@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface ChangeEmailProps {
-  onUpdateEmail: (newEmail: string) => void;
+  onUpdateEmail: (newEmail: string) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -12,11 +14,20 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({
   isUpdating,
 }) => {
   const [newEmail, setNewEmail] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateEmail(newEmail);
-    alert("Email updated");
+    try {
+      await toast.promise(onUpdateEmail(newEmail), {
+        loading: "Updating email...",
+        success: "Email updated successfully!",
+        error: "Failed to update email",
+      });
+      router.push("/profile");
+    } catch (error) {
+      console.error("Error updating email:", error);
+    }
   };
 
   return (

@@ -4,7 +4,7 @@ import "./globals.css";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import Layout from "@/components/Layout";
 import { AuthProvider } from "@/providers/AuthContext";
-
+import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -23,7 +23,10 @@ export default function RootLayout({
       <body className={`${inter.className}`}>
         <ReactQueryProvider>
           <AuthProvider>
-            <Layout>{children}</Layout>
+            <Layout>
+              {children}
+              <Toaster position="bottom-right" />
+            </Layout>
           </AuthProvider>
         </ReactQueryProvider>
       </body>

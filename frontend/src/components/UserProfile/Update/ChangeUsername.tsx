@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface ChangeUsernameProps {
-  onUpdateUsername: (newUsername: string) => void;
+  onUpdateUsername: (newUsername: string) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -10,10 +12,20 @@ const ChangeUsername: React.FC<ChangeUsernameProps> = ({
   isUpdating,
 }) => {
   const [newUsername, setNewUsername] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateUsername(newUsername);
+    try {
+      await toast.promise(onUpdateUsername(newUsername), {
+        loading: "Updating username...",
+        success: "Username updated successfully!",
+        error: "Failed to update username",
+      });
+      router.push("/profile");
+    } catch (error) {
+      console.error("Error updating username:", error);
+    }
   };
 
   return (

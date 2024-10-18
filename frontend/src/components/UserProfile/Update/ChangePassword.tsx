@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface ChangePasswordProps {
-  onChangePassword: (currentPassword: string, newPassword: string) => void;
+  onChangePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
   isChanging: boolean;
 }
 
@@ -14,12 +19,21 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword === confirmPassword) {
-      onChangePassword(currentPassword, newPassword);
-      alert("Password changed successfully");
+      try {
+        await toast.promise(onChangePassword(currentPassword, newPassword), {
+          loading: "Changing password...",
+          success: "Password changed successfully!",
+          error: "Failed to change password",
+        });
+        router.push("/profile");
+      } catch (error) {
+        console.error("Error changing password:", error);
+      }
     } else {
       // Handle password mismatch error
       alert("New passwords do not match");

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 interface DeleteAccountProps {
-  onDeleteAccount: () => void;
+  onDeleteAccount: () => Promise<void>;
   isDeleting: boolean;
 }
 
@@ -13,10 +14,18 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({
 }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmDelete) {
-      onDeleteAccount();
+      try {
+        await toast.promise(onDeleteAccount(), {
+          loading: "Deleting account...",
+          success: "Account deleted successfully!",
+          error: "Failed to delete account",
+        });
+      } catch (error) {
+        console.error("Error deleting account:", error);
+      }
     } else {
       alert("Please confirm that you want to delete your account.");
     }
