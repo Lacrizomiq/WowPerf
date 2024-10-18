@@ -1,4 +1,5 @@
 import api from "./api";
+import axios, { AxiosError } from "axios";
 
 export const authService = {
   async signup(username: string, email: string, password: string) {
@@ -23,7 +24,12 @@ export const authService = {
       return response.data;
     } catch (error) {
       console.error("Error logging in:", error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 401) {
+          throw new Error("Invalid credentials");
+        }
+      }
+      throw new Error("An error occurred during login");
     }
   },
 
@@ -33,7 +39,7 @@ export const authService = {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
     } catch (error) {
-      throw error;
+      console.error("Error during logout:", error);
     }
   },
 

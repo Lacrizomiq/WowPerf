@@ -19,6 +19,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response && error.response.status === 401) {
+      // Check if the error is due to invalid credentials
+      if (
+        error.response.data &&
+        error.response.data.error === "invalid_credentials"
+      ) {
+        return Promise.reject(error);
+      }
+
+      // If it's not invalid credentials, attempt to refresh the token
       try {
         const refreshToken = localStorage.getItem("refreshToken");
         const response = await axios.post(

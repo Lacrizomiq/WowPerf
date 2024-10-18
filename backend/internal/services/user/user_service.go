@@ -70,6 +70,20 @@ func (s *UserService) ChangePassword(userID uint, currentPassword, newPassword s
 	return s.DB.Model(&user).Update("password", string(hashedPassword)).Error
 }
 
+// DeleteAccount deletes the user's account and all related data
 func (s *UserService) DeleteAccount(userID uint) error {
-	return s.DB.Delete(&models.User{}, userID).Error
+	return s.DB.Transaction(func(tx *gorm.DB) error {
+		// Delete user's related data (if any)
+		// For example:
+		// if err := tx.Where("user_id = ?", userID).Delete(&models.UserPreferences{}).Error; err != nil {
+		//     return err
+		// }
+
+		// Delete the user
+		if err := tx.Unscoped().Delete(&models.User{}, userID).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

@@ -60,6 +60,7 @@ export function useUserProfile() {
     onSuccess: async () => {
       await authService.logout();
       queryClient.clear();
+      router.push("/login");
     },
   });
 

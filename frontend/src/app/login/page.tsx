@@ -20,7 +20,10 @@ export default function LoginPage() {
       return undefined;
     } catch (error) {
       console.error("Login failed:", error);
-      return "Invalid credentials. Please try again.";
+      if (error instanceof Error) {
+        return error.message;
+      }
+      return "An unknown error occurred";
     }
   };
 

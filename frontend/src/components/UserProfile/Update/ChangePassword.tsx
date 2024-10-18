@@ -19,6 +19,7 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
     e.preventDefault();
     if (newPassword === confirmPassword) {
       onChangePassword(currentPassword, newPassword);
+      alert("Password changed successfully");
     } else {
       // Handle password mismatch error
       alert("New passwords do not match");
