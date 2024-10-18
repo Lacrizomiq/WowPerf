@@ -86,22 +86,28 @@ const Sidebar: React.FC<SidebarProps> = ({ setMainMargin }) => {
   const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
+    let selectedRealms: Realm[] = [];
     switch (region) {
       case "eu":
-        setRealms(eu.realms);
+        selectedRealms = eu.realms;
         break;
       case "us":
-        setRealms(us.realms);
+        selectedRealms = us.realms;
         break;
       case "tw":
-        setRealms(tw.realms);
+        selectedRealms = tw.realms;
         break;
       case "kr":
-        setRealms(kr.realms);
+        selectedRealms = kr.realms;
         break;
       default:
-        setRealms([]);
+        selectedRealms = [];
     }
+    // Sort the realms alphabetically by name
+    const sortedRealms = selectedRealms.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    setRealms(sortedRealms);
     setRealm("");
   }, [region]);
 

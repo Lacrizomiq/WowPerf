@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,8 +11,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
@@ -20,14 +21,31 @@ type AuthService struct {
 	JWTSecret       []byte
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
+	OAuthConfig     *oauth2.Config
 }
 
-func NewAuthService(db *gorm.DB, jwtSecret string, redisClient *redis.Client, tokenExpiration time.Duration) *AuthService {
+type BattleNetUserInfo struct {
+	Sub       string `json:"sub"`
+	ID        int    `json:"id"`
+	BattleTag string `json:"battletag"`
+}
+
+func NewAuthService(db *gorm.DB, jwtSecret string, redisClient *redis.Client, tokenExpiration time.Duration, clientID, clientSecret, redirectURL string) *AuthService {
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
 		TokenExpiration: tokenExpiration,
+		OAuthConfig: &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			RedirectURL:  redirectURL,
+			Scopes:       []string{"openid", "wow.profile"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "https://eu.battle.net/oauth/authorize",
+				TokenURL: "https://eu.battle.net/oauth/token",
+			},
+		},
 	}
 }
 
@@ -117,8 +135,8 @@ func (s *AuthService) generateToken(userID uint, expiration time.Duration) (stri
 }
 
 func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
-	refreshToken := uuid.New().String()
 	ctx := context.Background()
+	refreshToken := fmt.Sprintf("%d", time.Now().UnixNano())
 	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, 7*24*time.Hour).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to store refresh token: %v", err)
@@ -144,4 +162,38 @@ func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
 	}
 
 	return newAccessToken, nil
+}
+
+// Battle.net OAuth methods
+
+func (s *AuthService) GetBattleNetAuthURL(state string) string {
+	return s.OAuthConfig.AuthCodeURL(state)
+}
+
+func (s *AuthService) ExchangeBattleNetCode(ctx context.Context, code string) (*oauth2.Token, error) {
+	return s.OAuthConfig.Exchange(ctx, code)
+}
+
+func (s *AuthService) GetBattleNetUserInfo(token *oauth2.Token) (*BattleNetUserInfo, error) {
+	client := s.OAuthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://eu.battle.net/oauth/userinfo")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var userInfo BattleNetUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return nil, err
+	}
+	return &userInfo, nil
+}
+
+func (s *AuthService) LinkBattleNetAccount(userID uint, battleNetInfo *BattleNetUserInfo, token *oauth2.Token) error {
+	return s.DB.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"battle_net_id":         battleNetInfo.ID,
+		"battle_tag":            battleNetInfo.BattleTag,
+		"battle_net_token":      token.AccessToken,
+		"battle_net_expires_at": token.Expiry,
+	}).Error
 }

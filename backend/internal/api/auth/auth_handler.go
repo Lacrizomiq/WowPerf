@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"net/http"
 	"strings"
 	"time"
@@ -65,7 +67,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	accessToken, refreshToken, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		if err.Error() == "invalid credentials" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
+		}
 		return
 	}
 
@@ -115,6 +122,47 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
 }
 
+// Battle.net OAuth handlers
+
+// Battle.net OAuth login
+func (h *AuthHandler) HandleBattleNetLogin(c *gin.Context) {
+	state := generateRandomState()
+	c.SetCookie("oauth_state", state, 3600, "/", "", false, true)
+	url := h.AuthService.GetBattleNetAuthURL(state)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+// Battle.net OAuth callback
+func (h *AuthHandler) HandleBattleNetCallback(c *gin.Context) {
+	state, _ := c.Cookie("oauth_state")
+	if state != c.Query("state") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state"})
+		return
+	}
+
+	code := c.Query("code")
+	token, err := h.AuthService.ExchangeBattleNetCode(c.Request.Context(), code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to exchange token"})
+		return
+	}
+
+	userInfo, err := h.AuthService.GetBattleNetUserInfo(token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
+		return
+	}
+
+	// Assuming the user is already authenticated and we have their ID
+	userID, _ := c.Get("user_id")
+	if err := h.AuthService.LinkBattleNetAccount(userID.(uint), userInfo, token); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link Battle.net account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Battle.net account linked successfully"})
+}
+
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
@@ -122,6 +170,8 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 		auth.POST("/login", h.Login)
 		auth.POST("/logout", h.Logout)
 		auth.POST("/refresh", h.RefreshToken)
+		auth.GET("/battle-net/login", h.HandleBattleNetLogin)
+		auth.GET("/battle-net/callback", h.AuthService.AuthMiddleware(), h.HandleBattleNetCallback)
 	}
 }
 
@@ -142,4 +192,12 @@ func formatValidationError(err validator.FieldError) string {
 	default:
 		return err.Field() + " is invalid"
 	}
+}
+
+func generateRandomState() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return base64.URLEncoding.EncodeToString(b)
 }

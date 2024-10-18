@@ -9,6 +9,10 @@ import (
 	"wowperf/internal/api/raiderio"
 	"wowperf/internal/database"
 	auth "wowperf/internal/services/auth"
+
+	userHandler "wowperf/internal/api/user"
+	userService "wowperf/internal/services/user"
+
 	"wowperf/pkg/cache"
 	"wowperf/pkg/middleware"
 
@@ -37,6 +41,8 @@ func checkUpdateState(db *gorm.DB) {
 }
 
 func main() {
+
+	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -80,8 +86,20 @@ func main() {
 		}
 	}
 
-	authService := auth.NewAuthService(db, jwtSecret, cache.GetRedisClient(), jwtExpiration)
+	authService := auth.NewAuthService(
+		db,
+		jwtSecret,
+		cache.GetRedisClient(),
+		jwtExpiration,
+		os.Getenv("BATTLE_NET_CLIENT_ID"),
+		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
+		os.Getenv("BATTLE_NET_REDIRECT_URL"),
+	)
 	authHandler := authHandler.NewAuthHandler(authService)
+
+	// User Service
+	userService := userService.NewUserService(db)
+	userHandler := userHandler.NewUserHandler(userService)
 
 	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
@@ -150,15 +168,7 @@ func main() {
 	*/
 
 	// Protected Routes
-	protected := r.Group("/user")
-	protected.Use(authService.AuthMiddleware())
-	{
-		// Protected Routes will be added here
-		protected.GET("/profile", func(c *gin.Context) {
-			userID, _ := c.Get("user_id")
-			c.JSON(200, gin.H{"message": "Profile accessed", "user_id": userID})
-		})
-	}
+	userHandler.RegisterRoutes(r, authService.AuthMiddleware())
 
 	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))
