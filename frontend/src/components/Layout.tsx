@@ -1,25 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import Sidebar from "@/components/Header/Sidebar";
+import React from "react";
+import AppSidebar from "@/components/Header/Sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [mainMargin, setMainMargin] = useState(64);
-
   return (
-    <div className="flex min-h-screen bg-[#002440]">
-      <Sidebar setMainMargin={setMainMargin} />
-      <main
-        className="flex-1 transition-all duration-300 overflow-y-auto"
-        style={{ marginLeft: `${mainMargin}px` }}
-      >
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="flex h-screen w-full overflow-hidden bg-[#002440]">
+        <AppSidebar />
+        <div className="flex-1 overflow-auto">
+          <main className="relative min-h-full">
+            <SidebarTrigger className="absolute top-0 left-0 z-10 text-white" />
+            {children}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
