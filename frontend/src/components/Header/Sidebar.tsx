@@ -22,36 +22,15 @@ import {
   Search,
   Sword,
   Hourglass,
-  LogIn,
-  LogOut,
-  UserPlus,
   ChevronDown,
   ChevronUp,
   BicepsFlexed,
   ChartColumnDecreasing,
-  ChevronsUpDown,
-  BadgeCheck,
-  CreditCard,
-  Bell,
-  Sparkles,
 } from "lucide-react";
 import { eu, us, tw, kr } from "@/data/realms";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
+import UserMenuOverlay from "./UserMenuOverlay";
+import { Separator } from "@/components/ui/separator";
 interface AppSidebarProps {
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
@@ -113,10 +92,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
   return (
     <Sidebar
-      className={`transition-all duration-300 h-full ${
-        isExpanded ? "w-64" : "w-16"
-      }`}
+      className={`
+      transition-all duration-300 h-full 
+      bg-[color:var(--sidebar-background)] 
+      text-[color:var(--sidebar-foreground)]
+      ${isExpanded ? "w-64" : "w-16"}
+    `}
     >
+      {/* Header */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -128,7 +111,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 {isExpanded && (
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">WoW Perf</span>
-                    <span className="truncate text-xs">Enterprise</span>
                   </div>
                 )}
               </a>
@@ -136,6 +118,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
+      {/* Content */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -225,7 +209,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                         onClick={() => router.push("/mythic-plus/best-runs")}
                       >
                         <BicepsFlexed />
-                        <span>Best Runs</span>
+                        <span className="cursor-pointer">Best Runs</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
@@ -233,7 +217,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                         onClick={() => router.push("/mythic-plus/statistics")}
                       >
                         <ChartColumnDecreasing />
-                        <span>Statistics</span>
+                        <span className="cursor-pointer">Statistics</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
@@ -249,111 +233,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Footer */}
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu
-              open={isFooterMenuOpen}
-              onOpenChange={(open) => {
-                setIsFooterMenuOpen(open);
-                if (open) {
-                  setIsExpanded(true);
-                }
-              }}
-            >
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src="/path-to-user-avatar.jpg" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                  {isExpanded && (
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {isAuthenticated ? "Username" : "Guest"}
-                      </span>
-                      <span className="truncate text-xs">
-                        {isAuthenticated ? "user@example.com" : "Not logged in"}
-                      </span>
-                    </div>
-                  )}
-                  <ChevronsUpDown className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="top"
-                align="end"
-                sideOffset={4}
-              >
-                {isAuthenticated ? (
-                  <>
-                    <DropdownMenuLabel className="p-0 font-normal">
-                      <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                        <Avatar className="h-8 w-8 rounded-lg">
-                          <AvatarImage
-                            src="/path-to-user-avatar.jpg"
-                            alt="User"
-                          />
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate font-semibold">
-                            Username
-                          </span>
-                          <span className="truncate text-xs">
-                            user@example.com
-                          </span>
-                        </div>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        <span>Upgrade to Pro</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem>
-                        <BadgeCheck className="mr-2 h-4 w-4" />
-                        <span>Account</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        <span>Billing</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Bell className="mr-2 h-4 w-4" />
-                        <span>Notifications</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem onClick={() => router.push("/login")}>
-                      <LogIn className="mr-2 h-4 w-4" />
-                      <span>Login</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/signup")}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      <span>Register</span>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="h-16 bg-[color:var(--sidebar-background)] text-[color:var(--sidebar-foreground)] rounded-lg hover:bg-slate-800">
+          <UserMenuOverlay isExpanded={isExpanded} />
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
