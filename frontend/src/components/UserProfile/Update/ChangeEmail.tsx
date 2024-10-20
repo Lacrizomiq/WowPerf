@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface ChangeEmailProps {
-  onUpdateEmail: (newEmail: string) => void;
+  onUpdateEmail: (newEmail: string) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -12,23 +14,32 @@ const ChangeEmail: React.FC<ChangeEmailProps> = ({
   isUpdating,
 }) => {
   const [newEmail, setNewEmail] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateEmail(newEmail);
-    alert("Email updated");
+    try {
+      await toast.promise(onUpdateEmail(newEmail), {
+        loading: "Updating email...",
+        success: "Email updated successfully!",
+        error: "Failed to update email",
+      });
+      router.push("/profile");
+    } catch (error) {
+      console.error("Error updating email:", error);
+    }
   };
 
   return (
-    <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">
+    <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
         Change Email
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="newEmail"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-medium text-white dark:text-gray-300 mb-2"
           >
             New Email
           </label>

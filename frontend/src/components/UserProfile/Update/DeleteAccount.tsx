@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 interface DeleteAccountProps {
-  onDeleteAccount: () => void;
+  onDeleteAccount: () => Promise<void>;
   isDeleting: boolean;
 }
 
@@ -13,18 +14,26 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({
 }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmDelete) {
-      onDeleteAccount();
+      try {
+        await toast.promise(onDeleteAccount(), {
+          loading: "Deleting account...",
+          success: "Account deleted successfully!",
+          error: "Failed to delete account",
+        });
+      } catch (error) {
+        console.error("Error deleting account:", error);
+      }
     } else {
       alert("Please confirm that you want to delete your account.");
     }
   };
 
   return (
-    <section className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">
+    <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
         Delete Account
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -36,7 +45,7 @@ const DeleteAccount: React.FC<DeleteAccountProps> = ({
               onChange={(e) => setConfirmDelete(e.target.checked)}
               className="form-checkbox h-5 w-5 text-red-600"
             />
-            <span className="ml-2 text-gray-700 dark:text-gray-300">
+            <span className="ml-2 text-white dark:text-gray-300">
               I understand that this action is irreversible and will permanently
               delete my account.
             </span>

@@ -1,25 +1,20 @@
-"use client";
-
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Camera, Edit2, Key, Mail, Trash2 } from "lucide-react";
 
-interface SidebarProps {
-  onSectionChange: (section: string) => void;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ onSectionChange }) => {
+const Sidebar: React.FC = () => {
   const pathname = usePathname();
-
+  const router = useRouter();
   const navItems = [
-    { name: "Profile", section: "profile" },
-    { name: "Change Username", section: "change-username" },
-    { name: "Change Password", section: "change-password" },
-    { name: "Change Email", section: "change-email" },
-    { name: "Delete Account", section: "delete-account" },
+    { name: "Profile", icon: Camera, section: "" },
+    { name: "Change Username", icon: Edit2, section: "update-username" },
+    { name: "Change Password", icon: Key, section: "update-password" },
+    { name: "Change Email", icon: Mail, section: "update-email" },
+    { name: "Delete Account", icon: Trash2, section: "delete-account" },
   ];
 
   return (
-    <aside className="w-64 bg-blue-700 dark:bg-gray-800 shadow-md">
+    <aside className="w-64 bg-[#2d3748] dark:bg-gray-800 shadow-md">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6 text-white dark:text-gray-200">
           Account Settings
@@ -29,14 +24,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onSectionChange }) => {
             {navItems.map((item) => (
               <li key={item.name}>
                 <button
-                  onClick={() => onSectionChange(item.section)}
-                  className={`block w-full text-left px-4 py-2 rounded-md transition-colors ${
+                  onClick={() => router.push(`/profile/${item.section}`)}
+                  className={`flex items-center w-full text-left px-4 py-2 rounded-md transition-colors ${
                     pathname === `/profile/${item.section}`
                       ? "bg-blue-500 text-white"
                       : "text-white dark:text-gray-300 hover:bg-blue-900 dark:hover:bg-gray-700"
                   }`}
                 >
-                  {item.name}
+                  <item.icon className="mr-2" size={20} />
+                  <span>{item.name}</span>
                 </button>
               </li>
             ))}

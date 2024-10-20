@@ -68,12 +68,16 @@ export function useUserProfile() {
     profile,
     isLoading,
     error,
-    updateEmail: (newEmail: string) => updateEmailMutation.mutate(newEmail),
-    changePassword: (currentPassword: string, newPassword: string) =>
-      changePasswordMutation.mutate({ currentPassword, newPassword }),
-    changeUsername: (newUsername: string) =>
-      changeUsernameMutation.mutate(newUsername),
-    deleteAccount: () => deleteAccountMutation.mutate(),
+    updateEmail: (newEmail: string): Promise<void> =>
+      updateEmailMutation.mutateAsync(newEmail),
+    changePassword: (
+      currentPassword: string,
+      newPassword: string
+    ): Promise<void> =>
+      changePasswordMutation.mutateAsync({ currentPassword, newPassword }),
+    changeUsername: (newUsername: string): Promise<void> =>
+      changeUsernameMutation.mutateAsync(newUsername),
+    deleteAccount: (): Promise<void> => deleteAccountMutation.mutateAsync(),
     isUpdatingEmail: updateEmailMutation.isPending,
     isChangingPassword: changePasswordMutation.isPending,
     isChangingUsername: changeUsernameMutation.isPending,
