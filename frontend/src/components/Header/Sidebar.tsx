@@ -121,27 +121,36 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </SidebarHeader>
 
       {/* Content */}
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
+              <SidebarMenuItem
+                className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
+              >
                 <SidebarMenuButton onClick={() => setSearchOpen(!searchOpen)}>
-                  <Search />
-                  {isExpanded && (
-                    <>
-                      <span>Search</span>
-                      {searchOpen ? (
-                        <ChevronUp className="ml-auto" />
-                      ) : (
-                        <ChevronDown className="ml-auto" />
-                      )}
-                    </>
-                  )}
+                  <div
+                    className={`flex items-center w-full mb-2 ${
+                      isExpanded ? "w-full" : "justify-center"
+                    }`}
+                  >
+                    <Search className={isExpanded ? "mr-4" : ""} />
+                    {isExpanded && (
+                      <>
+                        <span>Search</span>
+                        {searchOpen ? (
+                          <ChevronUp className="ml-auto" />
+                        ) : (
+                          <ChevronDown className="ml-auto" />
+                        )}
+                      </>
+                    )}
+                  </div>
                 </SidebarMenuButton>
                 {isExpanded && searchOpen && (
                   <SidebarMenuSub>
-                    <form onSubmit={handleSubmit} className="px-4 py-2">
+                    <form onSubmit={handleSubmit} className="px-4 py-4">
                       <select
                         value={region}
                         onChange={(e) => setRegion(e.target.value)}
@@ -187,25 +196,33 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              <SidebarMenuItem
+                className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
+              >
                 <SidebarMenuButton
                   onClick={() => setMythicPlusExpanded(!mythicPlusExpanded)}
                 >
-                  <Hourglass />
-                  {isExpanded && (
-                    <>
-                      <span>Mythic +</span>
-                      {mythicPlusExpanded ? (
-                        <ChevronUp className="ml-auto" />
-                      ) : (
-                        <ChevronDown className="ml-auto" />
-                      )}
-                    </>
-                  )}
+                  <div
+                    className={`flex items-center w-full mb-2 mt-2 ${
+                      isExpanded ? "w-full" : "justify-center"
+                    }`}
+                  >
+                    <Hourglass className={isExpanded ? "mr-4" : ""} />
+                    {isExpanded && (
+                      <>
+                        <span>Mythic +</span>
+                        {mythicPlusExpanded ? (
+                          <ChevronUp className="ml-auto" />
+                        ) : (
+                          <ChevronDown className="ml-auto" />
+                        )}
+                      </>
+                    )}
+                  </div>
                 </SidebarMenuButton>
                 {isExpanded && mythicPlusExpanded && (
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
+                    <SidebarMenuSubItem className="py-4 ">
                       <SidebarMenuSubButton
                         onClick={() => router.push("/mythic-plus/best-runs")}
                       >
@@ -224,10 +241,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              <SidebarMenuItem
+                className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
+              >
                 <SidebarMenuButton onClick={() => router.push("/raids")}>
-                  <Sword />
-                  {isExpanded && <span>Raids</span>}
+                  <div
+                    className={`flex items-center w-full mt-2 mb-2 ${
+                      isExpanded ? "w-full" : "justify-center"
+                    }`}
+                  >
+                    <Sword className={isExpanded ? "mr-4" : ""} />
+                    {isExpanded && <span>Raids</span>}
+                  </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
