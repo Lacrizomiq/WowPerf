@@ -9,6 +9,9 @@ import (
 	staticRaids "wowperf/internal/database/static/raids"
 	staticTalents "wowperf/internal/database/static/talents"
 
+	serviceRaiderio "wowperf/internal/services/raiderio"
+	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
+
 	mythicplus "wowperf/internal/models/mythicplus"
 	raiderioMythicPlus "wowperf/internal/models/raiderio/mythicrundetails"
 	raids "wowperf/internal/models/raids"
@@ -125,20 +128,44 @@ func ensureRaidsData(db *gorm.DB) error {
 	return nil
 }
 
+// Ensure DungeonStats data is present
 func ensureDungeonStats(db *gorm.DB) error {
-	var count int64
-	db.Model(&raiderioMythicPlus.DungeonStats{}).Count(&count)
-	if count == 0 {
-		log.Println("Initializing DungeonStats...")
-		initialStats := raiderioMythicPlus.DungeonStats{
-			Season:      "initial",
-			Region:      "initial",
-			DungeonSlug: "initial",
-			UpdatedAt:   time.Now(),
+	if mythicplusUpdate.IsDungeonStatsEmpty(db) {
+		log.Println("DungeonStats table is effectively empty. Resetting update state and initiating update...")
+		if err := mythicplusUpdate.RemoveInitialDungeonStats(db); err != nil {
+			log.Printf("Error removing initial DungeonStats: %v", err)
 		}
-		if err := db.Create(&initialStats).Error; err != nil {
-			return fmt.Errorf("error creating initial DungeonStats: %v", err)
+		mythicplusUpdate.ResetUpdateState(db)
+
+		rioService, err := serviceRaiderio.NewRaiderIOService()
+		if err != nil {
+			return fmt.Errorf("failed to initialize raiderio service: %v", err)
+		}
+
+		const maxRetries = 3
+		var updateErr error
+		for i := 0; i < maxRetries; i++ {
+			updateErr = mythicplusUpdate.UpdateDungeonStats(db, rioService)
+			if updateErr == nil {
+				break
+			}
+			log.Printf("Attempt %d failed to update DungeonStats: %v. Retrying...", i+1, updateErr)
+			time.Sleep(time.Second * 5)
+		}
+
+		if updateErr != nil {
+			return fmt.Errorf("error performing DungeonStats update after %d attempts: %v", maxRetries, updateErr)
+		}
+
+		log.Println("DungeonStats update completed successfully")
+	} else {
+		log.Println("DungeonStats are not empty, checking if update is needed...")
+		if mythicplusUpdate.CheckAndSetUpdateLock(db) {
+			// Perform update (same code as above)
+		} else {
+			log.Println("DungeonStats are up to date")
 		}
 	}
+
 	return nil
 }

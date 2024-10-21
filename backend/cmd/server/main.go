@@ -23,6 +23,7 @@ import (
 
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	serviceRaiderio "wowperf/internal/services/raiderio"
+	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -152,20 +153,28 @@ func main() {
 
 	checkUpdateState(db)
 
-	/*
-		go func() {
-			log.Println("Checking if dungeon stats update is needed...")
-			if err := raiderioMythicPlus.UpdateDungeonStats(db, rioService); err != nil {
-				log.Printf("Error during dungeon stats update check: %v", err)
-			} else {
-				log.Println("Dungeon stats update check completed")
+	go func() {
+		log.Println("Setting up dungeon stats update...")
+		if mythicplusUpdate.CheckAndSetUpdateLock(db) {
+			log.Println("Performing initial dungeon stats update...")
+			rioService, err := serviceRaiderio.NewRaiderIOService()
+			if err != nil {
+				log.Printf("Error initializing RaiderIO service: %v", err)
+				return
 			}
-			checkUpdateState(db)
+			if err := mythicplusUpdate.UpdateDungeonStats(db, rioService); err != nil {
+				log.Printf("Error during initial dungeon stats update: %v", err)
+			} else {
+				log.Println("Initial dungeon stats update completed")
+			}
+		} else {
+			log.Println("Dungeon stats are up to date")
+		}
+		checkUpdateState(db)
 
-			log.Println("Setting up weekly dungeon stats update...")
-			raiderioMythicPlus.StartWeeklyDungeonStatsUpdate(db, rioService)
-		}()
-	*/
+		log.Println("Setting up weekly dungeon stats update...")
+		mythicplusUpdate.StartWeeklyDungeonStatsUpdate(db, rioService)
+	}()
 
 	// Protected Routes
 	userHandler.RegisterRoutes(r, authService.AuthMiddleware())

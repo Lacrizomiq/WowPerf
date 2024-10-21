@@ -12,20 +12,28 @@ import (
 
 const updateInterval = 7 * 24 * time.Hour // 7 jours
 
-func isDungeonStatsEmpty(db *gorm.DB) bool {
+func IsDungeonStatsEmpty(db *gorm.DB) bool {
 	var count int64
-	err := db.Model(&models.DungeonStats{}).Count(&count).Error
+	err := db.Model(&models.DungeonStats{}).
+		Where("season != 'initial' OR region != 'initial' OR dungeon_slug != 'initial'").
+		Count(&count).Error
 	if err != nil {
 		log.Printf("Error checking if dungeon stats are empty: %v", err)
 		return true // Assume empty if there's an error
 	}
-	log.Printf("Found %d dungeon stats records", count)
+	log.Printf("Found %d non-initial dungeon stats records", count)
 	return count == 0
 }
 
-func checkAndSetUpdateLock(db *gorm.DB) bool {
-	if isDungeonStatsEmpty(db) {
-		log.Println("No dungeon stats found in database. Forcing update.")
+func RemoveInitialDungeonStats(db *gorm.DB) error {
+	return db.Where("season = 'initial' AND region = 'initial' AND dungeon_slug = 'initial'").
+		Delete(&models.DungeonStats{}).Error
+}
+
+func CheckAndSetUpdateLock(db *gorm.DB) bool {
+	if IsDungeonStatsEmpty(db) {
+		log.Println("DungeonStats table is empty. Forcing update.")
+		ResetUpdateState(db)
 		return true
 	}
 
@@ -61,12 +69,14 @@ func checkAndSetUpdateLock(db *gorm.DB) bool {
 	return false
 }
 
+func ResetUpdateState(db *gorm.DB) {
+	if err := db.Exec("DELETE FROM update_states").Error; err != nil {
+		log.Printf("Error resetting update state: %v", err)
+	}
+}
+
 // UpdateDungeonStats updates the dungeon stats in the database
 func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error {
-	if !checkAndSetUpdateLock(db) {
-		log.Println("Dungeon stats update is not needed at this time. Skipping.")
-		return nil
-	}
 
 	log.Println("Starting dungeon stats update...")
 
@@ -145,9 +155,4 @@ func StartWeeklyDungeonStatsUpdate(db *gorm.DB, rioService *raiderio.RaiderIOSer
 			}
 		}
 	}()
-}
-
-// CheckAndSetUpdateLock is an exported version of checkAndSetUpdateLock
-func CheckAndSetUpdateLock(db *gorm.DB) bool {
-	return checkAndSetUpdateLock(db)
 }
