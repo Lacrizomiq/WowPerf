@@ -3,6 +3,7 @@ package raiderioMythicPlus
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"wowperf/internal/services/raiderio"
 )
@@ -12,6 +13,7 @@ type DungeonStats struct {
 	RoleStats   map[string]map[string]int
 	SpecStats   map[string]map[string]int
 	LevelStats  map[int]int
+	TeamComp    map[string]int
 }
 
 // GetDungeonStats retrieves the dungeon statistics for a given dungeon slug, specially the class composition of the runs
@@ -21,6 +23,7 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 		RoleStats:   make(map[string]map[string]int),
 		SpecStats:   make(map[string]map[string]int),
 		LevelStats:  make(map[int]int),
+		TeamComp:    make(map[string]int),
 	}
 
 	var wg sync.WaitGroup
@@ -96,6 +99,22 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 					if !ok {
 						continue
 					}
+
+					var teamComp strings.Builder
+					for _, member := range roster {
+						memberMap, ok := member.(map[string]interface{})
+						if !ok {
+							continue
+						}
+
+						role, _ := memberMap["role"].(string)
+						character, _ := memberMap["character"].(map[string]interface{})
+						class, _ := character["class"].(map[string]interface{})["name"].(string)
+						spec, _ := character["spec"].(map[string]interface{})["name"].(string)
+						teamComp.WriteString(fmt.Sprintf("%s-%s-%s, ", role, class, spec))
+					}
+					compString := strings.TrimRight(teamComp.String(), ", ")
+					stats.TeamComp[compString]++
 
 					if stats.RoleStats[role] == nil {
 						stats.RoleStats[role] = make(map[string]int)

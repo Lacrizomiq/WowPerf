@@ -161,7 +161,14 @@ func ensureDungeonStats(db *gorm.DB) error {
 	} else {
 		log.Println("DungeonStats are not empty, checking if update is needed...")
 		if mythicplusUpdate.CheckAndSetUpdateLock(db) {
-			// Perform update (same code as above)
+			rioService, err := serviceRaiderio.NewRaiderIOService()
+			if err != nil {
+				return fmt.Errorf("failed to initialize raiderio service: %v", err)
+			}
+			if err := mythicplusUpdate.UpdateDungeonStats(db, rioService); err != nil {
+				return fmt.Errorf("error updating DungeonStats: %v", err)
+			}
+			log.Println("DungeonStats update completed successfully")
 		} else {
 			log.Println("DungeonStats are up to date")
 		}

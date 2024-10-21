@@ -14,6 +14,7 @@ type DungeonStats struct {
 	RoleStats   map[string]map[string]int `gorm:"serializer:json"`
 	SpecStats   map[string]map[string]int `gorm:"serializer:json"`
 	LevelStats  map[int]int               `gorm:"serializer:json"`
+	TeamComp    map[string]int            `gorm:"serializer:json"`
 	UpdatedAt   time.Time                 `json:"updated_at"`
 }
 

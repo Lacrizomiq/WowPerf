@@ -36,6 +36,7 @@ func Migrate(db *gorm.DB) error {
 		{"003_add_dungeon_stats", addDungeonStats},
 		{"004_add_constraints", addConstraints},
 		{"005_update_foreign_keys", updateForeignKeys},
+		{"006_add_team_comp_to_dungeon_stats", addTeamCompToDungeonStats},
 	}
 
 	for _, m := range migrations {
@@ -93,6 +94,13 @@ func addUserColumns(db *gorm.DB) error {
 
 func addDungeonStats(db *gorm.DB) error {
 	return db.AutoMigrate(&raiderioMythicPlus.DungeonStats{})
+}
+
+func addTeamCompToDungeonStats(db *gorm.DB) error {
+	return db.Exec(`
+	ALTER TABLE dungeon_stats
+	ADD COLUMN IF NOT EXISTS team_comp JSONB;
+	`).Error
 }
 
 func addConstraints(db *gorm.DB) error {
