@@ -34,7 +34,7 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
       <PopoverTrigger asChild>
         <button className="absolute bottom-4 left-0 w-full px-4 py-2 flex items-center ">
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src="/path-to-user-avatar.jpg" alt="User" />
+            <AvatarImage src="" alt="User" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           {isExpanded && (

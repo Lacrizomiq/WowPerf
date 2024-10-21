@@ -65,7 +65,7 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	if err := database.SeedDatabase(db); err != nil {
+	if err := database.InitializeDatabase(db); err != nil {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 

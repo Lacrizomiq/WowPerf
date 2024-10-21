@@ -5,10 +5,14 @@ import (
 	"log"
 	"path/filepath"
 	"time"
-	mythicplus "wowperf/internal/database/static/mythicplus"
-	raids "wowperf/internal/database/static/raids"
-	talents "wowperf/internal/database/static/talents"
-	models "wowperf/internal/models/raiderio/mythicrundetails"
+	staticMythicPlus "wowperf/internal/database/static/mythicplus"
+	staticRaids "wowperf/internal/database/static/raids"
+	staticTalents "wowperf/internal/database/static/talents"
+
+	mythicplus "wowperf/internal/models/mythicplus"
+	raiderioMythicPlus "wowperf/internal/models/raiderio/mythicrundetails"
+	raids "wowperf/internal/models/raids"
+	talents "wowperf/internal/models/talents"
 
 	"gorm.io/gorm"
 )
@@ -18,65 +22,123 @@ const (
 	staticRaidsPath      = "./static/Raid/"
 )
 
-func SeedDatabase(db *gorm.DB) error {
-	log.Println("Starting database seeding...")
+func InitializeDatabase(db *gorm.DB) error {
+	log.Println("Initializing database...")
 
-	// Initialize UpdateState
-	var updateState models.UpdateState
-	if err := db.FirstOrCreate(&updateState, models.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
+	if err := Migrate(db); err != nil {
+		return fmt.Errorf("error performing migrations: %v", err)
+	}
+
+	if err := ensureUpdateState(db); err != nil {
+		return fmt.Errorf("error ensuring update state: %v", err)
+	}
+
+	if err := ensureInitialData(db); err != nil {
+		return fmt.Errorf("error ensuring initial data: %v", err)
+	}
+
+	log.Println("Database initialization completed successfully.")
+	return nil
+}
+
+func ensureUpdateState(db *gorm.DB) error {
+	var updateState raiderioMythicPlus.UpdateState
+	if err := db.FirstOrCreate(&updateState, raiderioMythicPlus.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
 		return fmt.Errorf("error initializing UpdateState: %v", err)
 	}
-
-	// Seed Mythic+ data
-	if err := seedMythicPlusData(db); err != nil {
-		return fmt.Errorf("error seeding Mythic+ data: %v", err)
-	}
-
-	// Seed Talents data
-	if err := talents.SeedTalents(db); err != nil {
-		return fmt.Errorf("error seeding Talents data: %v", err)
-	}
-
-	// Seed Raids data
-	if err := seedRaidsData(db); err != nil {
-		return fmt.Errorf("error seeding Raids data: %v", err)
-	}
-
-	log.Println("Database seeding completed successfully.")
 	return nil
 }
 
-func seedMythicPlusData(db *gorm.DB) error {
-	absPath, err := filepath.Abs(staticMythicPlusPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path: %v", err)
+func ensureInitialData(db *gorm.DB) error {
+	if err := ensureMythicPlusData(db); err != nil {
+		return err
 	}
 
-	if err := mythicplus.SeedSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
+	if err := ensureTalentsData(db); err != nil {
 		return err
 	}
-	if err := mythicplus.SeedSeasons(db, filepath.Join(absPath, "TWW", "S1MMTWW.json")); err != nil {
+
+	if err := ensureRaidsData(db); err != nil {
 		return err
 	}
-	if err := mythicplus.SeedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
+
+	if err := ensureDungeonStats(db); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func ensureMythicPlusData(db *gorm.DB) error {
+	var count int64
+	db.Model(&mythicplus.Season{}).Count(&count)
+	if count == 0 {
+		log.Println("Seeding Mythic+ data...")
+		absPath, err := filepath.Abs(staticMythicPlusPath)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path: %v", err)
+		}
+
+		if err := staticMythicPlus.SeedSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
+			return err
+		}
+		if err := staticMythicPlus.SeedSeasons(db, filepath.Join(absPath, "TWW", "S1MMTWW.json")); err != nil {
+			return err
+		}
+		if err := staticMythicPlus.SeedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func seedRaidsData(db *gorm.DB) error {
-	absPath, err := filepath.Abs(staticRaidsPath)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path: %v", err)
+func ensureTalentsData(db *gorm.DB) error {
+	var count int64
+	db.Model(&talents.TalentTree{}).Count(&count)
+	if count == 0 {
+		log.Println("Seeding Talents data...")
+		if err := staticTalents.SeedTalents(db); err != nil {
+			return fmt.Errorf("error seeding Talents data: %v", err)
+		}
 	}
+	return nil
+}
 
-	if err := raids.SeedRaids(db, filepath.Join(absPath, "TWW", "raids.json")); err != nil {
-		return err
+func ensureRaidsData(db *gorm.DB) error {
+	var count int64
+	db.Model(&raids.Raid{}).Count(&count)
+	if count == 0 {
+		log.Println("Seeding Raids data...")
+		absPath, err := filepath.Abs(staticRaidsPath)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path: %v", err)
+		}
+
+		if err := staticRaids.SeedRaids(db, filepath.Join(absPath, "TWW", "raids.json")); err != nil {
+			return err
+		}
+
+		if err := staticRaids.SeedRaids(db, filepath.Join(absPath, "DF", "raids.json")); err != nil {
+			return err
+		}
 	}
+	return nil
+}
 
-	if err := raids.SeedRaids(db, filepath.Join(absPath, "DF", "raids.json")); err != nil {
-		return err
+func ensureDungeonStats(db *gorm.DB) error {
+	var count int64
+	db.Model(&raiderioMythicPlus.DungeonStats{}).Count(&count)
+	if count == 0 {
+		log.Println("Initializing DungeonStats...")
+		initialStats := raiderioMythicPlus.DungeonStats{
+			Season:      "initial",
+			Region:      "initial",
+			DungeonSlug: "initial",
+			UpdatedAt:   time.Now(),
+		}
+		if err := db.Create(&initialStats).Error; err != nil {
+			return fmt.Errorf("error creating initial DungeonStats: %v", err)
+		}
 	}
-
 	return nil
 }
