@@ -68,7 +68,10 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
               <Sparkles className="mr-2 h-4 w-4 inline" />
               Upgrade to Pro
             </button>
-            <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
+            <button
+              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+              onClick={() => router.push("/profile")}
+            >
               <BadgeCheck className="mr-2 h-4 w-4 inline" />
               Account
             </button>

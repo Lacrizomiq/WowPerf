@@ -3,7 +3,7 @@
 import React from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import ChangeEmail from "@/components/UserProfile/Update/ChangeEmail";
-import Sidebar from "@/components/UserProfile/Sidebar";
+import Sidebar from "@/components/UserProfile/ProfileSidebar";
 
 const UpdateEmailPage: React.FC = () => {
   const { updateEmail, isUpdatingEmail } = useUserProfile();

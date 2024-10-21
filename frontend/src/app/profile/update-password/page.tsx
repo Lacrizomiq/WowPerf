@@ -3,7 +3,7 @@
 import React from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import ChangePassword from "@/components/UserProfile/Update/ChangePassword";
-import Sidebar from "@/components/UserProfile/Sidebar";
+import Sidebar from "@/components/UserProfile/ProfileSidebar";
 
 const UpdatePasswordPage: React.FC = () => {
   const { changePassword, isChangingPassword } = useUserProfile();

@@ -30,7 +30,7 @@ import {
 import { eu, us, tw, kr } from "@/data/realms";
 
 import UserMenuOverlay from "./UserMenuOverlay";
-import { Separator } from "@/components/ui/separator";
+
 interface AppSidebarProps {
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
@@ -97,6 +97,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       bg-[color:var(--sidebar-background)] 
       text-[color:var(--sidebar-foreground)]
       ${isExpanded ? "w-64" : "w-16"}
+     
     `}
     >
       {/* Header */}

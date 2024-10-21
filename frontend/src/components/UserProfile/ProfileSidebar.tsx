@@ -2,7 +2,7 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Camera, Edit2, Key, Mail, Trash2 } from "lucide-react";
 
-const Sidebar: React.FC = () => {
+const ProfileSidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const navItems = [
@@ -14,7 +14,7 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-[#2d3748] dark:bg-gray-800 shadow-md">
+    <aside className="bg-[#374151] shadow-md relative z-20 m-8 rounded-lg">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6 text-white dark:text-gray-200">
           Account Settings
@@ -43,4 +43,4 @@ const Sidebar: React.FC = () => {
   );
 };
 
-export default Sidebar;
+export default ProfileSidebar;
