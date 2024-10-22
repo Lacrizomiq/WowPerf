@@ -80,9 +80,7 @@ export const OverallStats: React.FC<StatsProps> = ({ stats }) => {
                   <LabelList
                     dataKey="percentage"
                     position="top"
-                    formatter={(value: number) =>
-                      value > 5 ? `${value.toFixed(2)}%` : ""
-                    }
+                    formatter={(value: number) => `${value.toFixed(2)}%`}
                     style={{
                       fill: "white",
                       fontWeight: "bold",

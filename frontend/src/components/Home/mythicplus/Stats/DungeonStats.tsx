@@ -52,6 +52,11 @@ const DungeonStats: React.FC = () => {
     { id: "compositions", label: "Team Compositions" },
   ];
 
+  const getKeyRange = (levelStats: Record<string, number>) => {
+    const levels = Object.keys(levelStats).map(Number);
+    return `+${Math.min(...levels)} / +${Math.max(...levels)}`;
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "overall":
@@ -89,19 +94,30 @@ const DungeonStats: React.FC = () => {
         />
       </div>
 
-      <div className="p-4">
-        <p className="text-white">
-          Last update:{" "}
-          {new Intl.DateTimeFormat("en-US", {
-            weekday: "long",
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          }).format(new Date(statsData[0].updated_at))}
-        </p>
+      <div className="space-y-4">
+        <div className="p-4">
+          <p className="text-white">
+            Last update:{" "}
+            {new Intl.DateTimeFormat("en-US", {
+              weekday: "long",
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            }).format(new Date(statsData[0].updated_at))}
+          </p>
+        </div>
+
+        <div className="p-4 bg-deep-blue rounded-lg shadow-2xl">
+          <h3 className="text-xl font-bold text-white mb-2">
+            Mythic+ Keystones Range
+          </h3>
+          <p className="text-white text-lg">
+            {getKeyRange(currentDungeonStats.LevelStats)}
+          </p>
+        </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 mt-6">
         <div className="flex space-x-2 border-b border-gray-700">
           {tabs.map((tab) => (
             <button
