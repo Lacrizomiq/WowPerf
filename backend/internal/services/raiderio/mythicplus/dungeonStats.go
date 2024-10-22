@@ -2,7 +2,6 @@ package raiderioMythicPlus
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"sync"
 	models "wowperf/internal/models/raiderio/mythicrundetails"
@@ -28,17 +27,13 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 		TeamComp:    make(models.TeamCompMap),
 	}
 
-	// Create a wait group and a channel for errors
 	var wg sync.WaitGroup
 	errors := make(chan error, 2)
 
-	// Iterate over the pages of rankings
 	for page := 0; page <= 2; page++ {
 		wg.Add(1)
 		go func(page int) {
 			defer wg.Done()
-
-			log.Printf("Requesting page %d for %s %s", page, season, region)
 
 			runs, err := GetMythicPlusBestRuns(s, season, region, dungeonSlug, page)
 			if err != nil {
@@ -52,130 +47,8 @@ func GetDungeonStats(s *raiderio.RaiderIOService, season, region, dungeonSlug st
 				return
 			}
 
-			// Iterate over the rankings
 			for _, ranking := range rankings {
-				run, ok := ranking.(map[string]interface{})
-				if !ok {
-					continue
-				}
-
-				runDetails, ok := run["run"].(map[string]interface{})
-				if !ok {
-					continue
-				}
-
-				mythicLevel, ok := runDetails["mythic_level"].(float64)
-				if ok {
-					stats.LevelStats[int(mythicLevel)]++
-				}
-
-				roster, ok := runDetails["roster"].([]interface{})
-				if !ok {
-					continue
-				}
-
-				for _, member := range roster {
-					memberMap, ok := member.(map[string]interface{})
-					if !ok {
-						continue
-					}
-
-					role, ok := memberMap["role"].(string)
-					if !ok {
-						continue
-					}
-
-					character, ok := memberMap["character"].(map[string]interface{})
-					if !ok {
-						continue
-					}
-
-					class, ok := character["class"].(map[string]interface{})["name"].(string)
-					if !ok {
-						continue
-					}
-
-					spec, ok := character["spec"].(map[string]interface{})
-					if !ok {
-						continue
-					}
-
-					specName, ok := spec["name"].(string)
-					if !ok {
-						continue
-					}
-
-					// Create a composition for the team
-					comp := models.TeamComposition{}
-					dpsMembers := []models.TeamMember{}
-					for _, member := range roster {
-						memberMap := member.(map[string]interface{})
-						role := memberMap["role"].(string)
-						character := memberMap["character"].(map[string]interface{})
-						class := character["class"].(map[string]interface{})["name"].(string)
-						spec := character["spec"].(map[string]interface{})["name"].(string)
-
-						member := models.TeamMember{
-							Class: class,
-							Spec:  spec,
-						}
-
-						// Add the member to the composition
-						switch role {
-						case "tank":
-							comp.Tank = member
-						case "healer":
-							comp.Healer = member
-						case "dps":
-							dpsMembers = append(dpsMembers, member)
-						}
-					}
-
-					// Sort the dps members by class and spec
-					sort.Slice(dpsMembers, func(i, j int) bool {
-						if dpsMembers[i].Class == dpsMembers[j].Class {
-							return dpsMembers[i].Spec < dpsMembers[j].Spec
-						}
-						return dpsMembers[i].Class < dpsMembers[j].Class
-					})
-
-					// Add the dps members to the composition
-					if len(dpsMembers) >= 1 {
-						comp.Dps1 = dpsMembers[0]
-					}
-					if len(dpsMembers) >= 2 {
-						comp.Dps2 = dpsMembers[1]
-					}
-					if len(dpsMembers) >= 3 {
-						comp.Dps3 = dpsMembers[2]
-					}
-
-					// Create a key for the team composition
-					key := fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s_%s_%s_%s",
-						comp.Tank.Class, comp.Tank.Spec,
-						comp.Healer.Class, comp.Healer.Spec,
-						comp.Dps1.Class, comp.Dps1.Spec,
-						comp.Dps2.Class, comp.Dps2.Spec,
-						comp.Dps3.Class, comp.Dps3.Spec)
-					if teamComp, exists := stats.TeamComp[key]; exists {
-						teamComp.Count++
-						stats.TeamComp[key] = teamComp
-					} else {
-						stats.TeamComp[key] = models.TeamCompStats{Count: 1, Composition: comp}
-					}
-
-					// Add the role to the role stats
-					if stats.RoleStats[role] == nil {
-						stats.RoleStats[role] = make(map[string]int)
-					}
-					stats.RoleStats[role][class]++
-
-					// Add the spec to the spec stats
-					if stats.SpecStats[class] == nil {
-						stats.SpecStats[class] = make(map[string]int)
-					}
-					stats.SpecStats[class][specName]++
-				}
+				processRun(ranking, stats)
 			}
 		}(page)
 	}
@@ -217,4 +90,143 @@ func GetAllDungeonStats(s *raiderio.RaiderIOService, season, region string, dung
 	}
 
 	return stats, nil
+}
+
+// processRun processes a run and updates the stats// processRun processes a single run and updates the stats
+func processRun(ranking interface{}, stats *DungeonStats) {
+	run, ok := ranking.(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	runDetails, ok := run["run"].(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	// Process mythic level
+	if mythicLevel, ok := runDetails["mythic_level"].(float64); ok {
+		stats.LevelStats[int(mythicLevel)]++
+	}
+
+	// Process roster
+	roster, ok := runDetails["roster"].([]interface{})
+	if !ok {
+		return
+	}
+
+	var comp models.TeamComposition
+	var dpsMembers []models.TeamMember
+
+	for _, member := range roster {
+		memberMap, ok := member.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		role, class, spec := extractMemberInfo(memberMap)
+		if role == "" || class == "" || spec == "" {
+			continue
+		}
+
+		member := models.TeamMember{
+			Class: class,
+			Spec:  spec,
+		}
+
+		// Update role and spec stats
+		updateStats(stats, role, class, spec)
+
+		// Build team composition
+		switch role {
+		case "tank":
+			comp.Tank = member
+		case "healer":
+			comp.Healer = member
+		case "dps":
+			dpsMembers = append(dpsMembers, member)
+		}
+	}
+
+	// Sort and assign DPS
+	processDPSMembers(&comp, dpsMembers)
+
+	// Create and store team composition
+	key := createTeamCompKey(comp)
+	if teamComp, exists := stats.TeamComp[key]; exists {
+		teamComp.Count++
+		stats.TeamComp[key] = teamComp
+	} else {
+		stats.TeamComp[key] = models.TeamCompStats{
+			Count:       1,
+			Composition: comp,
+		}
+	}
+}
+
+// extractMemberInfo extracts the role, class, and spec from a member map
+func extractMemberInfo(memberMap map[string]interface{}) (role, class, spec string) {
+	role, _ = memberMap["role"].(string)
+
+	character, ok := memberMap["character"].(map[string]interface{})
+	if !ok {
+		return "", "", ""
+	}
+
+	classInfo, ok := character["class"].(map[string]interface{})
+	if !ok {
+		return role, "", ""
+	}
+	class, _ = classInfo["name"].(string)
+
+	specInfo, ok := character["spec"].(map[string]interface{})
+	if !ok {
+		return role, class, ""
+	}
+	spec, _ = specInfo["name"].(string)
+
+	return role, class, spec
+}
+
+// updateStats updates the role and spec stats
+func updateStats(stats *DungeonStats, role, class, spec string) {
+	if stats.RoleStats[role] == nil {
+		stats.RoleStats[role] = make(map[string]int)
+	}
+	stats.RoleStats[role][class]++
+
+	if stats.SpecStats[class] == nil {
+		stats.SpecStats[class] = make(map[string]int)
+	}
+	stats.SpecStats[class][spec]++
+}
+
+// processDPSMembers processes the dps members and updates the team composition
+func processDPSMembers(comp *models.TeamComposition, dpsMembers []models.TeamMember) {
+	sort.Slice(dpsMembers, func(i, j int) bool {
+		if dpsMembers[i].Class == dpsMembers[j].Class {
+			return dpsMembers[i].Spec < dpsMembers[j].Spec
+		}
+		return dpsMembers[i].Class < dpsMembers[j].Class
+	})
+
+	if len(dpsMembers) >= 1 {
+		comp.Dps1 = dpsMembers[0]
+	}
+	if len(dpsMembers) >= 2 {
+		comp.Dps2 = dpsMembers[1]
+	}
+	if len(dpsMembers) >= 3 {
+		comp.Dps3 = dpsMembers[2]
+	}
+}
+
+// createTeamCompKey creates a key for the team composition
+func createTeamCompKey(comp models.TeamComposition) string {
+	return fmt.Sprintf("%s_%s_%s_%s_%s_%s_%s_%s_%s_%s",
+		comp.Tank.Class, comp.Tank.Spec,
+		comp.Healer.Class, comp.Healer.Spec,
+		comp.Dps1.Class, comp.Dps1.Spec,
+		comp.Dps2.Class, comp.Dps2.Spec,
+		comp.Dps3.Class, comp.Dps3.Spec)
 }

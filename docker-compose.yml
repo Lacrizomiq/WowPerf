@@ -6,12 +6,15 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: runner
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - ./frontend:/app:cached
+      - frontend_node_modules:/app/node_modules:delegated
+      - frontend_next:/app/.next:delegated
     environment:
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "3000:3000"
     depends_on:
@@ -79,3 +82,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  frontend_node_modules:
+  frontend_next:

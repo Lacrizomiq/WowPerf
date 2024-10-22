@@ -1,27 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useGetDungeonStats } from "@/hooks/useRaiderioApi";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LabelList,
-  Cell,
-} from "recharts";
-import { ClassStats, DungeonStat, RoleStats } from "@/types/dungeonStats";
+import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
+import { DungeonStat } from "@/types/dungeonStats";
+import { Dungeon } from "@/types/mythicPlusRuns";
 import DungeonSelector from "./Selector/DungeonSelector";
 import RegionSelector from "./Selector/RegionSelector";
-import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
-import { Dungeon } from "@/types/mythicPlusRuns";
+import { OverallStats } from "./OverallStats";
+import { SpecStats } from "./SpecStats";
+import { TeamComposition } from "./TeamComposition";
 
 const DungeonStats: React.FC = () => {
   const [season] = useState("season-tww-1");
   const [region, setRegion] = useState("world");
   const [dungeon, setDungeon] = useState("all");
+  const [activeTab, setActiveTab] = useState("overall");
 
   const {
     data: statsData,
@@ -29,14 +21,11 @@ const DungeonStats: React.FC = () => {
     error,
   } = useGetDungeonStats(season, region);
 
-  console.log("stats data ", statsData);
-
   const { data: dungeonData } = useGetBlizzardMythicDungeonPerSeason(season);
-
   const [dungeons, setDungeons] = useState<Dungeon[]>([]);
 
   useEffect(() => {
-    if (dungeonData && dungeonData.dungeons) {
+    if (dungeonData?.dungeons) {
       setDungeons(dungeonData.dungeons);
     }
   }, [dungeonData]);
@@ -50,39 +39,36 @@ const DungeonStats: React.FC = () => {
   const currentDungeonStats =
     statsData?.find((stat: DungeonStat) => stat.dungeon_slug === dungeon) ||
     statsData?.[0];
-  if (!currentDungeonStats)
+
+  if (!currentDungeonStats) {
     return (
       <div className="text-white">No data available for this dungeon.</div>
     );
+  }
 
-  const getLevelRange = (levelStats: Record<string, number>) => {
+  const tabs = [
+    { id: "overall", label: "Overall Stats" },
+    { id: "specs", label: "Spec Distribution" },
+    { id: "compositions", label: "Team Compositions" },
+  ];
+
+  const getKeyRange = (levelStats: Record<string, number>) => {
     const levels = Object.keys(levelStats).map(Number);
-    const minLevel = Math.min(...levels);
-    const maxLevel = Math.max(...levels);
-    return `+${minLevel} / +${maxLevel}`;
+    return `+${Math.min(...levels)} / +${Math.max(...levels)}`;
   };
 
-  const prepareChartData = (role: string) => {
-    const roleStats = currentDungeonStats?.RoleStats || {};
-    const classStats =
-      roleStats[role.toLowerCase() as keyof typeof roleStats] || {};
-    const total = Object.values(classStats).reduce(
-      (sum: number, count) => sum + (count as number),
-      0
-    );
-    return Object.entries(classStats)
-      .map(([className, count]) => ({
-        className,
-        count: count as number,
-        percentage: Number((((count as number) / total) * 100).toFixed(2)),
-        color: `var(--color-${className.toLowerCase().replace(" ", "-")})`,
-      }))
-      .sort((a, b) => b.percentage - a.percentage);
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overall":
+        return <OverallStats stats={currentDungeonStats} />;
+      case "specs":
+        return <SpecStats stats={currentDungeonStats} />;
+      case "compositions":
+        return <TeamComposition stats={currentDungeonStats} />;
+      default:
+        return null;
+    }
   };
-
-  const roles = ["tank", "healer", "dps"];
-
-  console.log("statsData", statsData);
 
   return (
     <div className="p-4 bg-[#0a0a0a] bg-opacity-80">
@@ -108,99 +94,48 @@ const DungeonStats: React.FC = () => {
         />
       </div>
 
-      <div className="p-4">
-        <p>
-          Last update:{" "}
-          {new Intl.DateTimeFormat("en-US", {
-            weekday: "long",
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          }).format(new Date(statsData[0].updated_at))}
-        </p>
+      <div className="space-y-4">
+        <div className="p-4">
+          <p className="text-white">
+            Last update:{" "}
+            {new Intl.DateTimeFormat("en-US", {
+              weekday: "long",
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            }).format(new Date(statsData[0].updated_at))}
+          </p>
+        </div>
+
+        <div className="p-4 bg-deep-blue rounded-lg shadow-2xl">
+          <h3 className="text-xl font-bold text-white mb-2">
+            Mythic+ Keystones Range
+          </h3>
+          <p className="text-white text-lg">
+            {getKeyRange(currentDungeonStats.LevelStats)}
+          </p>
+        </div>
       </div>
 
-      <div className="p-4 bg-deep-blue rounded-lg mb-4 shadow-2xl">
-        <h3 className="text-xl font-bold text-white mb-2">
-          Mythic+ KeystoneLevel Range
-        </h3>
-        <p className="text-white text-lg">
-          {getLevelRange(currentDungeonStats.LevelStats)}
-        </p>
+      <div className="mb-6 mt-6">
+        <div className="flex space-x-2 border-b border-gray-700">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeTab === tab.id
+                  ? "text-white bg-deep-blue border-b-2 border-blue-500"
+                  : "text-gray-400 hover:text-white hover:bg-deep-blue/50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-8 pt-4 ">
-        {roles.map((role) => {
-          const chartData = prepareChartData(role);
-          if (chartData.length === 0) {
-            return (
-              <div key={role} className="p-4 rounded-lg ">
-                <h3 className="text-xl font-bold text-white mb-2 capitalize">
-                  {role}
-                </h3>
-                <p className="text-white">No data available for this role.</p>
-              </div>
-            );
-          }
-          return (
-            <div key={role} className="bg-deep-blue p-4 rounded-lg shadow-2xl">
-              <h3 className="text-xl font-bold text-white mb-4 capitalize">
-                {role} - Total:{" "}
-                {chartData.reduce((sum, entry) => sum + entry.count, 0)} players
-              </h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={chartData}
-                  layout="horizontal"
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <XAxis type="category" dataKey="className" />
-                  <YAxis type="number" domain={[0, 100]} />
-                  <Tooltip
-                    formatter={(value: number, name: string, props: any) => [
-                      `${
-                        props.payload.count
-                      } players (${props.payload.percentage.toFixed(2)}%)`,
-                      props.payload.className,
-                    ]}
-                    contentStyle={{ backgroundColor: "#000", border: "none" }}
-                    cursor={{ fill: "transparent" }}
-                  />
-                  <Bar dataKey="percentage" name="Percentage">
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                    <LabelList
-                      dataKey="percentage"
-                      position="top"
-                      formatter={(value: number) =>
-                        value > 5 ? `${value.toFixed(2)}%` : ""
-                      }
-                      style={{
-                        fill: "white",
-                        fontWeight: "bold",
-                        textShadow: "1px 1px 1px #000",
-                      }}
-                    />
-                    <LabelList
-                      dataKey="percentage"
-                      position="top"
-                      formatter={(value: number) =>
-                        value <= 5 ? `${value.toFixed(2)}%` : ""
-                      }
-                      style={{
-                        fill: "white",
-                        fontSize: "12px",
-                        textShadow: "1px 1px 1px #000",
-                      }}
-                    />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          );
-        })}
-      </div>
+      <div className="mt-6">{renderContent()}</div>
     </div>
   );
 };

@@ -1,13 +1,16 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type DungeonStats struct {
-	gorm.Model
+	gorm.Model  `json:"-"`
 	Season      string                    `json:"season"`
 	Region      string                    `json:"region"`
 	DungeonSlug string                    `json:"dungeon_slug"`
@@ -36,8 +39,27 @@ type TeamCompStats struct {
 	Composition TeamComposition `json:"composition"`
 }
 
-// TeamCompMap is a map of team compositions to their stats
 type TeamCompMap map[string]TeamCompStats
+
+// Scan implements the Scanner interface for TeamCompMap
+func (t *TeamCompMap) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
+	}
+
+	var temp map[string]TeamCompStats
+	if err := json.Unmarshal(bytes, &temp); err != nil {
+		return err
+	}
+	*t = TeamCompMap(temp)
+	return nil
+}
+
+// Value implements the driver Valuer interface for TeamCompMap
+func (t TeamCompMap) Value() (driver.Value, error) {
+	return json.Marshal(t)
+}
 
 func (DungeonStats) TableName() string {
 	return "dungeon_stats"
