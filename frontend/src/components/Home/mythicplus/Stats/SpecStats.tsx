@@ -40,7 +40,8 @@ export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
   return (
     <div className="bg-deep-blue p-4 rounded-lg shadow-2xl">
       <h3 className="text-xl font-bold text-white mb-4">
-        Specialization Distribution
+        Specialization Distribution - Total:{" "}
+        {specData.reduce((sum, entry) => sum + entry.count, 0)} players
       </h3>
       <ResponsiveContainer
         width="100%"
@@ -98,7 +99,8 @@ export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
                   y={Number(y) + 4}
                   fill="white"
                   textAnchor="start"
-                  className="text-sm"
+                  dominantBaseline="central"
+                  className="text-md"
                 >
                   {value}
                 </text>
