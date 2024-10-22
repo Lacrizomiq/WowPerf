@@ -1,0 +1,885 @@
+"http://localhost:8080/mythic-plus/dungeon-stats?season=season-tww-1&region=world&dungeon=all&page=0"
+
+[
+  {
+    "ID": 2,
+    "CreatedAt": "2024-10-21T12:56:09.467903Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "all",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 53,
+        "Demon Hunter": 1,
+        "Druid": 9,
+        "Evoker": 49,
+        "Hunter": 1,
+        "Mage": 26,
+        "Paladin": 2,
+        "Priest": 1,
+        "Rogue": 13,
+        "Shaman": 24,
+        "Warrior": 1
+      },
+      "healer": {
+        "Druid": 1,
+        "Evoker": 1,
+        "Priest": 11,
+        "Shaman": 47
+      },
+      "tank": {
+        "Death Knight": 1,
+        "Demon Hunter": 3,
+        "Druid": 22,
+        "Monk": 1,
+        "Paladin": 3,
+        "Warrior": 30
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 1,
+        "Frost": 48,
+        "Unholy": 5
+      },
+      "Demon Hunter": {
+        "Havoc": 1,
+        "Vengeance": 3
+      },
+      "Druid": {
+        "Balance": 9,
+        "Guardian": 22,
+        "Restoration": 1
+      },
+      "Evoker": {
+        "Augmentation": 49,
+        "Preservation": 1
+      },
+      "Hunter": {
+        "Marksmanship": 1
+      },
+      "Mage": {
+        "Arcane": 4,
+        "Fire": 1,
+        "Frost": 21
+      },
+      "Monk": {
+        "Brewmaster": 1
+      },
+      "Paladin": {
+        "Protection": 3,
+        "Retribution": 2
+      },
+      "Priest": {
+        "Discipline": 11,
+        "Shadow": 1
+      },
+      "Rogue": {
+        "Assassination": 11,
+        "Outlaw": 2
+      },
+      "Shaman": {
+        "Elemental": 3,
+        "Enhancement": 21,
+        "Restoration": 47
+      },
+      "Warrior": {
+        "Fury": 1,
+        "Protection": 30
+      }
+    },
+    "LevelStats": {
+      "15": 48,
+      "16": 12
+    },
+    "updated_at": "2024-10-21T13:01:20.477305Z"
+  },
+  {
+    "ID": 3,
+    "CreatedAt": "2024-10-21T12:56:09.472275Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "arakara-city-of-echoes",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 52,
+        "Demon Hunter": 2,
+        "Druid": 13,
+        "Evoker": 44,
+        "Hunter": 1,
+        "Mage": 22,
+        "Monk": 1,
+        "Paladin": 5,
+        "Priest": 2,
+        "Rogue": 14,
+        "Shaman": 20,
+        "Warlock": 1,
+        "Warrior": 3
+      },
+      "healer": {
+        "Druid": 2,
+        "Evoker": 3,
+        "Priest": 10,
+        "Shaman": 45
+      },
+      "tank": {
+        "Death Knight": 1,
+        "Demon Hunter": 9,
+        "Druid": 13,
+        "Monk": 2,
+        "Paladin": 8,
+        "Warrior": 27
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 1,
+        "Frost": 42,
+        "Unholy": 10
+      },
+      "Demon Hunter": {
+        "Havoc": 2,
+        "Vengeance": 9
+      },
+      "Druid": {
+        "Balance": 13,
+        "Guardian": 13,
+        "Restoration": 2
+      },
+      "Evoker": {
+        "Augmentation": 44,
+        "Preservation": 3
+      },
+      "Hunter": {
+        "Marksmanship": 1
+      },
+      "Mage": {
+        "Arcane": 2,
+        "Fire": 2,
+        "Frost": 18
+      },
+      "Monk": {
+        "Brewmaster": 2,
+        "Windwalker": 1
+      },
+      "Paladin": {
+        "Protection": 8,
+        "Retribution": 5
+      },
+      "Priest": {
+        "Discipline": 10,
+        "Shadow": 2
+      },
+      "Rogue": {
+        "Assassination": 12,
+        "Outlaw": 2
+      },
+      "Shaman": {
+        "Elemental": 5,
+        "Enhancement": 15,
+        "Restoration": 45
+      },
+      "Warlock": {
+        "Destruction": 1
+      },
+      "Warrior": {
+        "Fury": 3,
+        "Protection": 27
+      }
+    },
+    "LevelStats": {
+      "14": 9,
+      "15": 47,
+      "16": 4
+    },
+    "updated_at": "2024-10-21T13:01:20.47815Z"
+  },
+  {
+    "ID": 4,
+    "CreatedAt": "2024-10-21T12:56:09.47289Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "city-of-threads",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 51,
+        "Demon Hunter": 2,
+        "Druid": 11,
+        "Evoker": 41,
+        "Mage": 23,
+        "Monk": 2,
+        "Paladin": 4,
+        "Rogue": 17,
+        "Shaman": 21,
+        "Warlock": 3,
+        "Warrior": 4
+      },
+      "healer": {
+        "Druid": 1,
+        "Evoker": 2,
+        "Paladin": 1,
+        "Priest": 12,
+        "Shaman": 44
+      },
+      "tank": {
+        "Death Knight": 2,
+        "Demon Hunter": 14,
+        "Druid": 12,
+        "Monk": 1,
+        "Paladin": 4,
+        "Warrior": 27
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 2,
+        "Frost": 50,
+        "Unholy": 1
+      },
+      "Demon Hunter": {
+        "Havoc": 2,
+        "Vengeance": 14
+      },
+      "Druid": {
+        "Balance": 11,
+        "Guardian": 12,
+        "Restoration": 1
+      },
+      "Evoker": {
+        "Augmentation": 41,
+        "Preservation": 2
+      },
+      "Mage": {
+        "Arcane": 6,
+        "Fire": 3,
+        "Frost": 14
+      },
+      "Monk": {
+        "Brewmaster": 1,
+        "Windwalker": 2
+      },
+      "Paladin": {
+        "Holy": 1,
+        "Protection": 4,
+        "Retribution": 4
+      },
+      "Priest": {
+        "Discipline": 12
+      },
+      "Rogue": {
+        "Assassination": 15,
+        "Outlaw": 2
+      },
+      "Shaman": {
+        "Elemental": 7,
+        "Enhancement": 14,
+        "Restoration": 44
+      },
+      "Warlock": {
+        "Affliction": 1,
+        "Destruction": 2
+      },
+      "Warrior": {
+        "Fury": 4,
+        "Protection": 27
+      }
+    },
+    "LevelStats": {
+      "14": 52,
+      "15": 8
+    },
+    "updated_at": "2024-10-21T13:01:20.479059Z"
+  },
+  {
+    "ID": 5,
+    "CreatedAt": "2024-10-21T12:56:09.474185Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "grim-batol",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 55,
+        "Demon Hunter": 2,
+        "Druid": 7,
+        "Evoker": 40,
+        "Hunter": 1,
+        "Mage": 28,
+        "Monk": 2,
+        "Paladin": 8,
+        "Priest": 2,
+        "Rogue": 14,
+        "Shaman": 17,
+        "Warlock": 2,
+        "Warrior": 2
+      },
+      "healer": {
+        "Druid": 1,
+        "Evoker": 1,
+        "Priest": 8,
+        "Shaman": 50
+      },
+      "tank": {
+        "Death Knight": 4,
+        "Demon Hunter": 11,
+        "Druid": 13,
+        "Monk": 1,
+        "Paladin": 3,
+        "Warrior": 28
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 4,
+        "Frost": 54,
+        "Unholy": 1
+      },
+      "Demon Hunter": {
+        "Havoc": 2,
+        "Vengeance": 11
+      },
+      "Druid": {
+        "Balance": 7,
+        "Guardian": 13,
+        "Restoration": 1
+      },
+      "Evoker": {
+        "Augmentation": 40,
+        "Preservation": 1
+      },
+      "Hunter": {
+        "Survival": 1
+      },
+      "Mage": {
+        "Arcane": 11,
+        "Fire": 1,
+        "Frost": 16
+      },
+      "Monk": {
+        "Brewmaster": 1,
+        "Windwalker": 2
+      },
+      "Paladin": {
+        "Protection": 3,
+        "Retribution": 8
+      },
+      "Priest": {
+        "Discipline": 8,
+        "Shadow": 2
+      },
+      "Rogue": {
+        "Assassination": 13,
+        "Outlaw": 1
+      },
+      "Shaman": {
+        "Elemental": 8,
+        "Enhancement": 9,
+        "Restoration": 50
+      },
+      "Warlock": {
+        "Affliction": 1,
+        "Destruction": 1
+      },
+      "Warrior": {
+        "Fury": 2,
+        "Protection": 28
+      }
+    },
+    "LevelStats": {
+      "13": 24,
+      "14": 31,
+      "15": 5
+    },
+    "updated_at": "2024-10-21T13:01:20.479607Z"
+  },
+  {
+    "ID": 6,
+    "CreatedAt": "2024-10-21T12:56:09.475309Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "mists-of-tirna-scithe",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 54,
+        "Demon Hunter": 1,
+        "Druid": 8,
+        "Evoker": 49,
+        "Hunter": 1,
+        "Mage": 28,
+        "Paladin": 1,
+        "Priest": 1,
+        "Rogue": 14,
+        "Shaman": 20,
+        "Warlock": 1,
+        "Warrior": 2
+      },
+      "healer": {
+        "Druid": 2,
+        "Priest": 8,
+        "Shaman": 50
+      },
+      "tank": {
+        "Demon Hunter": 8,
+        "Druid": 17,
+        "Monk": 2,
+        "Paladin": 4,
+        "Warrior": 29
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Frost": 51,
+        "Unholy": 3
+      },
+      "Demon Hunter": {
+        "Havoc": 1,
+        "Vengeance": 8
+      },
+      "Druid": {
+        "Balance": 8,
+        "Guardian": 17,
+        "Restoration": 2
+      },
+      "Evoker": {
+        "Augmentation": 49
+      },
+      "Hunter": {
+        "Marksmanship": 1
+      },
+      "Mage": {
+        "Arcane": 12,
+        "Fire": 1,
+        "Frost": 15
+      },
+      "Monk": {
+        "Brewmaster": 2
+      },
+      "Paladin": {
+        "Protection": 4,
+        "Retribution": 1
+      },
+      "Priest": {
+        "Discipline": 8,
+        "Shadow": 1
+      },
+      "Rogue": {
+        "Assassination": 11,
+        "Outlaw": 3
+      },
+      "Shaman": {
+        "Elemental": 6,
+        "Enhancement": 14,
+        "Restoration": 50
+      },
+      "Warlock": {
+        "Destruction": 1
+      },
+      "Warrior": {
+        "Fury": 2,
+        "Protection": 29
+      }
+    },
+    "LevelStats": {
+      "14": 13,
+      "15": 42,
+      "16": 5
+    },
+    "updated_at": "2024-10-21T13:01:20.480071Z"
+  },
+  {
+    "ID": 7,
+    "CreatedAt": "2024-10-21T12:56:09.476161Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "siege-of-boralus",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 51,
+        "Demon Hunter": 2,
+        "Druid": 13,
+        "Evoker": 44,
+        "Mage": 23,
+        "Paladin": 2,
+        "Rogue": 19,
+        "Shaman": 23,
+        "Warlock": 1,
+        "Warrior": 2
+      },
+      "healer": {
+        "Druid": 2,
+        "Evoker": 1,
+        "Monk": 1,
+        "Priest": 15,
+        "Shaman": 41
+      },
+      "tank": {
+        "Death Knight": 6,
+        "Demon Hunter": 13,
+        "Druid": 12,
+        "Monk": 2,
+        "Paladin": 8,
+        "Warrior": 19
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 6,
+        "Frost": 49,
+        "Unholy": 2
+      },
+      "Demon Hunter": {
+        "Havoc": 2,
+        "Vengeance": 13
+      },
+      "Druid": {
+        "Balance": 13,
+        "Guardian": 12,
+        "Restoration": 2
+      },
+      "Evoker": {
+        "Augmentation": 44,
+        "Preservation": 1
+      },
+      "Mage": {
+        "Arcane": 7,
+        "Frost": 16
+      },
+      "Monk": {
+        "Brewmaster": 2,
+        "Mistweaver": 1
+      },
+      "Paladin": {
+        "Protection": 8,
+        "Retribution": 2
+      },
+      "Priest": {
+        "Discipline": 15
+      },
+      "Rogue": {
+        "Assassination": 17,
+        "Outlaw": 2
+      },
+      "Shaman": {
+        "Elemental": 5,
+        "Enhancement": 18,
+        "Restoration": 41
+      },
+      "Warlock": {
+        "Destruction": 1
+      },
+      "Warrior": {
+        "Fury": 2,
+        "Protection": 19
+      }
+    },
+    "LevelStats": {
+      "14": 43,
+      "15": 17
+    },
+    "updated_at": "2024-10-21T13:01:20.480495Z"
+  },
+  {
+    "ID": 8,
+    "CreatedAt": "2024-10-21T12:56:09.47659Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "the-dawnbreaker",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 54,
+        "Demon Hunter": 1,
+        "Druid": 6,
+        "Evoker": 50,
+        "Mage": 30,
+        "Paladin": 2,
+        "Priest": 1,
+        "Rogue": 13,
+        "Shaman": 19,
+        "Warlock": 3,
+        "Warrior": 1
+      },
+      "healer": {
+        "Druid": 1,
+        "Paladin": 1,
+        "Priest": 14,
+        "Shaman": 44
+      },
+      "tank": {
+        "Death Knight": 1,
+        "Demon Hunter": 17,
+        "Druid": 14,
+        "Monk": 2,
+        "Paladin": 6,
+        "Warrior": 20
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 1,
+        "Frost": 53,
+        "Unholy": 1
+      },
+      "Demon Hunter": {
+        "Havoc": 1,
+        "Vengeance": 17
+      },
+      "Druid": {
+        "Balance": 6,
+        "Guardian": 14,
+        "Restoration": 1
+      },
+      "Evoker": {
+        "Augmentation": 50
+      },
+      "Mage": {
+        "Arcane": 6,
+        "Frost": 24
+      },
+      "Monk": {
+        "Brewmaster": 2
+      },
+      "Paladin": {
+        "Holy": 1,
+        "Protection": 6,
+        "Retribution": 2
+      },
+      "Priest": {
+        "Discipline": 14,
+        "Shadow": 1
+      },
+      "Rogue": {
+        "Assassination": 10,
+        "Outlaw": 3
+      },
+      "Shaman": {
+        "Elemental": 3,
+        "Enhancement": 16,
+        "Restoration": 44
+      },
+      "Warlock": {
+        "Destruction": 3
+      },
+      "Warrior": {
+        "Fury": 1,
+        "Protection": 20
+      }
+    },
+    "LevelStats": {
+      "14": 33,
+      "15": 25,
+      "16": 2
+    },
+    "updated_at": "2024-10-21T13:01:20.480943Z"
+  },
+  {
+    "ID": 9,
+    "CreatedAt": "2024-10-21T12:56:09.476923Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "the-necrotic-wake",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 52,
+        "Druid": 12,
+        "Evoker": 41,
+        "Mage": 26,
+        "Monk": 2,
+        "Paladin": 5,
+        "Priest": 2,
+        "Rogue": 14,
+        "Shaman": 20,
+        "Warlock": 4,
+        "Warrior": 2
+      },
+      "healer": {
+        "Druid": 2,
+        "Monk": 2,
+        "Paladin": 1,
+        "Priest": 13,
+        "Shaman": 42
+      },
+      "tank": {
+        "Death Knight": 3,
+        "Demon Hunter": 12,
+        "Druid": 10,
+        "Monk": 3,
+        "Paladin": 10,
+        "Warrior": 22
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 3,
+        "Frost": 51,
+        "Unholy": 1
+      },
+      "Demon Hunter": {
+        "Vengeance": 12
+      },
+      "Druid": {
+        "Balance": 11,
+        "Feral": 1,
+        "Guardian": 10,
+        "Restoration": 2
+      },
+      "Evoker": {
+        "Augmentation": 41
+      },
+      "Mage": {
+        "Arcane": 23,
+        "Frost": 3
+      },
+      "Monk": {
+        "Brewmaster": 3,
+        "Mistweaver": 2,
+        "Windwalker": 2
+      },
+      "Paladin": {
+        "Holy": 1,
+        "Protection": 10,
+        "Retribution": 5
+      },
+      "Priest": {
+        "Discipline": 13,
+        "Shadow": 2
+      },
+      "Rogue": {
+        "Assassination": 10,
+        "Outlaw": 1,
+        "Subtlety": 3
+      },
+      "Shaman": {
+        "Elemental": 7,
+        "Enhancement": 13,
+        "Restoration": 42
+      },
+      "Warlock": {
+        "Affliction": 2,
+        "Destruction": 2
+      },
+      "Warrior": {
+        "Fury": 2,
+        "Protection": 22
+      }
+    },
+    "LevelStats": {
+      "14": 51,
+      "15": 8,
+      "16": 1
+    },
+    "updated_at": "2024-10-21T13:01:20.481397Z"
+  },
+  {
+    "ID": 10,
+    "CreatedAt": "2024-10-21T12:56:09.477254Z",
+    "UpdatedAt": "0001-01-01T00:00:00Z",
+    "DeletedAt": null,
+    "season": "season-tww-1",
+    "region": "world",
+    "dungeon_slug": "the-stonevault",
+    "RoleStats": {
+      "dps": {
+        "Death Knight": 56,
+        "Demon Hunter": 2,
+        "Druid": 10,
+        "Evoker": 46,
+        "Hunter": 1,
+        "Mage": 20,
+        "Paladin": 6,
+        "Priest": 1,
+        "Rogue": 16,
+        "Shaman": 15,
+        "Warlock": 3,
+        "Warrior": 4
+      },
+      "healer": {
+        "Druid": 1,
+        "Evoker": 1,
+        "Priest": 9,
+        "Shaman": 49
+      },
+      "tank": {
+        "Death Knight": 2,
+        "Demon Hunter": 13,
+        "Druid": 16,
+        "Monk": 2,
+        "Paladin": 6,
+        "Warrior": 21
+      }
+    },
+    "SpecStats": {
+      "Death Knight": {
+        "Blood": 2,
+        "Frost": 53,
+        "Unholy": 3
+      },
+      "Demon Hunter": {
+        "Havoc": 2,
+        "Vengeance": 13
+      },
+      "Druid": {
+        "Balance": 10,
+        "Guardian": 16,
+        "Restoration": 1
+      },
+      "Evoker": {
+        "Augmentation": 46,
+        "Preservation": 1
+      },
+      "Hunter": {
+        "Survival": 1
+      },
+      "Mage": {
+        "Fire": 2,
+        "Frost": 18
+      },
+      "Monk": {
+        "Brewmaster": 2
+      },
+      "Paladin": {
+        "Protection": 6,
+        "Retribution": 6
+      },
+      "Priest": {
+        "Discipline": 9,
+        "Shadow": 1
+      },
+      "Rogue": {
+        "Assassination": 14,
+        "Outlaw": 2
+      },
+      "Shaman": {
+        "Elemental": 5,
+        "Enhancement": 10,
+        "Restoration": 49
+      },
+      "Warlock": {
+        "Destruction": 3
+      },
+      "Warrior": {
+        "Fury": 4,
+        "Protection": 21
+      }
+    },
+    "LevelStats": {
+      "14": 54,
+      "15": 6
+    },
+    "updated_at": "2024-10-21T13:01:20.481759Z"
+  }
+]

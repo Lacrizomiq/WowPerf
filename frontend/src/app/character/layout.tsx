@@ -3,5 +3,5 @@ export default function CharacterLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div>{children}</div>;
+  return <div className="relative z-20">{children}</div>;
 }

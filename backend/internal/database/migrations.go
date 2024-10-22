@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"wowperf/internal/models"
@@ -13,27 +14,70 @@ import (
 	"gorm.io/gorm"
 )
 
+type Migration struct {
+	ID      uint   `gorm:"primaryKey"`
+	Version string `gorm:"uniqueIndex"`
+}
+
 func Migrate(db *gorm.DB) error {
-	if err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;").Error; err != nil {
-		return err
+	log.Println("Running database migrations...")
+
+	// Create migrations table if it doesn't exist
+	if err := db.AutoMigrate(&Migration{}); err != nil {
+		return fmt.Errorf("failed to create migrations table: %v", err)
 	}
 
-	if err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;").Error; err != nil {
-		return err
+	migrations := []struct {
+		version string
+		up      func(*gorm.DB) error
+	}{
+		{"001_initial_schema", initialSchema},
+		{"002_add_user_columns", addUserColumns},
+		{"003_add_dungeon_stats", addDungeonStats},
+		{"004_add_constraints", addConstraints},
+		{"005_update_foreign_keys", updateForeignKeys},
+		{"006_add_team_comp_to_dungeon_stats", addTeamCompToDungeonStats},
 	}
 
-	// Mythic+ migrations
-	if err := db.AutoMigrate(&mythicplus.Dungeon{}, &mythicplus.Season{}, &mythicplus.Affix{}, &raiderioMythicPlus.DungeonStats{}); err != nil {
-		return err
+	for _, m := range migrations {
+		var migration Migration
+		if err := db.Where("version = ?", m.version).First(&migration).Error; err == gorm.ErrRecordNotFound {
+			log.Printf("Running migration: %s", m.version)
+			if err := m.up(db); err != nil {
+				return fmt.Errorf("failed to run migration %s: %v", m.version, err)
+			}
+			db.Create(&Migration{Version: m.version})
+		} else if err != nil {
+			return fmt.Errorf("error checking migration %s: %v", m.version, err)
+		}
 	}
 
-	// Migrate User model
-	if err := db.AutoMigrate(&models.User{}); err != nil {
-		return fmt.Errorf("failed to migrate User model: %v", err)
-	}
+	log.Println("Database migrations completed successfully.")
+	return nil
+}
 
-	// Add new columns to User model
-	if err := db.Exec(`
+func initialSchema(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&mythicplus.Dungeon{},
+		&mythicplus.Season{},
+		&mythicplus.Affix{},
+		&raiderioMythicPlus.DungeonStats{},
+		&models.User{},
+		&mythicplus.KeyStoneUpgrade{},
+		&raids.Raid{},
+		&talents.TalentTree{},
+		&talents.TalentNode{},
+		&talents.TalentEntry{},
+		&talents.HeroNode{},
+		&talents.HeroEntry{},
+		&talents.SubTreeNode{},
+		&talents.SubTreeEntry{},
+		&raiderioMythicPlus.UpdateState{},
+	)
+}
+
+func addUserColumns(db *gorm.DB) error {
+	return db.Exec(`
 	ALTER TABLE users 
 	ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
 	ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
@@ -45,85 +89,21 @@ func Migrate(db *gorm.DB) error {
 	ALTER COLUMN battle_net_id DROP NOT NULL,
 	ALTER COLUMN battle_tag DROP NOT NULL,
 	ALTER COLUMN battle_net_expires_at DROP NOT NULL;
-`).Error; err != nil {
-		return fmt.Errorf("failed to add new columns to User model: %v", err)
-	}
+	`).Error
+}
 
-	// Add unique constraints
-	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)").Error; err != nil {
-		return fmt.Errorf("failed to create unique index on username: %v", err)
-	}
-	if err := db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)").Error; err != nil {
-		return fmt.Errorf("failed to create unique index on email: %v", err)
-	}
+func addDungeonStats(db *gorm.DB) error {
+	return db.AutoMigrate(&raiderioMythicPlus.DungeonStats{})
+}
 
-	// Create KeyStoneUpgrade table without foreign key constraint
-	if err := db.AutoMigrate(&mythicplus.KeyStoneUpgrade{}); err != nil {
-		return err
-	}
+func addTeamCompToDungeonStats(db *gorm.DB) error {
+	return db.Exec(`
+	ALTER TABLE dungeon_stats
+	ADD COLUMN IF NOT EXISTS team_comp JSONB;
+	`).Error
+}
 
-	// Raids migrations
-	if err := db.AutoMigrate(&raids.Raid{}); err != nil {
-		return err
-	}
-
-	// Talents migrations
-	if err := db.AutoMigrate(
-		&talents.TalentTree{},
-		&talents.TalentNode{},
-		&talents.TalentEntry{},
-		&talents.HeroNode{},
-		&talents.HeroEntry{},
-		&talents.SubTreeNode{},
-		&talents.SubTreeEntry{},
-	); err != nil {
-		return err
-	}
-
-	// UpdateState migration
-	if err := db.AutoMigrate(&raiderioMythicPlus.UpdateState{}); err != nil {
-		return err
-	}
-
-	// Add foreign key constraint for KeyStoneUpgrade if it doesn't exist
-	if err := db.Exec(`
-DO $$ 
-BEGIN
-		IF NOT EXISTS (
-				SELECT 1 FROM information_schema.table_constraints 
-				WHERE constraint_name = 'fk_dungeons_key_stone_upgrades'
-		) THEN
-				ALTER TABLE key_stone_upgrades 
-				ADD CONSTRAINT fk_dungeons_key_stone_upgrades 
-				FOREIGN KEY (challenge_mode_id) 
-				REFERENCES dungeons(challenge_mode_id);
-		END IF;
-END $$;
-`).Error; err != nil {
-		return fmt.Errorf("failed to add foreign key constraint: %v", err)
-	}
-
-	// Helper function to check and add/update constraints
-	addOrUpdateConstraint := func(tableName, constraintName, constraintDefinition string) error {
-		var constraintExists int64
-		db.Raw(fmt.Sprintf("SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_name = '%s' AND constraint_name = '%s'", tableName, constraintName)).Scan(&constraintExists)
-
-		if constraintExists == 0 {
-			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
-				return err
-			}
-		} else {
-			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s", tableName, constraintName)).Error; err != nil {
-				return err
-			}
-			if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	// Add or update constraints
+func addConstraints(db *gorm.DB) error {
 	constraints := []struct {
 		tableName            string
 		constraintName       string
@@ -136,16 +116,19 @@ END $$;
 		{"sub_tree_nodes", "uni_sub_tree_nodes_id_tree_spec", "UNIQUE (sub_tree_node_id, talent_tree_id, spec_id)"},
 		{"hero_nodes", "uni_hero_nodes_node_tree_spec", "UNIQUE (node_id, talent_tree_id, spec_id)"},
 		{"hero_entries", "uni_hero_entries_entry_node_tree_spec", "UNIQUE (entry_id, node_id, talent_tree_id, spec_id)"},
-		{"dungeon_stats", "uni_dungeon_stats_season_region_dungeon", "UNIQUE (season, region, dungeon_slug)"}, // Nouvelle contrainte
+		{"dungeon_stats", "uni_dungeon_stats_season_region_dungeon", "UNIQUE (season, region, dungeon_slug)"},
 	}
 
 	for _, c := range constraints {
-		if err := addOrUpdateConstraint(c.tableName, c.constraintName, c.constraintDefinition); err != nil {
+		if err := addOrUpdateConstraint(db, c.tableName, c.constraintName, c.constraintDefinition); err != nil {
 			return err
 		}
 	}
 
-	// Update foreign key constraints
+	return nil
+}
+
+func updateForeignKeys(db *gorm.DB) error {
 	foreignKeys := []struct {
 		table      string
 		constraint string
@@ -167,5 +150,24 @@ END $$;
 		}
 	}
 
+	return nil
+}
+
+func addOrUpdateConstraint(db *gorm.DB, tableName, constraintName, constraintDefinition string) error {
+	var constraintExists int64
+	db.Raw(fmt.Sprintf("SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_name = '%s' AND constraint_name = '%s'", tableName, constraintName)).Scan(&constraintExists)
+
+	if constraintExists == 0 {
+		if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
+			return err
+		}
+	} else {
+		if err := db.Exec(fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT IF EXISTS %s", tableName, constraintName)).Error; err != nil {
+			return err
+		}
+		if err := db.Exec(fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s", tableName, constraintName, constraintDefinition)).Error; err != nil {
+			return err
+		}
+	}
 	return nil
 }

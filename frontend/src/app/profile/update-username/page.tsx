@@ -3,7 +3,7 @@
 import React from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import ChangeUsername from "@/components/UserProfile/Update/ChangeUsername";
-import Sidebar from "@/components/UserProfile/Sidebar";
+import Sidebar from "@/components/UserProfile/ProfileSidebar";
 
 const UpdateUsernamePage: React.FC = () => {
   const { changeUsername, isChangingUsername } = useUserProfile();

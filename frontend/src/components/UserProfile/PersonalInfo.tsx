@@ -17,18 +17,18 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   return (
     <>
       <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
+        <h2 className="text-2xl font-bold mb-4 text-[#e2e8f0] dark:text-gray-200">
           Personal Information
         </h2>
 
         <div className="flex items-center">
-          <p className="block text-sm font-medium text-white dark:text-gray-300">
+          <p className="block text-sm font-medium text-[#e2e8f0] dark:text-gray-300">
             <span className="font-bold text-lg">Username : </span>
             {profile?.username}
           </p>
         </div>
         <div>
-          <p className="block text-sm font-medium text-white dark:text-gray-300">
+          <p className="block text-sm font-medium text-[#e2e8f0] dark:text-gray-300">
             <span className="font-bold text-lg">Email : </span>
             {profile?.email}
           </p>
@@ -36,7 +36,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
       </section>
 
       <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
-        <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
+        <h2 className="text-2xl font-bold mb-4 text-[#e2e8f0] dark:text-gray-200">
           Link your WowPerf account to your battle.net account
         </h2>
         <div className="flex items-center">

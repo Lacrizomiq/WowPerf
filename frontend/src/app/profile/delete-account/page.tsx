@@ -3,7 +3,7 @@
 import React from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import DeleteAccount from "@/components/UserProfile/Update/DeleteAccount";
-import Sidebar from "@/components/UserProfile/Sidebar";
+import Sidebar from "@/components/UserProfile/ProfileSidebar";
 
 const DeleteAccountPage: React.FC = () => {
   const { deleteAccount, isDeletingAccount } = useUserProfile();

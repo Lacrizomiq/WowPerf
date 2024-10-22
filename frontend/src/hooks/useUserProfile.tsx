@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { userService } from "@/libs/userService";
 import { authService } from "@/libs/authService";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 
@@ -11,18 +12,16 @@ export function useUserProfile() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  const { isAuthenticated } = useAuth();
+
   const {
     data: profile,
     isLoading,
     error,
   } = useQuery({
     queryKey: ["userProfile"],
-    queryFn: async () => {
-      console.log("Fetching user profile...");
-      const data = await userService.getProfile();
-      console.log("Profile data received:", data);
-      return data;
-    },
+    queryFn: userService.getProfile,
+    enabled: isAuthenticated, // Only run the query if the user is authenticated
   });
 
   useEffect(() => {

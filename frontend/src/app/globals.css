@@ -444,4 +444,24 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  :root {
+    --sidebar-background: 210 100% 9%; /* Équivalent à #001830 */
+    --sidebar-foreground: 0 0% 100%; /* Texte blanc pour un bon contraste */
+    --sidebar-primary: 210 100% 50%; /* Un bleu plus clair pour les éléments primaires */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 50% 15%; /* Un bleu légèrement plus clair pour l'accent */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 50% 20%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 }

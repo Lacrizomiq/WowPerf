@@ -35,6 +35,16 @@ type TalentTreeInput struct {
 
 // SeedTalents seeds the database with talent tree data
 func SeedTalents(db *gorm.DB) error {
+
+	var count int64
+	if err := db.Model(&models.TalentTree{}).Count(&count).Error; err != nil {
+		return fmt.Errorf("error checking existing talent trees: %v", err)
+	}
+	if count > 0 {
+		log.Println("Talent trees already seeded, skipping...")
+		return nil
+	}
+
 	log.Println("Seeding talents...")
 	db.Logger = db.Logger.LogMode(logger.Silent)
 
