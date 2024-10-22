@@ -22,7 +22,6 @@ type Migration struct {
 func Migrate(db *gorm.DB) error {
 	log.Println("Running database migrations...")
 
-	// Create migrations table if it doesn't exist
 	if err := db.AutoMigrate(&Migration{}); err != nil {
 		return fmt.Errorf("failed to create migrations table: %v", err)
 	}
@@ -36,7 +35,8 @@ func Migrate(db *gorm.DB) error {
 		{"003_add_dungeon_stats", addDungeonStats},
 		{"004_add_constraints", addConstraints},
 		{"005_update_foreign_keys", updateForeignKeys},
-		{"006_add_team_comp_to_dungeon_stats", addTeamCompToDungeonStats},
+		{"006_init_team_comp", initTeamComp},
+		{"007_clean_team_comp_data", cleanTeamCompData},
 	}
 
 	for _, m := range migrations {
@@ -78,29 +78,75 @@ func initialSchema(db *gorm.DB) error {
 
 func addUserColumns(db *gorm.DB) error {
 	return db.Exec(`
-	ALTER TABLE users 
-	ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
-	ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
-	ADD COLUMN IF NOT EXISTS encrypted_token BYTEA,
-	ADD COLUMN IF NOT EXISTS battle_net_expires_at TIMESTAMP,
-	ADD COLUMN IF NOT EXISTS last_username_change_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+    ALTER TABLE users 
+    ADD COLUMN IF NOT EXISTS battle_net_id INTEGER UNIQUE,
+    ADD COLUMN IF NOT EXISTS battle_tag VARCHAR(255) UNIQUE,
+    ADD COLUMN IF NOT EXISTS encrypted_token BYTEA,
+    ADD COLUMN IF NOT EXISTS battle_net_expires_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS last_username_change_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 
-	ALTER TABLE users
-	ALTER COLUMN battle_net_id DROP NOT NULL,
-	ALTER COLUMN battle_tag DROP NOT NULL,
-	ALTER COLUMN battle_net_expires_at DROP NOT NULL;
-	`).Error
+    ALTER TABLE users
+    ALTER COLUMN battle_net_id DROP NOT NULL,
+    ALTER COLUMN battle_tag DROP NOT NULL,
+    ALTER COLUMN battle_net_expires_at DROP NOT NULL;
+    `).Error
 }
 
 func addDungeonStats(db *gorm.DB) error {
 	return db.AutoMigrate(&raiderioMythicPlus.DungeonStats{})
 }
 
-func addTeamCompToDungeonStats(db *gorm.DB) error {
-	return db.Exec(`
-	ALTER TABLE dungeon_stats
-	ADD COLUMN IF NOT EXISTS team_comp JSONB;
-	`).Error
+func initTeamComp(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Drop the existing column if it exists
+		if err := tx.Exec(`ALTER TABLE dungeon_stats DROP COLUMN IF EXISTS team_comp;`).Error; err != nil {
+			// Ignorer l'erreur si la colonne n'existe pas
+			log.Printf("Note: team_comp column didn't exist or couldn't be dropped: %v", err)
+		}
+
+		// Add the new column with proper type and default value
+		if err := tx.Exec(`
+            ALTER TABLE dungeon_stats 
+            ADD COLUMN team_comp JSONB DEFAULT '{}'::jsonb;
+            
+            COMMENT ON COLUMN dungeon_stats.team_comp 
+            IS 'Stores the team composition statistics with their counts';
+        `).Error; err != nil {
+			return fmt.Errorf("failed to add team_comp column: %v", err)
+		}
+
+		return nil
+	})
+}
+
+func cleanTeamCompData(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Vérifier si la colonne existe avant de la mettre à jour
+		var exists bool
+		err := tx.Raw(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.columns 
+                WHERE table_name = 'dungeon_stats' 
+                AND column_name = 'team_comp'
+            );
+        `).Scan(&exists).Error
+
+		if err != nil {
+			return fmt.Errorf("failed to check if team_comp column exists: %v", err)
+		}
+
+		if exists {
+			if err := tx.Exec(`
+                UPDATE dungeon_stats 
+                SET team_comp = '{}'::jsonb 
+                WHERE team_comp IS NULL OR team_comp = 'null'::jsonb;
+            `).Error; err != nil {
+				return fmt.Errorf("failed to clean team_comp data: %v", err)
+			}
+		}
+
+		return nil
+	})
 }
 
 func addConstraints(db *gorm.DB) error {
