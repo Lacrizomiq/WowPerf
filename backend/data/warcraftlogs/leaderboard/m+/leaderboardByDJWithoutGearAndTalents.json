@@ -1,0 +1,3274 @@
+"
+query {
+  worldData {
+    encounter(id: 12660) {  # Ara-Kara
+      name
+      characterRankings(
+        metric: dps
+        includeCombatantInfo: false
+        className: "Any"
+      )
+    }
+  }
+}"
+
+// Only includes leaderboard that have a logs
+
+{
+	"data": {
+		"worldData": {
+			"encounter": {
+				"name": "Ara-Kara, City of Echoes",
+				"characterRankings": {
+					"page": 1,
+					"hasMorePages": true,
+					"count": 100,
+					"rankings": [
+						{
+							"name": "波顿大龙虾",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2117480.9755399823,
+							"hardModeLevel": 16,
+							"duration": 1752507,
+							"startTime": 1729348233447,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 5,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 584,
+								"name": "凤凰之神",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 425.9894375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Supremeyxz",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2066823.2034100294,
+							"hardModeLevel": 16,
+							"duration": 1677159,
+							"startTime": 1729173392347,
+							"report": {
+								"code": "wR74H6BmcL9PyGkW",
+								"fightID": 5,
+								"startTime": 1729173032363
+							},
+							"server": {
+								"id": 697,
+								"name": "无尽之海",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 427.5591875,
+							"leaderboard": 0
+						},
+						{
+							"name": "Mjtshaman",
+							"class": "Shaman",
+							"spec": "Enhancement",
+							"amount": 2014540.3536599874,
+							"hardModeLevel": 16,
+							"duration": 1677159,
+							"startTime": 1729173392347,
+							"report": {
+								"code": "wR74H6BmcL9PyGkW",
+								"fightID": 5,
+								"startTime": 1729173032363
+							},
+							"server": {
+								"id": 750,
+								"name": "燃烧之刃",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 427.5591875,
+							"leaderboard": 0
+						},
+						{
+							"name": "Milkmage",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1993939.0884000063,
+							"hardModeLevel": 16,
+							"duration": 1752507,
+							"startTime": 1729348233447,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 5,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 611,
+								"name": "国王之谷",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 425.9894375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Aleksib",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1471209.8906499743,
+							"hardModeLevel": 16,
+							"duration": 1677159,
+							"startTime": 1729173392347,
+							"report": {
+								"code": "wR74H6BmcL9PyGkW",
+								"fightID": 5,
+								"startTime": 1729173032363
+							},
+							"server": {
+								"id": 862,
+								"name": "阿古斯",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 427.5591875,
+							"leaderboard": 0
+						},
+						{
+							"name": "指尖丶",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1404755.9935600162,
+							"hardModeLevel": 16,
+							"duration": 1752507,
+							"startTime": 1729348233447,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 5,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 848,
+								"name": "迪托马斯",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 425.9894375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Zippokk",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 985119.6434000134,
+							"hardModeLevel": 16,
+							"duration": 1677159,
+							"startTime": 1729173392347,
+							"report": {
+								"code": "wR74H6BmcL9PyGkW",
+								"fightID": 5,
+								"startTime": 1729173032363
+							},
+							"server": {
+								"id": 584,
+								"name": "凤凰之神",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 427.5591875,
+							"leaderboard": 0
+						},
+						{
+							"name": "殺手裂風",
+							"class": "DemonHunter",
+							"spec": "Vengeance",
+							"amount": 930083.0798400044,
+							"hardModeLevel": 16,
+							"duration": 1752507,
+							"startTime": 1729348233447,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 5,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 750,
+								"name": "燃烧之刃",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 425.9894375,
+							"leaderboard": 0
+						},
+						{
+							"name": "吃饱了就想困",
+							"class": "Priest",
+							"spec": "Discipline",
+							"amount": 485226.3637499809,
+							"hardModeLevel": 16,
+							"duration": 1677159,
+							"startTime": 1729173392347,
+							"report": {
+								"code": "wR74H6BmcL9PyGkW",
+								"fightID": 5,
+								"startTime": 1729173032363
+							},
+							"server": {
+								"id": 770,
+								"name": "白银之手",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 427.5591875,
+							"leaderboard": 0
+						},
+						{
+							"name": "蓝色月光",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 258623.869690001,
+							"hardModeLevel": 16,
+							"duration": 1752507,
+							"startTime": 1729348233447,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 5,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 569,
+								"name": "伊森利恩",
+								"region": "CN"
+							},
+							"bracketData": 16,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 425.9894375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Cépakoh",
+							"class": "Shaman",
+							"spec": "Elemental",
+							"amount": 2593849.5018000007,
+							"hardModeLevel": 15,
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"guild": {
+								"id": 566970,
+								"name": "The Amazing Zoo",
+								"faction": 1
+							},
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Xanadeath",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2283534.984799981,
+							"hardModeLevel": 15,
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"guild": {
+								"id": 575011,
+								"name": "Revolutionist",
+								"faction": 1
+							},
+							"server": {
+								"id": 320,
+								"name": "Ragnaros",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "波顿大龙虾",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2118202.9917299747,
+							"hardModeLevel": 15,
+							"duration": 1667733,
+							"startTime": 1729071378453,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 9,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 584,
+								"name": "凤凰之神",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.7555625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Banshers",
+							"class": "Hunter",
+							"spec": "Survival",
+							"amount": 2089726.5892099738,
+							"hardModeLevel": 15,
+							"duration": 1742850,
+							"startTime": 1729663005285,
+							"report": {
+								"code": "YXgx16Nzq98RDtcp",
+								"fightID": 82,
+								"startTime": 1729632216424
+							},
+							"guild": {
+								"id": 448946,
+								"name": "Consequence",
+								"faction": 0
+							},
+							"server": {
+								"id": 206,
+								"name": "Stormrage",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.190625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Mckulling",
+							"class": "Druid",
+							"spec": "Balance",
+							"amount": 2085569.1748300195,
+							"hardModeLevel": 15,
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"guild": {
+								"id": 575011,
+								"name": "Revolutionist",
+								"faction": 1
+							},
+							"server": {
+								"id": 320,
+								"name": "Ragnaros",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Korospo",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2069208.8605200052,
+							"hardModeLevel": 15,
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"guild": {
+								"id": 61484,
+								"name": "TED",
+								"faction": 1
+							},
+							"server": {
+								"id": 350,
+								"name": "Twisting Nether",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Vadandk",
+							"class": "DeathKnight",
+							"spec": "Unholy",
+							"amount": 2038716.0907199979,
+							"hardModeLevel": 15,
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "aANK8v67t9WzMV1Y",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"guild": {
+								"id": 594459,
+								"name": "Ex Gratia",
+								"faction": 1
+							},
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Lirík",
+							"class": "Paladin",
+							"spec": "Retribution",
+							"amount": 2018442.2176600099,
+							"hardModeLevel": 15,
+							"duration": 1646221,
+							"startTime": 1729559934026,
+							"report": {
+								"code": "PgwArXaTM4txNC2V",
+								"fightID": 62,
+								"startTime": 1729538761070
+							},
+							"server": {
+								"id": 310,
+								"name": "Lightbringer",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "长谷川天心",
+							"class": "Shaman",
+							"spec": "Elemental",
+							"amount": 2006273.438470006,
+							"hardModeLevel": 15,
+							"duration": 1805792,
+							"startTime": 1729359653655,
+							"report": {
+								"code": "Zv86Ca4fX1R7QYKT",
+								"fightID": 3,
+								"startTime": 1729354982659
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.87933333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Syndera",
+							"class": "Rogue",
+							"spec": "Assassination",
+							"amount": 1990469.7238600254,
+							"hardModeLevel": 15,
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"guild": {
+								"id": 737144,
+								"name": "Mosaic",
+								"faction": 1
+							},
+							"server": {
+								"id": 340,
+								"name": "Tarren Mill",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "綾瀬沙季",
+							"class": "Rogue",
+							"spec": "Assassination",
+							"amount": 1949486.1223400235,
+							"hardModeLevel": 15,
+							"duration": 1717905,
+							"startTime": 1729677857229,
+							"report": {
+								"code": "FcMDvHQ62xmf7TtW",
+								"fightID": 3,
+								"startTime": 1729673553372
+							},
+							"server": {
+								"id": 713,
+								"name": "格瑞姆巴托",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.7103125,
+							"leaderboard": 0
+						},
+						{
+							"name": "Buhlr",
+							"class": "Rogue",
+							"spec": "Assassination",
+							"amount": 1923191.6978200078,
+							"hardModeLevel": 15,
+							"duration": 1782352,
+							"startTime": 1729455426553,
+							"report": {
+								"code": "1V2CdmHWqwQkxKBg",
+								"fightID": 5,
+								"startTime": 1729453811773
+							},
+							"guild": {
+								"id": 1,
+								"name": "Temerity",
+								"faction": 0
+							},
+							"server": {
+								"id": 121,
+								"name": "Hyjal",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.36766666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Zytray",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1917387.4869999886,
+							"hardModeLevel": 15,
+							"duration": 1666843,
+							"startTime": 1729291609532,
+							"report": {
+								"code": "2jADRMCX8VamYJf6",
+								"fightID": 23,
+								"startTime": 1729267263168
+							},
+							"guild": {
+								"id": 297426,
+								"name": "ToYz",
+								"faction": 1
+							},
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.77410416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Античка",
+							"class": "Shaman",
+							"spec": "Enhancement",
+							"amount": 1912181.9234899879,
+							"hardModeLevel": 15,
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "aANK8v67t9WzMV1Y",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"guild": {
+								"id": 461134,
+								"name": "Райдо",
+								"faction": 1
+							},
+							"server": {
+								"id": 495,
+								"name": "Ревущий фьорд",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Banshers",
+							"class": "Hunter",
+							"spec": "Marksmanship",
+							"amount": 1899069.1994000077,
+							"hardModeLevel": 15,
+							"duration": 1674610,
+							"startTime": 1729114706490,
+							"report": {
+								"code": "kgGMFVDyCWB9h63n",
+								"fightID": 7,
+								"startTime": 1729110116064
+							},
+							"guild": {
+								"id": 448946,
+								"name": "Consequence",
+								"faction": 0
+							},
+							"server": {
+								"id": 206,
+								"name": "Stormrage",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.61229166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Fauni",
+							"class": "Shaman",
+							"spec": "Elemental",
+							"amount": 1893228.0140299797,
+							"hardModeLevel": 15,
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"guild": {
+								"id": 241708,
+								"name": "Korruptio",
+								"faction": 1
+							},
+							"server": {
+								"id": 335,
+								"name": "Stormreaver",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "小雨饱饱",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1890636.887920022,
+							"hardModeLevel": 15,
+							"duration": 1750107,
+							"startTime": 1729019824048,
+							"report": {
+								"code": "VzJjfphGLXWtRAb7",
+								"fightID": 24,
+								"startTime": 1728922753526
+							},
+							"server": {
+								"id": 848,
+								"name": "迪托马斯",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.0394375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dwilkz",
+							"class": "Druid",
+							"spec": "Balance",
+							"amount": 1887519.6078100204,
+							"hardModeLevel": 15,
+							"duration": 1738057,
+							"startTime": 1729314698272,
+							"report": {
+								"code": "jCY4dnDkMZm3a2JN",
+								"fightID": 6,
+								"startTime": 1729308118761
+							},
+							"guild": {
+								"id": 576276,
+								"name": "Rhythm",
+								"faction": 0
+							},
+							"server": {
+								"id": 245,
+								"name": "Zul'jin",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.29047916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "黑川茜",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1887463.8264999986,
+							"hardModeLevel": 15,
+							"duration": 1750107,
+							"startTime": 1729019824048,
+							"report": {
+								"code": "VzJjfphGLXWtRAb7",
+								"fightID": 24,
+								"startTime": 1728922753526
+							},
+							"server": {
+								"id": 770,
+								"name": "白银之手",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.0394375,
+							"leaderboard": 0
+						},
+						{
+							"name": "Marcoxqt",
+							"class": "Druid",
+							"spec": "Balance",
+							"amount": 1875585.7840200067,
+							"hardModeLevel": 15,
+							"duration": 1666843,
+							"startTime": 1729291609532,
+							"report": {
+								"code": "2jADRMCX8VamYJf6",
+								"fightID": 23,
+								"startTime": 1729267263168
+							},
+							"guild": {
+								"id": 480547,
+								"name": "Alteracs Legacy",
+								"faction": 1
+							},
+							"server": {
+								"id": 406,
+								"name": "Blackhand",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.77410416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Kepsuda",
+							"class": "Paladin",
+							"spec": "Retribution",
+							"amount": 1856033.5594300032,
+							"hardModeLevel": 15,
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"guild": {
+								"id": 21310,
+								"name": "Honolulu",
+								"faction": 0
+							},
+							"server": {
+								"id": 338,
+								"name": "Sylvanas",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Abthas",
+							"class": "DeathKnight",
+							"spec": "Unholy",
+							"amount": 1846002.9130600095,
+							"hardModeLevel": 15,
+							"duration": 1670065,
+							"startTime": 1729672042864,
+							"report": {
+								"code": "gpqQ9Zx8dWHK7knr",
+								"fightID": 13,
+								"startTime": 1729520757721
+							},
+							"server": {
+								"id": 655,
+								"name": "安苏",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.70697916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "吴多米",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1841858.17900002,
+							"hardModeLevel": 15,
+							"duration": 1717905,
+							"startTime": 1729677857229,
+							"report": {
+								"code": "FcMDvHQ62xmf7TtW",
+								"fightID": 3,
+								"startTime": 1729673553372
+							},
+							"server": {
+								"id": 583,
+								"name": "冰风岗",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.7103125,
+							"leaderboard": 0
+						},
+						{
+							"name": "夜斗",
+							"class": "Paladin",
+							"spec": "Retribution",
+							"amount": 1828874.065779984,
+							"hardModeLevel": 15,
+							"duration": 1805792,
+							"startTime": 1729359653655,
+							"report": {
+								"code": "Zv86Ca4fX1R7QYKT",
+								"fightID": 3,
+								"startTime": 1729354982659
+							},
+							"server": {
+								"id": 747,
+								"name": "熊猫酒仙",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.87933333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Tomelvis",
+							"class": "Rogue",
+							"spec": "Outlaw",
+							"amount": 1826291.4353500009,
+							"hardModeLevel": 15,
+							"duration": 1646221,
+							"startTime": 1729559934026,
+							"report": {
+								"code": "PgwArXaTM4txNC2V",
+								"fightID": 62,
+								"startTime": 1729538761070
+							},
+							"guild": {
+								"id": 580482,
+								"name": "Advance",
+								"faction": 1
+							},
+							"server": {
+								"id": 283,
+								"name": "Draenor",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Rainspell",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1800326.6089199781,
+							"hardModeLevel": 15,
+							"duration": 1731701,
+							"startTime": 1729503629394,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 51,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.42289583333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dabnel",
+							"class": "Monk",
+							"spec": "Windwalker",
+							"amount": 1798745.6686400175,
+							"hardModeLevel": 15,
+							"duration": 1782352,
+							"startTime": 1729455426553,
+							"report": {
+								"code": "1V2CdmHWqwQkxKBg",
+								"fightID": 5,
+								"startTime": 1729453811773
+							},
+							"guild": {
+								"id": 472254,
+								"name": "Twitch Prime",
+								"faction": 1
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.36766666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Enox",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1790615.7178500295,
+							"hardModeLevel": 15,
+							"duration": 1829143,
+							"startTime": 1729616363532,
+							"report": {
+								"code": "AZ3aGbDJnRKyW1Yg",
+								"fightID": 6,
+								"startTime": 1729607147461
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.39285416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Tørbak",
+							"class": "DeathKnight",
+							"spec": "Unholy",
+							"amount": 1786801.3404800296,
+							"hardModeLevel": 15,
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"guild": {
+								"id": 16473,
+								"name": "Wave",
+								"faction": 1
+							},
+							"server": {
+								"id": 370,
+								"name": "Hyjal",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Noxiv",
+							"class": "Warrior",
+							"spec": "Fury",
+							"amount": 1734982.5630999804,
+							"hardModeLevel": 15,
+							"duration": 1674610,
+							"startTime": 1729114706490,
+							"report": {
+								"code": "kgGMFVDyCWB9h63n",
+								"fightID": 7,
+								"startTime": 1729110116064
+							},
+							"guild": {
+								"id": 221967,
+								"name": "vodka",
+								"faction": 0
+							},
+							"server": {
+								"id": 245,
+								"name": "Zul'jin",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.61229166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Farover",
+							"class": "Warrior",
+							"spec": "Fury",
+							"amount": 1709409.8943399787,
+							"hardModeLevel": 15,
+							"duration": 1783989,
+							"startTime": 1729347723513,
+							"report": {
+								"code": "bG2Tqn8kHAyMxt7K",
+								"fightID": 9,
+								"startTime": 1729342071466
+							},
+							"guild": {
+								"id": 346132,
+								"name": "Versatile",
+								"faction": 0
+							},
+							"server": {
+								"id": 321,
+								"name": "Ravencrest",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.3335625,
+							"leaderboard": 0
+						},
+						{
+							"name": "拳头弟弟",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1704149.123390019,
+							"hardModeLevel": 15,
+							"duration": 1829143,
+							"startTime": 1729616363532,
+							"report": {
+								"code": "AZ3aGbDJnRKyW1Yg",
+								"fightID": 6,
+								"startTime": 1729607147461
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.39285416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Jonewrld",
+							"class": "Rogue",
+							"spec": "Assassination",
+							"amount": 1694917.9126099944,
+							"hardModeLevel": 15,
+							"duration": 1783989,
+							"startTime": 1729347723513,
+							"report": {
+								"code": "bG2Tqn8kHAyMxt7K",
+								"fightID": 9,
+								"startTime": 1729342071466
+							},
+							"guild": {
+								"id": 235490,
+								"name": "Northstar",
+								"faction": 0
+							},
+							"server": {
+								"id": 321,
+								"name": "Ravencrest",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.3335625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Ketchup",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1660209.5155500174,
+							"hardModeLevel": 15,
+							"duration": 1667733,
+							"startTime": 1729071378453,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 9,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 750,
+								"name": "燃烧之刃",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.7555625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dackor",
+							"class": "Paladin",
+							"spec": "Retribution",
+							"amount": 1659309.0557199717,
+							"hardModeLevel": 15,
+							"duration": 1783989,
+							"startTime": 1729347723513,
+							"report": {
+								"code": "bG2Tqn8kHAyMxt7K",
+								"fightID": 9,
+								"startTime": 1729342071466
+							},
+							"guild": {
+								"id": 270410,
+								"name": "Seriously",
+								"faction": 0
+							},
+							"server": {
+								"id": 321,
+								"name": "Ravencrest",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.3335625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Esexer",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1656497.914049983,
+							"hardModeLevel": 15,
+							"duration": 1738057,
+							"startTime": 1729314698272,
+							"report": {
+								"code": "jCY4dnDkMZm3a2JN",
+								"fightID": 6,
+								"startTime": 1729308118761
+							},
+							"server": {
+								"id": 123,
+								"name": "Illidan",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.29047916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Zevokerr",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1645715.8145899773,
+							"hardModeLevel": 15,
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"guild": {
+								"id": 594459,
+								"name": "Ex Gratia",
+								"faction": 1
+							},
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Gramhehe",
+							"class": "Rogue",
+							"spec": "Subtlety",
+							"amount": 1610337.2472900152,
+							"hardModeLevel": 15,
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"guild": {
+								"id": 566970,
+								"name": "The Amazing Zoo",
+								"faction": 1
+							},
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Woxtoxic",
+							"class": "Rogue",
+							"spec": "Outlaw",
+							"amount": 1594831.5327200294,
+							"hardModeLevel": 15,
+							"duration": 1674610,
+							"startTime": 1729114706490,
+							"report": {
+								"code": "kgGMFVDyCWB9h63n",
+								"fightID": 7,
+								"startTime": 1729110116064
+							},
+							"guild": {
+								"id": 606849,
+								"name": "Divide",
+								"faction": 1
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.61229166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Tartesia",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1571524.224759996,
+							"hardModeLevel": 15,
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"guild": {
+								"id": 633223,
+								"name": "Project One",
+								"faction": 1
+							},
+							"server": {
+								"id": 480,
+								"name": "Nemesis",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dumbdwarf",
+							"class": "Shaman",
+							"spec": "Enhancement",
+							"amount": 1564241.6810799837,
+							"hardModeLevel": 15,
+							"duration": 1718492,
+							"startTime": 1729484911813,
+							"report": {
+								"code": "AkVzWvBYa3T4rJ6R",
+								"fightID": 7,
+								"startTime": 1729474304670
+							},
+							"guild": {
+								"id": 571642,
+								"name": "Strawberry Banana Fusion",
+								"faction": 1
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.69808333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Calliso",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 1527929.132070005,
+							"hardModeLevel": 15,
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "aANK8v67t9WzMV1Y",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"guild": {
+								"id": 257944,
+								"name": "Exposed",
+								"faction": 1
+							},
+							"server": {
+								"id": 286,
+								"name": "Drak'thul",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Deshanasana",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1491507.8031700253,
+							"hardModeLevel": 15,
+							"duration": 1782352,
+							"startTime": 1729455426553,
+							"report": {
+								"code": "1V2CdmHWqwQkxKBg",
+								"fightID": 5,
+								"startTime": 1729453811773
+							},
+							"guild": {
+								"id": 627,
+								"name": "Resonate",
+								"faction": 1
+							},
+							"server": {
+								"id": 38,
+								"name": "Bleeding Hollow",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.36766666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Aventurine",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1468527.1548799872,
+							"hardModeLevel": 15,
+							"duration": 1717905,
+							"startTime": 1729677857229,
+							"report": {
+								"code": "FcMDvHQ62xmf7TtW",
+								"fightID": 3,
+								"startTime": 1729673553372
+							},
+							"server": {
+								"id": 713,
+								"name": "格瑞姆巴托",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.7103125,
+							"leaderboard": 0
+						},
+						{
+							"name": "Goosiñho",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1439887.6982899904,
+							"hardModeLevel": 15,
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"guild": {
+								"id": 566970,
+								"name": "The Amazing Zoo",
+								"faction": 1
+							},
+							"server": {
+								"id": 392,
+								"name": "Ysondre",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Jetchy",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1371692.4761400223,
+							"hardModeLevel": 15,
+							"duration": 1738057,
+							"startTime": 1729314698272,
+							"report": {
+								"code": "jCY4dnDkMZm3a2JN",
+								"fightID": 6,
+								"startTime": 1729308118761
+							},
+							"guild": {
+								"id": 316476,
+								"name": "DMG",
+								"faction": 1
+							},
+							"server": {
+								"id": 123,
+								"name": "Illidan",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.29047916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "是谁的小闲闲",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1369577.8077200055,
+							"hardModeLevel": 15,
+							"duration": 1667733,
+							"startTime": 1729071378453,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 9,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 750,
+								"name": "燃烧之刃",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.7555625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Kxin",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1355014.53877002,
+							"hardModeLevel": 15,
+							"duration": 1805792,
+							"startTime": 1729359653655,
+							"report": {
+								"code": "Zv86Ca4fX1R7QYKT",
+								"fightID": 3,
+								"startTime": 1729354982659
+							},
+							"server": {
+								"id": 676,
+								"name": "影之哀伤",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.87933333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Síck",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 1308509.2842199802,
+							"hardModeLevel": 15,
+							"duration": 1742850,
+							"startTime": 1729663005285,
+							"report": {
+								"code": "YXgx16Nzq98RDtcp",
+								"fightID": 82,
+								"startTime": 1729632216424
+							},
+							"server": {
+								"id": 206,
+								"name": "Stormrage",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.190625,
+							"leaderboard": 0
+						},
+						{
+							"name": "指尖丶",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1274434.2060199976,
+							"hardModeLevel": 15,
+							"duration": 1750107,
+							"startTime": 1729019824048,
+							"report": {
+								"code": "VzJjfphGLXWtRAb7",
+								"fightID": 24,
+								"startTime": 1728922753526
+							},
+							"server": {
+								"id": 848,
+								"name": "迪托马斯",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.0394375,
+							"leaderboard": 0
+						},
+						{
+							"name": "阿粉的龙龙丶",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1210193.7459200025,
+							"hardModeLevel": 15,
+							"duration": 1829143,
+							"startTime": 1729616363532,
+							"report": {
+								"code": "AZ3aGbDJnRKyW1Yg",
+								"fightID": 6,
+								"startTime": 1729607147461
+							},
+							"server": {
+								"id": 644,
+								"name": "奥特兰克",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.39285416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dokidoki",
+							"class": "Evoker",
+							"spec": "Augmentation",
+							"amount": 1197150.7997099757,
+							"hardModeLevel": 15,
+							"duration": 1731701,
+							"startTime": 1729503629394,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 51,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 750,
+								"name": "燃烧之刃",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.42289583333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Squishvegan",
+							"class": "Druid",
+							"spec": "Guardian",
+							"amount": 1035746.5135200024,
+							"hardModeLevel": 15,
+							"duration": 1674610,
+							"startTime": 1729114706490,
+							"report": {
+								"code": "kgGMFVDyCWB9h63n",
+								"fightID": 7,
+								"startTime": 1729110116064
+							},
+							"guild": {
+								"id": 684078,
+								"name": "Floor Pov",
+								"faction": 1
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.61229166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Zimengprowr",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 974947.9394999743,
+							"hardModeLevel": 15,
+							"duration": 1717905,
+							"startTime": 1729677857229,
+							"report": {
+								"code": "FcMDvHQ62xmf7TtW",
+								"fightID": 3,
+								"startTime": 1729673553372
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.7103125,
+							"leaderboard": 0
+						},
+						{
+							"name": "Rayalexdh",
+							"class": "DemonHunter",
+							"spec": "Vengeance",
+							"amount": 942118.9650899768,
+							"hardModeLevel": 15,
+							"duration": 1667733,
+							"startTime": 1729071378453,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 9,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 720,
+								"name": "死亡之翼",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.7555625,
+							"leaderboard": 0
+						},
+						{
+							"name": "咖啡饼干",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 928030.4978899956,
+							"hardModeLevel": 15,
+							"duration": 1829143,
+							"startTime": 1729616363532,
+							"report": {
+								"code": "AZ3aGbDJnRKyW1Yg",
+								"fightID": 6,
+								"startTime": 1729607147461
+							},
+							"server": {
+								"id": 697,
+								"name": "无尽之海",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.39285416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Bobas",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 910426.2805600166,
+							"hardModeLevel": 15,
+							"duration": 1782352,
+							"startTime": 1729455426553,
+							"report": {
+								"code": "1V2CdmHWqwQkxKBg",
+								"fightID": 5,
+								"startTime": 1729453811773
+							},
+							"guild": {
+								"id": 1,
+								"name": "Temerity",
+								"faction": 0
+							},
+							"server": {
+								"id": 121,
+								"name": "Hyjal",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.36766666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Lîlrayan",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 892747.3595600128,
+							"hardModeLevel": 15,
+							"duration": 1646221,
+							"startTime": 1729559934026,
+							"report": {
+								"code": "PgwArXaTM4txNC2V",
+								"fightID": 62,
+								"startTime": 1729538761070
+							},
+							"guild": {
+								"id": 227852,
+								"name": "Waít for it",
+								"faction": 1
+							},
+							"server": {
+								"id": 392,
+								"name": "Ysondre",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Acefloorpov",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 889485.9314200282,
+							"hardModeLevel": 15,
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"guild": {
+								"id": 296858,
+								"name": "Competence Optional",
+								"faction": 1
+							},
+							"server": {
+								"id": 350,
+								"name": "Twisting Nether",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "恍然如夢丶",
+							"class": "DemonHunter",
+							"spec": "Vengeance",
+							"amount": 840136.3196700215,
+							"hardModeLevel": 15,
+							"duration": 1750107,
+							"startTime": 1729019824048,
+							"report": {
+								"code": "VzJjfphGLXWtRAb7",
+								"fightID": 24,
+								"startTime": 1728922753526
+							},
+							"server": {
+								"id": 848,
+								"name": "迪托马斯",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.0394375,
+							"leaderboard": 0
+						},
+						{
+							"name": "丶将息",
+							"class": "DemonHunter",
+							"spec": "Vengeance",
+							"amount": 839163.3559200168,
+							"hardModeLevel": 15,
+							"duration": 1670065,
+							"startTime": 1729672042864,
+							"report": {
+								"code": "gpqQ9Zx8dWHK7knr",
+								"fightID": 13,
+								"startTime": 1729520757721
+							},
+							"server": {
+								"id": 720,
+								"name": "死亡之翼",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.70697916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "菜的雅痞的猫",
+							"class": "Druid",
+							"spec": "Guardian",
+							"amount": 836191.8720399737,
+							"hardModeLevel": 15,
+							"duration": 1805792,
+							"startTime": 1729359653655,
+							"report": {
+								"code": "Zv86Ca4fX1R7QYKT",
+								"fightID": 3,
+								"startTime": 1729354982659
+							},
+							"server": {
+								"id": 564,
+								"name": "主宰之剑",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.87933333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Mikatos",
+							"class": "Druid",
+							"spec": "Guardian",
+							"amount": 835314.1709200144,
+							"hardModeLevel": 15,
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"guild": {
+								"id": 566970,
+								"name": "The Amazing Zoo",
+								"faction": 1
+							},
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Yonteaux",
+							"class": "Paladin",
+							"spec": "Protection",
+							"amount": 833516.1892399788,
+							"hardModeLevel": 15,
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "aANK8v67t9WzMV1Y",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"guild": {
+								"id": 257944,
+								"name": "Exposed",
+								"faction": 1
+							},
+							"server": {
+								"id": 286,
+								"name": "Drak'thul",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Tattman",
+							"class": "Warrior",
+							"spec": "Protection",
+							"amount": 832313.3460999727,
+							"hardModeLevel": 15,
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"guild": {
+								"id": 701136,
+								"name": "Brain AFK",
+								"faction": 1
+							},
+							"server": {
+								"id": 340,
+								"name": "Tarren Mill",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Mordrim",
+							"class": "Monk",
+							"spec": "Brewmaster",
+							"amount": 824238.0922600031,
+							"hardModeLevel": 15,
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"guild": {
+								"id": 371328,
+								"name": "Without Respect",
+								"faction": 1
+							},
+							"server": {
+								"id": 329,
+								"name": "Silvermoon",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Anonymous",
+							"class": "Druid",
+							"spec": "Guardian",
+							"amount": 816258.8732299805,
+							"hardModeLevel": 15,
+							"duration": 1783989,
+							"startTime": 1729347723513,
+							"report": {
+								"code": "a:cRWkpLJaDQPjwnNY",
+								"fightID": 9,
+								"startTime": 1729342071466
+							},
+							"hidden": true,
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.3335625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Azzinotha",
+							"class": "DemonHunter",
+							"spec": "Vengeance",
+							"amount": 802321.5583999753,
+							"hardModeLevel": 15,
+							"duration": 1731701,
+							"startTime": 1729503629394,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 51,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 713,
+								"name": "格瑞姆巴托",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.42289583333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Oreovoker",
+							"class": "Evoker",
+							"spec": "Preservation",
+							"amount": 432116.510890007,
+							"hardModeLevel": 15,
+							"duration": 1742850,
+							"startTime": 1729663005285,
+							"report": {
+								"code": "YXgx16Nzq98RDtcp",
+								"fightID": 82,
+								"startTime": 1729632216424
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.190625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Kigglypuff",
+							"class": "Evoker",
+							"spec": "Preservation",
+							"amount": 429788.50291001797,
+							"hardModeLevel": 15,
+							"duration": 1738057,
+							"startTime": 1729314698272,
+							"report": {
+								"code": "jCY4dnDkMZm3a2JN",
+								"fightID": 6,
+								"startTime": 1729308118761
+							},
+							"guild": {
+								"id": 316476,
+								"name": "DMG",
+								"faction": 1
+							},
+							"server": {
+								"id": 123,
+								"name": "Illidan",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.29047916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Propaneanzx",
+							"class": "Evoker",
+							"spec": "Preservation",
+							"amount": 380299.80282998085,
+							"hardModeLevel": 15,
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"guild": {
+								"id": 566970,
+								"name": "The Amazing Zoo",
+								"faction": 1
+							},
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "无信者阿比斯",
+							"class": "Priest",
+							"spec": "Discipline",
+							"amount": 376509.06748998165,
+							"hardModeLevel": 15,
+							"duration": 1805792,
+							"startTime": 1729359653655,
+							"report": {
+								"code": "Zv86Ca4fX1R7QYKT",
+								"fightID": 3,
+								"startTime": 1729354982659
+							},
+							"server": {
+								"id": 611,
+								"name": "国王之谷",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.87933333333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Rstoshmn",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 313768.02072000504,
+							"hardModeLevel": 15,
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"guild": {
+								"id": 180377,
+								"name": "Most Hated",
+								"faction": 1
+							},
+							"server": {
+								"id": 427,
+								"name": "Eredar",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "爱吃草莓饼干",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 302814.7607899904,
+							"hardModeLevel": 15,
+							"duration": 1829143,
+							"startTime": 1729616363532,
+							"report": {
+								"code": "AZ3aGbDJnRKyW1Yg",
+								"fightID": 6,
+								"startTime": 1729607147461
+							},
+							"server": {
+								"id": 697,
+								"name": "无尽之海",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "none",
+							"score": 304.39285416667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Sxm",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 296937.5586000085,
+							"hardModeLevel": 15,
+							"duration": 1674610,
+							"startTime": 1729114706490,
+							"report": {
+								"code": "kgGMFVDyCWB9h63n",
+								"fightID": 7,
+								"startTime": 1729110116064
+							},
+							"guild": {
+								"id": 472254,
+								"name": "Twitch Prime",
+								"faction": 1
+							},
+							"server": {
+								"id": 182,
+								"name": "Sargeras",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.61229166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Doomer",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 287613.7092999816,
+							"hardModeLevel": 15,
+							"duration": 1782352,
+							"startTime": 1729455426553,
+							"report": {
+								"code": "1V2CdmHWqwQkxKBg",
+								"fightID": 5,
+								"startTime": 1729453811773
+							},
+							"guild": {
+								"id": 1,
+								"name": "Temerity",
+								"faction": 0
+							},
+							"server": {
+								"id": 121,
+								"name": "Hyjal",
+								"region": "US"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.36766666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Daîlø",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 274174.6169000268,
+							"hardModeLevel": 15,
+							"duration": 1646221,
+							"startTime": 1729559934026,
+							"report": {
+								"code": "PgwArXaTM4txNC2V",
+								"fightID": 62,
+								"startTime": 1729538761070
+							},
+							"guild": {
+								"id": 656327,
+								"name": "Solid Minimum",
+								"faction": 1
+							},
+							"server": {
+								"id": 370,
+								"name": "Hyjal",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "丷天怒",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 271948.7864599824,
+							"hardModeLevel": 15,
+							"duration": 1717905,
+							"startTime": 1729677857229,
+							"report": {
+								"code": "FcMDvHQ62xmf7TtW",
+								"fightID": 3,
+								"startTime": 1729673553372
+							},
+							"server": {
+								"id": 611,
+								"name": "国王之谷",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.7103125,
+							"leaderboard": 0
+						},
+						{
+							"name": "Sonqopura",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 267054.4703299999,
+							"hardModeLevel": 15,
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"guild": {
+								"id": 754137,
+								"name": "Let me Deep",
+								"faction": 0
+							},
+							"server": {
+								"id": 350,
+								"name": "Twisting Nether",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "蓝色月光",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 257718.4987000227,
+							"hardModeLevel": 15,
+							"duration": 1667733,
+							"startTime": 1729071378453,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 9,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 569,
+								"name": "伊森利恩",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.7555625,
+							"leaderboard": 0
+						},
+						{
+							"name": "宸音丶丶",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 257203.69147002697,
+							"hardModeLevel": 15,
+							"duration": 1670065,
+							"startTime": 1729672042864,
+							"report": {
+								"code": "gpqQ9Zx8dWHK7knr",
+								"fightID": 13,
+								"startTime": 1729520757721
+							},
+							"server": {
+								"id": 826,
+								"name": "血色十字军",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.70697916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "小脑斧",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 236812.34463000298,
+							"hardModeLevel": 15,
+							"duration": 1731701,
+							"startTime": 1729503629394,
+							"report": {
+								"code": "4khj3g18mRpqtfDF",
+								"fightID": 51,
+								"startTime": 1729343422526
+							},
+							"server": {
+								"id": 790,
+								"name": "罗宁",
+								"region": "CN"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 411.42289583333,
+							"leaderboard": 0
+						},
+						{
+							"name": "Olssonx",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 221810.94894999266,
+							"hardModeLevel": 15,
+							"duration": 1783989,
+							"startTime": 1729347723513,
+							"report": {
+								"code": "bG2Tqn8kHAyMxt7K",
+								"fightID": 9,
+								"startTime": 1729342071466
+							},
+							"guild": {
+								"id": 270410,
+								"name": "Seriously",
+								"faction": 0
+							},
+							"server": {
+								"id": 321,
+								"name": "Ravencrest",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 410.3335625,
+							"leaderboard": 0
+						},
+						{
+							"name": "Hotop",
+							"class": "Druid",
+							"spec": "Restoration",
+							"amount": 216746.63978999853,
+							"hardModeLevel": 15,
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"guild": {
+								"id": 30714,
+								"name": "Lelijkerds",
+								"faction": 1
+							},
+							"server": {
+								"id": 283,
+								"name": "Draenor",
+								"region": "EU"
+							},
+							"bracketData": 15,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Anonymous",
+							"class": "Shaman",
+							"spec": "Restoration",
+							"amount": 210398.14271998405,
+							"hardModeLevel": 15,
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "a:RrZBzad3D7MvqgpJ",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"hidden": true,
+							"bracketData": 15,
+							"faction": 1,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"name": "波顿大龙虾",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2258811.7937099934,
+							"hardModeLevel": 14,
+							"duration": 1463543,
+							"startTime": 1729056808602,
+							"report": {
+								"code": "pGk7Jj4LFBCt12hn",
+								"fightID": 2,
+								"startTime": 1729056676435
+							},
+							"server": {
+								"id": 584,
+								"name": "凤凰之神",
+								"region": "CN"
+							},
+							"bracketData": 14,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 402.00952083333,
+							"leaderboard": 0
+						},
+						{
+							"name": "小雨饱饱",
+							"class": "DeathKnight",
+							"spec": "Frost",
+							"amount": 2189581.5769000053,
+							"hardModeLevel": 14,
+							"duration": 1400991,
+							"startTime": 1729277285661,
+							"report": {
+								"code": "1FtjzM8yakVJYBbR",
+								"fightID": 7,
+								"startTime": 1729266133278
+							},
+							"server": {
+								"id": 848,
+								"name": "迪托马斯",
+								"region": "CN"
+							},
+							"bracketData": 14,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "silver",
+							"score": 403.3126875,
+							"leaderboard": 0
+						},
+						{
+							"name": "Dartmentalxd",
+							"class": "Shaman",
+							"spec": "Elemental",
+							"amount": 2162146.556940019,
+							"hardModeLevel": 14,
+							"duration": 1613332,
+							"startTime": 1729709891443,
+							"report": {
+								"code": "QxvDJB1K3rAR8zXk",
+								"fightID": 28,
+								"startTime": 1729662463578
+							},
+							"guild": {
+								"id": 31089,
+								"name": "Stones",
+								"faction": 1
+							},
+							"server": {
+								"id": 286,
+								"name": "Drak'thul",
+								"region": "EU"
+							},
+							"bracketData": 14,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 398.88891666667,
+							"leaderboard": 0
+						},
+						{
+							"name": "Giantmonster",
+							"class": "Shaman",
+							"spec": "Enhancement",
+							"amount": 2135572.2901800275,
+							"hardModeLevel": 14,
+							"duration": 1613269,
+							"startTime": 1728775440028,
+							"report": {
+								"code": "dX2GHpBwTWqD4vY8",
+								"fightID": 17,
+								"startTime": 1728749368163
+							},
+							"guild": {
+								"id": 472254,
+								"name": "Twitch Prime",
+								"faction": 1
+							},
+							"server": {
+								"id": 18,
+								"name": "Area 52",
+								"region": "US"
+							},
+							"bracketData": 14,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "bronze",
+							"score": 398.89022916667,
+							"leaderboard": 0
+						},
+						{
+							"name": "黑川茜",
+							"class": "Mage",
+							"spec": "Frost",
+							"amount": 2100371.2886099815,
+							"hardModeLevel": 14,
+							"duration": 1400991,
+							"startTime": 1729277285661,
+							"report": {
+								"code": "1FtjzM8yakVJYBbR",
+								"fightID": 7,
+								"startTime": 1729266133278
+							},
+							"server": {
+								"id": 770,
+								"name": "白银之手",
+								"region": "CN"
+							},
+							"bracketData": 14,
+							"faction": 0,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"medal": "silver",
+							"score": 403.3126875,
+							"leaderboard": 0
+						}
+					]
+				}
+			}
+		}
+	}
+}

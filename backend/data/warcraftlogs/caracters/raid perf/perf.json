@@ -1,0 +1,179 @@
+"query {
+  characterData {
+    character(name: "TirranØ", serverSlug: "silvermoon", serverRegion: "EU") {
+      name
+      classID
+      zoneRankings(
+        zoneID: 38 // 38 = Nerub-ar Palace
+        difficulty: 3 // 3 = Normal, 4 = Heroic, 5 = Mythic
+        metric: dps // dps, hps, or tps
+      )
+    }
+  }
+}"
+
+{
+  "data": {
+    "characterData": {
+      "character": {
+        "name": "Tirranø",
+        "classID": 1,
+        "zoneRankings": {
+          "bestPerformanceAverage": 52.6710838036,
+          "medianPerformanceAverage": 52.6710838036,
+          "difficulty": 3,
+          "metric": "dps",
+          "partition": -1,
+          "zone": 38,
+          "allStars": [
+            {
+              "partition": 1,
+              "spec": "Blood",
+              "points": 104.312,
+              "possiblePoints": 960,
+              "rank": 35370,
+              "regionRank": 17202,
+              "serverRank": 994,
+              "rankPercent": 15.281803156961843,
+              "total": 41749
+            }
+          ],
+          "rankings": [
+            {
+              "encounter": {
+                "id": 2902,
+                "name": "Ulgrax the Devourer"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            },
+            {
+              "encounter": {
+                "id": 2917,
+                "name": "The Bloodbound Horror"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            },
+            {
+              "encounter": {
+                "id": 2898,
+                "name": "Sikran, Captain of the Sureki"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            },
+            {
+              "encounter": {
+                "id": 2918,
+                "name": "Rasha'nan"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            },
+            {
+              "encounter": {
+                "id": 2919,
+                "name": "Broodtwister Ovi'nax"
+              },
+              "rankPercent": 51.319549988093,
+              "medianPercent": 51.319549988093,
+              "lockedIn": true,
+              "totalKills": 1,
+              "fastestKill": 277570,
+              "allStars": {
+                "points": 52.11,
+                "possiblePoints": 120,
+                "partition": 1,
+                "rank": 18382,
+                "regionRank": 9282,
+                "serverRank": 541,
+                "rankPercent": 45.640858815875085,
+                "total": 33814
+              },
+              "spec": "Blood",
+              "bestSpec": "Blood",
+              "bestAmount": 319857.58547393
+            },
+            {
+              "encounter": {
+                "id": 2920,
+                "name": "Nexus-Princess Ky'veza"
+              },
+              "rankPercent": 54.022617619107,
+              "medianPercent": 54.022617619107,
+              "lockedIn": true,
+              "totalKills": 1,
+              "fastestKill": 256868,
+              "allStars": {
+                "points": 52.2,
+                "possiblePoints": 120,
+                "partition": 1,
+                "rank": 18489,
+                "regionRank": 9324,
+                "serverRank": 552,
+                "rankPercent": 45.61233195069573,
+                "total": 33993
+              },
+              "spec": "Blood",
+              "bestSpec": "Blood",
+              "bestAmount": 270855.38875999
+            },
+            {
+              "encounter": {
+                "id": 2921,
+                "name": "The Silken Court"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            },
+            {
+              "encounter": {
+                "id": 2922,
+                "name": "Queen Ansurek"
+              },
+              "rankPercent": null,
+              "medianPercent": null,
+              "allStars": null,
+              "lockedIn": true,
+              "totalKills": 0,
+              "fastestKill": 0,
+              "bestAmount": 0,
+              "spec": null
+            }
+          ]
+        }
+      }
+    }
+  }
+}
