@@ -1,0 +1,3403 @@
+"query {
+  worldData {
+    encounter(id: 12660) {  # Ara-Kara
+      name
+      fightRankings(
+        serverRegion: "EU", // EU, US, KR, TW, CN
+        page: 1
+      )
+    }
+  }
+}"
+
+"https://www.warcraftlogs.com/v2-api-docs/warcraft/encounter.doc.html" // API DOC
+
+{
+	"data": {
+		"worldData": {
+			"encounter": {
+				"name": "Ara-Kara, City of Echoes",
+				"fightRankings": {
+					"page": 1,
+					"hasMorePages": true,
+					"count": 50,
+					"rankings": [
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1547467,
+							"startTime": 1729592538533,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 320000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 16,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86818029,
+									"name": "Crimsu",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 430.26110416667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1547467,
+							"startTime": 1729592538533,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 320000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 16,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86818029,
+									"name": "Crimsu",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 430.26110416667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1495086,
+							"startTime": 1729339489914,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 63167468,
+									"name": "Razhag",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 75704400,
+									"name": "Waalpentwo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 82925316,
+									"name": "Hawked",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 88554786,
+									"name": "Acefloorpov",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 416.352375,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1495086,
+							"startTime": 1729339489914,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 63167468,
+									"name": "Razhag",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 75704400,
+									"name": "Waalpentwo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 82925316,
+									"name": "Hawked",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 88554786,
+									"name": "Acefloorpov",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 416.352375,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1516144,
+							"startTime": 1729354819856,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 59226065,
+									"name": "Mckulling",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 63965995,
+									"name": "Rstoshmn",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 67578075,
+									"name": "Xanadeath",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 81379633,
+									"name": "Zevokerr",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 88554786,
+									"name": "Acefloorpov",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1516144,
+							"startTime": 1729354827244,
+							"report": {
+								"code": "wWm2pn1VkxDF64ZH",
+								"fightID": 6,
+								"startTime": 1729347868844
+							},
+							"damageTaken": 1694661057,
+							"deaths": 1,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 59226065,
+									"name": "Mckulling",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 63965995,
+									"name": "Rstoshmn",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 67578075,
+									"name": "Xanadeath",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 81379633,
+									"name": "Zevokerr",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 88554786,
+									"name": "Acefloorpov",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.91366666667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1518189,
+							"startTime": 1728814646811,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								160
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86818029,
+									"name": "Crimsu",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.8710625,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1518189,
+							"startTime": 1728814646811,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86818029,
+									"name": "Crimsu",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.8710625,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1536580,
+							"startTime": 1729603943420,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 42978685,
+									"name": "Vibezzical",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 53402913,
+									"name": "Gingibro",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 63167468,
+									"name": "Razhag",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 77062268,
+									"name": "Lemikew",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 88230463,
+									"name": "Kusshh",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.48791666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1536580,
+							"startTime": 1729603943420,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 42978685,
+									"name": "Vibezzical",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 53402913,
+									"name": "Gingibro",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 63167468,
+									"name": "Razhag",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 77062268,
+									"name": "Lemikew",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 88230463,
+									"name": "Kusshh",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.48791666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 495,
+								"name": "Ревущий фьорд",
+								"region": "EU"
+							},
+							"duration": 1552426,
+							"startTime": 1729380632574,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 86059840,
+									"name": "Залупин",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 86428237,
+									"name": "Понакичх",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86565330,
+									"name": "Трикснанолль",
+									"class": "Mage",
+									"spec": "Fire",
+									"role": "DPS"
+								},
+								{
+									"id": 87482673,
+									"name": "Виионта",
+									"class": "Priest",
+									"spec": "Shadow",
+									"role": "DPS"
+								},
+								{
+									"id": 87529086,
+									"name": "Бейбишай",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.15779166667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 495,
+								"name": "Ревущий фьорд",
+								"region": "EU"
+							},
+							"duration": 1552426,
+							"startTime": 1729380632574,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 86059840,
+									"name": "Залупин",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 86428237,
+									"name": "Понакичх",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86565330,
+									"name": "Трикснанолль",
+									"class": "Mage",
+									"spec": "Fire",
+									"role": "DPS"
+								},
+								{
+									"id": 87482673,
+									"name": "Виионта",
+									"class": "Priest",
+									"spec": "Shadow",
+									"role": "DPS"
+								},
+								{
+									"id": 87529086,
+									"name": "Бейбишай",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 415.15779166667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1570708,
+							"startTime": 1729423395292,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 21012535,
+									"name": "Speedoflife",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 67992838,
+									"name": "Elbroiblo",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 76693384,
+									"name": "Shuhwar",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 81379633,
+									"name": "Zevokerr",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85646245,
+									"name": "Ihatersham",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.77691666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1570708,
+							"startTime": 1729423395292,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 21012535,
+									"name": "Speedoflife",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 67992838,
+									"name": "Elbroiblo",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 76693384,
+									"name": "Shuhwar",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 81379633,
+									"name": "Zevokerr",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85646245,
+									"name": "Ihatersham",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.77691666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1580768,
+							"startTime": 1728730332232,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								160
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 77574922,
+									"name": "Críms",
+									"class": "Mage",
+									"spec": "Arcane",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.56733333333,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1580768,
+							"startTime": 1728730332232,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 76017366,
+									"name": "Yarrgidudu",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 77574922,
+									"name": "Críms",
+									"class": "Mage",
+									"spec": "Arcane",
+									"role": "DPS"
+								},
+								{
+									"id": 82025620,
+									"name": "Casualaddict",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85877948,
+									"name": "Kirawarrior",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86427904,
+									"name": "Ayijexo",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.56733333333,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1598893,
+							"startTime": 1729437249107,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 53796201,
+									"name": "Zmen",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 70538983,
+									"name": "Ajevoker",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 75090150,
+									"name": "Petkosham",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76009804,
+									"name": "Nekzrowo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76053503,
+									"name": "Knowmedruid",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.18972916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1598893,
+							"startTime": 1729437249107,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 53796201,
+									"name": "Zmen",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 70538983,
+									"name": "Ajevoker",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 75090150,
+									"name": "Petkosham",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76009804,
+									"name": "Nekzrowo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76053503,
+									"name": "Knowmedruid",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 414.18972916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1608784,
+							"startTime": 1729257204216,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 21012535,
+									"name": "Speedoflife",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 67992838,
+									"name": "Elbroiblo",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 76693384,
+									"name": "Shuhwar",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 77128162,
+									"name": "Shirodrache",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85646245,
+									"name": "Ihatersham",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.98366666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"duration": 1610305,
+							"startTime": 1729727501695,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								148,
+								152
+							],
+							"team": [
+								{
+									"id": 61671609,
+									"name": "Mikatos",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								},
+								{
+									"id": 67140761,
+									"name": "Gramhehe",
+									"class": "Rogue",
+									"spec": "Subtlety",
+									"role": "DPS"
+								},
+								{
+									"id": 67995841,
+									"name": "Cépakoh",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 75433174,
+									"name": "Propaneanzx",
+									"class": "Evoker",
+									"spec": "Preservation",
+									"role": "Healer"
+								},
+								{
+									"id": 78515099,
+									"name": "Goosiñho",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 358,
+								"name": "Archimonde",
+								"region": "EU"
+							},
+							"duration": 1610305,
+							"startTime": 1729727551144,
+							"report": {
+								"code": "j7pPzkBTnwNJaG46",
+								"fightID": 6,
+								"startTime": 1729722722972
+							},
+							"damageTaken": 1878796747,
+							"deaths": 4,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 61671609,
+									"name": "Mikatos",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								},
+								{
+									"id": 67140761,
+									"name": "Gramhehe",
+									"class": "Rogue",
+									"spec": "Subtlety",
+									"role": "DPS"
+								},
+								{
+									"id": 67995841,
+									"name": "Cépakoh",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 75433174,
+									"name": "Propaneanzx",
+									"class": "Evoker",
+									"spec": "Preservation",
+									"role": "Healer"
+								},
+								{
+									"id": 78515099,
+									"name": "Goosiñho",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.95197916667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1634110,
+							"startTime": 1729624750890,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 65880491,
+									"name": "Vadandk",
+									"class": "DeathKnight",
+									"spec": "Unholy",
+									"role": "DPS"
+								},
+								{
+									"id": 73573333,
+									"name": "Yonteaux",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86027209,
+									"name": "Calliso",
+									"class": "Mage",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 88820220,
+									"name": "Worthsham",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1634110,
+							"startTime": 1729624785079,
+							"report": {
+								"code": "aANK8v67t9WzMV1Y",
+								"fightID": 1,
+								"startTime": 1729624785079
+							},
+							"damageTaken": 1793676549,
+							"deaths": 3,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 65880491,
+									"name": "Vadandk",
+									"class": "DeathKnight",
+									"spec": "Unholy",
+									"role": "DPS"
+								},
+								{
+									"id": 73573333,
+									"name": "Yonteaux",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86027209,
+									"name": "Calliso",
+									"class": "Mage",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 88820220,
+									"name": "Worthsham",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.45604166667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1635661,
+							"startTime": 1729613221991,
+							"report": {
+								"code": "v1YhqCkGyFTM6f2N",
+								"fightID": 31,
+								"startTime": 1729589037129
+							},
+							"damageTaken": 1626396626,
+							"deaths": 2,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 59798328,
+									"name": "Sonqopura",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 61322536,
+									"name": "Tattman",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 66287787,
+									"name": "Syndera",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 70610380,
+									"name": "Tartesia",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 81887074,
+									"name": "Korospo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1635661,
+							"startTime": 1729613201339,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 59798328,
+									"name": "Sonqopura",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 61322536,
+									"name": "Tattman",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 66287787,
+									"name": "Syndera",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 70610380,
+									"name": "Tartesia",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 81887074,
+									"name": "Korospo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.42372916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1640025,
+							"startTime": 1729285704975,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 64573447,
+									"name": "Gelefisk",
+									"class": "DemonHunter",
+									"spec": "Havoc",
+									"role": "DPS"
+								},
+								{
+									"id": 73167405,
+									"name": "Cryve",
+									"class": "Evoker",
+									"spec": "Preservation",
+									"role": "Healer"
+								},
+								{
+									"id": 75704400,
+									"name": "Waalpentwo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 88861446,
+									"name": "Nnoggie",
+									"class": "DeathKnight",
+									"spec": "Blood",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.3328125,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1640025,
+							"startTime": 1729285704975,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 64573447,
+									"name": "Gelefisk",
+									"class": "DemonHunter",
+									"spec": "Havoc",
+									"role": "DPS"
+								},
+								{
+									"id": 73167405,
+									"name": "Cryve",
+									"class": "Evoker",
+									"spec": "Preservation",
+									"role": "Healer"
+								},
+								{
+									"id": 75704400,
+									"name": "Waalpentwo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 88861446,
+									"name": "Nnoggie",
+									"class": "DeathKnight",
+									"spec": "Blood",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.3328125,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1640025,
+							"startTime": 1729285704975,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 64573447,
+									"name": "Gelefisk",
+									"class": "DemonHunter",
+									"spec": "Havoc",
+									"role": "DPS"
+								},
+								{
+									"id": 73167405,
+									"name": "Cryve",
+									"class": "Evoker",
+									"spec": "Preservation",
+									"role": "Healer"
+								},
+								{
+									"id": 75704400,
+									"name": "Waalpentwo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 80321017,
+									"name": "Nnoggie",
+									"class": "DeathKnight",
+									"spec": "Blood",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.3328125,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1646221,
+							"startTime": 1729559912779,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 3,
+							"ranged": 0,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 2200253,
+									"name": "Zytray",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 39024744,
+									"name": "Lirík",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 74700121,
+									"name": "Lîlrayan",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 74852196,
+									"name": "Daîlø",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 82034776,
+									"name": "Tomelvis",
+									"class": "Rogue",
+									"spec": "Outlaw",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1646221,
+							"startTime": 1729559934026,
+							"report": {
+								"code": "PgwArXaTM4txNC2V",
+								"fightID": 62,
+								"startTime": 1729538761070
+							},
+							"damageTaken": 1744083047,
+							"deaths": 2,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 3,
+							"ranged": 0,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 2200253,
+									"name": "Zytray",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 39024744,
+									"name": "Lirík",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 74700121,
+									"name": "Lîlrayan",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 74852196,
+									"name": "Daîlø",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 82034776,
+									"name": "Tomelvis",
+									"class": "Rogue",
+									"spec": "Outlaw",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 413.20372916667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1663288,
+							"startTime": 1729468229712,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 58675491,
+									"name": "Fauni",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 64775887,
+									"name": "Hotop",
+									"class": "Druid",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 76143215,
+									"name": "Tørbak",
+									"class": "DeathKnight",
+									"spec": "Unholy",
+									"role": "DPS"
+								},
+								{
+									"id": 82619273,
+									"name": "Kepsuda",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 85975643,
+									"name": "Mordrim",
+									"class": "Monk",
+									"spec": "Brewmaster",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1663288,
+							"startTime": 1729468282384,
+							"report": {
+								"code": "wCqvK6PhDkJTBfnV",
+								"fightID": 4,
+								"startTime": 1729464079596
+							},
+							"damageTaken": 2219471455,
+							"deaths": 4,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 58675491,
+									"name": "Fauni",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 64775887,
+									"name": "Hotop",
+									"class": "Druid",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 76143215,
+									"name": "Tørbak",
+									"class": "DeathKnight",
+									"spec": "Unholy",
+									"role": "DPS"
+								},
+								{
+									"id": 82619273,
+									"name": "Kepsuda",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 85975643,
+									"name": "Mordrim",
+									"class": "Monk",
+									"spec": "Brewmaster",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.84816666667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1664377,
+							"startTime": 1729017716623,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 0,
+							"ranged": 3,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 68083234,
+									"name": "Kronster",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82807108,
+									"name": "Griwyvoker",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85574795,
+									"name": "Stonewar",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86924552,
+									"name": "Disabldtide",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 87234878,
+									"name": "Arxes",
+									"class": "Mage",
+									"spec": "Arcane",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.82547916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 304,
+								"name": "Kazzak",
+								"region": "EU"
+							},
+							"duration": 1664377,
+							"startTime": 1729017716623,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 0,
+							"ranged": 3,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								160
+							],
+							"team": [
+								{
+									"id": 68083234,
+									"name": "Kronster",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82807108,
+									"name": "Griwyvoker",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85574795,
+									"name": "Stonewar",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 86924552,
+									"name": "Disabldtide",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 87234878,
+									"name": "Arxes",
+									"class": "Mage",
+									"spec": "Arcane",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.82547916667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1666843,
+							"startTime": 1729291557157,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 2200253,
+									"name": "Zytray",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 74700121,
+									"name": "Lîlrayan",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 74852196,
+									"name": "Daîlø",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 81885602,
+									"name": "Marcoxqt",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82034776,
+									"name": "Tomelvis",
+									"class": "Rogue",
+									"spec": "Outlaw",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.77410416667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1666843,
+							"startTime": 1729291609532,
+							"report": {
+								"code": "2jADRMCX8VamYJf6",
+								"fightID": 23,
+								"startTime": 1729267263168
+							},
+							"damageTaken": 1709146418,
+							"deaths": 4,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 2200253,
+									"name": "Zytray",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 74700121,
+									"name": "Lîlrayan",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 74852196,
+									"name": "Daîlø",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 81885602,
+									"name": "Marcoxqt",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 82034776,
+									"name": "Tomelvis",
+									"class": "Rogue",
+									"spec": "Outlaw",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.77410416667,
+							"leaderboard": 0
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1676136,
+							"startTime": 1729621499864,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 74336008,
+									"name": "Netaritide",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 77100434,
+									"name": "Jisoodc",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 80804190,
+									"name": "Talathdiren",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 83645104,
+									"name": "Chloeslack",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 88831368,
+									"name": "Uglyafrican",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.5805,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1676136,
+							"startTime": 1729621499864,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 77100434,
+									"name": "Jisoodc",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 80804190,
+									"name": "Talathdiren",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 83645104,
+									"name": "Chloeslack",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 86413689,
+									"name": "Crackrain",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 88831368,
+									"name": "Uglyafrican",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.5805,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1676136,
+							"startTime": 1729621499864,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 77100434,
+									"name": "Jisoodc",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 80804190,
+									"name": "Talathdiren",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								},
+								{
+									"id": 83645104,
+									"name": "Chloeslack",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 86413689,
+									"name": "Crackrain",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 88831368,
+									"name": "Uglyafrican",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.5805,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 495,
+								"name": "Ревущий фьорд",
+								"region": "EU"
+							},
+							"duration": 1679838,
+							"startTime": 1729202262162,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 83067820,
+									"name": "Зошечка",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 85917895,
+									"name": "Сандрагорыч",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85969494,
+									"name": "Севенсевенх",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86724456,
+									"name": "Дирекшенпро",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.503375,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 495,
+								"name": "Ревущий фьорд",
+								"region": "EU"
+							},
+							"duration": 1679838,
+							"startTime": 1729202262162,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 58522492,
+									"name": "Античка",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 83067820,
+									"name": "Зошечка",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 85917895,
+									"name": "Сандрагорыч",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 85969494,
+									"name": "Севенсевенх",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86724456,
+									"name": "Дирекшенпро",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.503375,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": 350,
+								"name": "Twisting Nether",
+								"region": "EU"
+							},
+							"duration": 1693882,
+							"startTime": 1729347557118,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 14483723,
+									"name": "Yumokt",
+									"class": "Priest",
+									"spec": "Discipline",
+									"role": "Healer"
+								},
+								{
+									"id": 72995924,
+									"name": "Cursewoke",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 73234278,
+									"name": "Handofcopium",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 77646524,
+									"name": "Flazedk",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 85512372,
+									"name": "Resumental",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.21079166667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1696230,
+							"startTime": 1729470108770,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 56663167,
+									"name": "Frexa",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 77610609,
+									"name": "Tundrah",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85594380,
+									"name": "Héléna",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86825823,
+									"name": "Maleec",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 88809591,
+									"name": "Wazobbjy",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.161875,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1696230,
+							"startTime": 1729470108770,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 56663167,
+									"name": "Frexa",
+									"class": "Druid",
+									"spec": "Balance",
+									"role": "DPS"
+								},
+								{
+									"id": 77610609,
+									"name": "Tundrah",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 85594380,
+									"name": "Héléna",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 86825823,
+									"name": "Maleec",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 88809591,
+									"name": "Wazobbjy",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.161875,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1702636,
+							"startTime": 1729523492364,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 72229025,
+									"name": "Flameshox",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 76425853,
+									"name": "Vallkyree",
+									"class": "Warlock",
+									"spec": "Affliction",
+									"role": "DPS"
+								},
+								{
+									"id": 77100434,
+									"name": "Jisoodc",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 86413689,
+									"name": "Crackrain",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 88831368,
+									"name": "Uglyafrican",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.02841666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1702636,
+							"startTime": 1729523492364,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 72229025,
+									"name": "Flameshox",
+									"class": "Shaman",
+									"spec": "Enhancement",
+									"role": "DPS"
+								},
+								{
+									"id": 76425853,
+									"name": "Vallkyree",
+									"class": "Warlock",
+									"spec": "Affliction",
+									"role": "DPS"
+								},
+								{
+									"id": 77100434,
+									"name": "Jisoodc",
+									"class": "Evoker",
+									"spec": "Augmentation",
+									"role": "DPS"
+								},
+								{
+									"id": 86413689,
+									"name": "Crackrain",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 88831368,
+									"name": "Uglyafrican",
+									"class": "Warrior",
+									"spec": "Protection",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 412.02841666667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1720915,
+							"startTime": 1729541908085,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 33641633,
+									"name": "Delgato",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 58675491,
+									"name": "Fauni",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76693364,
+									"name": "Naturelx",
+									"class": "Mage",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76753870,
+									"name": "Yiuon",
+									"class": "Monk",
+									"spec": "Mistweaver",
+									"role": "Healer"
+								},
+								{
+									"id": 82619273,
+									"name": "Kepsuda",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 411.64760416667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1720915,
+							"startTime": 1729541908085,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 1,
+							"ranged": 2,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 33641633,
+									"name": "Delgato",
+									"class": "Paladin",
+									"spec": "Protection",
+									"role": "Tank"
+								},
+								{
+									"id": 58675491,
+									"name": "Fauni",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76693364,
+									"name": "Naturelx",
+									"class": "Mage",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76753870,
+									"name": "Yiuon",
+									"class": "Monk",
+									"spec": "Mistweaver",
+									"role": "Healer"
+								},
+								{
+									"id": 82619273,
+									"name": "Kepsuda",
+									"class": "Paladin",
+									"spec": "Retribution",
+									"role": "DPS"
+								}
+							],
+							"medal": "bronze",
+							"score": 411.64760416667,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1722420,
+							"startTime": 1729079191580,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152,
+								159
+							],
+							"team": [
+								{
+									"id": 51885949,
+									"name": "Tacokekw",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 71490314,
+									"name": "Oupsïtv",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 75090150,
+									"name": "Petkosham",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76009804,
+									"name": "Nekzrowo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76053503,
+									"name": "Knowmedruid",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 411.61625,
+							"leaderboard": 1
+						},
+						{
+							"server": {
+								"id": null,
+								"name": null,
+								"region": ""
+							},
+							"duration": 1722420,
+							"startTime": 1729079191580,
+							"report": {
+								"code": null,
+								"fightID": 0,
+								"startTime": null
+							},
+							"damageTaken": 0,
+							"deaths": 300000000,
+							"tanks": 1,
+							"healers": 1,
+							"melee": 2,
+							"ranged": 1,
+							"bracketData": 15,
+							"affixes": [
+								9,
+								10,
+								147,
+								152
+							],
+							"team": [
+								{
+									"id": 51885949,
+									"name": "Tacokekw",
+									"class": "Rogue",
+									"spec": "Assassination",
+									"role": "DPS"
+								},
+								{
+									"id": 71490314,
+									"name": "Oupsïtv",
+									"class": "Shaman",
+									"spec": "Restoration",
+									"role": "Healer"
+								},
+								{
+									"id": 75090150,
+									"name": "Petkosham",
+									"class": "Shaman",
+									"spec": "Elemental",
+									"role": "DPS"
+								},
+								{
+									"id": 76009804,
+									"name": "Nekzrowo",
+									"class": "DeathKnight",
+									"spec": "Frost",
+									"role": "DPS"
+								},
+								{
+									"id": 76053503,
+									"name": "Knowmedruid",
+									"class": "Druid",
+									"spec": "Guardian",
+									"role": "Tank"
+								}
+							],
+							"medal": "bronze",
+							"score": 411.61625,
+							"leaderboard": 1
+						}
+					]
+				}
+			}
+		}
+	}
+}

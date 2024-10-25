@@ -17,6 +17,8 @@ import (
 	raids "wowperf/internal/models/raids"
 	talents "wowperf/internal/models/talents"
 
+	rankingsModels "wowperf/internal/models/warcraftlogs/mythicplus"
+
 	"gorm.io/gorm"
 )
 
@@ -45,9 +47,17 @@ func InitializeDatabase(db *gorm.DB) error {
 }
 
 func ensureUpdateState(db *gorm.DB) error {
+
+	// Mythic+ Update State
 	var updateState raiderioMythicPlus.UpdateState
 	if err := db.FirstOrCreate(&updateState, raiderioMythicPlus.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
 		return fmt.Errorf("error initializing UpdateState: %v", err)
+	}
+
+	// WarcraftLogs Rankings Update State
+	var rankingsUpdateState rankingsModels.RankingsUpdateState
+	if err := db.FirstOrCreate(&rankingsUpdateState, rankingsModels.RankingsUpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
+		return fmt.Errorf("error initializing RankingsUpdateState: %v", err)
 	}
 	return nil
 }
@@ -66,6 +76,10 @@ func ensureInitialData(db *gorm.DB) error {
 	}
 
 	if err := ensureDungeonStats(db); err != nil {
+		return err
+	}
+
+	if err := ensureRankingsData(db); err != nil {
 		return err
 	}
 
@@ -95,6 +109,7 @@ func ensureMythicPlusData(db *gorm.DB) error {
 	return nil
 }
 
+// Ensure Talents data is present
 func ensureTalentsData(db *gorm.DB) error {
 	var count int64
 	db.Model(&talents.TalentTree{}).Count(&count)
@@ -107,6 +122,7 @@ func ensureTalentsData(db *gorm.DB) error {
 	return nil
 }
 
+// Ensure Raids data is present
 func ensureRaidsData(db *gorm.DB) error {
 	var count int64
 	db.Model(&raids.Raid{}).Count(&count)
@@ -174,5 +190,15 @@ func ensureDungeonStats(db *gorm.DB) error {
 		}
 	}
 
+	return nil
+}
+
+// Ensure WarcraftLogs Rankings data is present
+func ensureRankingsData(db *gorm.DB) error {
+	var count int64
+	db.Model(&rankingsModels.PlayerRanking{}).Count(&count)
+	if count == 0 {
+		log.Println("Initial rankings data is empty, will be populated on first update...")
+	}
 	return nil
 }

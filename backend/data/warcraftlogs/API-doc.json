@@ -1,0 +1,6857 @@
+{
+  "data": {
+    "__schema": {
+      "types": [
+        {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "characterData",
+              "args": [],
+              "type": {
+                "name": "CharacterData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "gameData",
+              "args": [],
+              "type": {
+                "name": "GameData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "guildData",
+              "args": [],
+              "type": {
+                "name": "GuildData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "progressRaceData",
+              "args": [],
+              "type": {
+                "name": "ProgressRaceData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "rateLimitData",
+              "args": [],
+              "type": {
+                "name": "RateLimitData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "reportData",
+              "args": [],
+              "type": {
+                "name": "ReportData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "userData",
+              "args": [],
+              "type": {
+                "name": "UserData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "worldData",
+              "args": [],
+              "type": {
+                "name": "WorldData",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CharacterData",
+          "fields": [
+            {
+              "name": "character",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "name",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Character",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "characters",
+              "args": [
+                {
+                  "name": "guildID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "CharacterPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Int",
+          "fields": null
+        },
+        {
+          "name": "String",
+          "fields": null
+        },
+        {
+          "name": "Character",
+          "fields": [
+            {
+              "name": "canonicalID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "claimed",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "classID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "encounterRankings",
+              "args": [
+                {
+                  "name": "byBracket",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "className",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "compare",
+                  "type": {
+                    "name": "RankingCompareType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Rankings"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "includeCombatantInfo",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "includeOtherPlayers",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "includeHistoricalGraph",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "includePrivateLogs",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "metric",
+                  "type": {
+                    "name": "CharacterRankingMetricType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "default"
+                },
+                {
+                  "name": "partition",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "role",
+                  "type": {
+                    "name": "RoleType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "specName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "timeframe",
+                  "type": {
+                    "name": "RankingTimeframeType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Historical"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "faction",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "gameData",
+              "args": [
+                {
+                  "name": "specID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "forceUpdate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "guildRank",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "guilds",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "hidden",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "level",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "recentReports",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "10"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "ReportPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "server",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "zoneRankings",
+              "args": [
+                {
+                  "name": "byBracket",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "className",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "compare",
+                  "type": {
+                    "name": "RankingCompareType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Rankings"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "includePrivateLogs",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "metric",
+                  "type": {
+                    "name": "CharacterRankingMetricType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "default"
+                },
+                {
+                  "name": "partition",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "role",
+                  "type": {
+                    "name": "RoleType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "specName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "timeframe",
+                  "type": {
+                    "name": "RankingTimeframeType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Historical"
+                },
+                {
+                  "name": "zoneID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boolean",
+          "fields": null
+        },
+        {
+          "name": "RankingCompareType",
+          "fields": null
+        },
+        {
+          "name": "CharacterRankingMetricType",
+          "fields": null
+        },
+        {
+          "name": "RoleType",
+          "fields": null
+        },
+        {
+          "name": "RankingTimeframeType",
+          "fields": null
+        },
+        {
+          "name": "JSON",
+          "fields": null
+        },
+        {
+          "name": "GameFaction",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guild",
+          "fields": [
+            {
+              "name": "attendance",
+              "args": [
+                {
+                  "name": "guildTagID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "16"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "zoneID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "competitionMode",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "faction",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "server",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "stealthMode",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "tags",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "members",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "currentUserRank",
+              "args": [],
+              "type": {
+                "name": "GuildRank",
+                "kind": "ENUM"
+              }
+            },
+            {
+              "name": "zoneRanking",
+              "args": [
+                {
+                  "name": "zoneId",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildAttendancePagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildAttendance",
+          "fields": [
+            {
+              "name": "code",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "players",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "startTime",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "zone",
+              "args": [],
+              "type": {
+                "name": "Zone",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PlayerAttendance",
+          "fields": [
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "presence",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Float",
+          "fields": null
+        },
+        {
+          "name": "Zone",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "brackets",
+              "args": [],
+              "type": {
+                "name": "Bracket",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "difficulties",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "encounters",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "expansion",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "frozen",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "partitions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bracket",
+          "fields": [
+            {
+              "name": "min",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "max",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "bucket",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Difficulty",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "sizes",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Encounter",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "characterRankings",
+              "args": [
+                {
+                  "name": "bracket",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "partition",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "leaderboard",
+                  "type": {
+                    "name": "LeaderboardRank",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Any"
+                },
+                {
+                  "name": "hardModeLevel",
+                  "type": {
+                    "name": "HardModeLevelRankFilter",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Any"
+                },
+                {
+                  "name": "metric",
+                  "type": {
+                    "name": "CharacterRankingMetricType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "default"
+                },
+                {
+                  "name": "includeCombatantInfo",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "className",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "specName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "externalBuffs",
+                  "type": {
+                    "name": "ExternalBuffRankFilter",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Any"
+                },
+                {
+                  "name": "covenantID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "soulbindID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "fightRankings",
+              "args": [
+                {
+                  "name": "bracket",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "filter",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "partition",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "leaderboard",
+                  "type": {
+                    "name": "LeaderboardRank",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Any"
+                },
+                {
+                  "name": "hardModeLevel",
+                  "type": {
+                    "name": "HardModeLevelRankFilter",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Any"
+                },
+                {
+                  "name": "metric",
+                  "type": {
+                    "name": "FightRankingMetricType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "default"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "zone",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "journalID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "LeaderboardRank",
+          "fields": null
+        },
+        {
+          "name": "HardModeLevelRankFilter",
+          "fields": null
+        },
+        {
+          "name": "ExternalBuffRankFilter",
+          "fields": null
+        },
+        {
+          "name": "FightRankingMetricType",
+          "fields": null
+        },
+        {
+          "name": "Expansion",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "zones",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partition",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "compactName",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "default",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Server",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "normalizedName",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "slug",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "region",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "subregion",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "guilds",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "10"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GuildPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "characters",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "10"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "CharacterPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Region",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "compactName",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "slug",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "subregions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "servers",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "ServerPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subregion",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "region",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "servers",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "ServerPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ServerPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CharacterPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildTag",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "guild",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildRank",
+          "fields": null
+        },
+        {
+          "name": "GuildZoneRankings",
+          "fields": [
+            {
+              "name": "progress",
+              "args": [
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "WorldRegionServerRankPositions",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "speed",
+              "args": [
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "WorldRegionServerRankPositions",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "completeRaidSpeed",
+              "args": [
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "WorldRegionServerRankPositions",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "WorldRegionServerRankPositions",
+          "fields": [
+            {
+              "name": "worldRank",
+              "args": [],
+              "type": {
+                "name": "Rank",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "regionRank",
+              "args": [],
+              "type": {
+                "name": "Rank",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "serverRank",
+              "args": [],
+              "type": {
+                "name": "Rank",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rank",
+          "fields": [
+            {
+              "name": "number",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "percentile",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "color",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Report",
+          "fields": [
+            {
+              "name": "code",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "endTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "events",
+              "args": [
+                {
+                  "name": "abilityID",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "dataType",
+                  "type": {
+                    "name": "EventDataType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "death",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "endTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "filterExpression",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "hostilityType",
+                  "type": {
+                    "name": "HostilityType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Friendlies"
+                },
+                {
+                  "name": "includeResources",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                },
+                {
+                  "name": "killType",
+                  "type": {
+                    "name": "KillType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "300"
+                },
+                {
+                  "name": "sourceAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "sourceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "sourceInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "startTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "targetID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "useAbilityIDs",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "useActorIDs",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "viewOptions",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "wipeCutoff",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "ReportEventPaginator",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "exportedSegments",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "fights",
+              "args": [
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "killType",
+                  "type": {
+                    "name": "KillType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "graph",
+              "args": [
+                {
+                  "name": "abilityID",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "dataType",
+                  "type": {
+                    "name": "GraphDataType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Summary"
+                },
+                {
+                  "name": "death",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "endTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "filterExpression",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "hostilityType",
+                  "type": {
+                    "name": "HostilityType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Friendlies"
+                },
+                {
+                  "name": "killType",
+                  "type": {
+                    "name": "KillType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "sourceAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "sourceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "sourceInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "startTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "targetID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "viewOptions",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "viewBy",
+                  "type": {
+                    "name": "ViewType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Default"
+                },
+                {
+                  "name": "wipeCutoff",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "guild",
+              "args": [],
+              "type": {
+                "name": "Guild",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "guildTag",
+              "args": [],
+              "type": {
+                "name": "GuildTag",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "owner",
+              "args": [],
+              "type": {
+                "name": "User",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "masterData",
+              "args": [
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                }
+              ],
+              "type": {
+                "name": "ReportMasterData",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "playerDetails",
+              "args": [
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "endTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "killType",
+                  "type": {
+                    "name": "KillType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "startTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "includeCombatantInfo",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "rankedCharacters",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "rankings",
+              "args": [
+                {
+                  "name": "compare",
+                  "type": {
+                    "name": "RankingCompareType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Rankings"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "playerMetric",
+                  "type": {
+                    "name": "ReportRankingMetricType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "default"
+                },
+                {
+                  "name": "timeframe",
+                  "type": {
+                    "name": "RankingTimeframeType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Today"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "region",
+              "args": [],
+              "type": {
+                "name": "Region",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "revision",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "segments",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "startTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "table",
+              "args": [
+                {
+                  "name": "abilityID",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "dataType",
+                  "type": {
+                    "name": "TableDataType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Summary"
+                },
+                {
+                  "name": "death",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "endTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "fightIDs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": "[]"
+                },
+                {
+                  "name": "filterExpression",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "hostilityType",
+                  "type": {
+                    "name": "HostilityType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Friendlies"
+                },
+                {
+                  "name": "killType",
+                  "type": {
+                    "name": "KillType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "All"
+                },
+                {
+                  "name": "sourceAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "sourceClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "sourceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "sourceInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "startTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetAurasAbsent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetAurasPresent",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "targetClass",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"Any\""
+                },
+                {
+                  "name": "targetID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "targetInstanceID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "translate",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "true"
+                },
+                {
+                  "name": "viewOptions",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "viewBy",
+                  "type": {
+                    "name": "ViewType",
+                    "kind": "ENUM"
+                  },
+                  "defaultValue": "Default"
+                },
+                {
+                  "name": "wipeCutoff",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "title",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "visibility",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "zone",
+              "args": [],
+              "type": {
+                "name": "Zone",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "archiveStatus",
+              "args": [],
+              "type": {
+                "name": "ReportArchiveStatus",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "phases",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "EventDataType",
+          "fields": null
+        },
+        {
+          "name": "HostilityType",
+          "fields": null
+        },
+        {
+          "name": "KillType",
+          "fields": null
+        },
+        {
+          "name": "ReportEventPaginator",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "nextPageTimestamp",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportFight",
+          "fields": [
+            {
+              "name": "averageItemLevel",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "bossPercentage",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "boundingBox",
+              "args": [],
+              "type": {
+                "name": "ReportMapBoundingBox",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "classicSeasonID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "completeRaid",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "difficulty",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "dungeonPulls",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "encounterID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "endTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "enemyNPCs",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "enemyPets",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "enemyPlayers",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "fightPercentage",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "friendlyNPCs",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "friendlyPets",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "friendlyPlayers",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "gameZone",
+              "args": [],
+              "type": {
+                "name": "GameZone",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "hardModeLevel",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "inProgress",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "keystoneAffixes",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "keystoneBonus",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "keystoneLevel",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "keystoneTime",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "kill",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "lastPhase",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "lastPhaseAsAbsoluteIndex",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "lastPhaseIsIntermission",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "layer",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "maps",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "originalEncounterID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "phaseTransitions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "rating",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "size",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "startTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "talentImportCode",
+              "args": [
+                {
+                  "name": "actorID",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "wipeCalledTime",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportMapBoundingBox",
+          "fields": [
+            {
+              "name": "minX",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "maxX",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "minY",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "maxY",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportDungeonPull",
+          "fields": [
+            {
+              "name": "boundingBox",
+              "args": [],
+              "type": {
+                "name": "ReportMapBoundingBox",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "encounterID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "endTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "enemyNPCs",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "kill",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "maps",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "startTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "x",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "y",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportDungeonPullNPC",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "gameID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "minimumInstanceID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "maximumInstanceID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "minimumInstanceGroupID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "maximumInstanceGroupID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportMap",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportFightNPC",
+          "fields": [
+            {
+              "name": "gameID",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "instanceCount",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "groupCount",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "petOwner",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameZone",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PhaseTransition",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "startTime",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GraphDataType",
+          "fields": null
+        },
+        {
+          "name": "ViewType",
+          "fields": null
+        },
+        {
+          "name": "User",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "guilds",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "characters",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "battleTag",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportMasterData",
+          "fields": [
+            {
+              "name": "logVersion",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "gameVersion",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "lang",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "abilities",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "actors",
+              "args": [
+                {
+                  "name": "type",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "subType",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportAbility",
+          "fields": [
+            {
+              "name": "gameID",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportActor",
+          "fields": [
+            {
+              "name": "gameID",
+              "args": [],
+              "type": {
+                "name": "Float",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "petOwner",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "server",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "subType",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportRankingMetricType",
+          "fields": null
+        },
+        {
+          "name": "TableDataType",
+          "fields": null
+        },
+        {
+          "name": "ReportArchiveStatus",
+          "fields": [
+            {
+              "name": "isArchived",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "isAccessible",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "archiveDate",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "EncounterPhases",
+          "fields": [
+            {
+              "name": "encounterID",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "separatesWipes",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "phases",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PhaseMetadata",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "isIntermission",
+              "args": [],
+              "type": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameData",
+          "fields": [
+            {
+              "name": "abilities",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameAbilityPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "ability",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameAbility",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "achievement",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameAchievement",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "achievements",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameAchievementPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "affix",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameAffix",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "affixes",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "class",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "faction_id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "zone_id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameClass",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "classes",
+              "args": [
+                {
+                  "name": "faction_id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "zone_id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "enchant",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameEnchant",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "enchants",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameEnchantPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "factions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "item",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameItem",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "item_set",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameItemSet",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "item_sets",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameItemSetPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "items",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameItemPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "map",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameMap",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "maps",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameMapPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "npc",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameNPC",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "npcs",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameNPCPagination",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "zone",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GameZone",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "zones",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                }
+              ],
+              "type": {
+                "name": "GameZonePagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameAbilityPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameAbility",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameAchievement",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameAchievementPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameAffix",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameClass",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "slug",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "specs",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameSpec",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "class",
+              "args": [],
+              "type": {
+                "name": "GameClass",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "slug",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameEnchant",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameEnchantPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameItem",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "icon",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameItemSet",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameItemSetPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameItemPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameMap",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameMapPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameNPC",
+          "fields": [
+            {
+              "name": "id",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameNPCPagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GameZonePagination",
+          "fields": [
+            {
+              "name": "data",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "total",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "per_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "current_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "from",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "to",
+              "args": [],
+              "type": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "last_page",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "has_more_pages",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GuildData",
+          "fields": [
+            {
+              "name": "guild",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "name",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Guild",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "guilds",
+              "args": [
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "serverID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "GuildPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ProgressRaceData",
+          "fields": [
+            {
+              "name": "progressRace",
+              "args": [
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "serverSubregion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "\"\""
+                },
+                {
+                  "name": "zoneID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "competitionID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "guildID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "detailedComposition",
+              "args": [
+                {
+                  "name": "competitionID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "guildID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "serverRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "encounterID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "difficulty",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "size",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "RateLimitData",
+          "fields": [
+            {
+              "name": "limitPerHour",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "pointsSpentThisHour",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "pointsResetIn",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ReportData",
+          "fields": [
+            {
+              "name": "report",
+              "args": [
+                {
+                  "name": "code",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Report",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "reports",
+              "args": [
+                {
+                  "name": "endTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "guildName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildServerSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildServerRegion",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "guildTagID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "userID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "limit",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "100"
+                },
+                {
+                  "name": "page",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "1"
+                },
+                {
+                  "name": "startTime",
+                  "type": {
+                    "name": "Float",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "zoneID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                },
+                {
+                  "name": "gameZoneID",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "0"
+                }
+              ],
+              "type": {
+                "name": "ReportPagination",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "UserData",
+          "fields": [
+            {
+              "name": "user",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "User",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "currentUser",
+              "args": [],
+              "type": {
+                "name": "User",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "WorldData",
+          "fields": [
+            {
+              "name": "encounter",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Encounter",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "expansion",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Expansion",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "expansions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "region",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Region",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "regions",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "server",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "region",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "slug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Server",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "subregion",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Subregion",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "zone",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "Zone",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "zones",
+              "args": [
+                {
+                  "name": "expansion_id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID",
+          "fields": null
+        },
+        {
+          "name": "__Schema",
+          "fields": [
+            {
+              "name": "types",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "queryType",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "mutationType",
+              "args": [],
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "subscriptionType",
+              "args": [],
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            },
+            {
+              "name": "directives",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__Type",
+          "fields": [
+            {
+              "name": "kind",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "fields",
+              "args": [
+                {
+                  "name": "includeDeprecated",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "interfaces",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "possibleTypes",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "enumValues",
+              "args": [
+                {
+                  "name": "includeDeprecated",
+                  "type": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": "false"
+                }
+              ],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "inputFields",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "LIST"
+              }
+            },
+            {
+              "name": "ofType",
+              "args": [],
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__TypeKind",
+          "fields": null
+        },
+        {
+          "name": "__Field",
+          "fields": [
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "args",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "isDeprecated",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "deprecationReason",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__InputValue",
+          "fields": [
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "type",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "defaultValue",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__EnumValue",
+          "fields": [
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "isDeprecated",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "deprecationReason",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__Directive",
+          "fields": [
+            {
+              "name": "name",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "description",
+              "args": [],
+              "type": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "args",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "isRepeatable",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            },
+            {
+              "name": "locations",
+              "args": [],
+              "type": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          ]
+        },
+        {
+          "name": "__DirectiveLocation",
+          "fields": null
+        },
+        {
+          "name": "ArchonViewModels",
+          "fields": [
+            {
+              "name": "user",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "googleAnalytics",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "game",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "translations",
+              "args": [
+                {
+                  "name": "keys",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "header",
+              "args": [
+                {
+                  "name": "gameSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "headerTitle",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "footer",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "indexPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "signInPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "signOutPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "authErrorPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "accountPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "gamePage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "contactPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "privacyPolicyPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "aboutPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "announcementPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "gameSlugs",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "buildsZonePageSlugs",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "buildsZonePage",
+              "args": [
+                {
+                  "name": "gameSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "rankingsSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "zoneTypeSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "difficultySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "encounterSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "affixesSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "buildsSpecPageSlugs",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "buildsSpecPage",
+              "args": [
+                {
+                  "name": "gameSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "classSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "specSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "zoneTypeSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "categorySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "difficultySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "encounterSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "affixesSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "buildsClassesAndSpecsPage",
+              "args": [
+                {
+                  "name": "gameSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "ability",
+              "args": [
+                {
+                  "name": "id",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "articleCategory",
+              "args": [
+                {
+                  "name": "articleCategorySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "articleCategories",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "articleSlugs",
+              "args": [
+                {
+                  "name": "articleCategorySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "siteName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "article",
+              "args": [
+                {
+                  "name": "articleSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "articleCategorySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "siteName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "cmsNavigation",
+              "args": [
+                {
+                  "name": "currentSlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "pageOfArticlePreviews",
+              "args": [
+                {
+                  "name": "articleCategorySlug",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "pageNumber",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "siteName",
+                  "type": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "snippets",
+              "args": [
+                {
+                  "name": "snippetSlugs",
+                  "type": {
+                    "name": null,
+                    "kind": "LIST"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "articleIndexPage",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "playwireAds",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "adPlacements",
+              "args": [],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "reportPage",
+              "args": [
+                {
+                  "name": "userId",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "reportCode",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "fightPage",
+              "args": [
+                {
+                  "name": "userId",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "reportCode",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "fightId",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "characterPage",
+              "args": [
+                {
+                  "name": "characterId",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            },
+            {
+              "name": "characterPageData",
+              "args": [
+                {
+                  "name": "userId",
+                  "type": {
+                    "name": "Int",
+                    "kind": "SCALAR"
+                  },
+                  "defaultValue": null
+                },
+                {
+                  "name": "characterId",
+                  "type": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  },
+                  "defaultValue": null
+                }
+              ],
+              "type": {
+                "name": "JSON",
+                "kind": "SCALAR"
+              }
+            }
+          ]
+        },
+        {
+          "name": "SubscriptionStatus",
+          "fields": null
+        }
+      ],
+      "queryType": {
+        "name": "Query",
+        "fields": [
+          {
+            "name": "characterData",
+            "description": "Obtain the character data object that allows the retrieval of individual characters or filtered collections of characters.",
+            "args": [],
+            "type": {
+              "name": "CharacterData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "gameData",
+            "description": "Obtain the game data object that holds collections of static data such as abilities, achievements, classes, items, NPCs, etc..",
+            "args": [],
+            "type": {
+              "name": "GameData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "guildData",
+            "description": "Obtain the guild data object that allows the retrieval of individual guilds or filtered collections of guilds.",
+            "args": [],
+            "type": {
+              "name": "GuildData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "progressRaceData",
+            "description": "Obtain information about an ongoing world first or realm first race. Inactive when no race is occurring. This data only updates once every 30 seconds, so you do not need to fetch this information more often than that.",
+            "args": [],
+            "type": {
+              "name": "ProgressRaceData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "rateLimitData",
+            "description": "Obtain the rate limit data object to see how many points have been spent by this key.",
+            "args": [],
+            "type": {
+              "name": "RateLimitData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "reportData",
+            "description": "Obtain the report data object that allows the retrieval of individual reports or filtered collections of reports by guild or by user.",
+            "args": [],
+            "type": {
+              "name": "ReportData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "userData",
+            "description": "Obtain the user object that allows the retrieval of the authorized user's id and username.",
+            "args": [],
+            "type": {
+              "name": "UserData",
+              "kind": "OBJECT"
+            }
+          },
+          {
+            "name": "worldData",
+            "description": "Obtain the world data object that holds collections of data such as all expansions, regions, subregions, servers, dungeon/raid zones, and encounters.",
+            "args": [],
+            "type": {
+              "name": "WorldData",
+              "kind": "OBJECT"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

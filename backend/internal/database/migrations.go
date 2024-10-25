@@ -11,6 +11,8 @@ import (
 	raids "wowperf/internal/models/raids"
 	talents "wowperf/internal/models/talents"
 
+	rankingsModels "wowperf/internal/models/warcraftlogs/mythicplus"
+
 	"gorm.io/gorm"
 )
 
@@ -37,6 +39,7 @@ func Migrate(db *gorm.DB) error {
 		{"005_update_foreign_keys", updateForeignKeys},
 		{"006_init_team_comp", initTeamComp},
 		{"007_clean_team_comp_data", cleanTeamCompData},
+		{"008_ensure_rankings_data", ensureRankingsData},
 	}
 
 	for _, m := range migrations {
@@ -73,6 +76,8 @@ func initialSchema(db *gorm.DB) error {
 		&talents.SubTreeNode{},
 		&talents.SubTreeEntry{},
 		&raiderioMythicPlus.UpdateState{},
+		&rankingsModels.RankingsUpdateState{},
+		&rankingsModels.PlayerRanking{},
 	)
 }
 
@@ -92,8 +97,17 @@ func addUserColumns(db *gorm.DB) error {
     `).Error
 }
 
+// Add dungeon stats from Raider.io API
 func addDungeonStats(db *gorm.DB) error {
 	return db.AutoMigrate(&raiderioMythicPlus.DungeonStats{})
+}
+
+// Add rankings models from WarcraftLogs API
+func addRankings(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&rankingsModels.PlayerRanking{},
+		&rankingsModels.RankingsUpdateState{},
+	)
 }
 
 func initTeamComp(db *gorm.DB) error {

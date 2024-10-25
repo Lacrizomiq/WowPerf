@@ -12,7 +12,7 @@
     "class": "demonhunter",
     "classIcon": "https://render.worldofwarcraft.com/us/icons/56/classicon_demonhunter.jpg",
     "spec": {
-      "havoc": "https://render.worldofwarcraft.com/us/icons/56/spell_deathknight_unholypresence.jpg",
+      "havoc": "https://render.worldofwarcraft.com/us/icons/56/ability_demonhunter_specdps.jpg",
       "vengeance": "https://render.worldofwarcraft.com/us/icons/56/ability_demonhunter_spectank.jpg"
     }
   },

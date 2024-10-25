@@ -1,0 +1,168 @@
+"query {
+  characterData {
+    character(name: "TirranØ", serverSlug: "silvermoon", serverRegion: "EU") {
+      name
+      classID
+      zoneRankings(
+        zoneID: 39
+        metric: dps
+      )
+    }
+  }
+}"
+
+{
+	"data": {
+		"characterData": {
+			"character": {
+				"name": "Tirranø",
+				"classID": 1,
+				"zoneRankings": {
+					"bestPerformanceAverage": 70.8520464623395,
+					"medianPerformanceAverage": 70.8520464623395,
+					"difficulty": 10,
+					"metric": "dps",
+					"partition": 1,
+					"zone": 39,
+					"allStars": [
+						{
+							"partition": 1,
+							"spec": "Blood",
+							"points": 51.4511,
+							"possiblePoints": 960,
+							"rank": 44087,
+							"regionRank": 19408,
+							"serverRank": 1127,
+							"rankPercent": 24.41320188598371,
+							"total": 58325
+						}
+					],
+					"rankings": [
+						{
+							"encounter": {
+								"id": 12660,
+								"name": "Ara-Kara, City of Echoes"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 12669,
+								"name": "City of Threads"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 60670,
+								"name": "Grim Batol"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 62290,
+								"name": "Mists of Tirna Scithe"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 61822,
+								"name": "Siege of Boralus"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 12662,
+								"name": "The Dawnbreaker"
+							},
+							"rankPercent": 70.8520464623395,
+							"medianPercent": 70.8520464623395,
+							"lockedIn": true,
+							"totalKills": 1,
+							"fastestKill": -118438349,
+							"allStars": {
+								"points": 51.45,
+								"possiblePoints": 120,
+								"partition": 1,
+								"rank": 23479,
+								"regionRank": 10997,
+								"serverRank": 634,
+								"rankPercent": 25.043100695996426,
+								"total": 31322
+							},
+							"spec": "Blood",
+							"bestSpec": "Blood",
+							"bestAmount": 120378225.98519
+						},
+						{
+							"encounter": {
+								"id": 62286,
+								"name": "The Necrotic Wake"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						},
+						{
+							"encounter": {
+								"id": 12652,
+								"name": "The Stonevault"
+							},
+							"rankPercent": null,
+							"medianPercent": null,
+							"allStars": null,
+							"lockedIn": true,
+							"totalKills": 0,
+							"fastestKill": 0,
+							"bestAmount": 0,
+							"spec": null
+						}
+					]
+				}
+			}
+		}
+	}
+}
