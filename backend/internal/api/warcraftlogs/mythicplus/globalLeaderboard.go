@@ -68,6 +68,12 @@ func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 
 // Get the global leaderboard in every spec
 func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
+	class := c.Query("class")
+	if class == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Class parameter is required"})
+		return
+	}
+
 	spec := c.Query("spec")
 	if spec == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Spec parameter is required"})
@@ -79,7 +85,7 @@ func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
 		limit = 100
 	}
 
-	entries, err := h.globalLeaderboardService.GetGlobalLeaderboardBySpec(c.Request.Context(), spec, limit)
+	entries, err := h.globalLeaderboardService.GetGlobalLeaderboardBySpec(c.Request.Context(), class, spec, limit)
 	if err != nil {
 		log.Printf("Error getting spec leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get spec leaderboard"})
