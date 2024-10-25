@@ -1,12 +1,16 @@
 package warcraftlogs
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 	dungeonService "wowperf/internal/services/warcraftlogs/dungeons"
+	"wowperf/pkg/cache"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 type DungeonLeaderboardHandler struct {
@@ -31,21 +35,29 @@ func (h *DungeonLeaderboardHandler) GetDungeonLeaderboard(c *gin.Context) {
 		page = 1
 	}
 
+	cacheKey := fmt.Sprintf("warcraftlogs:dungeon:%d:page:%d", encounterID, page)
+
+	var leaderboard interface{}
+	err = cache.Get(cacheKey, &leaderboard)
+	if err == nil {
+		c.JSON(http.StatusOK, leaderboard)
+		return
+	}
+
+	if err != redis.Nil {
+		log.Printf("Error getting dungeon leaderboard from cache: %v", err)
+	}
+
 	// Get the dungeon leaderboard
-	leaderboard, err := h.dungeonService.GetDungeonLeaderboard(encounterID, page)
+	leaderboard, err = h.dungeonService.GetDungeonLeaderboard(encounterID, page)
 	if err != nil {
 		log.Printf("Error getting dungeon leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dungeon leaderboard"})
 		return
 	}
 
-	// Log the dungeon leaderboard for debugging
-	log.Printf("Got leaderboard for dungeon %d, page %d: %v", encounterID, page, leaderboard)
-	if leaderboard != nil {
-		log.Printf("Leaderboard: %d rankings", len(leaderboard.Rankings))
-		for i, ranking := range leaderboard.Rankings {
-			log.Printf("Ranking %d: %v", i, ranking)
-		}
+	if err := cache.Set(cacheKey, leaderboard, 8*time.Hour); err != nil {
+		log.Printf("Error setting dungeon leaderboard in cache: %v", err)
 	}
 
 	c.JSON(http.StatusOK, leaderboard)
