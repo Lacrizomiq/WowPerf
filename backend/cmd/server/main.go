@@ -122,7 +122,7 @@ func initializeServices(db *gorm.DB) (
 	}
 
 	dungeonService := warcraftLogsRankings.NewDungeonService(warcraftLogsClient)
-	rankingsService := warcraftLogsRankings.NewRankingsService(dungeonService)
+	rankingsService := warcraftLogsRankings.NewRankingsService(dungeonService, db)
 	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService)
 
 	return authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, nil

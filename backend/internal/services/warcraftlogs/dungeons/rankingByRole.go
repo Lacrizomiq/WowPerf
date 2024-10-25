@@ -8,6 +8,8 @@ import (
 	"sort"
 	"sync"
 	leaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/team"
+
+	"gorm.io/gorm"
 )
 
 // Base structures
@@ -43,6 +45,7 @@ type GlobalRankings struct {
 // Rankings service structure
 type RankingsService struct {
 	dungeonService *DungeonService
+	db             *gorm.DB
 }
 
 // Wrapper structure for the ranking with the dungeon ID
@@ -51,9 +54,10 @@ type RankingWithDungeon struct {
 	DungeonID int
 }
 
-func NewRankingsService(dungeonService *DungeonService) *RankingsService {
+func NewRankingsService(dungeonService *DungeonService, db *gorm.DB) *RankingsService {
 	return &RankingsService{
 		dungeonService: dungeonService,
+		db:             db,
 	}
 }
 
