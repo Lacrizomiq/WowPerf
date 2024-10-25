@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 	rankingsModels "wowperf/internal/models/warcraftlogs/mythicplus"
+	"wowperf/pkg/cache"
 
 	"gorm.io/gorm"
 )
@@ -35,6 +36,33 @@ func NewRankingsUpdater(db *gorm.DB, rankingService *RankingsService) *RankingsU
 	}
 }
 
+// InvalidateCache invalidates the cache when the rankings are updated
+func (u *RankingsUpdater) InvalidateCache(ctx context.Context) {
+	patterns := []string{
+		"warcraftlogs:global:*",
+		"warcraftlogs:role:*",
+		"warcraftlogs:class:*",
+		"warcraftlogs:spec:*",
+		"warcraftlogs:dungeon:*",
+	}
+
+	for _, pattern := range patterns {
+		keys, err := cache.GetRedisClient().Keys(ctx, pattern).Result()
+		if err != nil {
+			log.Printf("Warning: Error getting cache keys for pattern %s: %v", pattern, err)
+			continue
+		}
+
+		if len(keys) > 0 {
+			if err := cache.GetRedisClient().Del(ctx, keys...).Err(); err != nil {
+				log.Printf("Warning: Error deleting cache keys for pattern %s: %v", pattern, err)
+			} else {
+				log.Printf("Successfully invalidated %d cache keys for pattern %s", len(keys), pattern)
+			}
+		}
+	}
+}
+
 // Update rankings
 func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 	log.Println("Starting rankings update...")
@@ -49,7 +77,7 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		DungeonNecroticWake,
 		DungeonStonevault,
 	}
-	pagesPerDungeon := 3
+	pagesPerDungeon := 10
 
 	rankings, err := u.rankingService.GetGlobalRankings(ctx, dungeonIDs, pagesPerDungeon)
 	if err != nil {
@@ -57,7 +85,7 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		return err
 	}
 
-	// Debug logs pour voir les données récupérées
+	// Debug logs to see the data retrieved
 	log.Printf("Tanks count: %d", len(rankings.Tanks.Players))
 	log.Printf("Healers count: %d", len(rankings.Healers.Players))
 	log.Printf("DPS count: %d", len(rankings.DPS.Players))
@@ -155,6 +183,10 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 	} else {
 		log.Printf("Total rankings in database after update: %d", count)
 	}
+
+	// Invalidate the cache after a successful update
+	u.InvalidateCache(ctx)
+	log.Println("Cache invalidated after successful update")
 
 	log.Println("Rankings update completed successfully")
 	return nil

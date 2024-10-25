@@ -3,6 +3,7 @@ package warcraftlogs
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 const REQUIRED_DUNGEON_COUNT = 8
@@ -27,7 +28,7 @@ func (s *RankingsService) getBaseLeaderboardQuery() string {
             class,
             spec,
             role,
-            SUM(score) as total_score,
+            ROUND(CAST(SUM(score) AS numeric), 2) as total_score,
             COUNT(DISTINCT dungeon_id) as dungeon_count,
             DENSE_RANK() OVER (ORDER BY SUM(score) DESC, name ASC) as rank
         FROM player_rankings
@@ -42,7 +43,6 @@ func (s *RankingsService) getBaseLeaderboardQuery() string {
 // Get the global leaderboard in every role
 func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int) ([]LeaderboardEntry, error) {
 	var entries []LeaderboardEntry
-
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(),
 		"", // No WHERE clause needed
@@ -60,8 +60,7 @@ func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int) (
 // Get the global leaderboard by role
 func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role string, limit int) ([]LeaderboardEntry, error) {
 	var entries []LeaderboardEntry
-
-	whereClause := "WHERE role = ?"
+	whereClause := "WHERE LOWER(role) = LOWER(?)"
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(),
 		whereClause,
@@ -79,8 +78,7 @@ func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role s
 // Get the global leaderboard by class
 func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class string, limit int) ([]LeaderboardEntry, error) {
 	var entries []LeaderboardEntry
-
-	whereClause := "WHERE class = ?"
+	whereClause := "WHERE LOWER(class) = LOWER(?)"
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(),
 		whereClause,
@@ -98,8 +96,7 @@ func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class
 // Get the global leaderboard by spec
 func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class, spec string, limit int) ([]LeaderboardEntry, error) {
 	var entries []LeaderboardEntry
-
-	whereClause := "WHERE class = ? AND spec = ?"
+	whereClause := "WHERE LOWER(class) = LOWER(?) AND LOWER(spec) = LOWER(?)"
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(),
 		whereClause,
@@ -117,9 +114,11 @@ func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class,
 // function to validate the input
 func (s *RankingsService) validateInput(role, class, spec string, limit int) error {
 	// Validate the role if it is provided
+	roleLower := strings.ToLower(role)
+
 	if role != "" {
 		validRoles := map[string]bool{"tank": true, "healer": true, "dps": true}
-		if !validRoles[role] {
+		if !validRoles[roleLower] {
 			return fmt.Errorf("invalid role: %s", role)
 		}
 	}
