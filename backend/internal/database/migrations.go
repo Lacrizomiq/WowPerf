@@ -39,7 +39,8 @@ func Migrate(db *gorm.DB) error {
 		{"005_update_foreign_keys", updateForeignKeys},
 		{"006_init_team_comp", initTeamComp},
 		{"007_clean_team_comp_data", cleanTeamCompData},
-		{"008_ensure_rankings_data", ensureRankingsData},
+		{"008_add_rankings_models", addRankingsTables},
+		{"009_ensure_rankings_data", ensureRankingsData},
 	}
 
 	for _, m := range migrations {
@@ -103,11 +104,18 @@ func addDungeonStats(db *gorm.DB) error {
 }
 
 // Add rankings models from WarcraftLogs API
-func addRankings(db *gorm.DB) error {
-	return db.AutoMigrate(
-		&rankingsModels.PlayerRanking{},
-		&rankingsModels.RankingsUpdateState{},
-	)
+func addRankingsTables(db *gorm.DB) error {
+	// First create the rankings update state table
+	if err := db.AutoMigrate(&rankingsModels.RankingsUpdateState{}); err != nil {
+		return fmt.Errorf("failed to create rankings update state table: %v", err)
+	}
+
+	// Then create the player rankings table
+	if err := db.AutoMigrate(&rankingsModels.PlayerRanking{}); err != nil {
+		return fmt.Errorf("failed to create player rankings table: %v", err)
+	}
+
+	return nil
 }
 
 func initTeamComp(db *gorm.DB) error {

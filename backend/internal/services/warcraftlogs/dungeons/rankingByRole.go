@@ -7,7 +7,7 @@ import (
 	"log"
 	"sort"
 	"sync"
-	leaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/ByTeam"
+	leaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/team"
 )
 
 // Base structures
@@ -63,8 +63,14 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 	errorsChan := make(chan error, len(dungeonIDs)*pagesPerDungeon)
 
 	var wg sync.WaitGroup
-	PlayerScores := make(map[int]*PlayerScore)
-	var playersMutex sync.Mutex
+
+	// Map to store the best score by player and by dungeon
+	type playerDungeonKey struct {
+		playerID  int
+		dungeonID int
+	}
+	bestScores := make(map[playerDungeonKey]*PlayerScore)
+	var scoresMutex sync.Mutex
 
 	// Launch the goroutines
 	for _, dungeonID := range dungeonIDs {
@@ -78,13 +84,13 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 					errorsChan <- ctx.Err()
 					return
 				default:
-					rankings, err := s.dungeonService.GetDungeonLeaderboard(dID, p)
+					dungeonData, err := s.dungeonService.GetDungeonLeaderboard(dID, p)
 					if err != nil {
 						errorsChan <- fmt.Errorf("failed to get dungeon leaderboard for dungeon %d, page %d: %w", dID, p, err)
 						return
 					}
 
-					for _, ranking := range rankings.Rankings {
+					for _, ranking := range dungeonData.Rankings {
 						rankingsChan <- RankingWithDungeon{
 							Ranking:   &ranking,
 							DungeonID: dID,
@@ -101,36 +107,47 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 		close(errorsChan)
 	}()
 
+	// Process the rankings
 	for wrappedRanking := range rankingsChan {
+		if wrappedRanking.Ranking == nil || len(wrappedRanking.Ranking.Team) == 0 {
+			continue
+		}
+
 		for _, member := range wrappedRanking.Ranking.Team {
-			playersMutex.Lock()
-			if player, exists := PlayerScores[member.ID]; exists {
-				player.Runs = append(player.Runs, Run{
-					DungeonID:  wrappedRanking.DungeonID,
-					Score:      wrappedRanking.Ranking.Score,
-					Time:       wrappedRanking.Ranking.Duration,
-					AffixLevel: wrappedRanking.Ranking.BracketData,
-					Medal:      wrappedRanking.Ranking.Medal,
-				})
-				player.TotalScore += wrappedRanking.Ranking.Score
+			scoresMutex.Lock()
+			key := playerDungeonKey{
+				playerID:  member.ID,
+				dungeonID: wrappedRanking.DungeonID,
+			}
+
+			run := Run{
+				DungeonID:  wrappedRanking.DungeonID,
+				Score:      wrappedRanking.Ranking.Score,
+				Time:       wrappedRanking.Ranking.Duration,
+				AffixLevel: wrappedRanking.Ranking.BracketData,
+				Medal:      wrappedRanking.Ranking.Medal,
+			}
+
+			// Check if we already have a score for this player in this dungeon
+			if existingScore, exists := bestScores[key]; exists {
+				if wrappedRanking.Ranking.Score > existingScore.Runs[0].Score {
+					// Update with the best score
+					existingScore.Runs = []Run{run}
+					existingScore.TotalScore = wrappedRanking.Ranking.Score
+				}
 			} else {
-				PlayerScores[member.ID] = &PlayerScore{
-					ID:    member.ID,
-					Name:  member.Name,
-					Class: member.Class,
-					Spec:  member.Spec,
-					Role:  member.Role,
-					Runs: []Run{{
-						DungeonID:  wrappedRanking.DungeonID,
-						Score:      wrappedRanking.Ranking.Score,
-						Time:       wrappedRanking.Ranking.Duration,
-						AffixLevel: wrappedRanking.Ranking.BracketData,
-						Medal:      wrappedRanking.Ranking.Medal,
-					}},
+				// New player for this dungeon
+				bestScores[key] = &PlayerScore{
+					ID:         member.ID,
+					Name:       member.Name,
+					Class:      member.Class,
+					Spec:       member.Spec,
+					Role:       member.Role,
 					TotalScore: wrappedRanking.Ranking.Score,
+					Runs:       []Run{run},
 				}
 			}
-			playersMutex.Unlock()
+			scoresMutex.Unlock()
 		}
 	}
 
@@ -141,41 +158,55 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 		}
 	}
 
-	// Prepare the result
-	result := &GlobalRankings{}
-	tanks := make([]PlayerScore, 0)
-	healers := make([]PlayerScore, 0)
-	dps := make([]PlayerScore, 0)
+	// Convert map to slices grouped by role
+	result := &GlobalRankings{
+		Tanks:   RoleRankings{Players: make([]PlayerScore, 0)},
+		Healers: RoleRankings{Players: make([]PlayerScore, 0)},
+		DPS:     RoleRankings{Players: make([]PlayerScore, 0)},
+	}
 
-	for _, player := range PlayerScores {
-		switch player.Role {
-		case "Tank":
-			tanks = append(tanks, *player)
-		case "Healer":
-			healers = append(healers, *player)
-		case "DPS":
-			dps = append(dps, *player)
+	// Group players by their ID to calculer leur score total
+	playerScores := make(map[int]*PlayerScore)
+	for _, score := range bestScores {
+		if player, exists := playerScores[score.ID]; exists {
+			// Add the run to the existing player
+			player.Runs = append(player.Runs, score.Runs...)
+			player.TotalScore += score.TotalScore
+		} else {
+			// Create a copy of the score for the new player
+			newPlayer := *score
+			playerScores[score.ID] = &newPlayer
 		}
 	}
 
-	// Sort by total score
-	sort.SliceStable(tanks, func(i, j int) bool {
-		return tanks[i].TotalScore > tanks[j].TotalScore
+	// Convert the map to slices by role
+	for _, player := range playerScores {
+		playerCopy := *player
+		switch player.Role {
+		case "Tank":
+			result.Tanks.Players = append(result.Tanks.Players, playerCopy)
+		case "Healer":
+			result.Healers.Players = append(result.Healers.Players, playerCopy)
+		case "DPS":
+			result.DPS.Players = append(result.DPS.Players, playerCopy)
+		}
+	}
+
+	// Sort each role's players by total score
+	sort.Slice(result.Tanks.Players, func(i, j int) bool {
+		return result.Tanks.Players[i].TotalScore > result.Tanks.Players[j].TotalScore
 	})
-	sort.SliceStable(healers, func(i, j int) bool {
-		return healers[i].TotalScore > healers[j].TotalScore
+	sort.Slice(result.Healers.Players, func(i, j int) bool {
+		return result.Healers.Players[i].TotalScore > result.Healers.Players[j].TotalScore
 	})
-	sort.SliceStable(dps, func(i, j int) bool {
-		return dps[i].TotalScore > dps[j].TotalScore
+	sort.Slice(result.DPS.Players, func(i, j int) bool {
+		return result.DPS.Players[i].TotalScore > result.DPS.Players[j].TotalScore
 	})
 
-	// Assign the results
-	result.Tanks.Players = tanks
-	result.Tanks.Count = len(tanks)
-	result.Healers.Players = healers
-	result.Healers.Count = len(healers)
-	result.DPS.Players = dps
-	result.DPS.Count = len(dps)
+	// Update counts
+	result.Tanks.Count = len(result.Tanks.Players)
+	result.Healers.Count = len(result.Healers.Players)
+	result.DPS.Count = len(result.DPS.Players)
 
 	return result, nil
 }

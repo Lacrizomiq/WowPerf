@@ -8,8 +8,8 @@ import (
 
 type PlayerRanking struct {
 	gorm.Model
-	DungeonID int       `json:"dungeon_id"`
-	PlayerID  int       `json:"player_id"`
+	DungeonID int       `json:"dungeon_id" gorm:"index"`
+	PlayerID  int       `json:"player_id" gorm:"index"`
 	Name      string    `json:"name"`
 	Class     string    `json:"class"`
 	Spec      string    `json:"spec"`

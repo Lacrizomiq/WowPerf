@@ -6,95 +6,19 @@ import (
 	"fmt"
 	"log"
 
-	logsModels "wowperf/internal/models/warcraftlogs/mythicplus/ByLog"
-	leaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/ByTeam"
+	leaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/team"
 	warcraftlogsService "wowperf/internal/services/warcraftlogs"
 )
 
-const (
-	DungeonLeaderboardQuery = `
-	query getDungeonLeaderboard($encounterId: Int!, $region: String!, $page: Int!) {
-		worldData {
-			encounter(id: $encounterId) {
-				name
-				fightRankings(page: $page) {
-					page
-					hasMorePages
-					count
-					rankings {
-						server {
-							id
-							name
-							region
-						}
-						duration
-						startTime
-						deaths
-						tanks
-						healers
-						melee
-						ranged
-						bracketData
-						affixes
-						team {
-							id
-							name
-							class
-							spec
-							role
-						}
-						medal
-						score
-						leaderboard
-					}
-				}
-			}
-		}
-	}`
-
-	DungeonLogsQuery = `
-	query getDungeonLogs($encounterId: Int!, $metric: String!, $className: String!) {
-		worldData {
-			encounter(id: $encounterId) {
-				name
-				characterRankings(
-					metric: $metric
-					includeCombatantInfo: false
-					className: $className
-				) {
-					page
-					hasMorePages
-					count
-					rankings {
-						name
-						class
-						spec
-						amount
-						hardModeLevel
-						duration
-						startTime
-						report {
-							code
-							fightID
-							startTime
-						}
-						server {
-							id
-							name
-							region
-						}
-						bracketData
-						faction
-						affixes
-						medal
-						score
-						leaderboard
-					}
-				}
-			}
-		}
-	}`
-)
+const DungeonLeaderboardQuery = `
+query getDungeonLeaderboard($encounterId: Int!, $page: Int!) {
+    worldData {
+        encounter(id: $encounterId) {
+            name
+            fightRankings(page: $page)
+        }
+    }
+}`
 
 type DungeonService struct {
 	client *warcraftlogsService.Client
@@ -118,53 +42,63 @@ func (s *DungeonService) GetDungeonLeaderboard(encounterID int, page int) (*lead
 		return nil, fmt.Errorf("failed to get dungeon leaderboard: %w", err)
 	}
 
-	var result struct {
-		Data struct {
-			WorldData struct {
-				Encounter struct {
-					Name          string                               `json:"name"`
-					FightRankings leaderboardModels.DungeonLeaderboard `json:"fightRankings"`
-				} `json:"encounter"`
-			} `json:"worldData"`
-		} `json:"data"`
+	// Log raw response for debugging
+	log.Printf("Raw response: %s", string(response))
+
+	// First check if there are any GraphQL errors
+	var errorResponse struct {
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
 	}
-
-	if err := json.Unmarshal(response, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal leaderboard response: %w", err)
-	}
-
-	return &result.Data.WorldData.Encounter.FightRankings, nil
-}
-
-// GetDungeonLogs returns the leaderboard for users with logs for a given encounter, metric and class name
-func (s *DungeonService) GetDungeonLogs(encounterID int, metric string, className string) (*logsModels.DungeonLogs, error) {
-	log.Printf("Getting dungeon logs for encounter %d, metric %s, class %s", encounterID, metric, className)
-
-	variables := map[string]interface{}{
-		"encounterId": encounterID,
-		"metric":      metric,
-		"className":   className,
-	}
-
-	response, err := s.client.MakeGraphQLRequest(DungeonLogsQuery, variables)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get dungeon logs: %w", err)
+	if err := json.Unmarshal(response, &errorResponse); err == nil && len(errorResponse.Errors) > 0 {
+		return nil, fmt.Errorf("GraphQL error: %s", errorResponse.Errors[0].Message)
 	}
 
 	var result struct {
 		Data struct {
 			WorldData struct {
 				Encounter struct {
-					Name              string                 `json:"name"`
-					CharacterRankings logsModels.DungeonLogs `json:"characterRankings"`
+					Name          string          `json:"name"`
+					FightRankings json.RawMessage `json:"fightRankings"`
 				} `json:"encounter"`
 			} `json:"worldData"`
 		} `json:"data"`
 	}
 
 	if err := json.Unmarshal(response, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal logs response: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal initial response: %w", err)
 	}
 
-	return &result.Data.WorldData.Encounter.CharacterRankings, nil
+	// Verify if FightRankings is null or empty
+	if len(result.Data.WorldData.Encounter.FightRankings) == 0 {
+		return &leaderboardModels.DungeonLeaderboard{
+			Page:         page,
+			HasMorePages: false,
+			Count:        0,
+			Rankings:     make([]leaderboardModels.Ranking, 0),
+		}, nil
+	}
+
+	// Now unmarshal the FightRankings JSON into our DungeonLeaderboard struct
+	var leaderboard leaderboardModels.DungeonLeaderboard
+	if err := json.Unmarshal(result.Data.WorldData.Encounter.FightRankings, &leaderboard); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal fight rankings: %w", err)
+	}
+
+	log.Printf("Leaderboard for %s: Page %d, Count %d, HasMore %v, Rankings: %d",
+		result.Data.WorldData.Encounter.Name,
+		leaderboard.Page,
+		leaderboard.Count,
+		leaderboard.HasMorePages,
+		len(leaderboard.Rankings))
+
+	if leaderboard.Rankings != nil {
+		for i, ranking := range leaderboard.Rankings {
+			log.Printf("Ranking %d: Score %.2f, Medal %s, Team size %d",
+				i+1, ranking.Score, ranking.Medal, len(ranking.Team))
+		}
+	}
+
+	return &leaderboard, nil
 }

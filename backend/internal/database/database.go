@@ -195,6 +195,11 @@ func ensureDungeonStats(db *gorm.DB) error {
 
 // Ensure WarcraftLogs Rankings data is present
 func ensureRankingsData(db *gorm.DB) error {
+	// Check if the rankings table is empty
+	if err := db.AutoMigrate(&rankingsModels.PlayerRanking{}, &rankingsModels.RankingsUpdateState{}); err != nil {
+		return fmt.Errorf("error migrating rankings models: %v", err)
+	}
+
 	var count int64
 	db.Model(&rankingsModels.PlayerRanking{}).Count(&count)
 	if count == 0 {
