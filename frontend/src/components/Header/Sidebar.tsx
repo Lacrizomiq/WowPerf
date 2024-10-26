@@ -26,6 +26,7 @@ import {
   ChevronUp,
   BicepsFlexed,
   ChartColumnDecreasing,
+  Rows4,
 } from "lucide-react";
 import { eu, us, tw, kr } from "@/data/realms";
 
@@ -96,8 +97,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       transition-all duration-300 h-full 
       bg-[color:var(--sidebar-background)] 
       text-[color:var(--sidebar-foreground)]
+      shadow-lg
       ${isExpanded ? "w-64" : "w-16"}
-     
     `}
     >
       {/* Header */}
@@ -222,6 +223,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 </SidebarMenuButton>
                 {isExpanded && mythicPlusExpanded && (
                   <SidebarMenuSub>
+                    <SidebarMenuSubItem className="pt-4">
+                      <SidebarMenuSubButton
+                        onClick={() => router.push("/mythic-plus/leaderboard")}
+                      >
+                        <Rows4 />
+                        <span className="cursor-pointer">Leaderboard</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                     <SidebarMenuSubItem className="py-4 ">
                       <SidebarMenuSubButton
                         onClick={() => router.push("/mythic-plus/best-runs")}

@@ -77,7 +77,7 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		DungeonNecroticWake,
 		DungeonStonevault,
 	}
-	pagesPerDungeon := 10
+	pagesPerDungeon := 5
 
 	rankings, err := u.rankingService.GetGlobalRankings(ctx, dungeonIDs, pagesPerDungeon)
 	if err != nil {
