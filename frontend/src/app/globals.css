@@ -59,11 +59,7 @@
 body {
   color: white;
   min-height: 100vh;
-  background: linear-gradient(
-    to bottom,
-    var(--color-deep-blue),
-    var(--color-midnight-blue)
-  );
+  background: black;
 }
 
 .bg-gradient-dark {

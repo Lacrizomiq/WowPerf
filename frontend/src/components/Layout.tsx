@@ -1,3 +1,5 @@
+// components/Layout.tsx
+
 "use client";
 
 import React, { useState } from "react";
@@ -14,21 +16,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-gradient-dark">
-        <div
-          onMouseEnter={() => setIsExpanded(true)}
-          onMouseLeave={() => setIsExpanded(false)}
-          className="flex-shrink-0 transition-all duration-300"
-          style={{ width: isExpanded ? "240px" : "64px" }}
-        >
-          <AppSidebar
-            isExpanded={isExpanded}
-            setIsExpanded={setIsExpanded}
-            isFooterMenuOpen={isFooterMenuOpen}
-            setIsFooterMenuOpen={setIsFooterMenuOpen}
-          />
+      <div className="relative flex h-screen w-full overflow-hidden bg-gradient-dark">
+        <div className="fixed top-0 left-0 h-full z-50">
+          <div
+            className="absolute top-0 left-0 h-full overflow-hidden"
+            style={{ width: isExpanded ? "240px" : "64px" }}
+          >
+            <div
+              className="absolute top-0 left-0 h-full w-16"
+              onMouseEnter={() => setIsExpanded(true)}
+              onMouseLeave={() => setIsExpanded(false)}
+            >
+              <AppSidebar
+                isExpanded={isExpanded}
+                setIsExpanded={setIsExpanded}
+                isFooterMenuOpen={isFooterMenuOpen}
+                setIsFooterMenuOpen={setIsFooterMenuOpen}
+              />
+            </div>
+          </div>
         </div>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto pl-16">{children}</main>
       </div>
     </SidebarProvider>
   );

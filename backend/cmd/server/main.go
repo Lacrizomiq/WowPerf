@@ -32,6 +32,7 @@ import (
 	// Internal Packages - Models & Database
 	"wowperf/internal/database"
 	models "wowperf/internal/models/raiderio/mythicrundetails"
+	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
 	// Internal Packages - Utils
 	"wowperf/pkg/cache"
@@ -224,8 +225,27 @@ func main() {
 
 	// Start Periodic Updates (WarcraftLogs Dungeon Rankings)
 	go func() {
-		log.Println("Setting up rankings update...")
-		rankingsUpdater.CheckAndUpdate()
+		log.Println("Setting up WarcraftLogs rankings update scheduler...")
+
+		// Attendre que la base de données soit bien initialisée
+		time.Sleep(10 * time.Second)
+
+		// Vérifier l'état initial sans forcer de mise à jour
+		var state playerRankingModels.RankingsUpdateState
+		if err := db.First(&state).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				log.Println("Creating initial rankings update state...")
+				state = playerRankingModels.RankingsUpdateState{
+					LastUpdateTime: time.Now(),
+				}
+				if err := db.Create(&state).Error; err != nil {
+					log.Printf("Error creating initial state: %v", err)
+				}
+			}
+		}
+
+		// Start the update scheduler
+		log.Printf("Starting rankings update scheduler (minimum interval: %v)", warcraftLogsRankings.MinimumUpdateInterval)
 		rankingsUpdater.StartPeriodicUpdate()
 	}()
 

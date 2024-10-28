@@ -10,16 +10,18 @@ import (
 )
 
 type Handler struct {
-	MythicPlus *mythicplus.RankingHandler
-	Dungeon    *mythicplus.DungeonLeaderboardHandler
-	Global     *mythicplus.GlobalLeaderboardHandler
+	MythicPlus          *mythicplus.RankingHandler
+	Dungeon             *mythicplus.DungeonLeaderboardHandler
+	Global              *mythicplus.GlobalLeaderboardHandler
+	LeaderboardByPlayer *mythicplus.DungeonLeaderboardHandler
 }
 
 func NewHandler(rankingService *dungeons.RankingsService, dungeonService *dungeons.DungeonService, db *gorm.DB) *Handler {
 	return &Handler{
-		MythicPlus: mythicplus.NewRankingHandler(rankingService, db),
-		Dungeon:    mythicplus.NewDungeonLeaderboardHandler(dungeonService),
-		Global:     mythicplus.NewGlobalLeaderboardHandler(rankingService),
+		MythicPlus:          mythicplus.NewRankingHandler(rankingService, db),
+		Dungeon:             mythicplus.NewDungeonLeaderboardHandler(dungeonService),
+		Global:              mythicplus.NewGlobalLeaderboardHandler(rankingService),
+		LeaderboardByPlayer: mythicplus.NewDungeonLeaderboardHandler(dungeonService),
 	}
 }
 
@@ -31,8 +33,11 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 			// Get all the rankings for all dungeons to seed the database
 			mythicplus.GET("/rankings", h.MythicPlus.GetRankings)
 
-			// Get the leaderboard for a specific dungeon
-			mythicplus.GET("/rankings/dungeon", h.Dungeon.GetDungeonLeaderboard)
+			// Get the leaderboard for a specific dungeon by team
+			mythicplus.GET("/rankings/dungeon/team", h.Dungeon.GetDungeonLeaderboardByTeam)
+
+			// Get the leaderboard for a specific dungeon by player
+			mythicplus.GET("/rankings/dungeon/player", h.LeaderboardByPlayer.GetDungeonLeaderboardByPlayer)
 
 			// Get the global leaderboard
 			mythicplus.GET("/global/leaderboard", h.Global.GetGlobalLeaderboard)

@@ -1,42 +1,34 @@
-// services/warcraftlogs/rankingsUpdater.go
 package warcraftlogs
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"math"
+	"strings"
 	"time"
-	rankingsModels "wowperf/internal/models/warcraftlogs/mythicplus"
+	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 	"wowperf/pkg/cache"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
-const updateInterval = 24 * time.Hour
-
 const (
-	DungeonAraKara       = 12660
-	DungeonCityOfThreads = 12669
-	DungeonGrimBatol     = 60670
-	DungeonMists         = 62290
-	DungeonSiege         = 61822
-	DungeonDawnbreaker   = 12662
-	DungeonNecroticWake  = 62286
-	DungeonStonevault    = 12652
+	MinimumUpdateInterval = 23 * time.Hour // Minimum interval
+	DefaultUpdateInterval = 24 * time.Hour // Interval by default
+	batchSize             = 1000           // Maximum batch size for insertion
 )
 
-type RankingsUpdater struct {
-	db             *gorm.DB
-	rankingService *RankingsService
-}
+type UpdateStrategy int
 
-func NewRankingsUpdater(db *gorm.DB, rankingService *RankingsService) *RankingsUpdater {
-	return &RankingsUpdater{
-		db:             db,
-		rankingService: rankingService,
-	}
-}
+const (
+	UpdateStrategyNormal UpdateStrategy = iota
+	UpdateStrategyForce
+	UpdateStrategySkip
+)
 
-// InvalidateCache invalidates the cache when the rankings are updated
+// InvalidateCache invalidates the Redis cache
 func (u *RankingsUpdater) InvalidateCache(ctx context.Context) {
 	patterns := []string{
 		"warcraftlogs:global:*",
@@ -63,9 +55,76 @@ func (u *RankingsUpdater) InvalidateCache(ctx context.Context) {
 	}
 }
 
-// Update rankings
+// insertRankingsInBatches inserts rankings in batches
+func (u *RankingsUpdater) insertRankingsInBatches(tx *gorm.DB, rankings []playerRankingModels.PlayerRanking) error {
+	baseSQL := `
+	INSERT INTO player_rankings (
+			created_at, updated_at, dungeon_id, name, class, spec, role, 
+			amount, hard_mode_level, duration, start_time, report_code, 
+			report_fight_id, report_start_time, guild_id, guild_name, 
+			guild_faction, server_id, server_name, server_region, 
+			bracket_data, faction, affixes, medal, score, leaderboard
+	) VALUES `
+
+	batchSize := 100
+	totalRankings := len(rankings)
+	batches := int(math.Ceil(float64(totalRankings) / float64(batchSize)))
+
+	for i := 0; i < batches; i++ {
+		start := i * batchSize
+		end := start + batchSize
+		if end > totalRankings {
+			end = totalRankings
+		}
+
+		batch := rankings[start:end]
+		valueStrings := make([]string, len(batch))
+		valueArgs := make([]interface{}, 0, len(batch)*26)
+
+		for j, ranking := range batch {
+			valueStrings[j] = fmt.Sprintf(
+				"($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+				j*26+1, j*26+2, j*26+3, j*26+4, j*26+5, j*26+6, j*26+7, j*26+8, j*26+9, j*26+10,
+				j*26+11, j*26+12, j*26+13, j*26+14, j*26+15, j*26+16, j*26+17, j*26+18, j*26+19, j*26+20,
+				j*26+21, j*26+22, j*26+23, j*26+24, j*26+25, j*26+26,
+			)
+
+			now := time.Now()
+			valueArgs = append(valueArgs,
+				now, now, ranking.DungeonID, ranking.Name, ranking.Class,
+				ranking.Spec, ranking.Role, ranking.Amount, ranking.HardModeLevel,
+				ranking.Duration, ranking.StartTime, ranking.ReportCode,
+				ranking.ReportFightID, ranking.ReportStartTime, ranking.GuildID,
+				ranking.GuildName, ranking.GuildFaction, ranking.ServerID,
+				ranking.ServerName, ranking.ServerRegion, ranking.BracketData,
+				ranking.Faction, pq.Array(ranking.Affixes), ranking.Medal,
+				ranking.Score, ranking.Leaderboard,
+			)
+		}
+
+		query := baseSQL + strings.Join(valueStrings, ",")
+		if err := tx.Exec(query, valueArgs...).Error; err != nil {
+			return fmt.Errorf("failed to insert batch %d: %w", i+1, err)
+		}
+
+		log.Printf("Inserted batch %d/%d (%d rankings)", i+1, batches, len(batch))
+	}
+
+	return nil
+}
+
+// UpdateRankings updates the rankings in the database
 func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 	log.Println("Starting rankings update...")
+
+	// Check if an update is really necessary
+	var state playerRankingModels.RankingsUpdateState
+	if err := u.db.First(&state).Error; err == nil {
+		timeSinceLastUpdate := time.Since(state.LastUpdateTime)
+		if timeSinceLastUpdate < MinimumUpdateInterval {
+			return fmt.Errorf("last update was too recent (%v ago)", timeSinceLastUpdate.Round(time.Minute))
+		}
+	}
 
 	dungeonIDs := []int{
 		DungeonAraKara,
@@ -85,87 +144,58 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		return err
 	}
 
-	// Debug logs to see the data retrieved
-	log.Printf("Tanks count: %d", len(rankings.Tanks.Players))
-	log.Printf("Healers count: %d", len(rankings.Healers.Players))
-	log.Printf("DPS count: %d", len(rankings.DPS.Players))
-
 	err = u.db.Transaction(func(tx *gorm.DB) error {
-		// Hard delete all existing rankings
 		if err := tx.Exec("DELETE FROM player_rankings").Error; err != nil {
-			log.Printf("Error deleting existing rankings: %v", err)
-			return err
+			return fmt.Errorf("failed to delete existing rankings: %w", err)
 		}
 
-		// Count new rankings to be inserted for logging
-		var totalNewRankings int
+		var newRankings []playerRankingModels.PlayerRanking
 
-		// Collect and insert rankings for each role
-		for _, role := range []struct {
-			name    string
-			players []PlayerScore
-		}{
-			{"tank", rankings.Tanks.Players},
-			{"healer", rankings.Healers.Players},
-			{"dps", rankings.DPS.Players},
-		} {
-			log.Printf("Processing %s - %d players", role.name, len(role.players))
-
-			var newRankings []rankingsModels.PlayerRanking
-			for _, player := range role.players {
-				log.Printf("Processing player %s (%s %s) with %d runs",
-					player.Name, player.Class, player.Spec, len(player.Runs))
-
+		processRoleRankings := func(players []PlayerScore, role string) {
+			for _, player := range players {
 				for _, run := range player.Runs {
-					newRankings = append(newRankings, rankingsModels.PlayerRanking{
-						DungeonID: run.DungeonID,
-						PlayerID:  player.ID,
-						Name:      player.Name,
-						Class:     player.Class,
-						Spec:      player.Spec,
-						Role:      role.name,
-						Score:     run.Score,
-						UpdatedAt: time.Now(),
+					newRankings = append(newRankings, playerRankingModels.PlayerRanking{
+						DungeonID:       run.DungeonID,
+						Name:            player.Name,
+						Class:           player.Class,
+						Spec:            player.Spec,
+						Role:            player.Role,
+						Amount:          player.Amount,
+						HardModeLevel:   run.HardModeLevel,
+						Duration:        run.Duration,
+						StartTime:       run.StartTime,
+						ReportCode:      run.Report.Code,
+						ReportFightID:   run.Report.FightID,
+						ReportStartTime: run.Report.StartTime,
+						GuildID:         player.Guild.ID,
+						GuildName:       player.Guild.Name,
+						GuildFaction:    player.Guild.Faction,
+						ServerID:        player.Server.ID,
+						ServerName:      player.Server.Name,
+						ServerRegion:    player.Server.Region,
+						BracketData:     run.BracketData,
+						Faction:         player.Faction,
+						Affixes:         run.Affixes,
+						Medal:           run.Medal,
+						Score:           run.Score,
+						Leaderboard:     0,
+						UpdatedAt:       time.Now(),
 					})
 				}
 			}
-
-			// Insert rankings for this role
-			if len(newRankings) > 0 {
-				log.Printf("Attempting to insert %d %s rankings", len(newRankings), role.name)
-				if err := tx.Create(&newRankings).Error; err != nil {
-					log.Printf("Error inserting %s rankings: %v", role.name, err)
-					return err
-				}
-				totalNewRankings += len(newRankings)
-				log.Printf("Successfully inserted %d %s rankings", len(newRankings), role.name)
-			} else {
-				log.Printf("No rankings to insert for %s", role.name)
-			}
 		}
 
-		log.Printf("Total rankings inserted: %d", totalNewRankings)
+		processRoleRankings(rankings.Tanks.Players, "Tank")
+		processRoleRankings(rankings.Healers.Players, "Healer")
+		processRoleRankings(rankings.DPS.Players, "DPS")
 
-		// Update the last update time
-		updateResult := tx.Model(&rankingsModels.RankingsUpdateState{}).
-			Where("1 = 1").
-			Updates(map[string]interface{}{
-				"last_update_time": time.Now(),
-			})
-
-		if updateResult.Error != nil {
-			log.Printf("Error updating rankings state: %v", updateResult.Error)
-			return updateResult.Error
-		}
-
-		if updateResult.RowsAffected == 0 {
-			log.Println("Creating new rankings update state")
-			if err := tx.Create(&rankingsModels.RankingsUpdateState{
-				LastUpdateTime: time.Now(),
-			}).Error; err != nil {
-				log.Printf("Error creating rankings state: %v", err)
-				return err
+		if len(newRankings) > 0 {
+			log.Printf("Preparing to insert %d total rankings", len(newRankings))
+			if err := u.insertRankingsInBatches(tx, newRankings); err != nil {
+				return fmt.Errorf("failed to insert new rankings: %w", err)
 			}
+		} else {
+			log.Println("No new rankings to insert")
 		}
 
 		return nil
@@ -176,70 +206,122 @@ func (u *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		return err
 	}
 
-	// Verify the insert
-	var count int64
-	if err := u.db.Model(&rankingsModels.PlayerRanking{}).Count(&count).Error; err != nil {
-		log.Printf("Error counting rankings after update: %v", err)
-	} else {
-		log.Printf("Total rankings in database after update: %d", count)
-	}
-
-	// Invalidate the cache after a successful update
 	u.InvalidateCache(ctx)
-	log.Println("Cache invalidated after successful update")
-
 	log.Println("Rankings update completed successfully")
 	return nil
 }
 
-// Start periodic update
-func (u *RankingsUpdater) StartPeriodicUpdate() {
-	ticker := time.NewTicker(updateInterval)
-	go func() {
-		for range ticker.C {
-			if err := u.UpdateRankings(context.Background()); err != nil {
-				log.Printf("Error updating rankings: %v", err)
-			}
-		}
-	}()
-}
-
-// Check and update rankings if the interval has been exceeded or if the table is empty
+// CheckAndUpdate checks and updates the rankings if necessary
 func (u *RankingsUpdater) CheckAndUpdate() {
-	// First check if we have any rankings
-	var rankingsCount int64
-	if err := u.db.Model(&rankingsModels.PlayerRanking{}).Count(&rankingsCount).Error; err != nil {
-		log.Printf("Error checking rankings count: %v", err)
-		return
-	}
-
-	var state rankingsModels.RankingsUpdateState
+	// Check the last update state
+	var state playerRankingModels.RankingsUpdateState
 	result := u.db.First(&state)
 
-	if result.Error == gorm.ErrRecordNotFound || rankingsCount == 0 {
-		log.Println("No rankings update state found or rankings table is empty. Creating initial state and forcing update.")
-		state = rankingsModels.RankingsUpdateState{LastUpdateTime: time.Now().Add(-updateInterval)}
+	// If we don't have an update state, create one without forcing the update
+	if result.Error == gorm.ErrRecordNotFound {
+		log.Println("No update state found, creating initial state...")
+		state = playerRankingModels.RankingsUpdateState{
+			LastUpdateTime: time.Now(), // Consider it up to date
+		}
 		if err := u.db.Create(&state).Error; err != nil {
 			log.Printf("Error creating initial rankings state: %v", err)
-			return
 		}
-		if err := u.UpdateRankings(context.Background()); err != nil {
-			log.Printf("Error during initial rankings update: %v", err)
-		}
+		return // Don't force the update at startup
+	}
+
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		log.Printf("Error checking update state: %v", result.Error)
 		return
 	}
 
 	timeSinceLastUpdate := time.Since(state.LastUpdateTime)
-	log.Printf("Current update state: Last update was %v ago", timeSinceLastUpdate)
-	log.Printf("Current rankings count: %d", rankingsCount)
+	log.Printf("Time since last update: %v", timeSinceLastUpdate)
 
-	if timeSinceLastUpdate >= updateInterval || rankingsCount == 0 {
-		log.Printf("Update needed: Time since last update: %v, Rankings count: %d", timeSinceLastUpdate, rankingsCount)
-		if err := u.UpdateRankings(context.Background()); err != nil {
-			log.Printf("Error during scheduled rankings update: %v", err)
-			return
-		}
-	} else {
-		log.Printf("Rankings are up to date (count: %d)", rankingsCount)
+	// Update only if the minimum interval is exceeded
+	if timeSinceLastUpdate < MinimumUpdateInterval {
+		log.Printf("Last update was too recent (%v ago), skipping update", timeSinceLastUpdate.Round(time.Minute))
+		return
 	}
+
+	// Check if an update is in progress
+	if !u.acquireUpdateLock(context.Background()) {
+		log.Println("Update already in progress, skipping...")
+		return
+	}
+	defer u.releaseUpdateLock(context.Background())
+
+	// Perform the update
+	if err := u.UpdateRankings(context.Background()); err != nil {
+		log.Printf("Error during rankings update: %v", err)
+		return
+	}
+
+	// Update the timestamp
+	state.LastUpdateTime = time.Now()
+	if err := u.db.Save(&state).Error; err != nil {
+		log.Printf("Error updating timestamp: %v", err)
+	}
+}
+
+func (u *RankingsUpdater) determineUpdateStrategy(rankingsCount int64, state playerRankingModels.RankingsUpdateState, stateErr error) UpdateStrategy {
+	if stateErr == gorm.ErrRecordNotFound {
+		log.Println("No update state found in database")
+		return UpdateStrategyForce
+	}
+
+	if rankingsCount == 0 {
+		log.Println("No rankings found in database")
+		return UpdateStrategyForce
+	}
+
+	timeSinceLastUpdate := time.Since(state.LastUpdateTime)
+	if timeSinceLastUpdate < MinimumUpdateInterval {
+		log.Printf("Last update was %v ago (minimum interval is %v)",
+			timeSinceLastUpdate.Round(time.Minute),
+			MinimumUpdateInterval)
+		return UpdateStrategySkip
+	}
+
+	if timeSinceLastUpdate >= DefaultUpdateInterval {
+		log.Printf("Data is older than %v, needs update", DefaultUpdateInterval)
+		return UpdateStrategyForce
+	}
+
+	return UpdateStrategyNormal
+}
+
+// Redis lock to avoid simultaneous updates
+func (u *RankingsUpdater) acquireUpdateLock(ctx context.Context) bool {
+	key := "rankings:update:lock"
+	success, err := cache.GetRedisClient().SetNX(
+		ctx,
+		key,
+		time.Now().String(),
+		1*time.Hour,
+	).Result()
+
+	if err != nil {
+		log.Printf("Error acquiring lock: %v", err)
+		return false
+	}
+
+	return success
+}
+
+func (u *RankingsUpdater) releaseUpdateLock(ctx context.Context) {
+	key := "rankings:update:lock"
+	if err := cache.GetRedisClient().Del(ctx, key).Err(); err != nil {
+		log.Printf("Error releasing lock: %v", err)
+	}
+}
+
+// StartPeriodicUpdate starts periodic updates
+func (u *RankingsUpdater) StartPeriodicUpdate() {
+	ticker := time.NewTicker(MinimumUpdateInterval)
+	go func() {
+		for range ticker.C {
+			log.Println("Periodic update check triggered")
+			u.CheckAndUpdate()
+		}
+	}()
 }

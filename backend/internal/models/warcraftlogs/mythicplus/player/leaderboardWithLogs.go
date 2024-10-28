@@ -1,9 +1,15 @@
-package logs
+package models
 
 type Server struct {
 	ID     int    `json:"id"`
 	Name   string `json:"name"`
 	Region string `json:"region"`
+}
+
+type Guild struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Faction int    `json:"faction"`
 }
 
 type Report struct {
@@ -21,6 +27,7 @@ type Ranking struct {
 	Duration      int64   `json:"duration"`
 	StartTime     int64   `json:"startTime"`
 	Report        Report  `json:"report"`
+	Guild         Guild   `json:"guild"`
 	Server        Server  `json:"server"`
 	BracketData   int     `json:"bracketData"`
 	Faction       int     `json:"faction"`
@@ -35,4 +42,18 @@ type DungeonLogs struct {
 	HasMorePages bool      `json:"hasMorePages"`
 	Count        int       `json:"count"`
 	Rankings     []Ranking `json:"rankings"`
+}
+
+type Encounter struct {
+	ID                int         `json:"id"`
+	Name              string      `json:"name"`
+	CharacterRankings DungeonLogs `json:"characterRankings"`
+}
+
+type WorldData struct {
+	Encounter Encounter `json:"encounter"`
+}
+
+type WarcraftLogsResponse struct {
+	Data WorldData `json:"data"`
 }

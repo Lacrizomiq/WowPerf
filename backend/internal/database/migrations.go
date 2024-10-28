@@ -41,6 +41,7 @@ func Migrate(db *gorm.DB) error {
 		{"007_clean_team_comp_data", cleanTeamCompData},
 		{"008_add_rankings_models", addRankingsTables},
 		{"009_ensure_rankings_data", ensureRankingsData},
+		{"010_update_player_rankings", updatePlayerRankings},
 	}
 
 	for _, m := range migrations {
@@ -122,7 +123,7 @@ func initTeamComp(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		// Drop the existing column if it exists
 		if err := tx.Exec(`ALTER TABLE dungeon_stats DROP COLUMN IF EXISTS team_comp;`).Error; err != nil {
-			// Ignorer l'erreur si la colonne n'existe pas
+			// Ignore the error if the column doesn't exist
 			log.Printf("Note: team_comp column didn't exist or couldn't be dropped: %v", err)
 		}
 
@@ -143,7 +144,7 @@ func initTeamComp(db *gorm.DB) error {
 
 func cleanTeamCompData(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Vérifier si la colonne existe avant de la mettre à jour
+		// Check if the column exists before updating it
 		var exists bool
 		err := tx.Raw(`
             SELECT EXISTS (
@@ -238,4 +239,62 @@ func addOrUpdateConstraint(db *gorm.DB, tableName, constraintName, constraintDef
 		}
 	}
 	return nil
+}
+
+func updatePlayerRankings(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Drop the existing table
+		if err := tx.Exec("DROP TABLE IF EXISTS player_rankings CASCADE").Error; err != nil {
+			return fmt.Errorf("failed to drop existing table: %w", err)
+		}
+
+		// Create the new table with the correct affixes definition
+		createTableSQL := `
+			CREATE TABLE player_rankings (
+					id SERIAL PRIMARY KEY,
+					created_at TIMESTAMP WITH TIME ZONE,
+					updated_at TIMESTAMP WITH TIME ZONE,
+					deleted_at TIMESTAMP WITH TIME ZONE,
+					dungeon_id INTEGER,
+					name VARCHAR(255),
+					class VARCHAR(255),
+					spec VARCHAR(255),
+					role VARCHAR(255),
+					amount DOUBLE PRECISION,
+					hard_mode_level INTEGER,
+					duration BIGINT,
+					start_time BIGINT,
+					report_code VARCHAR(255),
+					report_fight_id INTEGER,
+					report_start_time BIGINT,
+					guild_id INTEGER,
+					guild_name VARCHAR(255),
+					guild_faction INTEGER,
+					server_id INTEGER,
+					server_name VARCHAR(255),
+					server_region VARCHAR(50),
+					bracket_data INTEGER,
+					faction INTEGER,
+					affixes INTEGER[],
+					medal VARCHAR(50),
+					score DOUBLE PRECISION,
+					leaderboard INTEGER DEFAULT 0
+			);
+
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_dungeon_id ON player_rankings(dungeon_id);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_name ON player_rankings(name);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_class ON player_rankings(class);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_spec ON player_rankings(spec);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_role ON player_rankings(role);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_guild_id ON player_rankings(guild_id);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_server_id ON player_rankings(server_id);
+			CREATE INDEX IF NOT EXISTS idx_player_rankings_deleted_at ON player_rankings(deleted_at);
+			`
+
+		if err := tx.Exec(createTableSQL).Error; err != nil {
+			return fmt.Errorf("failed to create table: %w", err)
+		}
+
+		return nil
+	})
 }

@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const REQUIRED_DUNGEON_COUNT = 8
 
+// LeaderboardEntry represents a single entry in the leaderboard
 type LeaderboardEntry struct {
-	PlayerID     int     `json:"player_id"`
 	Name         string  `json:"name"`
 	Class        string  `json:"class"`
 	Spec         string  `json:"spec"`
@@ -17,143 +20,250 @@ type LeaderboardEntry struct {
 	TotalScore   float64 `json:"total_score"`
 	Rank         int     `json:"rank"`
 	DungeonCount int     `json:"dungeon_count"`
+	ServerName   string  `json:"server_name"`
+	ServerRegion string  `json:"server_region"`
+	Medal        string  `json:"medal"`
 }
 
-// Base query helper
-func (s *RankingsService) getBaseLeaderboardQuery() string {
-	return `
-        SELECT 
-            player_id,
-            name,
-            class,
-            spec,
-            role,
-            ROUND(CAST(SUM(score) AS numeric), 2) as total_score,
-            COUNT(DISTINCT dungeon_id) as dungeon_count,
-            DENSE_RANK() OVER (ORDER BY SUM(score) DESC, name ASC) as rank
-        FROM player_rankings
-        %s  -- WHERE clause placeholder
-        GROUP BY player_id, name, class, spec, role
-        HAVING COUNT(DISTINCT dungeon_id) = %d
-        ORDER BY total_score DESC, name ASC
-        LIMIT ?
-    `
+// OrderDirection defines the sort order for queries
+type OrderDirection string
+
+const (
+	ASC  OrderDirection = "ASC"
+	DESC OrderDirection = "DESC"
+)
+
+// OrderByOption represents a column and its sort direction for queries
+type OrderByOption struct {
+	Column    string
+	Direction OrderDirection
 }
 
-// Get the global leaderboard in every role
-func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int) ([]LeaderboardEntry, error) {
-	var entries []LeaderboardEntry
+// formatNameCase formats a string with proper title case handling
+// using Unicode-aware casing rules
+func formatNameCase(s string) string {
+	if s == "" {
+		return s
+	}
+	caser := cases.Title(language.English)
+	return caser.String(strings.ToLower(strings.TrimSpace(s)))
+}
+
+// formatRole handles special case formatting for roles
+// particularly the "DPS" role which should remain uppercase
+func formatRole(role string) string {
+	formatted := strings.ToUpper(strings.TrimSpace(role))
+	if formatted == "DPS" {
+		return formatted
+	}
+	return formatNameCase(role)
+}
+
+// createOptimizedIndexes creates database indexes for optimized query performance
+func (s *RankingsService) createOptimizedIndexes() error {
+	indexes := []string{
+		// Index for uniquely identifying players
+		"CREATE INDEX IF NOT EXISTS idx_rankings_player_unique ON player_rankings(name, server_name, server_region)",
+		// Composite indexes for different query types
+		"CREATE INDEX IF NOT EXISTS idx_rankings_role_score ON player_rankings(role, score DESC, name, server_name, server_region)",
+		"CREATE INDEX IF NOT EXISTS idx_rankings_class_score ON player_rankings(class, score DESC, name, server_name, server_region)",
+		"CREATE INDEX IF NOT EXISTS idx_rankings_class_spec_score ON player_rankings(class, spec, score DESC, name, server_name, server_region)",
+		"CREATE INDEX IF NOT EXISTS idx_rankings_score_global ON player_rankings(score DESC, name, server_name, server_region)",
+	}
+
+	for _, idx := range indexes {
+		if err := s.db.Exec(idx).Error; err != nil {
+			return fmt.Errorf("failed to create index: %w", err)
+		}
+	}
+	return nil
+}
+
+// sanitizeOrderBy ensures safe column names and directions for ORDER BY clauses
+func (s *RankingsService) sanitizeOrderBy(column string, direction OrderDirection) OrderByOption {
+	validColumns := map[string]string{
+		"score":         "total_score",
+		"name":          "name",
+		"rank":          "rank",
+		"server":        "server_name",
+		"region":        "server_region",
+		"class":         "class",
+		"spec":          "spec",
+		"role":          "role",
+		"medal":         "best_medal",
+		"dungeon_count": "dungeon_count",
+	}
+
+	if direction != ASC && direction != DESC {
+		direction = DESC
+	}
+
+	if sanitized, ok := validColumns[column]; ok {
+		return OrderByOption{
+			Column:    sanitized,
+			Direction: direction,
+		}
+	}
+
+	// Default sorting by total_score DESC
+	return OrderByOption{
+		Column:    "total_score",
+		Direction: DESC,
+	}
+}
+
+// getBaseLeaderboardQuery returns the base CTE query for all leaderboard types
+func (s *RankingsService) getBaseLeaderboardQuery(orderBy OrderByOption) string {
+	return fmt.Sprintf(`
+		WITH PlayerScores AS (
+			SELECT 
+				name,
+				server_name,
+				server_region,
+				class,
+				spec,
+				role,
+				MAX(medal) as best_medal,
+				ROUND(CAST(SUM(score) AS numeric), 2) as total_score,
+				COUNT(DISTINCT dungeon_id) as dungeon_count
+			FROM player_rankings
+			WHERE deleted_at IS NULL
+			%%s  -- Additional WHERE conditions placeholder
+			GROUP BY name, server_name, server_region, class, spec, role
+			HAVING COUNT(DISTINCT dungeon_id) = %%d
+		)
+		SELECT 
+			*,
+			DENSE_RANK() OVER (ORDER BY %s %s, name ASC, server_name ASC) as rank
+		FROM PlayerScores
+		ORDER BY %s %s, name ASC, server_name ASC
+		LIMIT ?`,
+		orderBy.Column, orderBy.Direction,
+		orderBy.Column, orderBy.Direction,
+	)
+}
+
+// GetGlobalLeaderboard retrieves the global leaderboard with sorting options
+func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
 	rankQuery := fmt.Sprintf(
-		s.getBaseLeaderboardQuery(),
-		"", // No WHERE clause needed
+		s.getBaseLeaderboardQuery(sanitizedOrder),
+		"", // No additional WHERE conditions
 		REQUIRED_DUNGEON_COUNT,
 	)
 
-	err := s.db.Raw(rankQuery, limit).Scan(&entries).Error
+	var entries []LeaderboardEntry
+	err := s.db.WithContext(ctx).Raw(rankQuery, limit).Scan(&entries).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get global leaderboard: %w", err)
 	}
 
 	return entries, nil
 }
 
-// Get the global leaderboard by role
-func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role string, limit int) ([]LeaderboardEntry, error) {
-	var entries []LeaderboardEntry
-	whereClause := "WHERE LOWER(role) = LOWER(?)"
+// GetGlobalLeaderboardByRole retrieves the leaderboard filtered by role
+func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+	formattedRole := formatRole(role)
+	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
+
+	whereClause := "AND role = ?"
 	rankQuery := fmt.Sprintf(
-		s.getBaseLeaderboardQuery(),
+		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
 		REQUIRED_DUNGEON_COUNT,
 	)
 
-	err := s.db.Raw(rankQuery, role, limit).Scan(&entries).Error
+	var entries []LeaderboardEntry
+	err := s.db.WithContext(ctx).Raw(rankQuery, formattedRole, limit).Scan(&entries).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get role leaderboard: %w", err)
 	}
 
 	return entries, nil
 }
 
-// Get the global leaderboard by class
-func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class string, limit int) ([]LeaderboardEntry, error) {
-	var entries []LeaderboardEntry
-	whereClause := "WHERE LOWER(class) = LOWER(?)"
+// GetGlobalLeaderboardByClass retrieves the leaderboard filtered by class
+func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+	formattedClass := formatNameCase(class)
+	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
+
+	whereClause := "AND class = ?"
 	rankQuery := fmt.Sprintf(
-		s.getBaseLeaderboardQuery(),
+		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
 		REQUIRED_DUNGEON_COUNT,
 	)
 
-	err := s.db.Raw(rankQuery, class, limit).Scan(&entries).Error
+	var entries []LeaderboardEntry
+	err := s.db.WithContext(ctx).Raw(rankQuery, formattedClass, limit).Scan(&entries).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get class leaderboard: %w", err)
 	}
 
 	return entries, nil
 }
 
-// Get the global leaderboard by spec
-func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class, spec string, limit int) ([]LeaderboardEntry, error) {
-	var entries []LeaderboardEntry
-	whereClause := "WHERE LOWER(class) = LOWER(?) AND LOWER(spec) = LOWER(?)"
+// GetGlobalLeaderboardBySpec retrieves the leaderboard filtered by class and spec
+func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class, spec string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+	formattedClass := formatNameCase(class)
+	formattedSpec := formatNameCase(spec)
+	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
+
+	whereClause := "AND class = ? AND spec = ?"
 	rankQuery := fmt.Sprintf(
-		s.getBaseLeaderboardQuery(),
+		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
 		REQUIRED_DUNGEON_COUNT,
 	)
 
-	err := s.db.Raw(rankQuery, class, spec, limit).Scan(&entries).Error
+	var entries []LeaderboardEntry
+	err := s.db.WithContext(ctx).Raw(rankQuery, formattedClass, formattedSpec, limit).Scan(&entries).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get spec leaderboard: %w", err)
 	}
 
 	return entries, nil
 }
 
-// function to validate the input
+// validateInput validates input parameters for the leaderboard queries
 func (s *RankingsService) validateInput(role, class, spec string, limit int) error {
-	// Validate the role if it is provided
-	roleLower := strings.ToLower(role)
-
 	if role != "" {
-		validRoles := map[string]bool{"tank": true, "healer": true, "dps": true}
-		if !validRoles[roleLower] {
+		validRoles := map[string]bool{
+			"Tank":   true,
+			"Healer": true,
+			"DPS":    true,
+		}
+		formattedRole := formatRole(role)
+		if !validRoles[formattedRole] {
 			return fmt.Errorf("invalid role: %s", role)
 		}
 	}
 
-	// Validate the class if it is provided
 	if class != "" {
 		validClasses := map[string]bool{
-			"warrior": true, "paladin": true, "hunter": true, "rogue": true,
-			"priest": true, "shaman": true, "mage": true, "warlock": true,
-			"monk": true, "druid": true, "demonhunter": true, "deathknight": true,
-			"evoker": true,
+			"Warrior":     true,
+			"Paladin":     true,
+			"Hunter":      true,
+			"Rogue":       true,
+			"Priest":      true,
+			"Shaman":      true,
+			"Mage":        true,
+			"Warlock":     true,
+			"Monk":        true,
+			"Druid":       true,
+			"Demonhunter": true,
+			"Deathknight": true,
+			"Evoker":      true,
 		}
-		if !validClasses[class] {
+		formattedClass := formatNameCase(class)
+		if !validClasses[formattedClass] {
 			return fmt.Errorf("invalid class: %s", class)
 		}
 	}
 
-	// Validate the limit
 	if limit <= 0 || limit > 1000 {
 		return fmt.Errorf("invalid limit: must be between 1 and 1000")
 	}
 
 	return nil
-}
-
-// Helper function to sanitize the order by columns
-func (s *RankingsService) sanitizeOrderBy(column string) string {
-	validColumns := map[string]string{
-		"score": "score",
-		"name":  "name",
-		"rank":  "rank",
-	}
-
-	if sanitized, ok := validColumns[column]; ok {
-		return sanitized
-	}
-	return "score" // default
 }
