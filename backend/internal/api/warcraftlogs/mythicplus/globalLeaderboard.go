@@ -1,4 +1,3 @@
-// internal/api/warcraftlogs/mythicplus/globalLeaderboard.go
 package warcraftlogs
 
 import (
@@ -6,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	dungeons "wowperf/internal/services/warcraftlogs/dungeons"
 	"wowperf/pkg/cache"
@@ -22,13 +22,30 @@ func NewGlobalLeaderboardHandler(rankingsService *dungeons.RankingsService) *Glo
 	return &GlobalLeaderboardHandler{rankingsService: rankingsService}
 }
 
+// Helper to handle sorting parameters
+func getOrderParams(c *gin.Context) (string, dungeons.OrderDirection) {
+	orderBy := c.DefaultQuery("orderBy", "score")
+	direction := dungeons.OrderDirection(strings.ToUpper(c.DefaultQuery("direction", "DESC")))
+
+	// Validate direction
+	if direction != dungeons.ASC && direction != dungeons.DESC {
+		direction = dungeons.DESC
+	}
+
+	return orderBy, direction
+}
+
+// GetGlobalLeaderboard returns the global leaderboard
 func (h *GlobalLeaderboardHandler) GetGlobalLeaderboard(c *gin.Context) {
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "100"))
 	if err != nil || limit < 1 {
 		limit = 100
 	}
 
-	cacheKey := fmt.Sprintf("warcraftlogs:global:limit:%d", limit)
+	orderBy, direction := getOrderParams(c)
+
+	// Update cache key to include sorting parameters
+	cacheKey := fmt.Sprintf("warcraftlogs:global:limit:%d:order:%s:%s", limit, orderBy, direction)
 
 	var leaderboard interface{}
 	err = cache.Get(cacheKey, &leaderboard)
@@ -41,7 +58,7 @@ func (h *GlobalLeaderboardHandler) GetGlobalLeaderboard(c *gin.Context) {
 		log.Printf("Error getting global leaderboard from cache: %v", err)
 	}
 
-	leaderboard, err = h.rankingsService.GetGlobalLeaderboard(c.Request.Context(), limit)
+	leaderboard, err = h.rankingsService.GetGlobalLeaderboard(c.Request.Context(), limit, orderBy, direction)
 	if err != nil {
 		log.Printf("Error getting global leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get global leaderboard"})
@@ -55,6 +72,7 @@ func (h *GlobalLeaderboardHandler) GetGlobalLeaderboard(c *gin.Context) {
 	c.JSON(http.StatusOK, leaderboard)
 }
 
+// GetRoleLeaderboard returns the leaderboard for a specific role
 func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
 	role := c.Query("role")
 	if role == "" {
@@ -67,7 +85,9 @@ func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
 		limit = 100
 	}
 
-	cacheKey := fmt.Sprintf("warcraftlogs:role:%s:limit:%d", role, limit)
+	orderBy, direction := getOrderParams(c)
+
+	cacheKey := fmt.Sprintf("warcraftlogs:role:%s:limit:%d:order:%s:%s", role, limit, orderBy, direction)
 
 	var leaderboard interface{}
 	err = cache.Get(cacheKey, &leaderboard)
@@ -80,7 +100,7 @@ func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
 		log.Printf("Error getting role leaderboard from cache: %v", err)
 	}
 
-	leaderboard, err = h.rankingsService.GetGlobalLeaderboardByRole(c.Request.Context(), role, limit)
+	leaderboard, err = h.rankingsService.GetGlobalLeaderboardByRole(c.Request.Context(), role, limit, orderBy, direction)
 	if err != nil {
 		log.Printf("Error getting role leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get role leaderboard"})
@@ -94,6 +114,7 @@ func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
 	c.JSON(http.StatusOK, leaderboard)
 }
 
+// GetClassLeaderboard returns the leaderboard for a specific class
 func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 	class := c.Query("class")
 	if class == "" {
@@ -106,7 +127,9 @@ func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 		limit = 100
 	}
 
-	cacheKey := fmt.Sprintf("warcraftlogs:class:%s:limit:%d", class, limit)
+	orderBy, direction := getOrderParams(c)
+
+	cacheKey := fmt.Sprintf("warcraftlogs:class:%s:limit:%d:order:%s:%s", class, limit, orderBy, direction)
 
 	var leaderboard interface{}
 	err = cache.Get(cacheKey, &leaderboard)
@@ -119,7 +142,7 @@ func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 		log.Printf("Error getting class leaderboard from cache: %v", err)
 	}
 
-	leaderboard, err = h.rankingsService.GetGlobalLeaderboardByClass(c.Request.Context(), class, limit)
+	leaderboard, err = h.rankingsService.GetGlobalLeaderboardByClass(c.Request.Context(), class, limit, orderBy, direction)
 	if err != nil {
 		log.Printf("Error getting class leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get class leaderboard"})
@@ -133,6 +156,7 @@ func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 	c.JSON(http.StatusOK, leaderboard)
 }
 
+// GetSpecLeaderboard returns the leaderboard for a specific spec
 func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
 	class := c.Query("class")
 	if class == "" {
@@ -151,7 +175,10 @@ func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
 		limit = 100
 	}
 
-	cacheKey := fmt.Sprintf("warcraftlogs:spec:%s:%s:limit:%d", class, spec, limit)
+	orderBy, direction := getOrderParams(c)
+
+	cacheKey := fmt.Sprintf("warcraftlogs:spec:%s:%s:limit:%d:order:%s:%s",
+		class, spec, limit, orderBy, direction)
 
 	var leaderboard interface{}
 	err = cache.Get(cacheKey, &leaderboard)
@@ -164,7 +191,7 @@ func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
 		log.Printf("Error getting spec leaderboard from cache: %v", err)
 	}
 
-	leaderboard, err = h.rankingsService.GetGlobalLeaderboardBySpec(c.Request.Context(), class, spec, limit)
+	leaderboard, err = h.rankingsService.GetGlobalLeaderboardBySpec(c.Request.Context(), class, spec, limit, orderBy, direction)
 	if err != nil {
 		log.Printf("Error getting spec leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get spec leaderboard"})
