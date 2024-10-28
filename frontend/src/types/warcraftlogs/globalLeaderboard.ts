@@ -10,6 +10,8 @@ export interface GlobalLeaderboardEntry {
   total_score: number;
   rank: number;
   dungeon_count: number;
+  server_name: string;
+  server_region: string;
 }
 
 // Enum for the roles

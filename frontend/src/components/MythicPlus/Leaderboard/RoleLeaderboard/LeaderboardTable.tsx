@@ -24,24 +24,25 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     <table className="w-full">
       <thead>
         <tr>
-          <th className="text-left p-2">Rank</th>
-          <th className="text-left p-2">Name</th>
+          <th className="text-center p-2">Rank</th>
+          <th className="text-center p-2">Name</th>
           <th className="text-right p-2">Score</th>
         </tr>
       </thead>
       <tbody>
         {entries.map((entry) => (
           <tr key={entry.player_id} className="border-t border-gray-700">
-            <td className="p-2">{entry.rank}</td>
-            <td className="p-2">
+            <td className="p-2 text-center">{entry.rank}</td>
+            <td className="py-2">
               <div className="flex flex-col">
                 <span className={getClassColor(entry.class)}>{entry.name}</span>
+
                 <span className="text-xs text-gray-400">
-                  {entry.spec} {entry.class}
+                  {entry.server_name} ({entry.server_region})
                 </span>
               </div>
             </td>
-            <td className="p-2 text-right">{entry.total_score.toFixed(2)}</td>
+            <td className="text-right">{entry.total_score.toFixed(2)}</td>
           </tr>
         ))}
       </tbody>

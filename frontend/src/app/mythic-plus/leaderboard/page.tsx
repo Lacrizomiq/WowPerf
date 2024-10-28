@@ -3,7 +3,7 @@ import { RoleLeaderboards } from "@/components/MythicPlus/Leaderboard/RoleLeader
 
 export default function HomePage() {
   return (
-    <div className="p-6 bg-black w-full h-full">
+    <div className=" w-full h-full bg-black">
       <h1 className="text-2xl font-bold text-center mb-6">
         Mythic+ Leaderboards
       </h1>

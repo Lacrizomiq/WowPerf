@@ -27,7 +27,7 @@ export const RoleLeaderboardCard: React.FC<RoleLeaderboardCardProps> = ({
   }
 
   return (
-    <Card className="w-full bg-deep-blue rounded-lg glow-effect">
+    <Card className="w-full h-full bg-deep-blue rounded-lg glow-effect">
       <CardHeader>
         <CardTitle className="text-xl font-bold">{title}</CardTitle>
       </CardHeader>
