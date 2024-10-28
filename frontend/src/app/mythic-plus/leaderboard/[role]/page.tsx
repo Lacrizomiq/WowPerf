@@ -19,11 +19,11 @@ const RolePage: React.FC<RolePageProps> = ({ params }) => {
   const getTitleByRole = (role: Role) => {
     switch (role) {
       case "dps":
-        return "All Stars (DPS)";
+        return "Top Mythic+ DPS";
       case "tank":
-        return "All Stars (Tanks)";
+        return "Top Mythic+ Tanks";
       case "healer":
-        return "All Stars (Healers)";
+        return "Top Mythic+ Healers";
       default:
         return "Leaderboard";
     }

@@ -1,7 +1,7 @@
-// components/MythicPlus/Leaderboard/LeaderboardTable.tsx
-
 import React from "react";
 import { RoleLeaderboardEntry } from "@/types/warcraftlogs/globalLeaderboard";
+import Link from "next/link";
+import { normalizeServerName } from "@/utils/serverNameUtils";
 
 interface LeaderboardTableProps {
   entries: RoleLeaderboardEntry[];
@@ -10,14 +10,24 @@ interface LeaderboardTableProps {
 export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
   entries,
 }) => {
-  // Helper function to get the proper class color
   const getClassColor = (className: string) => {
-    // Convert class names like "DeathKnight" to "death-knight" for CSS classes
     const formattedClass = className
       .replace(/([A-Z])/g, "-$1")
       .toLowerCase()
       .replace(/^-/, "");
     return `class-color--${formattedClass}`;
+  };
+
+  const getClassHoverStyles = (className: string) => {
+    const baseClass = getClassColor(className);
+    return `${baseClass} inline relative no-underline transition-all duration-200 hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-[-2px] hover:after:h-[2px] hover:after:w-[100%] hover:after:bg-current`;
+  };
+
+  const buildCharacterUrl = (entry: RoleLeaderboardEntry) => {
+    const region = entry.server_region.toLowerCase();
+    const realm = normalizeServerName(entry.server_name);
+    const name = entry.name.toLowerCase();
+    return `/character/${region}/${realm}/${name}`;
   };
 
   return (
@@ -35,8 +45,14 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <td className="p-2 text-center">{entry.rank}</td>
             <td className="py-2">
               <div className="flex flex-col">
-                <span className={getClassColor(entry.class)}>{entry.name}</span>
-
+                <div>
+                  <Link
+                    href={buildCharacterUrl(entry)}
+                    className={getClassHoverStyles(entry.class)}
+                  >
+                    {entry.name}
+                  </Link>
+                </div>
                 <span className="text-xs text-gray-400">
                   {entry.server_name} ({entry.server_region})
                 </span>
