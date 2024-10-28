@@ -10,6 +10,9 @@ import (
 	dungeons "wowperf/internal/services/warcraftlogs/dungeons"
 	"wowperf/pkg/cache"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
@@ -20,6 +23,24 @@ type GlobalLeaderboardHandler struct {
 
 func NewGlobalLeaderboardHandler(rankingsService *dungeons.RankingsService) *GlobalLeaderboardHandler {
 	return &GlobalLeaderboardHandler{rankingsService: rankingsService}
+}
+
+// Helper to format the string with the first letter in uppercase
+func formatNameCase(s string) string {
+	if s == "" {
+		return s
+	}
+	caser := cases.Title(language.English)
+	return caser.String(strings.ToLower(strings.TrimSpace(s)))
+}
+
+// Helper to format the role with the first letter in uppercase
+func formatRole(role string) string {
+	formatted := strings.ToUpper(strings.TrimSpace(role))
+	if formatted == "DPS" {
+		return formatted
+	}
+	return formatNameCase(role)
 }
 
 // Helper to handle sorting parameters
@@ -74,9 +95,23 @@ func (h *GlobalLeaderboardHandler) GetGlobalLeaderboard(c *gin.Context) {
 
 // GetRoleLeaderboard returns the leaderboard for a specific role
 func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
-	role := c.Query("role")
+	role := formatRole(c.Query("role"))
 	if role == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Role parameter is required"})
+		return
+	}
+
+	// Validation du rôle
+	validRoles := map[string]bool{
+		"Tank":   true,
+		"Healer": true,
+		"DPS":    true,
+	}
+
+	if !validRoles[role] {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Invalid role. Must be one of: Tank, Healer, DPS. Got: %s", role),
+		})
 		return
 	}
 
@@ -116,9 +151,33 @@ func (h *GlobalLeaderboardHandler) GetRoleLeaderboard(c *gin.Context) {
 
 // GetClassLeaderboard returns the leaderboard for a specific class
 func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
-	class := c.Query("class")
+	class := formatNameCase(c.Query("class"))
 	if class == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Class parameter is required"})
+		return
+	}
+
+	// Validation de la classe
+	validClasses := map[string]bool{
+		"Warrior":     true,
+		"Paladin":     true,
+		"Hunter":      true,
+		"Rogue":       true,
+		"Priest":      true,
+		"Shaman":      true,
+		"Mage":        true,
+		"Warlock":     true,
+		"Monk":        true,
+		"Druid":       true,
+		"Demonhunter": true,
+		"Deathknight": true,
+		"Evoker":      true,
+	}
+
+	if !validClasses[class] {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("Invalid class: %s", class),
+		})
 		return
 	}
 
@@ -158,13 +217,13 @@ func (h *GlobalLeaderboardHandler) GetClassLeaderboard(c *gin.Context) {
 
 // GetSpecLeaderboard returns the leaderboard for a specific spec
 func (h *GlobalLeaderboardHandler) GetSpecLeaderboard(c *gin.Context) {
-	class := c.Query("class")
+	class := formatNameCase(c.Query("class"))
 	if class == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Class parameter is required"})
 		return
 	}
 
-	spec := c.Query("spec")
+	spec := formatNameCase(c.Query("spec"))
 	if spec == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Spec parameter is required"})
 		return
