@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -35,8 +36,8 @@ import (
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
 	// Internal Packages - Utils
+	middlewares "wowperf/middlewares"
 	"wowperf/pkg/cache"
-	"wowperf/pkg/middleware"
 )
 
 func checkUpdateState(db *gorm.DB) {
@@ -54,20 +55,30 @@ func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *ser
 	mythicPlusRaiderioCache.StartMythicPlusBestRunsCacheUpdater(rioService)
 }
 
-func waitForRedis() {
-	for i := 0; i < 30; i++ {
-		err := cache.Ping()
-		if err == nil {
-			log.Println("Redis is ready")
-			return
-		}
-		log.Println("Waiting for Redis to be ready")
-		time.Sleep(time.Second)
+// Redis initialization
+func initializeCacheService() (cache.CacheService, error) {
+	cacheService, err := cache.NewRedisCache(&cache.Config{
+		URL:      os.Getenv("REDIS_URL"),
+		Password: os.Getenv("REDIS_PASSWORD"), // as an optionnal parameter
+		DB:       0,                           // Use the default DB
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache service: %w", err)
 	}
-	log.Println("Redis is not ready")
+
+	// Context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Test the connection
+	if err := cacheService.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("failed to connect to cache: %w", err)
+	}
+
+	return cacheService, nil
 }
 
-func initializeServices(db *gorm.DB) (
+func initializeServices(db *gorm.DB, cacheService cache.CacheService) (
 	*auth.AuthService,
 	*userService.UserService,
 	*serviceBlizzard.Service,
@@ -94,11 +105,11 @@ func initializeServices(db *gorm.DB) (
 	authService := auth.NewAuthService(
 		db,
 		jwtSecret,
-		cache.GetRedisClient(),
 		jwtExpiration,
 		os.Getenv("BATTLE_NET_CLIENT_ID"),
 		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
 		os.Getenv("BATTLE_NET_REDIRECT_URL"),
+		cacheService,
 	)
 
 	// User Service
@@ -124,7 +135,7 @@ func initializeServices(db *gorm.DB) (
 
 	dungeonService := warcraftLogsRankings.NewDungeonService(warcraftLogsClient)
 	rankingsService := warcraftLogsRankings.NewRankingsService(dungeonService, db)
-	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService)
+	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService, cacheService)
 
 	return authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, nil
 }
@@ -137,6 +148,7 @@ func setupRoutes(
 	rioHandler *raiderio.Handler,
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
+	cacheManager *middlewares.CacheManager,
 ) {
 	// CORS Configuration
 	config := cors.DefaultConfig()
@@ -151,7 +163,7 @@ func setupRoutes(
 	r.Use(gin.Logger())
 
 	// Auth Routes
-	r.GET("/csrf-token", middleware.CSRFToken())
+	// r.GET("/csrf-token", middlewares.CSRFToken())
 	authHandler.RegisterRoutes(r)
 
 	// API Routes
@@ -171,8 +183,11 @@ func main() {
 	}
 
 	// Initialize Cache and Redis
-	cache.InitCache()
-	waitForRedis()
+	cacheService, err := initializeCacheService()
+	if err != nil {
+		log.Fatalf("Failed to initialize cache service: %v", err)
+	}
+	defer cacheService.Close()
 
 	// Initialize Database
 	db, err := database.InitDB()
@@ -189,7 +204,7 @@ func main() {
 	}
 
 	// Initialize Services
-	authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, err := initializeServices(db)
+	authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, err := initializeServices(db, cacheService)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
@@ -198,8 +213,15 @@ func main() {
 	authHandler := authHandler.NewAuthHandler(authService)
 	userHandler := userHandler.NewUserHandler(userSvc)
 	rioHandler := raiderio.NewHandler(rioService, db)
-	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
-	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db)
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService)
+	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db, cacheService)
+
+	// Initialize Cache Manager
+	cacheManager := middlewares.NewCacheManager(middlewares.CacheConfig{
+		Cache:      cacheService,
+		Expiration: 8 * time.Hour,
+		KeyPrefix:  "warcraftlogs", // TODO: change this for all routes
+	})
 
 	// Start Cache Updater
 	startCacheUpdater(blizzardService, rioService)
@@ -251,7 +273,7 @@ func main() {
 
 	// Setup and Start Server
 	r := gin.Default()
-	setupRoutes(r, authService, authHandler, userHandler, rioHandler, blizzardHandler, warcraftlogsHandler)
+	setupRoutes(r, authService, authHandler, userHandler, rioHandler, blizzardHandler, warcraftlogsHandler, cacheManager)
 
 	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
-	"wowperf/pkg/cache"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
@@ -39,17 +38,15 @@ func (u *RankingsUpdater) InvalidateCache(ctx context.Context) {
 	}
 
 	for _, pattern := range patterns {
-		keys, err := cache.GetRedisClient().Keys(ctx, pattern).Result()
+		keys, err := u.cache.Keys(ctx, pattern)
 		if err != nil {
 			log.Printf("Warning: Error getting cache keys for pattern %s: %v", pattern, err)
 			continue
 		}
 
 		if len(keys) > 0 {
-			if err := cache.GetRedisClient().Del(ctx, keys...).Err(); err != nil {
+			if err := u.cache.DeleteMany(ctx, keys); err != nil {
 				log.Printf("Warning: Error deleting cache keys for pattern %s: %v", pattern, err)
-			} else {
-				log.Printf("Successfully invalidated %d cache keys for pattern %s", len(keys), pattern)
 			}
 		}
 	}
@@ -293,12 +290,12 @@ func (u *RankingsUpdater) determineUpdateStrategy(rankingsCount int64, state pla
 // Redis lock to avoid simultaneous updates
 func (u *RankingsUpdater) acquireUpdateLock(ctx context.Context) bool {
 	key := "rankings:update:lock"
-	success, err := cache.GetRedisClient().SetNX(
+	success, err := u.cache.SetNX(
 		ctx,
 		key,
 		time.Now().String(),
 		1*time.Hour,
-	).Result()
+	)
 
 	if err != nil {
 		log.Printf("Error acquiring lock: %v", err)
@@ -310,7 +307,7 @@ func (u *RankingsUpdater) acquireUpdateLock(ctx context.Context) bool {
 
 func (u *RankingsUpdater) releaseUpdateLock(ctx context.Context) {
 	key := "rankings:update:lock"
-	if err := cache.GetRedisClient().Del(ctx, key).Err(); err != nil {
+	if err := u.cache.Delete(ctx, key); err != nil {
 		log.Printf("Error releasing lock: %v", err)
 	}
 }

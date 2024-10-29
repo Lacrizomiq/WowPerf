@@ -3,6 +3,7 @@ package warcraftlogs
 import (
 	"time"
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
+	"wowperf/pkg/cache"
 
 	"golang.org/x/time/rate"
 	"gorm.io/gorm"
@@ -108,12 +109,14 @@ type playerData struct {
 type RankingsUpdater struct {
 	db             *gorm.DB
 	rankingService *RankingsService
+	cache          cache.CacheService
 }
 
 // NewRankingsUpdater creates a new rankings updater
-func NewRankingsUpdater(db *gorm.DB, rankingService *RankingsService) *RankingsUpdater {
+func NewRankingsUpdater(db *gorm.DB, rankingService *RankingsService, cacheService cache.CacheService) *RankingsUpdater {
 	return &RankingsUpdater{
 		db:             db,
 		rankingService: rankingService,
+		cache:          cacheService,
 	}
 }

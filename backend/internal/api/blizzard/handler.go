@@ -1,9 +1,12 @@
 package blizzard
 
 import (
+	"time"
 	"wowperf/internal/api/blizzard/gamedata"
 	"wowperf/internal/api/blizzard/profile"
 	"wowperf/internal/services/blizzard"
+	middleware "wowperf/middleware/cache"
+	"wowperf/pkg/cache"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -42,9 +45,19 @@ type Handler struct {
 	EncounterRaid               *profile.EncounterRaidHandler
 	RaidsByExpansion            *gamedata.RaidsByExpansionHandler
 	RealmsIndex                 *gamedata.RealmsIndexHandler
+	cache                       cache.CacheService
+	cacheManager                *middleware.CacheManager
 }
 
-func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
+func NewHandler(service *blizzard.Service, db *gorm.DB, cache cache.CacheService) *Handler {
+	// Cache configuration
+	cacheConfig := middleware.CacheConfig{
+		Cache:      cache,
+		Expiration: 24 * time.Hour,
+		KeyPrefix:  "blizzard",
+		Metrics:    true,
+	}
+
 	return &Handler{
 		CharacterProfile:            profile.NewCharacterProfileHandler(service),
 		CharacterMedia:              profile.NewCharacterMediaHandler(service),
@@ -78,29 +91,36 @@ func NewHandler(service *blizzard.Service, db *gorm.DB) *Handler {
 		EncounterRaid:               profile.NewEncounterRaidHandler(service),
 		RaidsByExpansion:            gamedata.NewRaidsByExpansionHandler(db),
 		RealmsIndex:                 gamedata.NewRealmsIndexHandler(service),
+		cache:                       cache,
+		cacheManager:                middleware.NewCacheManager(cacheConfig),
 	}
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
 
+	routeConfig := middleware.RouteConfig{
+		Enabled:    true,
+		Expiration: 24 * time.Hour,
+	}
+
 	// Blizzard Profile API
-	r.GET("/blizzard/characters/:realmSlug/:characterName", h.CharacterProfile.GetCharacterProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/media", h.CharacterMedia.GetCharacterMedia)
+	r.GET("/blizzard/characters/:realmSlug/:characterName", h.cacheManager.CacheMiddleware(routeConfig), h.CharacterProfile.GetCharacterProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/media", h.cacheManager.CacheMiddleware(routeConfig), h.CharacterMedia.GetCharacterMedia)
 
-	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", h.Equipment.GetCharacterEquipment)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", h.cacheManager.CacheMiddleware(routeConfig), h.Equipment.GetCharacterEquipment)
 
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", h.MythicKeystoneProfile.GetCharacterMythicKeystoneProfile)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", h.MythicKeystoneSeasonDetails.GetCharacterMythicKeystoneSeasonBestRuns)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", h.cacheManager.CacheMiddleware(routeConfig), h.MythicKeystoneProfile.GetCharacterMythicKeystoneProfile)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", h.cacheManager.CacheMiddleware(routeConfig), h.MythicKeystoneSeasonDetails.GetCharacterMythicKeystoneSeasonBestRuns)
 
-	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", h.Specializations.GetCharacterSpecializations)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/specializations", h.cacheManager.CacheMiddleware(routeConfig), h.Specializations.GetCharacterSpecializations)
 
-	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters", h.EncounterSummary.GetCharacterEncounterSummary)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters/dungeons", h.EncounterDungeon.GetCharacterEncounterDungeon)
-	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters/raids", h.EncounterRaid.GetCharacterEncounterRaid)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters", h.cacheManager.CacheMiddleware(routeConfig), h.EncounterSummary.GetCharacterEncounterSummary)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.EncounterDungeon.GetCharacterEncounterDungeon)
+	r.GET("/blizzard/characters/:realmSlug/:characterName/encounters/raids", h.cacheManager.CacheMiddleware(routeConfig), h.EncounterRaid.GetCharacterEncounterRaid)
 
 	// Blizzard Game Data API
-	r.GET("/blizzard/data/item/:itemId/media", h.ItemMedia.GetItemMedia)
-	r.GET("/blizzard/data/spell/:spellId/media", h.SpellMedia.GetSpellMedia)
+	r.GET("/blizzard/data/item/:itemId/media", h.cacheManager.CacheMiddleware(routeConfig), h.ItemMedia.GetItemMedia)
+	r.GET("/blizzard/data/spell/:spellId/media", h.cacheManager.CacheMiddleware(routeConfig), h.SpellMedia.GetSpellMedia)
 
 	r.GET("/blizzard/data/talent-tree/index", h.TalentTreeIndex.GetTalentTreeIndex)
 	r.GET("/blizzard/data/talent-tree/:talentTreeId/playable-specialization/:specId", h.TalentTree.GetTalentTree)
@@ -122,11 +142,11 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 
 	r.GET("/blizzard/data/journal-instance/index", h.JournalInstanceIndex.GetJournalInstanceIndex)
 	r.GET("/blizzard/data/journal-instance/:instanceId", h.JournalInstanceByID.GetJournalInstanceByID)
-	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.JournalInstanceMedia.GetJournalInstanceMedia)
+	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.cacheManager.CacheMiddleware(routeConfig), h.JournalInstanceMedia.GetJournalInstanceMedia)
 
-	r.GET("data/mythic-keystone/season/:seasonSlug/dungeons", h.GetSeasonDungeons.GetSeasonDungeons)
+	r.GET("/blizzard/data/mythic-keystone/season/:seasonSlug/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.GetSeasonDungeons.GetSeasonDungeons)
 
-	r.GET("/blizzard/data/raids/:expansion", h.RaidsByExpansion.GetRaidsByExpansion)
+	r.GET("/blizzard/data/raids/:expansion", h.cacheManager.CacheMiddleware(routeConfig), h.RaidsByExpansion.GetRaidsByExpansion)
 
 	r.GET("/blizzard/data/realm/index", h.RealmsIndex.GetRealmsIndex)
 }

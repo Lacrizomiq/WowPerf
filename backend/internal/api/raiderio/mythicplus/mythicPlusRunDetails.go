@@ -1,19 +1,15 @@
 package raiderio
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
-	models "wowperf/internal/models/raiderio/mythicrundetails"
 	"wowperf/internal/services/raiderio"
 	raiderioMythicPlus "wowperf/internal/services/raiderio/mythicplus"
 	raiderioMythicPlusWrapper "wowperf/internal/wrapper/raiderio"
-	"wowperf/pkg/cache"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 )
 
 type MythicPlusRunDetailsHandler struct {
@@ -46,25 +42,6 @@ func (h *MythicPlusRunDetailsHandler) GetMythicPlusRunDetails(c *gin.Context) {
 		return
 	}
 
-	cacheKey := fmt.Sprintf("mythic_plus_run_details_%s_%d", season, id)
-
-	var transformedRunDetails *models.MythicPlusRun
-	cacheStart := time.Now()
-	err = cache.Get(cacheKey, &transformedRunDetails)
-	log.Printf("Cache check took: %v", time.Since(cacheStart))
-
-	if err == nil {
-		log.Printf("Cache hit. Returning cached data.")
-		c.JSON(http.StatusOK, transformedRunDetails)
-		return
-	}
-
-	if err != redis.Nil {
-		log.Printf("Error getting from cache: %v", err)
-	} else {
-		log.Printf("Cache miss. Fetching data from API.")
-	}
-
 	// Implement retry logic
 	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
@@ -74,21 +51,13 @@ func (h *MythicPlusRunDetailsHandler) GetMythicPlusRunDetails(c *gin.Context) {
 
 		if err == nil {
 			transformStart := time.Now()
-			transformedRunDetails, err = raiderioMythicPlusWrapper.TransformMythicPlusRun(rawRunDetails)
-			log.Printf("Data transformation took: %v", time.Since(transformStart))
-
-			if err == nil {
-				cacheSetStart := time.Now()
-				err = cache.Set(cacheKey, transformedRunDetails, 12*time.Hour)
-				log.Printf("Cache set took: %v", time.Since(cacheSetStart))
-
-				if err != nil {
-					log.Printf("Error setting cache: %v", err)
-				}
-
-				c.JSON(http.StatusOK, transformedRunDetails)
-				return
+			transformedRunDetails, err := raiderioMythicPlusWrapper.TransformMythicPlusRun(rawRunDetails)
+			if err != nil {
+				log.Printf("Error transforming data: %v", err)
 			}
+			log.Printf("Data transformation took: %v", time.Since(transformStart))
+			c.JSON(http.StatusOK, transformedRunDetails)
+			return
 		}
 
 		log.Printf("Attempt %d failed: %v", i+1, err)
