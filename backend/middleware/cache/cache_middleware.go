@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +27,27 @@ func (w *responseWriter) Write(b []byte) (int, error) {
 
 // generateDefaultCacheKey generates the default cache key
 func generateDefaultCacheKey(prefix string, c *gin.Context) string {
-	return fmt.Sprintf("%s:route:%s", prefix, c.Request.URL.Path)
+	// Get all the query parameters
+	params := c.Request.URL.Query()
+
+	// Sort parameters for consistent key generation
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Build cache key with path and sorted parameters
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%s:route:%s", prefix, c.Request.URL.Path))
+
+	// Add each parameter to the cache key
+	for _, k := range keys {
+		v := params.Get(k)
+		sb.WriteString(fmt.Sprintf(":%s:%s", k, v))
+	}
+
+	return sb.String()
 }
 
 // CacheMiddleware is the middleware for the cache with advanced options
@@ -40,12 +62,7 @@ func (cm *CacheManager) CacheMiddleware(routeConfig RouteConfig) gin.HandlerFunc
 		ctx := c.Request.Context()
 
 		// Generate the cache key
-		var cacheKey string
-		if routeConfig.KeyGenerator != nil {
-			cacheKey = routeConfig.KeyGenerator(c)
-		} else {
-			cacheKey = generateDefaultCacheKey(cm.config.KeyPrefix, c)
-		}
+		cacheKey := generateDefaultCacheKey(cm.config.KeyPrefix, c)
 
 		// Try to get the value from the cache
 		var cachedResponse interface{}

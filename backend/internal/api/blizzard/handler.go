@@ -144,7 +144,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/journal-instance/:instanceId", h.JournalInstanceByID.GetJournalInstanceByID)
 	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.cacheManager.CacheMiddleware(routeConfig), h.JournalInstanceMedia.GetJournalInstanceMedia)
 
-	r.GET("/blizzard/data/mythic-keystone/season/:seasonSlug/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.GetSeasonDungeons.GetSeasonDungeons)
+	r.GET("/blizzard/static/data/mythic-keystone/season/:seasonSlug/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.GetSeasonDungeons.GetSeasonDungeons)
 
 	r.GET("/blizzard/data/raids/:expansion", h.cacheManager.CacheMiddleware(routeConfig), h.RaidsByExpansion.GetRaidsByExpansion)
 

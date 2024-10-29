@@ -28,6 +28,7 @@ const MythicPlusBestRuns: React.FC = () => {
   }, [dungeonData]);
 
   const handleDungeonChange = (selectedDungeonSlug: string) => {
+    console.log("selectedDungeonSlug", selectedDungeonSlug);
     setDungeon(selectedDungeonSlug);
   };
 

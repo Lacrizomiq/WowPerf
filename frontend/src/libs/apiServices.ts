@@ -115,7 +115,7 @@ export const getBlizzardTalentTree = async (
 export const getBlizzardMythicDungeonPerSeason = async (seasonSlug: string) => {
   try {
     const { data } = await api.get(
-      `/data/mythic-keystone/season/${seasonSlug}/dungeons`,
+      `/blizzard/static/data/mythic-keystone/season/${seasonSlug}/dungeons`,
       {
         params: {},
       }
