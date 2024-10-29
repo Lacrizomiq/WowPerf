@@ -19,6 +19,7 @@ type CacheService interface {
 	DeleteMany(ctx context.Context, keys []string) error
 	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) (bool, error)
 	Close() error
+	GetRedisClient() *redis.Client
 }
 
 // RedisCache implements CacheService using Redis
@@ -31,6 +32,11 @@ type Config struct {
 	URL      string
 	Password string
 	DB       int
+}
+
+// GetRedisClient returns the underlying Redis client
+func (c *RedisCache) GetRedisClient() *redis.Client {
+	return c.client
 }
 
 // NewRedisCache creates a new Redis cache service

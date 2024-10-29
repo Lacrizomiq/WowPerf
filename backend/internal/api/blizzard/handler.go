@@ -49,7 +49,7 @@ type Handler struct {
 	cacheManager                *middleware.CacheManager
 }
 
-func NewHandler(service *blizzard.Service, db *gorm.DB, cache cache.CacheService) *Handler {
+func NewHandler(service *blizzard.Service, db *gorm.DB, cache cache.CacheService, cacheManager *middleware.CacheManager) *Handler {
 	// Cache configuration
 	cacheConfig := middleware.CacheConfig{
 		Cache:      cache,

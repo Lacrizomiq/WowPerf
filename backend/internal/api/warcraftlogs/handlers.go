@@ -21,7 +21,7 @@ type Handler struct {
 	cacheManager        *middleware.CacheManager
 }
 
-func NewHandler(rankingService *dungeons.RankingsService, dungeonService *dungeons.DungeonService, db *gorm.DB, cache cache.CacheService) *Handler {
+func NewHandler(rankingService *dungeons.RankingsService, dungeonService *dungeons.DungeonService, db *gorm.DB, cache cache.CacheService, cacheManager *middleware.CacheManager) *Handler {
 	// Cache configuration
 	cacheConfig := middleware.CacheConfig{
 		Cache:      cache,

@@ -16,8 +16,6 @@ import (
 	authHandler "wowperf/internal/api/auth"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
-	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
-	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
 	userHandler "wowperf/internal/api/user"
 	apiWarcraftlogs "wowperf/internal/api/warcraftlogs"
 
@@ -36,7 +34,7 @@ import (
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
 	// Internal Packages - Utils
-	middlewares "wowperf/middlewares"
+	cacheMiddleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
 )
 
@@ -48,11 +46,6 @@ func checkUpdateState(db *gorm.DB) {
 		return
 	}
 	log.Printf("Current update state: Last update was %v ago", time.Since(state.LastUpdateTime))
-}
-
-func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *serviceRaiderio.RaiderIOService) {
-	raidsRaiderioCache.StartRaidLeaderboardCacheUpdater(rioService)
-	mythicPlusRaiderioCache.StartMythicPlusBestRunsCacheUpdater(rioService)
 }
 
 // Redis initialization
@@ -102,14 +95,16 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService) (
 		}
 	}
 
+	redisClient := cacheService.GetRedisClient()
+
 	authService := auth.NewAuthService(
 		db,
 		jwtSecret,
+		redisClient,
 		jwtExpiration,
 		os.Getenv("BATTLE_NET_CLIENT_ID"),
 		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
 		os.Getenv("BATTLE_NET_REDIRECT_URL"),
-		cacheService,
 	)
 
 	// User Service
@@ -148,7 +143,6 @@ func setupRoutes(
 	rioHandler *raiderio.Handler,
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
-	cacheManager *middlewares.CacheManager,
 ) {
 	// CORS Configuration
 	config := cors.DefaultConfig()
@@ -209,22 +203,38 @@ func main() {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 
+	// Initialize Cache Manager with the cache service and the routes prefix
+	cacheManagers := struct {
+		raiderio     *cacheMiddleware.CacheManager
+		blizzard     *cacheMiddleware.CacheManager
+		warcraftlogs *cacheMiddleware.CacheManager
+	}{
+		raiderio: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 24 * time.Hour,
+			KeyPrefix:  "raiderio",
+			Metrics:    true,
+		}),
+		blizzard: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 24 * time.Hour,
+			KeyPrefix:  "blizzard",
+			Metrics:    true,
+		}),
+		warcraftlogs: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 8 * time.Hour,
+			KeyPrefix:  "warcraftlogs",
+			Metrics:    true,
+		}),
+	}
+
 	// Initialize Handlers
 	authHandler := authHandler.NewAuthHandler(authService)
 	userHandler := userHandler.NewUserHandler(userSvc)
-	rioHandler := raiderio.NewHandler(rioService, db)
-	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService)
-	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db, cacheService)
-
-	// Initialize Cache Manager
-	cacheManager := middlewares.NewCacheManager(middlewares.CacheConfig{
-		Cache:      cacheService,
-		Expiration: 8 * time.Hour,
-		KeyPrefix:  "warcraftlogs", // TODO: change this for all routes
-	})
-
-	// Start Cache Updater
-	startCacheUpdater(blizzardService, rioService)
+	rioHandler := raiderio.NewHandler(rioService, db, cacheService, cacheManagers.raiderio)
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService, cacheManagers.blizzard)
+	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db, cacheService, cacheManagers.warcraftlogs)
 
 	// Start Periodic Updates (Mythic+ Dungeon Stats)
 	go func() {
@@ -273,7 +283,7 @@ func main() {
 
 	// Setup and Start Server
 	r := gin.Default()
-	setupRoutes(r, authService, authHandler, userHandler, rioHandler, blizzardHandler, warcraftlogsHandler, cacheManager)
+	setupRoutes(r, authService, authHandler, userHandler, rioHandler, blizzardHandler, warcraftlogsHandler)
 
 	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))
