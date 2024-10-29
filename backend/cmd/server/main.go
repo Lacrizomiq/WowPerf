@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -15,8 +16,6 @@ import (
 	authHandler "wowperf/internal/api/auth"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	"wowperf/internal/api/raiderio"
-	mythicPlusRaiderioCache "wowperf/internal/api/raiderio/mythicplus"
-	raidsRaiderioCache "wowperf/internal/api/raiderio/raids"
 	userHandler "wowperf/internal/api/user"
 	apiWarcraftlogs "wowperf/internal/api/warcraftlogs"
 
@@ -35,8 +34,8 @@ import (
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
 	// Internal Packages - Utils
+	cacheMiddleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
-	"wowperf/pkg/middleware"
 )
 
 func checkUpdateState(db *gorm.DB) {
@@ -49,25 +48,30 @@ func checkUpdateState(db *gorm.DB) {
 	log.Printf("Current update state: Last update was %v ago", time.Since(state.LastUpdateTime))
 }
 
-func startCacheUpdater(blizzardService *serviceBlizzard.Service, rioService *serviceRaiderio.RaiderIOService) {
-	raidsRaiderioCache.StartRaidLeaderboardCacheUpdater(rioService)
-	mythicPlusRaiderioCache.StartMythicPlusBestRunsCacheUpdater(rioService)
-}
-
-func waitForRedis() {
-	for i := 0; i < 30; i++ {
-		err := cache.Ping()
-		if err == nil {
-			log.Println("Redis is ready")
-			return
-		}
-		log.Println("Waiting for Redis to be ready")
-		time.Sleep(time.Second)
+// Redis initialization
+func initializeCacheService() (cache.CacheService, error) {
+	cacheService, err := cache.NewRedisCache(&cache.Config{
+		URL:      os.Getenv("REDIS_URL"),
+		Password: os.Getenv("REDIS_PASSWORD"), // as an optionnal parameter
+		DB:       0,                           // Use the default DB
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache service: %w", err)
 	}
-	log.Println("Redis is not ready")
+
+	// Context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Test the connection
+	if err := cacheService.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("failed to connect to cache: %w", err)
+	}
+
+	return cacheService, nil
 }
 
-func initializeServices(db *gorm.DB) (
+func initializeServices(db *gorm.DB, cacheService cache.CacheService) (
 	*auth.AuthService,
 	*userService.UserService,
 	*serviceBlizzard.Service,
@@ -91,10 +95,12 @@ func initializeServices(db *gorm.DB) (
 		}
 	}
 
+	redisClient := cacheService.GetRedisClient()
+
 	authService := auth.NewAuthService(
 		db,
 		jwtSecret,
-		cache.GetRedisClient(),
+		redisClient,
 		jwtExpiration,
 		os.Getenv("BATTLE_NET_CLIENT_ID"),
 		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
@@ -124,7 +130,7 @@ func initializeServices(db *gorm.DB) (
 
 	dungeonService := warcraftLogsRankings.NewDungeonService(warcraftLogsClient)
 	rankingsService := warcraftLogsRankings.NewRankingsService(dungeonService, db)
-	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService)
+	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService, cacheService)
 
 	return authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, nil
 }
@@ -151,7 +157,7 @@ func setupRoutes(
 	r.Use(gin.Logger())
 
 	// Auth Routes
-	r.GET("/csrf-token", middleware.CSRFToken())
+	// r.GET("/csrf-token", middlewares.CSRFToken())
 	authHandler.RegisterRoutes(r)
 
 	// API Routes
@@ -171,8 +177,11 @@ func main() {
 	}
 
 	// Initialize Cache and Redis
-	cache.InitCache()
-	waitForRedis()
+	cacheService, err := initializeCacheService()
+	if err != nil {
+		log.Fatalf("Failed to initialize cache service: %v", err)
+	}
+	defer cacheService.Close()
 
 	// Initialize Database
 	db, err := database.InitDB()
@@ -189,20 +198,43 @@ func main() {
 	}
 
 	// Initialize Services
-	authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, err := initializeServices(db)
+	authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, err := initializeServices(db, cacheService)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
+	}
+
+	// Initialize Cache Manager with the cache service and the routes prefix
+	cacheManagers := struct {
+		raiderio     *cacheMiddleware.CacheManager
+		blizzard     *cacheMiddleware.CacheManager
+		warcraftlogs *cacheMiddleware.CacheManager
+	}{
+		raiderio: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 24 * time.Hour,
+			KeyPrefix:  "raiderio",
+			Metrics:    true,
+		}),
+		blizzard: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 24 * time.Hour,
+			KeyPrefix:  "blizzard",
+			Metrics:    true,
+		}),
+		warcraftlogs: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
+			Cache:      cacheService,
+			Expiration: 8 * time.Hour,
+			KeyPrefix:  "warcraftlogs",
+			Metrics:    true,
+		}),
 	}
 
 	// Initialize Handlers
 	authHandler := authHandler.NewAuthHandler(authService)
 	userHandler := userHandler.NewUserHandler(userSvc)
-	rioHandler := raiderio.NewHandler(rioService, db)
-	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db)
-	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db)
-
-	// Start Cache Updater
-	startCacheUpdater(blizzardService, rioService)
+	rioHandler := raiderio.NewHandler(rioService, db, cacheService, cacheManagers.raiderio)
+	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService, cacheManagers.blizzard)
+	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db, cacheService, cacheManagers.warcraftlogs)
 
 	// Start Periodic Updates (Mythic+ Dungeon Stats)
 	go func() {

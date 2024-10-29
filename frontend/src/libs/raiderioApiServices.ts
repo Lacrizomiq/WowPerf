@@ -9,7 +9,7 @@ export const getRaiderioMythicPlusBestRuns = async (
   page: number
 ) => {
   try {
-    const response = await api.get(`/mythic-plus/best-runs`, {
+    const response = await api.get(`/raiderio/mythicplus/best-runs`, {
       params: { season, region, dungeon, page },
     });
     return response.data;
@@ -25,7 +25,7 @@ export const getRaiderioMythicPlusRunDetails = async (
   id: number
 ) => {
   try {
-    const response = await api.get(`/mythic-plus/run-details`, {
+    const response = await api.get(`/raiderio/mythicplus/run-details`, {
       params: { season, id },
     });
     return response.data;
@@ -44,7 +44,7 @@ export const getRaiderioRaidLeaderboard = async (
   page: number
 ) => {
   try {
-    const response = await api.get(`/raids/leaderboard`, {
+    const response = await api.get(`/raiderio/raids/leaderboard`, {
       params: { raid, difficulty, region, limit, page },
     });
     return response.data;
@@ -57,7 +57,7 @@ export const getRaiderioRaidLeaderboard = async (
 // getDungeonStats retrieves the dungeon stats of a specific season and region
 export const getDungeonStats = async (season: string, region: string) => {
   try {
-    const response = await api.get(`/mythic-plus/dungeon-stats`, {
+    const response = await api.get(`/raiderio/mythicplus/dungeon-stats`, {
       params: { season, region },
     });
     return response.data;
