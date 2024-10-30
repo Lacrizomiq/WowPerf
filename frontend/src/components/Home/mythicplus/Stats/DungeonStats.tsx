@@ -97,13 +97,35 @@ const DungeonStats: React.FC = () => {
       <div className="space-y-4">
         <div className="p-4">
           <p className="text-white">
-            Last update:{" "}
+            <span className="font-bold">Last update:</span>{" "}
             {new Intl.DateTimeFormat("en-US", {
               weekday: "long",
               day: "2-digit",
               month: "long",
               year: "numeric",
             }).format(new Date(statsData[0].updated_at))}
+          </p>
+          <p className="text-white mt-4">
+            The data is updated every week on Tuesday, coming from{" "}
+            <a
+              href="https://raider.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500"
+            >
+              Raider.io
+            </a>{" "}
+            best mythic + runs.
+          </p>
+          <p className="text-white">
+            As it aggregates data from the best runs and the very top teams, it
+            may not be 100% accurate to determine the best class / spec or team
+            composition as some players / teams are highlighted many times and
+            can skew the data.
+          </p>
+          <p className="text-white mt-4">
+            Remember to play the game and enjoy the journey with your friends on
+            the class you love !
           </p>
         </div>
 

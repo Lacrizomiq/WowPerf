@@ -3,10 +3,6 @@ package warcraftlogs
 import (
 	"time"
 	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
-	"wowperf/pkg/cache"
-
-	"golang.org/x/time/rate"
-	"gorm.io/gorm"
 )
 
 // Constants for rate limiting
@@ -83,40 +79,8 @@ type GlobalRankings struct {
 	DPS     RoleRankings `json:"dps"`
 }
 
-// RankingsService structure
-type RankingsService struct {
-	dungeonService *DungeonService
-	db             *gorm.DB
-	rateLimiter    *rate.Limiter
-}
-
-// NewRankingsService creates a new rankings service with a rate limiter initialized
-func NewRankingsService(dungeonService *DungeonService, db *gorm.DB) *RankingsService {
-	return &RankingsService{
-		dungeonService: dungeonService,
-		db:             db,
-		rateLimiter:    rate.NewLimiter(rate.Limit(requestsPerSecond), burstLimit),
-	}
-}
-
 // Temporary data structure
 type playerData struct {
 	ranking   playerRankingModels.PlayerRanking
 	dungeonID int
-}
-
-// RankingsUpdater manages periodic updates of rankings
-type RankingsUpdater struct {
-	db             *gorm.DB
-	rankingService *RankingsService
-	cache          cache.CacheService
-}
-
-// NewRankingsUpdater creates a new rankings updater
-func NewRankingsUpdater(db *gorm.DB, rankingService *RankingsService, cacheService cache.CacheService) *RankingsUpdater {
-	return &RankingsUpdater{
-		db:             db,
-		rankingService: rankingService,
-		cache:          cacheService,
-	}
 }

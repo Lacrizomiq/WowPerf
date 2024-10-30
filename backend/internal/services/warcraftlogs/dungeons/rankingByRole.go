@@ -6,6 +6,8 @@ import (
 	"log"
 	"sort"
 	"sync"
+
+	service "wowperf/internal/services/warcraftlogs"
 )
 
 func determineRole(class, spec string) string {
@@ -47,7 +49,7 @@ func determineRole(class, spec string) string {
 }
 
 // GetGlobalRankings retrieve the global rankings for the given dungeon IDs and pages per dungeon
-func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []int, pagesPerDungeon int) (*GlobalRankings, error) {
+func GetGlobalRankings(s *service.WarcraftLogsClientService, ctx context.Context, dungeonIDs []int, pagesPerDungeon int) (*GlobalRankings, error) {
 	log.Printf("Starting global rankings collection for %d dungeons, %d pages each", len(dungeonIDs), pagesPerDungeon)
 
 	var wg sync.WaitGroup
@@ -70,7 +72,7 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 				sem <- struct{}{}
 				defer func() { <-sem }()
 
-				if err := s.rateLimiter.Wait(ctx); err != nil {
+				if err := s.RateLimiter.Wait(ctx); err != nil {
 					errorsChan <- fmt.Errorf("rate limiter error: %w", err)
 					return
 				}
@@ -83,7 +85,7 @@ func (s *RankingsService) GetGlobalRankings(ctx context.Context, dungeonIDs []in
 					errorsChan <- reqCtx.Err()
 					return
 				default:
-					dungeonData, err := s.dungeonService.GetDungeonLeaderboardByPlayer(dID, p)
+					dungeonData, err := GetDungeonLeaderboardByPlayer(s, dID, p)
 					if err != nil {
 						errorsChan <- fmt.Errorf("failed to get dungeon leaderboard for dungeon %d, page %d: %w", dID, p, err)
 						return

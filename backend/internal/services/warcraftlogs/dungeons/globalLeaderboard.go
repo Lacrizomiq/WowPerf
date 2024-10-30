@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"gorm.io/gorm"
 )
 
 const REQUIRED_DUNGEON_COUNT = 8
@@ -59,8 +60,17 @@ func formatRole(role string) string {
 	return formatNameCase(role)
 }
 
+// GlobalLeaderboardService is a service for querying the global leaderboard
+type GlobalLeaderboardService struct {
+	db *gorm.DB
+}
+
+func NewGlobalLeaderboardService(db *gorm.DB) *GlobalLeaderboardService {
+	return &GlobalLeaderboardService{db: db}
+}
+
 // createOptimizedIndexes creates database indexes for optimized query performance
-func (s *RankingsService) createOptimizedIndexes() error {
+func (s *GlobalLeaderboardService) createOptimizedIndexes() error {
 	indexes := []string{
 		// Index for uniquely identifying players
 		"CREATE INDEX IF NOT EXISTS idx_rankings_player_unique ON player_rankings(name, server_name, server_region)",
@@ -80,7 +90,7 @@ func (s *RankingsService) createOptimizedIndexes() error {
 }
 
 // sanitizeOrderBy ensures safe column names and directions for ORDER BY clauses
-func (s *RankingsService) sanitizeOrderBy(column string, direction OrderDirection) OrderByOption {
+func (s *GlobalLeaderboardService) sanitizeOrderBy(column string, direction OrderDirection) OrderByOption {
 	validColumns := map[string]string{
 		"score":         "total_score",
 		"name":          "name",
@@ -113,7 +123,7 @@ func (s *RankingsService) sanitizeOrderBy(column string, direction OrderDirectio
 }
 
 // getBaseLeaderboardQuery returns the base CTE query for all leaderboard types
-func (s *RankingsService) getBaseLeaderboardQuery(orderBy OrderByOption) string {
+func (s *GlobalLeaderboardService) getBaseLeaderboardQuery(orderBy OrderByOption) string {
 	return fmt.Sprintf(`
 		WITH PlayerScores AS (
 			SELECT 
@@ -144,7 +154,7 @@ func (s *RankingsService) getBaseLeaderboardQuery(orderBy OrderByOption) string 
 }
 
 // GetGlobalLeaderboard retrieves the global leaderboard with sorting options
-func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+func (s *GlobalLeaderboardService) GetGlobalLeaderboard(ctx context.Context, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
 	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(sanitizedOrder),
@@ -162,7 +172,7 @@ func (s *RankingsService) GetGlobalLeaderboard(ctx context.Context, limit int, o
 }
 
 // GetGlobalLeaderboardByRole retrieves the leaderboard filtered by role
-func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+func (s *GlobalLeaderboardService) GetGlobalLeaderboardByRole(ctx context.Context, role string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
 	formattedRole := formatRole(role)
 	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
 
@@ -183,7 +193,7 @@ func (s *RankingsService) GetGlobalLeaderboardByRole(ctx context.Context, role s
 }
 
 // GetGlobalLeaderboardByClass retrieves the leaderboard filtered by class
-func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+func (s *GlobalLeaderboardService) GetGlobalLeaderboardByClass(ctx context.Context, class string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
 	formattedClass := formatNameCase(class)
 	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
 
@@ -204,7 +214,7 @@ func (s *RankingsService) GetGlobalLeaderboardByClass(ctx context.Context, class
 }
 
 // GetGlobalLeaderboardBySpec retrieves the leaderboard filtered by class and spec
-func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class, spec string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
+func (s *GlobalLeaderboardService) GetGlobalLeaderboardBySpec(ctx context.Context, class, spec string, limit int, orderBy string, direction OrderDirection) ([]LeaderboardEntry, error) {
 	formattedClass := formatNameCase(class)
 	formattedSpec := formatNameCase(spec)
 	sanitizedOrder := s.sanitizeOrderBy(orderBy, direction)
@@ -226,7 +236,7 @@ func (s *RankingsService) GetGlobalLeaderboardBySpec(ctx context.Context, class,
 }
 
 // validateInput validates input parameters for the leaderboard queries
-func (s *RankingsService) validateInput(role, class, spec string, limit int) error {
+func (s *GlobalLeaderboardService) validateInput(role, class, spec string, limit int) error {
 	if role != "" {
 		validRoles := map[string]bool{
 			"Tank":   true,

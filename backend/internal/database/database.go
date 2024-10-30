@@ -55,8 +55,7 @@ func ensureUpdateState(db *gorm.DB) error {
 	}
 
 	// WarcraftLogs Rankings Update State
-	var rankingsUpdateState rankingsModels.RankingsUpdateState
-	if err := db.FirstOrCreate(&rankingsUpdateState, rankingsModels.RankingsUpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
+	if err := rankingsModels.InitializeRankingsUpdateState(db); err != nil {
 		return fmt.Errorf("error initializing RankingsUpdateState: %v", err)
 	}
 	return nil

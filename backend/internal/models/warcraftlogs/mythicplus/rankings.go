@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -45,10 +46,52 @@ type PlayerRanking struct {
 }
 
 type RankingsUpdateState struct {
-	gorm.Model
+	ID             uint `gorm:"primaryKey;default:1"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
 	LastUpdateTime time.Time
 }
 
 func (RankingsUpdateState) TableName() string {
 	return "rankings_update_states"
+}
+
+// InitializeRankingsUpdateState initializes the rankings update state
+func InitializeRankingsUpdateState(db *gorm.DB) error {
+	return db.Exec(`
+			INSERT INTO rankings_update_states (id, created_at, updated_at, last_update_time)
+			VALUES (1, NOW(), NOW(), NOW() - INTERVAL '25 hours')
+			ON CONFLICT (id) DO NOTHING
+	`).Error
+}
+
+// GetOrCreateRankingsUpdateState gets or creates the rankings update state
+func GetOrCreateRankingsUpdateState(db *gorm.DB) (*RankingsUpdateState, error) {
+	var state RankingsUpdateState
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// Trying to get the existing state with ID = 1
+		result := tx.First(&state, 1)
+		if result.Error == nil {
+			return nil // State found
+		}
+
+		if result.Error != gorm.ErrRecordNotFound {
+			return result.Error // Unexpected error
+		}
+
+		// Create a new state with ID = 1
+		state = RankingsUpdateState{
+			ID:             1,
+			LastUpdateTime: time.Now().Add(-25 * time.Hour),
+		}
+		return tx.Create(&state).Error
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get or create rankings update state: %w", err)
+	}
+
+	return &state, nil
 }

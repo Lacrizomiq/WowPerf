@@ -1,0 +1,9 @@
+tmp/
+.git/
+.env.local
+.env.*.local
+*.test
+*.md
+
+# Ne pas ignorer .air.toml
+!.air.toml
