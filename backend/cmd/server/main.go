@@ -217,7 +217,7 @@ func main() {
 		}),
 		warcraftlogs: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
 			Cache:      cacheService,
-			Expiration: 8 * time.Hour,
+			Expiration: 2 * time.Hour,
 			KeyPrefix:  "warcraftlogs",
 			Tags:       []string{"rankings", "leaderboard"},
 			Metrics:    true,
