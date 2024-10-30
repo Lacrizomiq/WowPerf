@@ -4,16 +4,17 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	dungeonService "wowperf/internal/services/warcraftlogs/dungeons"
+	service "wowperf/internal/services/warcraftlogs"
+	dungeons "wowperf/internal/services/warcraftlogs/dungeons"
 
 	"github.com/gin-gonic/gin"
 )
 
 type DungeonLeaderboardHandler struct {
-	dungeonService *dungeonService.DungeonService
+	dungeonService *service.WarcraftLogsClientService
 }
 
-func NewDungeonLeaderboardHandler(dungeonService *dungeonService.DungeonService) *DungeonLeaderboardHandler {
+func NewDungeonLeaderboardHandler(dungeonService *service.WarcraftLogsClientService) *DungeonLeaderboardHandler {
 	return &DungeonLeaderboardHandler{dungeonService: dungeonService}
 }
 
@@ -32,7 +33,7 @@ func (h *DungeonLeaderboardHandler) GetDungeonLeaderboardByPlayer(c *gin.Context
 	}
 
 	// Get the dungeon leaderboard
-	leaderboard, err := h.dungeonService.GetDungeonLeaderboardByPlayer(encounterID, page)
+	leaderboard, err := dungeons.GetDungeonLeaderboardByPlayer(h.dungeonService, encounterID, page)
 	if err != nil {
 		log.Printf("Error getting dungeon leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dungeon leaderboard"})
@@ -58,7 +59,7 @@ func (h *DungeonLeaderboardHandler) GetDungeonLeaderboardByTeam(c *gin.Context) 
 	}
 
 	// Get the dungeon leaderboard
-	leaderboard, err := h.dungeonService.GetDungeonLeaderboardByTeam(encounterID, page)
+	leaderboard, err := dungeons.GetDungeonLeaderboardByTeam(h.dungeonService, encounterID, page)
 	if err != nil {
 		log.Printf("Error getting dungeon leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dungeon leaderboard"})

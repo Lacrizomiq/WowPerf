@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"wowperf/internal/models"
 	mythicplus "wowperf/internal/models/mythicplus"
@@ -42,6 +43,9 @@ func Migrate(db *gorm.DB) error {
 		{"008_add_rankings_models", addRankingsTables},
 		{"009_ensure_rankings_data", ensureRankingsData},
 		{"010_update_player_rankings", updatePlayerRankings},
+		{"011_clean_rankings_update_state", cleanRankingsUpdateState},
+		{"012_clean_and_constrain_rankings_update_state", cleanAndConstrainRankingsUpdateState},
+		{"013_clean_and_fix_rankings_update_state", cleanAndFixRankingsUpdateState},
 	}
 
 	for _, m := range migrations {
@@ -296,5 +300,98 @@ func updatePlayerRankings(db *gorm.DB) error {
 		}
 
 		return nil
+	})
+}
+
+// CleanRankingsUpdateState cleans the rankings update state
+func cleanRankingsUpdateState(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Supprime toutes les entrées existantes
+		if err := tx.Exec("DELETE FROM rankings_update_states").Error; err != nil {
+			return fmt.Errorf("failed to clean rankings update states: %v", err)
+		}
+
+		// Crée une nouvelle entrée avec la date d'il y a 25 heures
+		state := rankingsModels.RankingsUpdateState{
+			LastUpdateTime: time.Now().Add(-25 * time.Hour),
+		}
+		if err := tx.Create(&state).Error; err != nil {
+			return fmt.Errorf("failed to create new rankings update state: %v", err)
+		}
+
+		// Ajoute une contrainte unique si elle n'existe pas déjà
+		return tx.Exec(`
+					DO $$
+					BEGIN
+							IF NOT EXISTS (
+									SELECT 1 FROM information_schema.table_constraints 
+									WHERE table_name = 'rankings_update_states' 
+									AND constraint_type = 'UNIQUE'
+							) THEN
+									ALTER TABLE rankings_update_states
+									ADD CONSTRAINT rankings_update_states_single_row
+									UNIQUE (id);
+							END IF;
+					END
+					$$;
+			`).Error
+	})
+}
+
+func cleanAndConstrainRankingsUpdateState(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Supprime la table existante
+		if err := tx.Exec("DROP TABLE IF EXISTS rankings_update_states CASCADE").Error; err != nil {
+			return err
+		}
+
+		// Crée la nouvelle table avec la contrainte
+		if err := tx.Exec(`
+					CREATE TABLE rankings_update_states (
+							id INTEGER PRIMARY KEY CHECK (id = 1),
+							created_at TIMESTAMP WITH TIME ZONE,
+							updated_at TIMESTAMP WITH TIME ZONE,
+							deleted_at TIMESTAMP WITH TIME ZONE,
+							last_update_time TIMESTAMP WITH TIME ZONE
+					)
+			`).Error; err != nil {
+			return err
+		}
+
+		// Crée l'entrée initiale
+		return tx.Exec(`
+					INSERT INTO rankings_update_states (id, created_at, updated_at, last_update_time)
+					VALUES (1, NOW(), NOW(), NOW() - INTERVAL '25 hours')
+			`).Error
+	})
+}
+
+func cleanAndFixRankingsUpdateState(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Supprime la table existante
+		if err := tx.Exec("DROP TABLE IF EXISTS rankings_update_states CASCADE").Error; err != nil {
+			return err
+		}
+
+		// Crée la nouvelle table avec la contrainte
+		if err := tx.Exec(`
+					CREATE TABLE rankings_update_states (
+							id INTEGER PRIMARY KEY DEFAULT 1,
+							created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+							updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+							deleted_at TIMESTAMP WITH TIME ZONE,
+							last_update_time TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP - INTERVAL '25 hours'),
+							CONSTRAINT ensure_single_row CHECK (id = 1)
+					)
+			`).Error; err != nil {
+			return err
+		}
+
+		// Insert initial row
+		return tx.Exec(`
+					INSERT INTO rankings_update_states (id)
+					VALUES (1)
+					ON CONFLICT (id) DO NOTHING
+			`).Error
 	})
 }

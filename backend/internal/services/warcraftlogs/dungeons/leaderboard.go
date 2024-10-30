@@ -2,13 +2,14 @@
 package warcraftlogs
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 
 	playerLeaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/player"
 	teamLeaderboardModels "wowperf/internal/models/warcraftlogs/mythicplus/team"
-	warcraftlogsService "wowperf/internal/services/warcraftlogs"
+	service "wowperf/internal/services/warcraftlogs"
 )
 
 const DungeonLeaderboardTeamQuery = `
@@ -31,16 +32,8 @@ query getDungeonLeaderboard($encounterId: Int!, $page: Int!) {
     }
 }`
 
-type DungeonService struct {
-	client *warcraftlogsService.Client
-}
-
-func NewDungeonService(client *warcraftlogsService.Client) *DungeonService {
-	return &DungeonService{client: client}
-}
-
 // GetDungeonLeaderboardByPlayer returns the dungeon leaderboard for a given encounter, region and page
-func (s *DungeonService) GetDungeonLeaderboardByPlayer(encounterID int, page int) (*playerLeaderboardModels.DungeonLogs, error) {
+func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, encounterID int, page int) (*playerLeaderboardModels.DungeonLogs, error) {
 	log.Printf("Getting dungeon leaderboard for encounter %d, page %d", encounterID, page)
 
 	variables := map[string]interface{}{
@@ -49,7 +42,7 @@ func (s *DungeonService) GetDungeonLeaderboardByPlayer(encounterID int, page int
 	}
 
 	// make the request
-	response, err := s.client.MakeGraphQLRequest(DungeonLeaderboardPlayerQuery, variables)
+	response, err := s.MakeRequest(context.Background(), DungeonLeaderboardPlayerQuery, variables)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dungeon leaderboard: %w", err)
 	}
@@ -118,7 +111,7 @@ func (s *DungeonService) GetDungeonLeaderboardByPlayer(encounterID int, page int
 }
 
 // GetDungeonLeaderboardByTeam returns the dungeon leaderboard for a given encounter and page
-func (s *DungeonService) GetDungeonLeaderboardByTeam(encounterID int, page int) (*teamLeaderboardModels.DungeonLeaderboard, error) {
+func GetDungeonLeaderboardByTeam(s *service.WarcraftLogsClientService, encounterID int, page int) (*teamLeaderboardModels.DungeonLeaderboard, error) {
 	log.Printf("Getting dungeon leaderboard for encounter %d, page %d", encounterID, page)
 
 	variables := map[string]interface{}{
@@ -126,7 +119,7 @@ func (s *DungeonService) GetDungeonLeaderboardByTeam(encounterID int, page int) 
 		"page":        page,
 	}
 
-	response, err := s.client.MakeGraphQLRequest(DungeonLeaderboardTeamQuery, variables)
+	response, err := s.MakeRequest(context.Background(), DungeonLeaderboardTeamQuery, variables)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dungeon leaderboard: %w", err)
 	}

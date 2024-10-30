@@ -25,11 +25,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      target: development # Use the development stage
+    volumes:
+      - ./backend:/app:cached # Mount the source code for hot-reloading
+      - backend_go:/go:delegated # Persistent cache for Go modules
     environment:
       - DB_HOST=db
       - DB_USER=wowperf_user
@@ -37,10 +36,13 @@ services:
       - DB_NAME=wowperf_db
       - DB_SSL_MODE=disable
       - REDIS_URL=redis:6379
-    volumes:
-      - ./backend/data/static:/app/static
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # Database Postgres
   db:
@@ -84,3 +86,4 @@ volumes:
   redis_data:
   frontend_node_modules:
   frontend_next:
+  backend_go:

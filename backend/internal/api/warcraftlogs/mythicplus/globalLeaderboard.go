@@ -15,10 +15,10 @@ import (
 )
 
 type GlobalLeaderboardHandler struct {
-	rankingsService *dungeons.RankingsService
+	rankingsService *dungeons.GlobalLeaderboardService
 }
 
-func NewGlobalLeaderboardHandler(rankingsService *dungeons.RankingsService) *GlobalLeaderboardHandler {
+func NewGlobalLeaderboardHandler(rankingsService *dungeons.GlobalLeaderboardService) *GlobalLeaderboardHandler {
 	return &GlobalLeaderboardHandler{rankingsService: rankingsService}
 }
 

@@ -26,12 +26,11 @@ import (
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
 	userService "wowperf/internal/services/user"
 	warcraftlogs "wowperf/internal/services/warcraftlogs"
-	warcraftLogsRankings "wowperf/internal/services/warcraftlogs/dungeons"
+	warcraftLogsLeaderboard "wowperf/internal/services/warcraftlogs/dungeons"
 
 	// Internal Packages - Models & Database
 	"wowperf/internal/database"
 	models "wowperf/internal/models/raiderio/mythicrundetails"
-	playerRankingModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
 	// Internal Packages - Utils
 	cacheMiddleware "wowperf/middleware/cache"
@@ -71,14 +70,18 @@ func initializeCacheService() (cache.CacheService, error) {
 	return cacheService, nil
 }
 
-func initializeServices(db *gorm.DB, cacheService cache.CacheService) (
+func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManagers struct {
+	raiderio     *cacheMiddleware.CacheManager
+	blizzard     *cacheMiddleware.CacheManager
+	warcraftlogs *cacheMiddleware.CacheManager
+}) (
 	*auth.AuthService,
 	*userService.UserService,
 	*serviceBlizzard.Service,
 	*serviceRaiderio.RaiderIOService,
-	*warcraftLogsRankings.RankingsService,
-	*warcraftLogsRankings.RankingsUpdater,
-	*warcraftLogsRankings.DungeonService,
+	*warcraftlogs.WarcraftLogsClientService,
+	*warcraftLogsLeaderboard.GlobalLeaderboardService,
+	*warcraftLogsLeaderboard.RankingsUpdater,
 	error,
 ) {
 	// Auth Service Setup
@@ -123,16 +126,13 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService) (
 	}
 
 	// WarcraftLogs Service Setup
-	warcraftLogsClient, err := warcraftlogs.NewClient()
+	warcraftLogsService, err := warcraftlogs.NewWarcraftLogsClientService()
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize warcraftlogs client: %v", err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize warcraftlogs service: %v", err)
 	}
-
-	dungeonService := warcraftLogsRankings.NewDungeonService(warcraftLogsClient)
-	rankingsService := warcraftLogsRankings.NewRankingsService(dungeonService, db)
-	rankingsUpdater := warcraftLogsRankings.NewRankingsUpdater(db, rankingsService, cacheService)
-
-	return authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, nil
+	globalLeaderboardService := warcraftLogsLeaderboard.NewGlobalLeaderboardService(db)
+	rankingsUpdater := warcraftLogsLeaderboard.NewRankingsUpdater(db, warcraftLogsService, cacheService, cacheManagers.warcraftlogs)
+	return authService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, nil
 }
 
 func setupRoutes(
@@ -197,12 +197,6 @@ func main() {
 		log.Fatalf("Failed to seed database: %v", err)
 	}
 
-	// Initialize Services
-	authService, userSvc, blizzardService, rioService, rankingsService, rankingsUpdater, dungeonService, err := initializeServices(db, cacheService)
-	if err != nil {
-		log.Fatalf("Failed to initialize services: %v", err)
-	}
-
 	// Initialize Cache Manager with the cache service and the routes prefix
 	cacheManagers := struct {
 		raiderio     *cacheMiddleware.CacheManager
@@ -225,8 +219,15 @@ func main() {
 			Cache:      cacheService,
 			Expiration: 8 * time.Hour,
 			KeyPrefix:  "warcraftlogs",
+			Tags:       []string{"rankings", "leaderboard"},
 			Metrics:    true,
 		}),
+	}
+
+	// Initialize Services
+	authService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, err := initializeServices(db, cacheService, cacheManagers)
+	if err != nil {
+		log.Fatalf("Failed to initialize services: %v", err)
 	}
 
 	// Initialize Handlers
@@ -234,7 +235,7 @@ func main() {
 	userHandler := userHandler.NewUserHandler(userSvc)
 	rioHandler := raiderio.NewHandler(rioService, db, cacheService, cacheManagers.raiderio)
 	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService, cacheManagers.blizzard)
-	warcraftlogsHandler := apiWarcraftlogs.NewHandler(rankingsService, dungeonService, db, cacheService, cacheManagers.warcraftlogs)
+	warcraftlogsHandler := apiWarcraftlogs.NewHandler(globalLeaderboardService, warcraftLogsService, db, cacheService, cacheManagers.warcraftlogs)
 
 	// Start Periodic Updates (Mythic+ Dungeon Stats)
 	go func() {
@@ -259,26 +260,11 @@ func main() {
 	go func() {
 		log.Println("Setting up WarcraftLogs rankings update scheduler...")
 
-		// Attendre que la base de données soit bien initialisée
+		// Wait for the database to be ready
 		time.Sleep(10 * time.Second)
 
-		// Vérifier l'état initial sans forcer de mise à jour
-		var state playerRankingModels.RankingsUpdateState
-		if err := db.First(&state).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				log.Println("Creating initial rankings update state...")
-				state = playerRankingModels.RankingsUpdateState{
-					LastUpdateTime: time.Now(),
-				}
-				if err := db.Create(&state).Error; err != nil {
-					log.Printf("Error creating initial state: %v", err)
-				}
-			}
-		}
-
-		// Start the update scheduler
-		log.Printf("Starting rankings update scheduler (minimum interval: %v)", warcraftLogsRankings.MinimumUpdateInterval)
-		rankingsUpdater.StartPeriodicUpdate()
+		// Start the periodic updates
+		rankingsUpdater.StartPeriodicUpdate(context.Background())
 	}()
 
 	// Setup and Start Server
