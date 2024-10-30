@@ -8,6 +8,7 @@ import {
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
+import { PlayerRankings } from "@/types/warcraftlogs/playerRankings";
 
 // Get global leaderboard
 export const getGlobalLeaderboard = async (limit: number = 100) => {
@@ -85,6 +86,27 @@ export const getDungeonLeaderboard = async (
     return data;
   } catch (error) {
     console.error("Error fetching dungeon leaderboard:", error);
+    throw error;
+  }
+};
+
+// Get player rankings
+export const getPlayerRankings = async (
+  characterName: string,
+  serverSlug: string,
+  serverRegion: string,
+  zoneID: number
+) => {
+  try {
+    const { data } = await api.get<PlayerRankings>(
+      `/warcraftlogs/character/ranking/player`,
+      {
+        params: { characterName, serverSlug, serverRegion, zoneID },
+      }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching player rankings:", error);
     throw error;
   }
 };

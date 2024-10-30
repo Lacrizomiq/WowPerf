@@ -9,6 +9,7 @@ import {
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
+import { PlayerRankings } from "@/types/warcraftlogs/playerRankings";
 
 // Hook for global leaderboard with required limit
 export const useGetGlobalLeaderboard = (limit: number) => {
@@ -60,5 +61,31 @@ export const useGetDungeonLeaderboard = (
     queryFn: () =>
       warcraftLogsApiService.getDungeonLeaderboard(encounterID, page),
     enabled: !!encounterID, // Only fetch if encounterID is provided
+  });
+};
+
+// Hook for player rankings
+export const useGetPlayerRankings = (
+  characterName: string,
+  serverSlug: string,
+  serverRegion: string,
+  zoneID: number
+) => {
+  return useQuery<PlayerRankings, Error>({
+    queryKey: [
+      "warcraftlogs-player-rankings",
+      characterName,
+      serverSlug,
+      serverRegion,
+      zoneID,
+    ],
+    queryFn: () =>
+      warcraftLogsApiService.getPlayerRankings(
+        characterName,
+        serverSlug,
+        serverRegion,
+        zoneID
+      ),
+    enabled: !!(characterName && serverSlug && serverRegion && zoneID), // Only fetch if all required parameters are provided
   });
 };
