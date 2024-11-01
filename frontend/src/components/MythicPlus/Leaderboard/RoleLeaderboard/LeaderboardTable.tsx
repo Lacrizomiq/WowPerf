@@ -28,7 +28,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
   const getClassHoverStyles = (className: string) => {
     const baseClass = getClassColor(className);
-    return `${baseClass} inline relative no-underline transition-all duration-200 hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-[-2px] hover:after:h-[2px] hover:after:w-[100%] hover:after:bg-current`;
+    return `${baseClass} inline relative no-underline transition-all duration-200 hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-[-1px] hover:after:h-[1px] hover:after:w-[100%] hover:after:bg-current`;
   };
 
   const handleCharacterUrl = (entry: RoleLeaderboardEntry): string => {

@@ -22,7 +22,7 @@ export const RoleLeaderboards: React.FC = () => {
   } = useGetRoleLeaderboard("tank", 10);
 
   return (
-    <div className="container mx-auto px-4 p-6">
+    <div className=" mx-auto px-8 py-6 bg-black">
       <p className="text-left text-xl font-bold">
         Data are updated every 24 hours.
       </p>
