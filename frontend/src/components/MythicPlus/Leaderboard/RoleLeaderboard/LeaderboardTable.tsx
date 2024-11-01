@@ -1,7 +1,9 @@
 import React from "react";
 import { RoleLeaderboardEntry } from "@/types/warcraftlogs/globalLeaderboard";
 import Link from "next/link";
-import { normalizeServerName } from "@/utils/serverNameUtils";
+import { buildCharacterUrl } from "@/utils/realmMappingUtility";
+import type { RegionType } from "@/utils/realmMappingUtility";
+import { realmService } from "@/utils/realmMappingUtility";
 
 interface LeaderboardTableProps {
   entries: RoleLeaderboardEntry[];
@@ -23,11 +25,38 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     return `${baseClass} inline relative no-underline transition-all duration-200 hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-[-2px] hover:after:h-[2px] hover:after:w-[100%] hover:after:bg-current`;
   };
 
-  const buildCharacterUrl = (entry: RoleLeaderboardEntry) => {
-    const region = entry.server_region.toLowerCase();
-    const realm = normalizeServerName(entry.server_name);
-    const name = entry.name.toLowerCase();
-    return `/character/${region}/${realm}/${name}`;
+  const handleCharacterUrl = (entry: RoleLeaderboardEntry): string => {
+    try {
+      // Trouver le realm par son nom
+      const realm = realmService.getRealmByName(entry.server_name);
+
+      if (!realm) {
+        console.warn(
+          `Unable to find realm for server name ${entry.server_name}`,
+          "Falling back to basic URL structure"
+        );
+        // Fallback à une URL basique si on ne trouve pas le realm
+        const region = entry.server_region.toLowerCase();
+        const name = entry.name.toLowerCase();
+        return `/character/${region}/${entry.server_name.toLowerCase()}/${name}`;
+      }
+
+      // Utiliser buildCharacterUrl avec l'ID trouvé
+      const url = buildCharacterUrl(
+        entry.name,
+        realm.id,
+        entry.server_region as RegionType
+      );
+
+      if (!url) {
+        throw new Error("Failed to build character URL");
+      }
+
+      return url;
+    } catch (error) {
+      console.error("Error building character URL:", error);
+      return "#";
+    }
   };
 
   return (
@@ -47,7 +76,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               <div className="flex flex-col">
                 <div>
                   <Link
-                    href={buildCharacterUrl(entry)}
+                    href={handleCharacterUrl(entry)}
                     className={getClassHoverStyles(entry.class)}
                   >
                     {entry.name}

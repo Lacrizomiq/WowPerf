@@ -23,22 +23,59 @@ query getDungeonLeaderboard($encounterId: Int!, $page: Int!) {
 }`
 
 const DungeonLeaderboardPlayerQuery = `
-query getDungeonLeaderboard($encounterId: Int!, $page: Int!) {
+query getDungeonLeaderboard(
+    $encounterId: Int!,
+    $page: Int!,
+    $serverRegion: String,
+		$serverSlug: String,
+		$className: String,
+		$specName: String
+) {
     worldData {
         encounter(id: $encounterId) {
             name
-            characterRankings(leaderboard: Any, page: $page)
+            characterRankings(
+							leaderboard: Any,
+							page: $page,
+							serverRegion: $serverRegion,
+							serverSlug: $serverSlug,
+							className: $className,
+							specName: $specName
+						)
         }
     }
 }`
 
+type LeaderboardParams struct {
+	EncounterID  int
+	Page         int
+	ServerRegion string
+	ServerSlug   string
+	ClassName    string
+	SpecName     string
+}
+
 // GetDungeonLeaderboardByPlayer returns the dungeon leaderboard for a given encounter, region and page
-func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, encounterID int, page int) (*playerLeaderboardModels.DungeonLogs, error) {
-	log.Printf("Getting dungeon leaderboard for encounter %d, page %d", encounterID, page)
+func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, params LeaderboardParams) (*playerLeaderboardModels.DungeonLogs, error) {
+	log.Printf("Getting dungeon leaderboard for encounter %d, page %d", params.EncounterID, params.Page)
 
 	variables := map[string]interface{}{
-		"encounterId": encounterID,
-		"page":        page,
+		"encounterId": params.EncounterID,
+		"page":        params.Page,
+	}
+
+	// add optional parameters if they are provided
+	if params.ServerRegion != "" {
+		variables["serverRegion"] = params.ServerRegion
+	}
+	if params.ServerSlug != "" {
+		variables["serverSlug"] = params.ServerSlug
+	}
+	if params.ClassName != "" {
+		variables["className"] = params.ClassName
+	}
+	if params.SpecName != "" {
+		variables["specName"] = params.SpecName
 	}
 
 	// make the request
@@ -80,7 +117,7 @@ func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, encount
 	// Verify if CharacterRankings is null or empty
 	if len(result.Data.WorldData.Encounter.CharacterRankings) == 0 {
 		return &playerLeaderboardModels.DungeonLogs{
-			Page:         page,
+			Page:         params.Page,
 			HasMorePages: false,
 			Count:        0,
 			Rankings:     make([]playerLeaderboardModels.Ranking, 0),
@@ -101,12 +138,6 @@ func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, encount
 		leaderboard.HasMorePages,
 		len(leaderboard.Rankings))
 
-	if leaderboard.Rankings != nil {
-		for i, ranking := range leaderboard.Rankings {
-			log.Printf("Ranking %d: Player %s, Class %s, Spec %s, Score %.2f",
-				i+1, ranking.Name, ranking.Class, ranking.Spec, ranking.Score)
-		}
-	}
 	return &leaderboard, nil
 }
 

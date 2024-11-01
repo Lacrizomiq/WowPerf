@@ -50,18 +50,18 @@ export const RoleLeaderboards: React.FC = () => {
           error={dpsError}
         />
         <RoleLeaderboardCard
-          role="tank"
-          title="Top Mythic+ Tanks"
-          data={tankData || []}
-          isLoading={isTankLoading}
-          error={tankError}
-        />
-        <RoleLeaderboardCard
           role="healer"
           title="Top Mythic+ Healers"
           data={healerData || []}
           isLoading={isHealerLoading}
           error={healerError}
+        />
+        <RoleLeaderboardCard
+          role="tank"
+          title="Top Mythic+ Tanks"
+          data={tankData || []}
+          isLoading={isTankLoading}
+          error={tankError}
         />
       </div>
     </div>

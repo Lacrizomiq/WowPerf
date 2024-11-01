@@ -20,6 +20,8 @@ func NewDungeonLeaderboardHandler(dungeonService *service.WarcraftLogsClientServ
 
 // GetDungeonLeaderboardByPlayer returns the dungeon leaderboard for a given encounter and page
 func (h *DungeonLeaderboardHandler) GetDungeonLeaderboardByPlayer(c *gin.Context) {
+
+	// Mandatory params
 	encounterID, err := strconv.Atoi(c.Query("encounterID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid encounter ID"})
@@ -32,8 +34,22 @@ func (h *DungeonLeaderboardHandler) GetDungeonLeaderboardByPlayer(c *gin.Context
 		page = 1
 	}
 
+	// Create the params
+	params := dungeons.LeaderboardParams{
+		EncounterID: encounterID,
+		Page:        page,
+		// Optional params
+		ServerRegion: c.Query("serverRegion"),
+		ServerSlug:   c.Query("serverSlug"),
+		ClassName:    c.Query("className"),
+		SpecName:     c.Query("specName"),
+	}
+
+	// Log the params for debugging
+	log.Printf("Fetching dungeon leaderboard for params: %+v", params)
+
 	// Get the dungeon leaderboard
-	leaderboard, err := dungeons.GetDungeonLeaderboardByPlayer(h.dungeonService, encounterID, page)
+	leaderboard, err := dungeons.GetDungeonLeaderboardByPlayer(h.dungeonService, params)
 	if err != nil {
 		log.Printf("Error getting dungeon leaderboard: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dungeon leaderboard"})
