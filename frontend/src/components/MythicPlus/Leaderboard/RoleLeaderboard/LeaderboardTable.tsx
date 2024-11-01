@@ -4,6 +4,12 @@ import Link from "next/link";
 import { buildCharacterUrl } from "@/utils/realmMappingUtility";
 import type { RegionType } from "@/utils/realmMappingUtility";
 import { realmService } from "@/utils/realmMappingUtility";
+import {
+  getClassIcon,
+  getSpecIcon,
+  normalizeWowName,
+} from "@/utils/classandspecicons";
+import Image from "next/image";
 
 interface LeaderboardTableProps {
   entries: RoleLeaderboardEntry[];
@@ -27,7 +33,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
   const handleCharacterUrl = (entry: RoleLeaderboardEntry): string => {
     try {
-      // Trouver le realm par son nom
+      // find the realm by its name
       const realm = realmService.getRealmByName(entry.server_name);
 
       if (!realm) {
@@ -35,13 +41,13 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
           `Unable to find realm for server name ${entry.server_name}`,
           "Falling back to basic URL structure"
         );
-        // Fallback à une URL basique si on ne trouve pas le realm
+        // fallback to basic URL structure if the realm is not found
         const region = entry.server_region.toLowerCase();
         const name = entry.name.toLowerCase();
         return `/character/${region}/${entry.server_name.toLowerCase()}/${name}`;
       }
 
-      // Utiliser buildCharacterUrl avec l'ID trouvé
+      // use buildCharacterUrl with the found ID
       const url = buildCharacterUrl(
         entry.name,
         realm.id,
@@ -56,6 +62,32 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
     } catch (error) {
       console.error("Error building character URL:", error);
       return "#";
+    }
+  };
+
+  const renderSpecIcon = (entry: RoleLeaderboardEntry) => {
+    try {
+      if (!entry.class || !entry.spec) return null;
+
+      const normalizedClass = normalizeWowName(entry.class);
+      const normalizedSpec = normalizeWowName(entry.spec);
+      const specIconUrl = getSpecIcon(normalizedClass, normalizedSpec);
+
+      if (!specIconUrl) return null;
+
+      return (
+        <Image
+          src={specIconUrl}
+          alt={`${entry.spec} ${entry.class}`}
+          width={24}
+          height={24}
+          className="inline-block rounded-sm"
+          unoptimized
+        />
+      );
+    } catch (error) {
+      console.error("Error rendering spec icon:", error);
+      return null;
     }
   };
 
@@ -74,20 +106,23 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             <td className="p-2 text-center">{entry.rank}</td>
             <td className="py-2">
               <div className="flex flex-col">
-                <div>
-                  <Link
-                    href={handleCharacterUrl(entry)}
-                    className={getClassHoverStyles(entry.class)}
-                  >
-                    {entry.name}
-                  </Link>
+                <div className="flex items-center">
+                  <div className="mr-2">{renderSpecIcon(entry)}</div>
+                  <div className="flex flex-col">
+                    <Link
+                      href={handleCharacterUrl(entry)}
+                      className={getClassHoverStyles(entry.class)}
+                    >
+                      {entry.name}
+                    </Link>
+                    <span className="text-xs text-gray-400">
+                      {entry.server_name} ({entry.server_region})
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-400">
-                  {entry.server_name} ({entry.server_region})
-                </span>
               </div>
             </td>
-            <td className="text-right">{entry.total_score.toFixed(2)}</td>
+            <td className="text-right">{entry.total_score}</td>
           </tr>
         ))}
       </tbody>
