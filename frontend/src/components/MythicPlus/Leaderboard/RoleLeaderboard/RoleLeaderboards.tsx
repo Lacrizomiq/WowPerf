@@ -23,24 +23,6 @@ export const RoleLeaderboards: React.FC = () => {
 
   return (
     <div className=" mx-auto px-8 py-6 bg-black">
-      <p className="text-left text-xl font-bold">
-        Data are updated every 24 hours.
-      </p>
-      <p className="text-left text-sm">
-        Due to technical limitations, the data is not updated in real-time and
-        only includes the very best players of each role
-      </p>
-      <p className="text-left text-sm mb-6">
-        The data is provided by{" "}
-        <a
-          href="https://www.warcraftlogs.com/about"
-          target="_blank"
-          className="text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          Warcraft Logs
-        </a>{" "}
-        , check them out for more detailed data.
-      </p>
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-[1400px] mx-auto">
         <RoleLeaderboardCard
           role="dps"
@@ -63,6 +45,12 @@ export const RoleLeaderboards: React.FC = () => {
           isLoading={isTankLoading}
           error={tankError}
         />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-left text-xl font-bold">
+          Leaderboard for each dungeon
+        </h2>
       </div>
     </div>
   );

@@ -54,12 +54,26 @@ export const useGetSpecLeaderboard = (
 // Hook for the dungeon leaderboard
 export const useGetDungeonLeaderboard = (
   encounterID: number,
-  page: number = 1
+  page: number = 1,
+  options?: {
+    serverSlug?: string;
+    serverRegion?: string;
+    className?: WowClass;
+    specName?: string;
+  }
 ) => {
   return useQuery<DungeonLeaderboardResponse, Error>({
-    queryKey: ["warcraftlogs-dungeon-leaderboard", encounterID, page],
+    queryKey: [
+      "warcraftlogs-dungeon-leaderboard",
+      encounterID,
+      page,
+      options?.serverRegion,
+      options?.className,
+      options?.specName,
+      options?.serverSlug,
+    ],
     queryFn: () =>
-      warcraftLogsApiService.getDungeonLeaderboard(encounterID, page),
+      warcraftLogsApiService.getDungeonLeaderboard(encounterID, page, options),
     enabled: !!encounterID, // Only fetch if encounterID is provided
   });
 };

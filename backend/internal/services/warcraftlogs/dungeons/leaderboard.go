@@ -84,9 +84,6 @@ func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, params 
 		return nil, fmt.Errorf("failed to get dungeon leaderboard: %w", err)
 	}
 
-	// log raw response for debugging
-	log.Printf("Raw response: %s", string(response))
-
 	// Check for GraphQL errors
 	var errorResponse struct {
 		Errors []struct {
@@ -129,14 +126,6 @@ func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, params 
 	if err := json.Unmarshal(result.Data.WorldData.Encounter.CharacterRankings, &leaderboard); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal character rankings: %w", err)
 	}
-
-	// log the leaderboard
-	log.Printf("Leaderboard for %s: Page %d, Count %d, HasMore %v, Rankings: %d",
-		result.Data.WorldData.Encounter.Name,
-		leaderboard.Page,
-		leaderboard.Count,
-		leaderboard.HasMorePages,
-		len(leaderboard.Rankings))
 
 	return &leaderboard, nil
 }

@@ -76,12 +76,24 @@ export const getSpecLeaderboard = async (
 // Get dungeon leaderboard
 export const getDungeonLeaderboard = async (
   encounterID: number,
-  page: number = 1
+  page: number = 1,
+  options?: {
+    serverSlug?: string;
+    serverRegion?: string;
+    className?: WowClass;
+    specName?: string;
+  }
 ) => {
   try {
     const { data } = await api.get<DungeonLeaderboardResponse>(
-      `/warcraftlogs/mythicplus/rankings/dungeon`,
-      { params: { encounterID, page } }
+      `/warcraftlogs/mythicplus/rankings/dungeon/player`,
+      {
+        params: {
+          encounterID,
+          page,
+          ...options,
+        },
+      }
     );
     return data;
   } catch (error) {
