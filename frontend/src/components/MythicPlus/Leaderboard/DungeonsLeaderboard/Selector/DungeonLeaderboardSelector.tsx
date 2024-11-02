@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Dungeon } from "@/types/mythicPlusRuns";
 
-// Mapping des dungeons avec leurs encounterID
+// Mapping of dungeons to their encounterID
 const DUNGEON_ENCOUNTER_MAPPING: Record<string, { id: number; name: string }> =
   {
     "arakara-city-of-echoes": {

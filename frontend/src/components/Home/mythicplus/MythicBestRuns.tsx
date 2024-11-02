@@ -56,7 +56,7 @@ const MythicPlusBestRuns: React.FC = () => {
               page={page}
             />
 
-            {/* Pagination pourrait être ajoutée ici si nécessaire */}
+            {/* Pagination to be added here if needed */}
           </div>
         </div>
       </div>

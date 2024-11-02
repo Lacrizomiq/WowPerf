@@ -63,7 +63,7 @@ const DungeonLeaderboard = () => {
   };
 
   return (
-    <div className="p-4 bg-black">
+    <div className="p-4 bg-black w-full h-full mb-12">
       <div className="flex flex-wrap gap-4 mb-6">
         <DungeonLeaderboardSelector
           dungeons={dungeonData?.dungeons || []}

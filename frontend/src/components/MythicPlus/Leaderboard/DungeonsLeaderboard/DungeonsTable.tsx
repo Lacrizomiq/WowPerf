@@ -37,7 +37,7 @@ const DungeonLeaderboardTable: React.FC<DungeonLeaderboardTableProps> = ({
   };
 
   const getAffixIcon = (affixId: number) => {
-    // TODO: Implémenter la logique pour obtenir l'icône d'affix si nécessaire
+    // TODO: Implement the logic to get the affix icon if needed
     return `https://wow.zamimg.com/images/wow/icons/large/achievement_boss_archaedas.jpg`;
   };
 

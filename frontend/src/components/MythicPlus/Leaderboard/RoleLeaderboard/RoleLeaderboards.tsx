@@ -46,12 +46,6 @@ export const RoleLeaderboards: React.FC = () => {
           error={tankError}
         />
       </div>
-
-      <div className="mt-6">
-        <h2 className="text-left text-xl font-bold">
-          Leaderboard for each dungeon
-        </h2>
-      </div>
     </div>
   );
 };

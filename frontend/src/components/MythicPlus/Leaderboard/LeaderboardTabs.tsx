@@ -23,7 +23,7 @@ const LeaderboardTabs = () => {
   };
 
   return (
-    <div className="mx-auto px-8 py-6 bg-black">
+    <div className="mx-auto px-8 py-6 bg-black w-full h-full">
       <div className="mb-6">
         <div className="flex space-x-2 border-b border-gray-700">
           {tabs.map((tab) => (

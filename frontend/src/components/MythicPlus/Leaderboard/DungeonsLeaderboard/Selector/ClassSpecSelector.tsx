@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import type { WowClass } from "@/types/warcraftlogs/dungeonRankings";
 import type { ClassIconsMapping } from "@/utils/classandspecicons";
+import { ChevronsUpDown } from "lucide-react";
 
 interface ClassSpecSelectorProps {
   selectedClass: WowClass | null;
@@ -27,7 +28,7 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
       .replace(/([A-Z])/g, "-$1")
       .toLowerCase()
       .replace(/^-/, "");
-    return `class-color--${formattedClass}`;
+    return `class-color--${formattedClass} font-bold`;
   };
 
   useEffect(() => {
@@ -45,8 +46,11 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleClassHover = (className: string) => {
-    setActiveClass(className);
+  const handleClassClick = (className: WowClass) => {
+    onClassChange(className);
+    onSpecChange(null);
+    setIsOpen(false);
+    setActiveClass(null);
   };
 
   const handleSpecClick = (className: WowClass, specName: string) => {
@@ -65,7 +69,7 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="w-[200px] h-10 px-3 bg-gradient-blue text-left text-white rounded-lg flex items-center justify-between"
+        className="w-[200px] h-9 px-3 bg-gradient-blue text-left text-white rounded-lg flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">
@@ -83,7 +87,9 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
             {getCurrentSelection()}
           </span>
         </div>
-        <span>▶</span>
+        <span>
+          <ChevronsUpDown className="w-3 h-3 text-gray-300" />
+        </span>
       </button>
 
       {isOpen && (
@@ -98,17 +104,19 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
           >
             <span className="w-6"></span>
             <span>All Classes</span>
-            <span className="ml-auto">▶</span>
           </div>
 
           {Object.entries(classMapping).map(([className, data]) => (
             <div
               key={className}
               className="relative"
-              onMouseEnter={() => handleClassHover(className)}
-              onMouseLeave={() => !selectedClass && setActiveClass(null)}
+              onMouseEnter={() => setActiveClass(className)}
+              onMouseLeave={() => setActiveClass(null)}
             >
-              <div className="p-2 hover:bg-gradient-purple cursor-pointer flex items-center gap-2">
+              <div
+                className="p-2 hover:bg-gray-800 cursor-pointer flex items-center gap-2"
+                onClick={() => handleClassClick(className as WowClass)}
+              >
                 <Image
                   src={data.classIcon}
                   alt={className}
@@ -126,10 +134,11 @@ const ClassSpecSelector: React.FC<ClassSpecSelectorProps> = ({
                   {Object.entries(data.spec).map(([specName, iconUrl]) => (
                     <div
                       key={specName}
-                      className="p-2 hover:bg-gradient-purple cursor-pointer flex items-center gap-2"
-                      onClick={() =>
-                        handleSpecClick(className as WowClass, specName)
-                      }
+                      className="p-2 hover:bg-gray-800 cursor-pointer flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Stop propagation to avoid closing the dropdown
+                        handleSpecClick(className as WowClass, specName);
+                      }}
                     >
                       <Image
                         src={iconUrl}
