@@ -29,11 +29,11 @@ export const RoleLeaderboardCard: React.FC<RoleLeaderboardCardProps> = ({
   return (
     <Card className="w-full h-full bg-deep-blue rounded-lg glow-effect">
       <CardHeader>
-        <CardTitle className="text-xl font-bold">{title}</CardTitle>
+        <CardTitle className="text-xl font-bold text-center">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="text-center">Loading...</div>
         ) : (
           <>
             <LeaderboardTable entries={data} />

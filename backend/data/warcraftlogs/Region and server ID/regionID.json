@@ -1,0 +1,6438 @@
+"query {
+  worldData {
+   regions {
+		name
+		slug
+		subregions {
+			id
+			name
+			__typename
+			servers {
+				data {
+					id
+					name
+					slug
+					normalizedName
+					subregion {
+						id
+						region {
+							slug
+						}
+					}
+				}
+			}
+		}
+	}
+  }
+}"
+
+{
+	"data": {
+		"worldData": {
+			"regions": [
+				{
+					"name": "United States",
+					"slug": "US",
+					"subregions": [
+						{
+							"id": 1,
+							"name": "United States",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 1,
+										"name": "Aegwynn",
+										"slug": "aegwynn",
+										"normalizedName": "Aegwynn",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 2,
+										"name": "Aerie Peak",
+										"slug": "aerie-peak",
+										"normalizedName": "AeriePeak",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 3,
+										"name": "Agamaggan",
+										"slug": "agamaggan",
+										"normalizedName": "Agamaggan",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 4,
+										"name": "Aggramar",
+										"slug": "aggramar",
+										"normalizedName": "Aggramar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 5,
+										"name": "Akama",
+										"slug": "akama",
+										"normalizedName": "Akama",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 6,
+										"name": "Alexstrasza",
+										"slug": "alexstrasza",
+										"normalizedName": "Alexstrasza",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 7,
+										"name": "Alleria",
+										"slug": "alleria",
+										"normalizedName": "Alleria",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 8,
+										"name": "Altar of Storms",
+										"slug": "altar-of-storms",
+										"normalizedName": "AltarofStorms",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 9,
+										"name": "Alterac Mountains",
+										"slug": "alterac-mountains",
+										"normalizedName": "AlteracMountains",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 11,
+										"name": "Andorhal",
+										"slug": "andorhal",
+										"normalizedName": "Andorhal",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 12,
+										"name": "Anetheron",
+										"slug": "anetheron",
+										"normalizedName": "Anetheron",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 13,
+										"name": "Antonidas",
+										"slug": "antonidas",
+										"normalizedName": "Antonidas",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 14,
+										"name": "Anub'arak",
+										"slug": "anubarak",
+										"normalizedName": "Anub'arak",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 15,
+										"name": "Anvilmar",
+										"slug": "anvilmar",
+										"normalizedName": "Anvilmar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 16,
+										"name": "Arathor",
+										"slug": "arathor",
+										"normalizedName": "Arathor",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 17,
+										"name": "Archimonde",
+										"slug": "archimonde",
+										"normalizedName": "Archimonde",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 18,
+										"name": "Area 52",
+										"slug": "area-52",
+										"normalizedName": "Area52",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 19,
+										"name": "Argent Dawn",
+										"slug": "argent-dawn",
+										"normalizedName": "ArgentDawn",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 20,
+										"name": "Arthas",
+										"slug": "arthas",
+										"normalizedName": "Arthas",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 21,
+										"name": "Arygos",
+										"slug": "arygos",
+										"normalizedName": "Arygos",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 22,
+										"name": "Auchindoun",
+										"slug": "auchindoun",
+										"normalizedName": "Auchindoun",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 23,
+										"name": "Azgalor",
+										"slug": "azgalor",
+										"normalizedName": "Azgalor",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 24,
+										"name": "Azjol-Nerub",
+										"slug": "azjolnerub",
+										"normalizedName": "AzjolNerub",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 25,
+										"name": "Azralon",
+										"slug": "azralon",
+										"normalizedName": "Azralon",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 26,
+										"name": "Azshara",
+										"slug": "azshara",
+										"normalizedName": "Azshara",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 27,
+										"name": "Azuremyst",
+										"slug": "azuremyst",
+										"normalizedName": "Azuremyst",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 28,
+										"name": "Baelgun",
+										"slug": "baelgun",
+										"normalizedName": "Baelgun",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 29,
+										"name": "Balnazzar",
+										"slug": "balnazzar",
+										"normalizedName": "Balnazzar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 31,
+										"name": "Black Dragonflight",
+										"slug": "black-dragonflight",
+										"normalizedName": "BlackDragonflight",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 32,
+										"name": "Blackhand",
+										"slug": "blackhand",
+										"normalizedName": "Blackhand",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 33,
+										"name": "Blackrock",
+										"slug": "blackrock",
+										"normalizedName": "Blackrock",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 34,
+										"name": "Blackwater Raiders",
+										"slug": "blackwater-raiders",
+										"normalizedName": "BlackwaterRaiders",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 35,
+										"name": "Blackwing Lair",
+										"slug": "blackwing-lair",
+										"normalizedName": "BlackwingLair",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 36,
+										"name": "Blade's Edge",
+										"slug": "blades-edge",
+										"normalizedName": "Blade'sEdge",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 37,
+										"name": "Bladefist",
+										"slug": "bladefist",
+										"normalizedName": "Bladefist",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 38,
+										"name": "Bleeding Hollow",
+										"slug": "bleeding-hollow",
+										"normalizedName": "BleedingHollow",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 39,
+										"name": "Blood Furnace",
+										"slug": "blood-furnace",
+										"normalizedName": "BloodFurnace",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 40,
+										"name": "Bloodhoof",
+										"slug": "bloodhoof",
+										"normalizedName": "Bloodhoof",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 41,
+										"name": "Bloodscalp",
+										"slug": "bloodscalp",
+										"normalizedName": "Bloodscalp",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 42,
+										"name": "Bonechewer",
+										"slug": "bonechewer",
+										"normalizedName": "Bonechewer",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 43,
+										"name": "Borean Tundra",
+										"slug": "borean-tundra",
+										"normalizedName": "BoreanTundra",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 44,
+										"name": "Boulderfist",
+										"slug": "boulderfist",
+										"normalizedName": "Boulderfist",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 45,
+										"name": "Bronzebeard",
+										"slug": "bronzebeard",
+										"normalizedName": "Bronzebeard",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 46,
+										"name": "Burning Blade",
+										"slug": "burning-blade",
+										"normalizedName": "BurningBlade",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 47,
+										"name": "Burning Legion",
+										"slug": "burning-legion",
+										"normalizedName": "BurningLegion",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 49,
+										"name": "Cairne",
+										"slug": "cairne",
+										"normalizedName": "Cairne",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 50,
+										"name": "Cenarion Circle",
+										"slug": "cenarion-circle",
+										"normalizedName": "CenarionCircle",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 51,
+										"name": "Cenarius",
+										"slug": "cenarius",
+										"normalizedName": "Cenarius",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 52,
+										"name": "Cho'gall",
+										"slug": "chogall",
+										"normalizedName": "Cho'gall",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 53,
+										"name": "Chromaggus",
+										"slug": "chromaggus",
+										"normalizedName": "Chromaggus",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 54,
+										"name": "Coilfang",
+										"slug": "coilfang",
+										"normalizedName": "Coilfang",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 55,
+										"name": "Crushridge",
+										"slug": "crushridge",
+										"normalizedName": "Crushridge",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 56,
+										"name": "Daggerspine",
+										"slug": "daggerspine",
+										"normalizedName": "Daggerspine",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 57,
+										"name": "Dalaran",
+										"slug": "dalaran",
+										"normalizedName": "Dalaran",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 58,
+										"name": "Dalvengyr",
+										"slug": "dalvengyr",
+										"normalizedName": "Dalvengyr",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 59,
+										"name": "Dark Iron",
+										"slug": "dark-iron",
+										"normalizedName": "DarkIron",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 60,
+										"name": "Darkspear",
+										"slug": "darkspear",
+										"normalizedName": "Darkspear",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 61,
+										"name": "Darrowmere",
+										"slug": "darrowmere",
+										"normalizedName": "Darrowmere",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 63,
+										"name": "Dawnbringer",
+										"slug": "dawnbringer",
+										"normalizedName": "Dawnbringer",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 64,
+										"name": "Deathwing",
+										"slug": "deathwing",
+										"normalizedName": "Deathwing",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 65,
+										"name": "Demon Soul",
+										"slug": "demon-soul",
+										"normalizedName": "DemonSoul",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 66,
+										"name": "Dentarg",
+										"slug": "dentarg",
+										"normalizedName": "Dentarg",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 67,
+										"name": "Destromath",
+										"slug": "destromath",
+										"normalizedName": "Destromath",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 68,
+										"name": "Dethecus",
+										"slug": "dethecus",
+										"normalizedName": "Dethecus",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 69,
+										"name": "Detheroc",
+										"slug": "detheroc",
+										"normalizedName": "Detheroc",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 70,
+										"name": "Doomhammer",
+										"slug": "doomhammer",
+										"normalizedName": "Doomhammer",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 71,
+										"name": "Draenor",
+										"slug": "draenor",
+										"normalizedName": "Draenor",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 72,
+										"name": "Dragonblight",
+										"slug": "dragonblight",
+										"normalizedName": "Dragonblight",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 73,
+										"name": "Dragonmaw",
+										"slug": "dragonmaw",
+										"normalizedName": "Dragonmaw",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 74,
+										"name": "Drak'Tharon",
+										"slug": "draktharon",
+										"normalizedName": "Drak'Tharon",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 75,
+										"name": "Drak'thul",
+										"slug": "drakthul",
+										"normalizedName": "Drak'thul",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 76,
+										"name": "Draka",
+										"slug": "draka",
+										"normalizedName": "Draka",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 77,
+										"name": "Drakkari",
+										"slug": "drakkari",
+										"normalizedName": "Drakkari",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 79,
+										"name": "Drenden",
+										"slug": "drenden",
+										"normalizedName": "Drenden",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 80,
+										"name": "Dunemaul",
+										"slug": "dunemaul",
+										"normalizedName": "Dunemaul",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 81,
+										"name": "Durotan",
+										"slug": "durotan",
+										"normalizedName": "Durotan",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 82,
+										"name": "Duskwood",
+										"slug": "duskwood",
+										"normalizedName": "Duskwood",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 83,
+										"name": "Earthen Ring",
+										"slug": "earthen-ring",
+										"normalizedName": "EarthenRing",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 84,
+										"name": "Echo Isles",
+										"slug": "echo-isles",
+										"normalizedName": "EchoIsles",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 85,
+										"name": "Eitrigg",
+										"slug": "eitrigg",
+										"normalizedName": "Eitrigg",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 86,
+										"name": "Eldre'Thalas",
+										"slug": "eldrethalas",
+										"normalizedName": "Eldre'Thalas",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 87,
+										"name": "Elune",
+										"slug": "elune",
+										"normalizedName": "Elune",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 88,
+										"name": "Emerald Dream",
+										"slug": "emerald-dream",
+										"normalizedName": "EmeraldDream",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 89,
+										"name": "Eonar",
+										"slug": "eonar",
+										"normalizedName": "Eonar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 90,
+										"name": "Eredar",
+										"slug": "eredar",
+										"normalizedName": "Eredar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 91,
+										"name": "Executus",
+										"slug": "executus",
+										"normalizedName": "Executus",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 92,
+										"name": "Exodar",
+										"slug": "exodar",
+										"normalizedName": "Exodar",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 93,
+										"name": "Farstriders",
+										"slug": "farstriders",
+										"normalizedName": "Farstriders",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 94,
+										"name": "Feathermoon",
+										"slug": "feathermoon",
+										"normalizedName": "Feathermoon",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 95,
+										"name": "Fenris",
+										"slug": "fenris",
+										"normalizedName": "Fenris",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 96,
+										"name": "Firetree",
+										"slug": "firetree",
+										"normalizedName": "Firetree",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 97,
+										"name": "Fizzcrank",
+										"slug": "fizzcrank",
+										"normalizedName": "Fizzcrank",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 98,
+										"name": "Frostmane",
+										"slug": "frostmane",
+										"normalizedName": "Frostmane",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 100,
+										"name": "Frostwolf",
+										"slug": "frostwolf",
+										"normalizedName": "Frostwolf",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 101,
+										"name": "Galakrond",
+										"slug": "galakrond",
+										"normalizedName": "Galakrond",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 102,
+										"name": "Gallywix",
+										"slug": "gallywix",
+										"normalizedName": "Gallywix",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 103,
+										"name": "Garithos",
+										"slug": "garithos",
+										"normalizedName": "Garithos",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 104,
+										"name": "Garona",
+										"slug": "garona",
+										"normalizedName": "Garona",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 105,
+										"name": "Garrosh",
+										"slug": "garrosh",
+										"normalizedName": "Garrosh",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 106,
+										"name": "Ghostlands",
+										"slug": "ghostlands",
+										"normalizedName": "Ghostlands",
+										"subregion": {
+											"id": 1,
+											"region": {
+												"slug": "US"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 12,
+							"name": "Oceanic",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 10,
+										"name": "Aman'Thul",
+										"slug": "amanthul",
+										"normalizedName": "Aman'Thul",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 30,
+										"name": "Barthilas",
+										"slug": "barthilas",
+										"normalizedName": "Barthilas",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 48,
+										"name": "Caelestrasz",
+										"slug": "caelestrasz",
+										"normalizedName": "Caelestrasz",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 62,
+										"name": "Dath'Remar",
+										"slug": "dathremar",
+										"normalizedName": "Dath'Remar",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 78,
+										"name": "Dreadmaul",
+										"slug": "dreadmaul",
+										"normalizedName": "Dreadmaul",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 99,
+										"name": "Frostmourne",
+										"slug": "frostmourne",
+										"normalizedName": "Frostmourne",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 115,
+										"name": "Gundrak",
+										"slug": "gundrak",
+										"normalizedName": "Gundrak",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 125,
+										"name": "Jubei'Thos",
+										"slug": "jubeithos",
+										"normalizedName": "Jubei'Thos",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 132,
+										"name": "Khaz'goroth",
+										"slug": "khazgoroth",
+										"normalizedName": "Khaz'goroth",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 162,
+										"name": "Nagrand",
+										"slug": "nagrand",
+										"normalizedName": "Nagrand",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 183,
+										"name": "Saurfang",
+										"slug": "saurfang",
+										"normalizedName": "Saurfang",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									},
+									{
+										"id": 213,
+										"name": "Thaurissan",
+										"slug": "thaurissan",
+										"normalizedName": "Thaurissan",
+										"subregion": {
+											"id": 12,
+											"region": {
+												"slug": "US"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Europe",
+					"slug": "EU",
+					"subregions": [
+						{
+							"id": 2,
+							"name": "English",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 247,
+										"name": "Aerie Peak",
+										"slug": "aerie-peak",
+										"normalizedName": "AeriePeak",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 248,
+										"name": "Agamaggan",
+										"slug": "agamaggan",
+										"normalizedName": "Agamaggan",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 249,
+										"name": "Aggramar",
+										"slug": "aggramar",
+										"normalizedName": "Aggramar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 250,
+										"name": "Ahn'Qiraj",
+										"slug": "ahnqiraj",
+										"normalizedName": "Ahn'Qiraj",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 251,
+										"name": "Al'Akir",
+										"slug": "alakir",
+										"normalizedName": "Al'Akir",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 252,
+										"name": "Alonsus",
+										"slug": "alonsus",
+										"normalizedName": "Alonsus",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 253,
+										"name": "Anachronos",
+										"slug": "anachronos",
+										"normalizedName": "Anachronos",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 254,
+										"name": "Arathor",
+										"slug": "arathor",
+										"normalizedName": "Arathor",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 255,
+										"name": "Argent Dawn",
+										"slug": "argent-dawn",
+										"normalizedName": "ArgentDawn",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 256,
+										"name": "Aszune",
+										"slug": "aszune",
+										"normalizedName": "Aszune",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 257,
+										"name": "Auchindoun",
+										"slug": "auchindoun",
+										"normalizedName": "Auchindoun",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 258,
+										"name": "Azjol-Nerub",
+										"slug": "azjolnerub",
+										"normalizedName": "AzjolNerub",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 259,
+										"name": "Azuremyst",
+										"slug": "azuremyst",
+										"normalizedName": "Azuremyst",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 260,
+										"name": "Balnazzar",
+										"slug": "balnazzar",
+										"normalizedName": "Balnazzar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 261,
+										"name": "Blade's Edge",
+										"slug": "blades-edge",
+										"normalizedName": "Blade'sEdge",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 262,
+										"name": "Bladefist",
+										"slug": "bladefist",
+										"normalizedName": "Bladefist",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 263,
+										"name": "Bloodfeather",
+										"slug": "bloodfeather",
+										"normalizedName": "Bloodfeather",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 264,
+										"name": "Bloodhoof",
+										"slug": "bloodhoof",
+										"normalizedName": "Bloodhoof",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 265,
+										"name": "Bloodscalp",
+										"slug": "bloodscalp",
+										"normalizedName": "Bloodscalp",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 266,
+										"name": "Boulderfist",
+										"slug": "boulderfist",
+										"normalizedName": "Boulderfist",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 267,
+										"name": "Bronze Dragonflight",
+										"slug": "bronze-dragonflight",
+										"normalizedName": "BronzeDragonflight",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 268,
+										"name": "Bronzebeard",
+										"slug": "bronzebeard",
+										"normalizedName": "Bronzebeard",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 269,
+										"name": "Burning Blade",
+										"slug": "burning-blade",
+										"normalizedName": "BurningBlade",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 270,
+										"name": "Burning Legion",
+										"slug": "burning-legion",
+										"normalizedName": "BurningLegion",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 271,
+										"name": "Burning Steppes",
+										"slug": "burning-steppes",
+										"normalizedName": "BurningSteppes",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 272,
+										"name": "Chamber of Aspects",
+										"slug": "chamber-of-aspects",
+										"normalizedName": "ChamberofAspects",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 273,
+										"name": "Chromaggus",
+										"slug": "chromaggus",
+										"normalizedName": "Chromaggus",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 274,
+										"name": "Crushridge",
+										"slug": "crushridge",
+										"normalizedName": "Crushridge",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 275,
+										"name": "Daggerspine",
+										"slug": "daggerspine",
+										"normalizedName": "Daggerspine",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 276,
+										"name": "Darkmoon Faire",
+										"slug": "darkmoon-faire",
+										"normalizedName": "DarkmoonFaire",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 277,
+										"name": "Darksorrow",
+										"slug": "darksorrow",
+										"normalizedName": "Darksorrow",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 278,
+										"name": "Darkspear",
+										"slug": "darkspear",
+										"normalizedName": "Darkspear",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 279,
+										"name": "Deathwing",
+										"slug": "deathwing",
+										"normalizedName": "Deathwing",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 280,
+										"name": "Defias Brotherhood",
+										"slug": "defias-brotherhood",
+										"normalizedName": "DefiasBrotherhood",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 281,
+										"name": "Dentarg",
+										"slug": "dentarg",
+										"normalizedName": "Dentarg",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 282,
+										"name": "Doomhammer",
+										"slug": "doomhammer",
+										"normalizedName": "Doomhammer",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 283,
+										"name": "Draenor",
+										"slug": "draenor",
+										"normalizedName": "Draenor",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 284,
+										"name": "Dragonblight",
+										"slug": "dragonblight",
+										"normalizedName": "Dragonblight",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 285,
+										"name": "Dragonmaw",
+										"slug": "dragonmaw",
+										"normalizedName": "Dragonmaw",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 286,
+										"name": "Drak'thul",
+										"slug": "drakthul",
+										"normalizedName": "Drak'thul",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 287,
+										"name": "Dunemaul",
+										"slug": "dunemaul",
+										"normalizedName": "Dunemaul",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 288,
+										"name": "Earthen Ring",
+										"slug": "earthen-ring",
+										"normalizedName": "EarthenRing",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 289,
+										"name": "Emerald Dream",
+										"slug": "emerald-dream",
+										"normalizedName": "EmeraldDream",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 290,
+										"name": "Emeriss",
+										"slug": "emeriss",
+										"normalizedName": "Emeriss",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 291,
+										"name": "Eonar",
+										"slug": "eonar",
+										"normalizedName": "Eonar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 292,
+										"name": "Executus",
+										"slug": "executus",
+										"normalizedName": "Executus",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 293,
+										"name": "Frostmane",
+										"slug": "frostmane",
+										"normalizedName": "Frostmane",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 294,
+										"name": "Frostwhisper",
+										"slug": "frostwhisper",
+										"normalizedName": "Frostwhisper",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 295,
+										"name": "Genjuros",
+										"slug": "genjuros",
+										"normalizedName": "Genjuros",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 296,
+										"name": "Ghostlands",
+										"slug": "ghostlands",
+										"normalizedName": "Ghostlands",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 297,
+										"name": "Grim Batol",
+										"slug": "grim-batol",
+										"normalizedName": "GrimBatol",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 298,
+										"name": "Hakkar",
+										"slug": "hakkar",
+										"normalizedName": "Hakkar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 299,
+										"name": "Haomarush",
+										"slug": "haomarush",
+										"normalizedName": "Haomarush",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 300,
+										"name": "Hellfire",
+										"slug": "hellfire",
+										"normalizedName": "Hellfire",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 301,
+										"name": "Hellscream",
+										"slug": "hellscream",
+										"normalizedName": "Hellscream",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 302,
+										"name": "Jaedenar",
+										"slug": "jaedenar",
+										"normalizedName": "Jaedenar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 303,
+										"name": "Karazhan",
+										"slug": "karazhan",
+										"normalizedName": "Karazhan",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 304,
+										"name": "Kazzak",
+										"slug": "kazzak",
+										"normalizedName": "Kazzak",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 305,
+										"name": "Khadgar",
+										"slug": "khadgar",
+										"normalizedName": "Khadgar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 306,
+										"name": "Kilrogg",
+										"slug": "kilrogg",
+										"normalizedName": "Kilrogg",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 307,
+										"name": "Kor'gall",
+										"slug": "korgall",
+										"normalizedName": "Kor'gall",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 308,
+										"name": "Kul Tiras",
+										"slug": "kul-tiras",
+										"normalizedName": "KulTiras",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 309,
+										"name": "Laughing Skull",
+										"slug": "laughing-skull",
+										"normalizedName": "LaughingSkull",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 310,
+										"name": "Lightbringer",
+										"slug": "lightbringer",
+										"normalizedName": "Lightbringer",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 311,
+										"name": "Lightning's Blade",
+										"slug": "lightnings-blade",
+										"normalizedName": "Lightning'sBlade",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 312,
+										"name": "Magtheridon",
+										"slug": "magtheridon",
+										"normalizedName": "Magtheridon",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 313,
+										"name": "Mazrigos",
+										"slug": "mazrigos",
+										"normalizedName": "Mazrigos",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 314,
+										"name": "Moonglade",
+										"slug": "moonglade",
+										"normalizedName": "Moonglade",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 315,
+										"name": "Nagrand",
+										"slug": "nagrand",
+										"normalizedName": "Nagrand",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 316,
+										"name": "Neptulon",
+										"slug": "neptulon",
+										"normalizedName": "Neptulon",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 317,
+										"name": "Nordrassil",
+										"slug": "nordrassil",
+										"normalizedName": "Nordrassil",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 318,
+										"name": "Outland",
+										"slug": "outland",
+										"normalizedName": "Outland",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 319,
+										"name": "Quel'Thalas",
+										"slug": "quelthalas",
+										"normalizedName": "Quel'Thalas",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 320,
+										"name": "Ragnaros",
+										"slug": "ragnaros",
+										"normalizedName": "Ragnaros",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 321,
+										"name": "Ravencrest",
+										"slug": "ravencrest",
+										"normalizedName": "Ravencrest",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 322,
+										"name": "Ravenholdt",
+										"slug": "ravenholdt",
+										"normalizedName": "Ravenholdt",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 323,
+										"name": "Runetotem",
+										"slug": "runetotem",
+										"normalizedName": "Runetotem",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 324,
+										"name": "Saurfang",
+										"slug": "saurfang",
+										"normalizedName": "Saurfang",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 325,
+										"name": "Scarshield Legion",
+										"slug": "scarshield-legion",
+										"normalizedName": "ScarshieldLegion",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 326,
+										"name": "Shadowsong",
+										"slug": "shadowsong",
+										"normalizedName": "Shadowsong",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 327,
+										"name": "Shattered Halls",
+										"slug": "shattered-halls",
+										"normalizedName": "ShatteredHalls",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 328,
+										"name": "Shattered Hand",
+										"slug": "shattered-hand",
+										"normalizedName": "ShatteredHand",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 329,
+										"name": "Silvermoon",
+										"slug": "silvermoon",
+										"normalizedName": "Silvermoon",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 330,
+										"name": "Skullcrusher",
+										"slug": "skullcrusher",
+										"normalizedName": "Skullcrusher",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 331,
+										"name": "Spinebreaker",
+										"slug": "spinebreaker",
+										"normalizedName": "Spinebreaker",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 332,
+										"name": "Sporeggar",
+										"slug": "sporeggar",
+										"normalizedName": "Sporeggar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 333,
+										"name": "Steamwheedle Cartel",
+										"slug": "steamwheedle-cartel",
+										"normalizedName": "SteamwheedleCartel",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 334,
+										"name": "Stormrage",
+										"slug": "stormrage",
+										"normalizedName": "Stormrage",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 335,
+										"name": "Stormreaver",
+										"slug": "stormreaver",
+										"normalizedName": "Stormreaver",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 336,
+										"name": "Stormscale",
+										"slug": "stormscale",
+										"normalizedName": "Stormscale",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 337,
+										"name": "Sunstrider",
+										"slug": "sunstrider",
+										"normalizedName": "Sunstrider",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 338,
+										"name": "Sylvanas",
+										"slug": "sylvanas",
+										"normalizedName": "Sylvanas",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 339,
+										"name": "Talnivarr",
+										"slug": "talnivarr",
+										"normalizedName": "Talnivarr",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 340,
+										"name": "Tarren Mill",
+										"slug": "tarren-mill",
+										"normalizedName": "TarrenMill",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 341,
+										"name": "Terenas",
+										"slug": "terenas",
+										"normalizedName": "Terenas",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 342,
+										"name": "Terokkar",
+										"slug": "terokkar",
+										"normalizedName": "Terokkar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 343,
+										"name": "The Maelstrom",
+										"slug": "the-maelstrom",
+										"normalizedName": "TheMaelstrom",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 344,
+										"name": "The Sha'tar",
+										"slug": "the-shatar",
+										"normalizedName": "TheSha'tar",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 345,
+										"name": "The Venture Co",
+										"slug": "the-venture-co",
+										"normalizedName": "TheVentureCo",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 346,
+										"name": "Thunderhorn",
+										"slug": "thunderhorn",
+										"normalizedName": "Thunderhorn",
+										"subregion": {
+											"id": 2,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 3,
+							"name": "French",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 356,
+										"name": "Arak-arahm",
+										"slug": "arakarahm",
+										"normalizedName": "Arakarahm",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 357,
+										"name": "Arathi",
+										"slug": "arathi",
+										"normalizedName": "Arathi",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 358,
+										"name": "Archimonde",
+										"slug": "archimonde",
+										"normalizedName": "Archimonde",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 359,
+										"name": "Chants éternels",
+										"slug": "chants-éternels",
+										"normalizedName": "Chantséternels",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 360,
+										"name": "Cho’gall",
+										"slug": "chogall",
+										"normalizedName": "Cho’gall",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 361,
+										"name": "Confrérie du Thorium",
+										"slug": "confrérie-du-thorium",
+										"normalizedName": "ConfrérieduThorium",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 362,
+										"name": "Conseil des Ombres",
+										"slug": "conseil-des-ombres",
+										"normalizedName": "ConseildesOmbres",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 363,
+										"name": "Culte de la Rive noire",
+										"slug": "culte-de-la-rive-noire",
+										"normalizedName": "CultedelaRivenoire",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 364,
+										"name": "Dalaran",
+										"slug": "dalaran",
+										"normalizedName": "Dalaran",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 365,
+										"name": "Drek'Thar",
+										"slug": "drekthar",
+										"normalizedName": "Drek'Thar",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 366,
+										"name": "Eitrigg",
+										"slug": "eitrigg",
+										"normalizedName": "Eitrigg",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 367,
+										"name": "Eldre'Thalas",
+										"slug": "eldrethalas",
+										"normalizedName": "Eldre'Thalas",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 368,
+										"name": "Elune",
+										"slug": "elune",
+										"normalizedName": "Elune",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 369,
+										"name": "Garona",
+										"slug": "garona",
+										"normalizedName": "Garona",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 370,
+										"name": "Hyjal",
+										"slug": "hyjal",
+										"normalizedName": "Hyjal",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 371,
+										"name": "Illidan",
+										"slug": "illidan",
+										"normalizedName": "Illidan",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 372,
+										"name": "Kael'thas",
+										"slug": "kaelthas",
+										"normalizedName": "Kael'thas",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 373,
+										"name": "Khaz Modan",
+										"slug": "khaz-modan",
+										"normalizedName": "KhazModan",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 374,
+										"name": "Kirin Tor",
+										"slug": "kirin-tor",
+										"normalizedName": "KirinTor",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 375,
+										"name": "Krasus",
+										"slug": "krasus",
+										"normalizedName": "Krasus",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 376,
+										"name": "La Croisade écarlate",
+										"slug": "la-croisade-écarlate",
+										"normalizedName": "LaCroisadeécarlate",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 377,
+										"name": "Les Clairvoyants",
+										"slug": "les-clairvoyants",
+										"normalizedName": "LesClairvoyants",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 378,
+										"name": "Les Sentinelles",
+										"slug": "les-sentinelles",
+										"normalizedName": "LesSentinelles",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 379,
+										"name": "Marécage de Zangar",
+										"slug": "marécage-de-zangar",
+										"normalizedName": "MarécagedeZangar",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 380,
+										"name": "Medivh",
+										"slug": "medivh",
+										"normalizedName": "Medivh",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 381,
+										"name": "Naxxramas",
+										"slug": "naxxramas",
+										"normalizedName": "Naxxramas",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 382,
+										"name": "zzzzz",
+										"slug": "zzzzz",
+										"normalizedName": "zzzzz",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 383,
+										"name": "Rashgarroth",
+										"slug": "rashgarroth",
+										"normalizedName": "Rashgarroth",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 384,
+										"name": "Sargeras",
+										"slug": "sargeras",
+										"normalizedName": "Sargeras",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 385,
+										"name": "Sinstralis",
+										"slug": "sinstralis",
+										"normalizedName": "Sinstralis",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 386,
+										"name": "Suramar",
+										"slug": "suramar",
+										"normalizedName": "Suramar",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 387,
+										"name": "Temple noir",
+										"slug": "temple-noir",
+										"normalizedName": "Templenoir",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 388,
+										"name": "Throk'Feroth",
+										"slug": "throkferoth",
+										"normalizedName": "Throk'Feroth",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 389,
+										"name": "Uldaman",
+										"slug": "uldaman",
+										"normalizedName": "Uldaman",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 390,
+										"name": "Varimathras",
+										"slug": "varimathras",
+										"normalizedName": "Varimathras",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 391,
+										"name": "Vol'jin",
+										"slug": "voljin",
+										"normalizedName": "Vol'jin",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 392,
+										"name": "Ysondre",
+										"slug": "ysondre",
+										"normalizedName": "Ysondre",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 912,
+										"name": "Ner’zhul",
+										"slug": "nerzhul",
+										"normalizedName": "Ner’zhul",
+										"subregion": {
+											"id": 3,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 4,
+							"name": "German",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 393,
+										"name": "Aegwynn",
+										"slug": "aegwynn",
+										"normalizedName": "Aegwynn",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 394,
+										"name": "Alexstrasza",
+										"slug": "alexstrasza",
+										"normalizedName": "Alexstrasza",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 395,
+										"name": "Alleria",
+										"slug": "alleria",
+										"normalizedName": "Alleria",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 396,
+										"name": "Aman'Thul",
+										"slug": "amanthul",
+										"normalizedName": "Aman'Thul",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 397,
+										"name": "Ambossar",
+										"slug": "ambossar",
+										"normalizedName": "Ambossar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 398,
+										"name": "Anetheron",
+										"slug": "anetheron",
+										"normalizedName": "Anetheron",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 399,
+										"name": "Antonidas",
+										"slug": "antonidas",
+										"normalizedName": "Antonidas",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 400,
+										"name": "Anub'arak",
+										"slug": "anubarak",
+										"normalizedName": "Anub'arak",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 401,
+										"name": "Area 52",
+										"slug": "area-52",
+										"normalizedName": "Area52",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 402,
+										"name": "Arthas",
+										"slug": "arthas",
+										"normalizedName": "Arthas",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 403,
+										"name": "Arygos",
+										"slug": "arygos",
+										"normalizedName": "Arygos",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 404,
+										"name": "Azshara",
+										"slug": "azshara",
+										"normalizedName": "Azshara",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 405,
+										"name": "Baelgun",
+										"slug": "baelgun",
+										"normalizedName": "Baelgun",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 406,
+										"name": "Blackhand",
+										"slug": "blackhand",
+										"normalizedName": "Blackhand",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 407,
+										"name": "Blackmoore",
+										"slug": "blackmoore",
+										"normalizedName": "Blackmoore",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 408,
+										"name": "Blackrock",
+										"slug": "blackrock",
+										"normalizedName": "Blackrock",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 409,
+										"name": "Blutkessel",
+										"slug": "blutkessel",
+										"normalizedName": "Blutkessel",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 410,
+										"name": "Dalvengyr",
+										"slug": "dalvengyr",
+										"normalizedName": "Dalvengyr",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 411,
+										"name": "Das Konsortium",
+										"slug": "das-konsortium",
+										"normalizedName": "DasKonsortium",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 412,
+										"name": "Das Syndikat",
+										"slug": "das-syndikat",
+										"normalizedName": "DasSyndikat",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 413,
+										"name": "Der Abyssische Rat",
+										"slug": "der-abyssische-rat",
+										"normalizedName": "DerAbyssischeRat",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 414,
+										"name": "Der Mithrilorden",
+										"slug": "der-mithrilorden",
+										"normalizedName": "DerMithrilorden",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 415,
+										"name": "Der Rat von Dalaran",
+										"slug": "der-rat-von-dalaran",
+										"normalizedName": "DerRatvonDalaran",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 416,
+										"name": "Destromath",
+										"slug": "destromath",
+										"normalizedName": "Destromath",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 417,
+										"name": "Dethecus",
+										"slug": "dethecus",
+										"normalizedName": "Dethecus",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 418,
+										"name": "Die Aldor",
+										"slug": "die-aldor",
+										"normalizedName": "DieAldor",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 419,
+										"name": "Die Arguswacht",
+										"slug": "die-arguswacht",
+										"normalizedName": "DieArguswacht",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 420,
+										"name": "Die Nachtwache",
+										"slug": "die-nachtwache",
+										"normalizedName": "DieNachtwache",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 421,
+										"name": "Die Silberne Hand",
+										"slug": "die-silberne-hand",
+										"normalizedName": "DieSilberneHand",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 422,
+										"name": "Die Todeskrallen",
+										"slug": "die-todeskrallen",
+										"normalizedName": "DieTodeskrallen",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 423,
+										"name": "Die ewige Wacht",
+										"slug": "die-ewige-wacht",
+										"normalizedName": "DieewigeWacht",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 424,
+										"name": "Dun Morogh",
+										"slug": "dun-morogh",
+										"normalizedName": "DunMorogh",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 425,
+										"name": "Durotan",
+										"slug": "durotan",
+										"normalizedName": "Durotan",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 426,
+										"name": "Echsenkessel",
+										"slug": "echsenkessel",
+										"normalizedName": "Echsenkessel",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 427,
+										"name": "Eredar",
+										"slug": "eredar",
+										"normalizedName": "Eredar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 428,
+										"name": "Festung der Stürme",
+										"slug": "festung-der-stürme",
+										"normalizedName": "FestungderStürme",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 429,
+										"name": "Forscherliga",
+										"slug": "forscherliga",
+										"normalizedName": "Forscherliga",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 430,
+										"name": "Frostmourne",
+										"slug": "frostmourne",
+										"normalizedName": "Frostmourne",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 431,
+										"name": "Frostwolf",
+										"slug": "frostwolf",
+										"normalizedName": "Frostwolf",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 432,
+										"name": "Garrosh",
+										"slug": "garrosh",
+										"normalizedName": "Garrosh",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 433,
+										"name": "Gilneas",
+										"slug": "gilneas",
+										"normalizedName": "Gilneas",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 434,
+										"name": "Gorgonnash",
+										"slug": "gorgonnash",
+										"normalizedName": "Gorgonnash",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 435,
+										"name": "Gul'dan",
+										"slug": "guldan",
+										"normalizedName": "Gul'dan",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 436,
+										"name": "Kargath",
+										"slug": "kargath",
+										"normalizedName": "Kargath",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 437,
+										"name": "Kel'Thuzad",
+										"slug": "kelthuzad",
+										"normalizedName": "Kel'Thuzad",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 438,
+										"name": "Khaz'goroth",
+										"slug": "khazgoroth",
+										"normalizedName": "Khaz'goroth",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 439,
+										"name": "Kil'jaeden",
+										"slug": "kiljaeden",
+										"normalizedName": "Kil'jaeden",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 440,
+										"name": "Krag'jin",
+										"slug": "kragjin",
+										"normalizedName": "Krag'jin",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 441,
+										"name": "Kult der Verdammten",
+										"slug": "kult-der-verdammten",
+										"normalizedName": "KultderVerdammten",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 442,
+										"name": "Lordaeron",
+										"slug": "lordaeron",
+										"normalizedName": "Lordaeron",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 443,
+										"name": "Lothar",
+										"slug": "lothar",
+										"normalizedName": "Lothar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 444,
+										"name": "Madmortem",
+										"slug": "madmortem",
+										"normalizedName": "Madmortem",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 445,
+										"name": "Mal'Ganis",
+										"slug": "malganis",
+										"normalizedName": "Mal'Ganis",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 446,
+										"name": "Malfurion",
+										"slug": "malfurion",
+										"normalizedName": "Malfurion",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 447,
+										"name": "Malorne",
+										"slug": "malorne",
+										"normalizedName": "Malorne",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 448,
+										"name": "Malygos",
+										"slug": "malygos",
+										"normalizedName": "Malygos",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 449,
+										"name": "Mannoroth",
+										"slug": "mannoroth",
+										"normalizedName": "Mannoroth",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 450,
+										"name": "Mug'thol",
+										"slug": "mugthol",
+										"normalizedName": "Mug'thol",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 451,
+										"name": "Nathrezim",
+										"slug": "nathrezim",
+										"normalizedName": "Nathrezim",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 452,
+										"name": "Nazjatar",
+										"slug": "nazjatar",
+										"normalizedName": "Nazjatar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 453,
+										"name": "Nefarian",
+										"slug": "nefarian",
+										"normalizedName": "Nefarian",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 454,
+										"name": "Nera'thor",
+										"slug": "nerathor",
+										"normalizedName": "Nera'thor",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 455,
+										"name": "Nethersturm",
+										"slug": "nethersturm",
+										"normalizedName": "Nethersturm",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 456,
+										"name": "Norgannon",
+										"slug": "norgannon",
+										"normalizedName": "Norgannon",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 457,
+										"name": "Nozdormu",
+										"slug": "nozdormu",
+										"normalizedName": "Nozdormu",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 458,
+										"name": "Onyxia",
+										"slug": "onyxia",
+										"normalizedName": "Onyxia",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 459,
+										"name": "Perenolde",
+										"slug": "perenolde",
+										"normalizedName": "Perenolde",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 460,
+										"name": "Proudmoore",
+										"slug": "proudmoore",
+										"normalizedName": "Proudmoore",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 461,
+										"name": "Rajaxx",
+										"slug": "rajaxx",
+										"normalizedName": "Rajaxx",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 462,
+										"name": "Rexxar",
+										"slug": "rexxar",
+										"normalizedName": "Rexxar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 463,
+										"name": "Sen'jin",
+										"slug": "senjin",
+										"normalizedName": "Sen'jin",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 464,
+										"name": "Shattrath",
+										"slug": "shattrath",
+										"normalizedName": "Shattrath",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 465,
+										"name": "Taerar",
+										"slug": "taerar",
+										"normalizedName": "Taerar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 466,
+										"name": "Teldrassil",
+										"slug": "teldrassil",
+										"normalizedName": "Teldrassil",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 467,
+										"name": "Terrordar",
+										"slug": "terrordar",
+										"normalizedName": "Terrordar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 468,
+										"name": "Theradras",
+										"slug": "theradras",
+										"normalizedName": "Theradras",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 469,
+										"name": "Thrall",
+										"slug": "thrall",
+										"normalizedName": "Thrall",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 470,
+										"name": "Tichondrius",
+										"slug": "tichondrius",
+										"normalizedName": "Tichondrius",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 471,
+										"name": "Tirion",
+										"slug": "tirion",
+										"normalizedName": "Tirion",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 472,
+										"name": "Todeswache",
+										"slug": "todeswache",
+										"normalizedName": "Todeswache",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 473,
+										"name": "Ulduar",
+										"slug": "ulduar",
+										"normalizedName": "Ulduar",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 474,
+										"name": "Un'Goro",
+										"slug": "ungoro",
+										"normalizedName": "Un'Goro",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 475,
+										"name": "Vek'lor",
+										"slug": "veklor",
+										"normalizedName": "Vek'lor",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 476,
+										"name": "Wrathbringer",
+										"slug": "wrathbringer",
+										"normalizedName": "Wrathbringer",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 477,
+										"name": "Ysera",
+										"slug": "ysera",
+										"normalizedName": "Ysera",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 478,
+										"name": "Zirkel des Cenarius",
+										"slug": "zirkel-des-cenarius",
+										"normalizedName": "ZirkeldesCenarius",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 479,
+										"name": "Zuluhed",
+										"slug": "zuluhed",
+										"normalizedName": "Zuluhed",
+										"subregion": {
+											"id": 4,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 5,
+							"name": "Italian",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 480,
+										"name": "Nemesis",
+										"slug": "nemesis",
+										"normalizedName": "Nemesis",
+										"subregion": {
+											"id": 5,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 481,
+										"name": "Pozzo dell'Eternità",
+										"slug": "pozzo-delleternità",
+										"normalizedName": "Pozzodell'Eternità",
+										"subregion": {
+											"id": 5,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 6,
+							"name": "Portuguese",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 482,
+										"name": "Aggra (Português)",
+										"slug": "aggra-português",
+										"normalizedName": "Aggra(Português)",
+										"subregion": {
+											"id": 6,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 7,
+							"name": "Russian",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 483,
+										"name": "Азурегос",
+										"slug": "azuregos",
+										"normalizedName": "Азурегос",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 484,
+										"name": "Борейская тундра",
+										"slug": "borean-tundra",
+										"normalizedName": "Борейскаятундра",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 485,
+										"name": "Вечная Песня",
+										"slug": "eversong",
+										"normalizedName": "ВечнаяПесня",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 486,
+										"name": "Галакронд",
+										"slug": "galakrond",
+										"normalizedName": "Галакронд",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 487,
+										"name": "Голдринн",
+										"slug": "goldrinn",
+										"normalizedName": "Голдринн",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 488,
+										"name": "Гордунни",
+										"slug": "gordunni",
+										"normalizedName": "Гордунни",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 489,
+										"name": "Гром",
+										"slug": "grom",
+										"normalizedName": "Гром",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 490,
+										"name": "Дракономор",
+										"slug": "fordragon",
+										"normalizedName": "Дракономор",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 491,
+										"name": "Король-лич",
+										"slug": "lich-king",
+										"normalizedName": "Корольлич",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 492,
+										"name": "Пиратская бухта",
+										"slug": "booty-bay",
+										"normalizedName": "Пиратскаябухта",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 493,
+										"name": "Подземье",
+										"slug": "deepholm",
+										"normalizedName": "Подземье",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 494,
+										"name": "Разувий",
+										"slug": "razuvious",
+										"normalizedName": "Разувий",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 495,
+										"name": "Ревущий фьорд",
+										"slug": "howling-fjord",
+										"normalizedName": "Ревущийфьорд",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 496,
+										"name": "Свежеватель Душ",
+										"slug": "soulflayer",
+										"normalizedName": "СвежевательДуш",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 497,
+										"name": "Седогрив",
+										"slug": "greymane",
+										"normalizedName": "Седогрив",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 498,
+										"name": "Страж Смерти",
+										"slug": "deathguard",
+										"normalizedName": "СтражСмерти",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 499,
+										"name": "Термоштепсель",
+										"slug": "thermaplugg",
+										"normalizedName": "Термоштепсель",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 500,
+										"name": "Ткач Смерти",
+										"slug": "deathweaver",
+										"normalizedName": "ТкачСмерти",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 501,
+										"name": "Черный Шрам",
+										"slug": "blackscar",
+										"normalizedName": "ЧерныйШрам",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 502,
+										"name": "Ясеневый лес",
+										"slug": "ashenvale",
+										"normalizedName": "Ясеневыйлес",
+										"subregion": {
+											"id": 7,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"id": 8,
+							"name": "Spanish",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 503,
+										"name": "C'Thun",
+										"slug": "cthun",
+										"normalizedName": "C'Thun",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 504,
+										"name": "Colinas Pardas",
+										"slug": "colinas-pardas",
+										"normalizedName": "ColinasPardas",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 505,
+										"name": "Dun Modr",
+										"slug": "dun-modr",
+										"normalizedName": "DunModr",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 506,
+										"name": "Exodar",
+										"slug": "exodar",
+										"normalizedName": "Exodar",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 507,
+										"name": "Los Errantes",
+										"slug": "los-errantes",
+										"normalizedName": "LosErrantes",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 508,
+										"name": "Minahonda",
+										"slug": "minahonda",
+										"normalizedName": "Minahonda",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 509,
+										"name": "Sanguino",
+										"slug": "sanguino",
+										"normalizedName": "Sanguino",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 510,
+										"name": "Shen'dralar",
+										"slug": "shendralar",
+										"normalizedName": "Shen'dralar",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 511,
+										"name": "Tyrande",
+										"slug": "tyrande",
+										"normalizedName": "Tyrande",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 512,
+										"name": "Uldum",
+										"slug": "uldum",
+										"normalizedName": "Uldum",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									},
+									{
+										"id": 513,
+										"name": "Zul'jin",
+										"slug": "zuljin",
+										"normalizedName": "Zul'jin",
+										"subregion": {
+											"id": 8,
+											"region": {
+												"slug": "EU"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Korea",
+					"slug": "KR",
+					"subregions": [
+						{
+							"id": 9,
+							"name": "Korea",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 514,
+										"name": "가로나",
+										"slug": "garona",
+										"normalizedName": "가로나",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 515,
+										"name": "굴단",
+										"slug": "guldan",
+										"normalizedName": "굴단",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 516,
+										"name": "노르간논",
+										"slug": "norgannon",
+										"normalizedName": "노르간논",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 517,
+										"name": "달라란",
+										"slug": "dalaran",
+										"normalizedName": "달라란",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 518,
+										"name": "데스윙",
+										"slug": "deathwing",
+										"normalizedName": "데스윙",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 519,
+										"name": "듀로탄",
+										"slug": "durotan",
+										"normalizedName": "듀로탄",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 520,
+										"name": "라그나로스",
+										"slug": "라그나로스",
+										"normalizedName": "라그나로스",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 521,
+										"name": "렉사르",
+										"slug": "rexxar",
+										"normalizedName": "렉사르",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 522,
+										"name": "말퓨리온",
+										"slug": "malfurion",
+										"normalizedName": "말퓨리온",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 523,
+										"name": "불타는 군단",
+										"slug": "burning-legion",
+										"normalizedName": "불타는군단",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 524,
+										"name": "세나리우스",
+										"slug": "cenarius",
+										"normalizedName": "세나리우스",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 525,
+										"name": "스톰레이지",
+										"slug": "stormrage",
+										"normalizedName": "스톰레이지",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 526,
+										"name": "아즈샤라",
+										"slug": "azshara",
+										"normalizedName": "아즈샤라",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 527,
+										"name": "알렉스트라자",
+										"slug": "alexstrasza",
+										"normalizedName": "알렉스트라자",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 528,
+										"name": "에이그윈",
+										"slug": "에이그윈",
+										"normalizedName": "에이그윈",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 529,
+										"name": "엘룬",
+										"slug": "엘룬",
+										"normalizedName": "엘룬",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 530,
+										"name": "와일드해머",
+										"slug": "wildhammer",
+										"normalizedName": "와일드해머",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 531,
+										"name": "윈드러너",
+										"slug": "windrunner",
+										"normalizedName": "윈드러너",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 532,
+										"name": "이오나",
+										"slug": "이오나",
+										"normalizedName": "이오나",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 533,
+										"name": "줄진",
+										"slug": "zuljin",
+										"normalizedName": "줄진",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 534,
+										"name": "카르가스",
+										"slug": "카르가스",
+										"normalizedName": "카르가스",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 535,
+										"name": "하이잘",
+										"slug": "hyjal",
+										"normalizedName": "하이잘",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									},
+									{
+										"id": 536,
+										"name": "헬스크림",
+										"slug": "hellscream",
+										"normalizedName": "헬스크림",
+										"subregion": {
+											"id": 9,
+											"region": {
+												"slug": "KR"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Taiwan",
+					"slug": "TW",
+					"subregions": [
+						{
+							"id": 10,
+							"name": "Taiwan",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 537,
+										"name": "世界之樹",
+										"slug": "world-tree",
+										"normalizedName": "世界之樹",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 538,
+										"name": "亞雷戈斯",
+										"slug": "arygos",
+										"normalizedName": "亞雷戈斯",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 539,
+										"name": "冰霜之刺",
+										"slug": "frostmane",
+										"normalizedName": "冰霜之刺",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 540,
+										"name": "冰風崗哨",
+										"slug": "chillwind-point",
+										"normalizedName": "冰風崗哨",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 541,
+										"name": "地獄吼",
+										"slug": "hellscream",
+										"normalizedName": "地獄吼",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 542,
+										"name": "夜空之歌",
+										"slug": "nightsong",
+										"normalizedName": "夜空之歌",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 543,
+										"name": "天空之牆",
+										"slug": "skywall",
+										"normalizedName": "天空之牆",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 544,
+										"name": "寒冰皇冠",
+										"slug": "icecrown",
+										"normalizedName": "寒冰皇冠",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 545,
+										"name": "尖石",
+										"slug": "spirestone",
+										"normalizedName": "尖石",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 546,
+										"name": "屠魔山谷",
+										"slug": "demon-fall-canyon",
+										"normalizedName": "屠魔山谷",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 547,
+										"name": "憤怒使者",
+										"slug": "wrathbringer",
+										"normalizedName": "憤怒使者",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 548,
+										"name": "日落沼澤",
+										"slug": "sundown-marsh",
+										"normalizedName": "日落沼澤",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 549,
+										"name": "暗影之月",
+										"slug": "shadowmoon",
+										"normalizedName": "暗影之月",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 550,
+										"name": "水晶之刺",
+										"slug": "crystalpine-stinger",
+										"normalizedName": "水晶之刺",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 551,
+										"name": "狂熱之刃",
+										"slug": "zealot-blade",
+										"normalizedName": "狂熱之刃",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 552,
+										"name": "眾星之子",
+										"slug": "queldorei",
+										"normalizedName": "眾星之子",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 553,
+										"name": "米奈希爾",
+										"slug": "menethil",
+										"normalizedName": "米奈希爾",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 554,
+										"name": "聖光之願",
+										"slug": "lights-hope",
+										"normalizedName": "聖光之願",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 555,
+										"name": "血之谷",
+										"slug": "bleeding-hollow",
+										"normalizedName": "血之谷",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 556,
+										"name": "語風",
+										"slug": "whisperwind",
+										"normalizedName": "語風",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 557,
+										"name": "銀翼要塞",
+										"slug": "silverwing-hold",
+										"normalizedName": "銀翼要塞",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 558,
+										"name": "阿薩斯",
+										"slug": "arthas",
+										"normalizedName": "阿薩斯",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 559,
+										"name": "雷鱗",
+										"slug": "stormscale",
+										"normalizedName": "雷鱗",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 560,
+										"name": "龍喉",
+										"slug": "龍喉",
+										"normalizedName": "龍喉",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 905,
+										"name": "巨龍之喉",
+										"slug": "dragonmaw",
+										"normalizedName": "巨龍之喉",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 907,
+										"name": "雲蛟衛",
+										"slug": "order-of-the-cloud-serpent",
+										"normalizedName": "雲蛟衛",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 927,
+										"name": "克羅之刃",
+										"slug": "krol-blade",
+										"normalizedName": "克羅之刃",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									},
+									{
+										"id": 928,
+										"name": "老馬布蘭契",
+										"slug": "old-blanchy",
+										"normalizedName": "老馬布蘭契",
+										"subregion": {
+											"id": 10,
+											"region": {
+												"slug": "TW"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "China",
+					"slug": "CN",
+					"subregions": [
+						{
+							"id": 11,
+							"name": "China",
+							"__typename": "Subregion",
+							"servers": {
+								"data": [
+									{
+										"id": 561,
+										"name": "万色星辰",
+										"slug": "万色星辰",
+										"normalizedName": "万色星辰",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 562,
+										"name": "世界之树",
+										"slug": "世界之树",
+										"normalizedName": "世界之树",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 563,
+										"name": "丹莫德",
+										"slug": "丹莫德",
+										"normalizedName": "丹莫德",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 564,
+										"name": "主宰之剑",
+										"slug": "主宰之剑",
+										"normalizedName": "主宰之剑",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 565,
+										"name": "亚雷戈斯",
+										"slug": "亚雷戈斯",
+										"normalizedName": "亚雷戈斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 566,
+										"name": "亡语者",
+										"slug": "亡语者",
+										"normalizedName": "亡语者",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 567,
+										"name": "伊兰尼库斯",
+										"slug": "伊兰尼库斯",
+										"normalizedName": "伊兰尼库斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 568,
+										"name": "伊利丹",
+										"slug": "伊利丹",
+										"normalizedName": "伊利丹",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 569,
+										"name": "伊森利恩",
+										"slug": "伊森利恩",
+										"normalizedName": "伊森利恩",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 570,
+										"name": "伊森德雷",
+										"slug": "伊森德雷",
+										"normalizedName": "伊森德雷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 571,
+										"name": "伊瑟拉",
+										"slug": "伊瑟拉",
+										"normalizedName": "伊瑟拉",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 572,
+										"name": "伊莫塔尔",
+										"slug": "伊莫塔尔",
+										"normalizedName": "伊莫塔尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 573,
+										"name": "伊萨里奥斯",
+										"slug": "伊萨里奥斯",
+										"normalizedName": "伊萨里奥斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 574,
+										"name": "元素之力",
+										"slug": "元素之力",
+										"normalizedName": "元素之力",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 575,
+										"name": "克尔苏加德",
+										"slug": "克尔苏加德",
+										"normalizedName": "克尔苏加德",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 576,
+										"name": "克洛玛古斯",
+										"slug": "克洛玛古斯",
+										"normalizedName": "克洛玛古斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 577,
+										"name": "克苏恩",
+										"slug": "克苏恩",
+										"normalizedName": "克苏恩",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 578,
+										"name": "军团要塞",
+										"slug": "军团要塞",
+										"normalizedName": "军团要塞",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 579,
+										"name": "冬拥湖",
+										"slug": "冬拥湖",
+										"normalizedName": "冬拥湖",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 580,
+										"name": "冬泉谷",
+										"slug": "冬泉谷",
+										"normalizedName": "冬泉谷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 581,
+										"name": "冰川之拳",
+										"slug": "冰川之拳",
+										"normalizedName": "冰川之拳",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 582,
+										"name": "冰霜之刃",
+										"slug": "冰霜之刃",
+										"normalizedName": "冰霜之刃",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 583,
+										"name": "冰风岗",
+										"slug": "冰风岗",
+										"normalizedName": "冰风岗",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 584,
+										"name": "凤凰之神",
+										"slug": "凤凰之神",
+										"normalizedName": "凤凰之神",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 585,
+										"name": "凯尔萨斯",
+										"slug": "凯尔萨斯",
+										"normalizedName": "凯尔萨斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 586,
+										"name": "凯恩血蹄",
+										"slug": "凯恩血蹄",
+										"normalizedName": "凯恩血蹄",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 587,
+										"name": "刀塔",
+										"slug": "",
+										"normalizedName": "",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 588,
+										"name": "利刃之拳",
+										"slug": "利刃之拳",
+										"normalizedName": "利刃之拳",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 589,
+										"name": "刺骨利刃",
+										"slug": "刺骨利刃",
+										"normalizedName": "刺骨利刃",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 590,
+										"name": "加兹鲁维",
+										"slug": "加兹鲁维",
+										"normalizedName": "加兹鲁维",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 591,
+										"name": "加基森",
+										"slug": "加基森",
+										"normalizedName": "加基森",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 592,
+										"name": "加尔",
+										"slug": "加尔",
+										"normalizedName": "加尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 593,
+										"name": "加德纳尔",
+										"slug": "",
+										"normalizedName": "",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 594,
+										"name": "加里索斯",
+										"slug": "加里索斯",
+										"normalizedName": "加里索斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 595,
+										"name": "勇士岛",
+										"slug": "勇士岛",
+										"normalizedName": "勇士岛",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 596,
+										"name": "千针石林",
+										"slug": "千针石林",
+										"normalizedName": "千针石林",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 597,
+										"name": "卡德加",
+										"slug": "卡德加",
+										"normalizedName": "卡德加",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 598,
+										"name": "卡德罗斯",
+										"slug": "卡德罗斯",
+										"normalizedName": "卡德罗斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 599,
+										"name": "卡扎克",
+										"slug": "卡扎克",
+										"normalizedName": "卡扎克",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 600,
+										"name": "卡拉赞",
+										"slug": "卡拉赞",
+										"normalizedName": "卡拉赞",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 601,
+										"name": "卡珊德拉",
+										"slug": "卡珊德拉",
+										"normalizedName": "卡珊德拉",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 602,
+										"name": "厄祖玛特",
+										"slug": "厄祖玛特",
+										"normalizedName": "厄祖玛特",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 603,
+										"name": "古加尔",
+										"slug": "古加尔",
+										"normalizedName": "古加尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 604,
+										"name": "古尔丹",
+										"slug": "古尔丹",
+										"normalizedName": "古尔丹",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 605,
+										"name": "古拉巴什",
+										"slug": "古拉巴什",
+										"normalizedName": "古拉巴什",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 606,
+										"name": "古达克",
+										"slug": "古达克",
+										"normalizedName": "古达克",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 607,
+										"name": "哈兰",
+										"slug": "哈兰",
+										"normalizedName": "哈兰",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 608,
+										"name": "哈卡",
+										"slug": "哈卡",
+										"normalizedName": "哈卡",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 609,
+										"name": "嚎风峡湾",
+										"slug": "嚎风峡湾",
+										"normalizedName": "嚎风峡湾",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 610,
+										"name": "回音山",
+										"slug": "回音山",
+										"normalizedName": "回音山",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 611,
+										"name": "国王之谷",
+										"slug": "国王之谷",
+										"normalizedName": "国王之谷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 612,
+										"name": "图拉扬",
+										"slug": "图拉扬",
+										"normalizedName": "图拉扬",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 613,
+										"name": "圣火神殿",
+										"slug": "圣火神殿",
+										"normalizedName": "圣火神殿",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 614,
+										"name": "地狱之石",
+										"slug": "地狱之石",
+										"normalizedName": "地狱之石",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 615,
+										"name": "地狱咆哮",
+										"slug": "地狱咆哮",
+										"normalizedName": "地狱咆哮",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 616,
+										"name": "埃克索图斯",
+										"slug": "埃克索图斯",
+										"normalizedName": "埃克索图斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 617,
+										"name": "埃加洛尔",
+										"slug": "埃加洛尔",
+										"normalizedName": "埃加洛尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 618,
+										"name": "埃德萨拉",
+										"slug": "埃德萨拉",
+										"normalizedName": "埃德萨拉",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 619,
+										"name": "埃苏雷格",
+										"slug": "埃苏雷格",
+										"normalizedName": "埃苏雷格",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 620,
+										"name": "埃雷达尔",
+										"slug": "埃雷达尔",
+										"normalizedName": "埃雷达尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 621,
+										"name": "基尔加丹",
+										"slug": "基尔加丹",
+										"normalizedName": "基尔加丹",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 622,
+										"name": "基尔罗格",
+										"slug": "基尔罗格",
+										"normalizedName": "基尔罗格",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 623,
+										"name": "塔纳利斯",
+										"slug": "塔纳利斯",
+										"normalizedName": "塔纳利斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 624,
+										"name": "塞拉摩",
+										"slug": "塞拉摩",
+										"normalizedName": "塞拉摩",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 625,
+										"name": "塞拉赞恩",
+										"slug": "塞拉赞恩",
+										"normalizedName": "塞拉赞恩",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 626,
+										"name": "塞泰克",
+										"slug": "塞泰克",
+										"normalizedName": "塞泰克",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 627,
+										"name": "塞纳里奥",
+										"slug": "塞纳里奥",
+										"normalizedName": "塞纳里奥",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 628,
+										"name": "壁炉谷",
+										"slug": "壁炉谷",
+										"normalizedName": "壁炉谷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 629,
+										"name": "夏维安",
+										"slug": "夏维安",
+										"normalizedName": "夏维安",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 630,
+										"name": "外域",
+										"slug": "外域",
+										"normalizedName": "外域",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 631,
+										"name": "大地之怒",
+										"slug": "大地之怒",
+										"normalizedName": "大地之怒",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 632,
+										"name": "大漩涡",
+										"slug": "大漩涡",
+										"normalizedName": "大漩涡",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 633,
+										"name": "天空之墙",
+										"slug": "天空之墙",
+										"normalizedName": "天空之墙",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 634,
+										"name": "太阳之井",
+										"slug": "太阳之井",
+										"normalizedName": "太阳之井",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 635,
+										"name": "夺灵者",
+										"slug": "夺灵者",
+										"normalizedName": "夺灵者",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 636,
+										"name": "奈法利安",
+										"slug": "奈法利安",
+										"normalizedName": "奈法利安",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 637,
+										"name": "奈萨里奥",
+										"slug": "奈萨里奥",
+										"normalizedName": "奈萨里奥",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 638,
+										"name": "奎尔丹纳斯",
+										"slug": "奎尔丹纳斯",
+										"normalizedName": "奎尔丹纳斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 639,
+										"name": "奎尔萨拉斯",
+										"slug": "奎尔萨拉斯",
+										"normalizedName": "奎尔萨拉斯",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 640,
+										"name": "奥妮克希亚",
+										"slug": "奥妮克希亚",
+										"normalizedName": "奥妮克希亚",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 641,
+										"name": "奥尔加隆",
+										"slug": "奥尔加隆",
+										"normalizedName": "奥尔加隆",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 642,
+										"name": "奥拉基尔",
+										"slug": "奥拉基尔",
+										"normalizedName": "奥拉基尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 643,
+										"name": "奥斯里安",
+										"slug": "奥斯里安",
+										"normalizedName": "奥斯里安",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 644,
+										"name": "奥特兰克",
+										"slug": "奥特兰克",
+										"normalizedName": "奥特兰克",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 645,
+										"name": "奥蕾莉亚",
+										"slug": "奥蕾莉亚",
+										"normalizedName": "奥蕾莉亚",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 646,
+										"name": "奥达曼",
+										"slug": "奥达曼",
+										"normalizedName": "奥达曼",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 647,
+										"name": "守护之剑",
+										"slug": "守护之剑",
+										"normalizedName": "守护之剑",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 648,
+										"name": "安其拉",
+										"slug": "安其拉",
+										"normalizedName": "安其拉",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 649,
+										"name": "安加萨",
+										"slug": "安加萨",
+										"normalizedName": "安加萨",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 650,
+										"name": "安多哈尔",
+										"slug": "",
+										"normalizedName": "",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 651,
+										"name": "安威玛尔",
+										"slug": "安威玛尔",
+										"normalizedName": "安威玛尔",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 652,
+										"name": "安戈洛",
+										"slug": "安戈洛",
+										"normalizedName": "安戈洛",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 653,
+										"name": "安格博达",
+										"slug": "安格博达",
+										"normalizedName": "安格博达",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 654,
+										"name": "安纳塞隆",
+										"slug": "安纳塞隆",
+										"normalizedName": "安纳塞隆",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 655,
+										"name": "安苏",
+										"slug": "安苏",
+										"normalizedName": "安苏",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 656,
+										"name": "密林游侠",
+										"slug": "密林游侠",
+										"normalizedName": "密林游侠",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 657,
+										"name": "寒冰皇冠",
+										"slug": "寒冰皇冠",
+										"normalizedName": "寒冰皇冠",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 658,
+										"name": "尘风峡谷",
+										"slug": "尘风峡谷",
+										"normalizedName": "尘风峡谷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 659,
+										"name": "屠魔山谷",
+										"slug": "屠魔山谷",
+										"normalizedName": "屠魔山谷",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									},
+									{
+										"id": 660,
+										"name": "山丘之王",
+										"slug": "山丘之王",
+										"normalizedName": "山丘之王",
+										"subregion": {
+											"id": 11,
+											"region": {
+												"slug": "CN"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	}
+}

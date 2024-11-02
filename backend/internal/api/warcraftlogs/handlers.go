@@ -64,7 +64,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 	routeConfig := middleware.RouteConfig{
 		Enabled:    true,
-		Expiration: 8 * time.Hour,
+		Expiration: 2 * time.Hour,
 	}
 
 	warcraftlogs := router.Group("/warcraftlogs")
@@ -73,7 +73,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 		character := warcraftlogs.Group("/character")
 		{
 			// Get the character ranking for a given character name, server slug, server region and zone ID
-			character.GET("/ranking", h.cacheManager.CacheMiddleware(routeConfig), h.Character.Ranking.GetCharacterRanking)
+			character.GET("/ranking/player", h.cacheManager.CacheMiddleware(routeConfig), h.Character.Ranking.GetCharacterRanking)
 		}
 
 		// Mythic+ routes

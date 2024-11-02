@@ -14,7 +14,7 @@ const ProfileSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="bg-[#374151] shadow-md relative z-20 m-8 rounded-lg">
+    <aside className="bg-deep-blue relative z-20 m-8 rounded-lg shadow-2xl border border-gray-800">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6 text-white dark:text-gray-200">
           Account Settings

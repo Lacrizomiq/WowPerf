@@ -29,10 +29,8 @@ const ChangeUsername: React.FC<ChangeUsernameProps> = ({
   };
 
   return (
-    <section className="bg-[#374151] dark:bg-gray-800 shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4 text-white dark:text-gray-200">
-        Change Username
-      </h2>
+    <section className="bg-deep-blue border border-gray-800 shadow rounded-lg p-6">
+      <h2 className="text-2xl font-bold mb-4 text-white">Change Username</h2>
       <p className="text-sm text-white dark:text-gray-400 mb-4">
         Please note that you can only change your username once every 30 days.
       </p>

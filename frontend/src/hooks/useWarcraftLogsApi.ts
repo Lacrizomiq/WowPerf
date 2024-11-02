@@ -9,6 +9,7 @@ import {
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
+import { PlayerRankings } from "@/types/warcraftlogs/playerRankings";
 
 // Hook for global leaderboard with required limit
 export const useGetGlobalLeaderboard = (limit: number) => {
@@ -53,12 +54,52 @@ export const useGetSpecLeaderboard = (
 // Hook for the dungeon leaderboard
 export const useGetDungeonLeaderboard = (
   encounterID: number,
-  page: number = 1
+  page: number = 1,
+  options?: {
+    serverSlug?: string;
+    serverRegion?: string;
+    className?: WowClass;
+    specName?: string;
+  }
 ) => {
   return useQuery<DungeonLeaderboardResponse, Error>({
-    queryKey: ["warcraftlogs-dungeon-leaderboard", encounterID, page],
+    queryKey: [
+      "warcraftlogs-dungeon-leaderboard",
+      encounterID,
+      page,
+      options?.serverRegion,
+      options?.className,
+      options?.specName,
+      options?.serverSlug,
+    ],
     queryFn: () =>
-      warcraftLogsApiService.getDungeonLeaderboard(encounterID, page),
+      warcraftLogsApiService.getDungeonLeaderboard(encounterID, page, options),
     enabled: !!encounterID, // Only fetch if encounterID is provided
+  });
+};
+
+// Hook for player rankings
+export const useGetPlayerRankings = (
+  characterName: string,
+  serverSlug: string,
+  serverRegion: string,
+  zoneID: number
+) => {
+  return useQuery<PlayerRankings, Error>({
+    queryKey: [
+      "warcraftlogs-player-rankings",
+      characterName,
+      serverSlug,
+      serverRegion,
+      zoneID,
+    ],
+    queryFn: () =>
+      warcraftLogsApiService.getPlayerRankings(
+        characterName,
+        serverSlug,
+        serverRegion,
+        zoneID
+      ),
+    enabled: !!(characterName && serverSlug && serverRegion && zoneID), // Only fetch if all required parameters are provided
   });
 };

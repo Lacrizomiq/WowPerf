@@ -1,48 +1,61 @@
-// types/dungeonRankings.ts
+// types/warcraftlogs/dungeonRankings.ts
 
-import { WowClass } from "./globalLeaderboard";
+// Re-export WowClass if needed
+export type WowClass =
+  | "Warrior"
+  | "Paladin"
+  | "Hunter"
+  | "Rogue"
+  | "Priest"
+  | "DeathKnight"
+  | "Shaman"
+  | "Mage"
+  | "Warlock"
+  | "Monk"
+  | "Druid"
+  | "DemonHunter"
+  | "Evoker";
 
-// Interface for the dungeon server
+export interface DungeonGuild {
+  faction: number;
+  id: number;
+  name: string;
+}
+
 export interface DungeonServer {
   id: number;
   name: string;
   region: string;
 }
 
-// Interface for the team member
-export interface TeamMember {
-  id: number;
-  name: string;
-  class: WowClass;
-  spec: string;
-  role: "Tank" | "Healer" | "DPS";
-}
-
-// Interface for the dungeon ranking
-export interface DungeonRanking {
-  server: DungeonServer;
-  duration: number;
+export interface DungeonReport {
+  code: string;
+  fightID: number;
   startTime: number;
-  deaths: number;
-  tanks: number;
-  healers: number;
-  melee: number;
-  ranged: number;
-  bracketData: number;
-  affixes: number[];
-  team: TeamMember[];
-  medal: "gold" | "silver" | "bronze";
-  score: number;
-  leaderboard: number;
 }
 
-// Interface for the dungeon leaderboard response
+export interface DungeonRanking {
+  affixes: number[];
+  amount: number;
+  bracketData: number;
+  class: WowClass;
+  duration: number;
+  faction: number;
+  guild: DungeonGuild;
+  hardModeLevel: number;
+  leaderboard: number;
+  medal: "gold" | "silver" | "bronze";
+  name: string;
+  report: DungeonReport;
+  score: number;
+  server: DungeonServer;
+  spec: string;
+  startTime: number;
+}
+
 export interface DungeonLeaderboardResponse {
-  page: number;
-  hasMorePages: boolean;
   count: number;
+  hasMorePages: boolean;
+  page: number;
   rankings: DungeonRanking[];
 }
-
-// Re-export WowClass from globalLeaderboard if needed
-export type { WowClass } from "./globalLeaderboard";

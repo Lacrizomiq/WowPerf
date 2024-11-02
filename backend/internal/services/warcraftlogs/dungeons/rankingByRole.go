@@ -85,7 +85,10 @@ func GetGlobalRankings(s *service.WarcraftLogsClientService, ctx context.Context
 					errorsChan <- reqCtx.Err()
 					return
 				default:
-					dungeonData, err := GetDungeonLeaderboardByPlayer(s, dID, p)
+					dungeonData, err := GetDungeonLeaderboardByPlayer(s, LeaderboardParams{
+						EncounterID: dID,
+						Page:        p,
+					})
 					if err != nil {
 						errorsChan <- fmt.Errorf("failed to get dungeon leaderboard for dungeon %d, page %d: %w", dID, p, err)
 						return

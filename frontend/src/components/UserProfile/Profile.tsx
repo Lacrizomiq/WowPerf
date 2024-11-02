@@ -13,7 +13,7 @@ const Profile: React.FC = () => {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="flex min-h-screen w-full bg-gradient-to-br from-[#1a202c] to-[#2d3748] dark:bg-gray-900">
+    <div className="flex min-h-screen w-full bg-black">
       <ProfileSidebar />
       <main className="flex-1 p-8">
         {profile && (
