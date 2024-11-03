@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 	"wowperf/internal/services/auth"
 
@@ -13,23 +13,17 @@ import (
 
 func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+		// Retrieve the token from the cookie
+		tokenCookie, err := c.Cookie("access_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
 			c.Abort()
 			return
 		}
 
-		bearerToken := strings.Split(authHeader, " ")
-		if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		tokenString := bearerToken[1]
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Parse and validate the token
+		token, err := jwt.Parse(tokenCookie, func(token *jwt.Token) (interface{}, error) {
+			// Verify the signature method
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
@@ -37,13 +31,41 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid token: %v", err)})
+			// if token is expired, try to refresh
+			var validationError *jwt.ValidationError
+			if errors.As(err, &validationError) && validationError.Errors&jwt.ValidationErrorExpired != 0 {
+				// Try to refresh
+				if err := authService.RefreshToken(c); err != nil {
+					c.JSON(http.StatusUnauthorized, gin.H{"error": "Token expired, please login again"})
+					c.Abort()
+					return
+				}
+				// Continue with new token
+				c.Next()
+				return
+			}
+
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
 
+		// Verify if token is blacklist
+		blacklisted, err := authService.IsTokenBlacklisted(tokenCookie)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify token status"})
+			c.Abort()
+			return
+		}
+		if blacklisted {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
+			c.Abort()
+			return
+		}
+
+		// Extract and validate claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			// Check expiration
+			// Verify the expirations
 			if exp, ok := claims["exp"].(float64); ok {
 				if time.Now().Unix() > int64(exp) {
 					c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
@@ -52,19 +74,7 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 				}
 			}
 
-			// Check if the token is blacklisted
-			blacklisted, err := authService.IsTokenBlacklisted(tokenString)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check token status"})
-				c.Abort()
-				return
-			}
-			if blacklisted {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
-				c.Abort()
-				return
-			}
-
+			// Extract userID
 			userID, ok := claims["user_id"].(float64)
 			if !ok {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
@@ -72,6 +82,7 @@ func JWTAuth(authService *auth.AuthService) gin.HandlerFunc {
 				return
 			}
 
+			// Store in the context
 			c.Set("user_id", uint(userID))
 			c.Next()
 		} else {

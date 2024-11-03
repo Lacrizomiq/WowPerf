@@ -3,11 +3,11 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"net/http"
-	"strings"
-	"time"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
+	authMiddleware "wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -54,6 +54,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
+// Login is the login handlers
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginInput struct {
 		Username string `json:"username" binding:"required"`
@@ -65,61 +66,37 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.AuthService.Login(loginInput.Username, loginInput.Password)
-	if err != nil {
-		if err.Error() == "invalid credentials" {
+	if err := h.AuthService.Login(c, loginInput.Username, loginInput.Password); err != nil {
+		if errors.Is(err, auth.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 			return
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"user": gin.H{
+			"username": loginInput.Username,
+		},
+	})
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization header is missing"})
-		return
-	}
-
-	bearerToken := strings.Split(authHeader, " ")
-	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid authorization header format"})
-		return
-	}
-
-	token := bearerToken[1]
-
-	// Blacklist the token
-	if err := h.AuthService.BlacklistToken(token, 24*time.Hour); err != nil {
+	if err := h.AuthService.Logout(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	var input struct {
-		RefreshToken string `json:"refresh_token" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	if err := h.AuthService.RefreshToken(c); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
 		return
 	}
-
-	newAccessToken, err := h.AuthService.RefreshToken(input.RefreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
+	c.JSON(http.StatusOK, gin.H{"message": "Refresh token successful"})
 }
 
 // Battle.net OAuth handlers
@@ -166,12 +143,19 @@ func (h *AuthHandler) HandleBattleNetCallback(c *gin.Context) {
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
+		// Public route who don't need auth
 		auth.POST("/signup", h.SignUp)
 		auth.POST("/login", h.Login)
-		auth.POST("/logout", h.Logout)
 		auth.POST("/refresh", h.RefreshToken)
 		auth.GET("/battle-net/login", h.HandleBattleNetLogin)
-		auth.GET("/battle-net/callback", h.AuthService.AuthMiddleware(), h.HandleBattleNetCallback)
+
+		// Protected route that need protection
+		protected := auth.Group("")
+		protected.Use(authMiddleware.JWTAuth(h.AuthService))
+		{
+			protected.POST("/logout", h.Logout)
+			protected.GET("/battle-net/callback", h.HandleBattleNetCallback)
+		}
 	}
 }
 

@@ -157,7 +157,6 @@ func setupRoutes(
 	r.Use(gin.Logger())
 
 	// Auth Routes
-	// r.GET("/csrf-token", middlewares.CSRFToken())
 	authHandler.RegisterRoutes(r)
 
 	// API Routes
@@ -167,6 +166,7 @@ func setupRoutes(
 
 	// Protected Routes
 	userHandler.RegisterRoutes(r, authService.AuthMiddleware())
+
 }
 
 func main() {

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"strconv"
 	"time"
 	"wowperf/internal/models"
@@ -16,12 +18,31 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	// ErrInvalidCredentials Returned when credentials are invalid
+	ErrInvalidCredentials   = errors.New("invalid credentials")
+	ErrTokenExpired         = errors.New("token has expired")
+	ErrTokenInvalid         = errors.New("invalid token")
+	ErrTokenBlacklisted     = errors.New("token has been blacklisted")
+	ErrRefreshTokenNotFound = errors.New("refresh token not found")
+)
+
+// CookieConfig contains the parameters of the cookies configuration
+type CookieConfig struct {
+	Domain   string
+	Path     string
+	Secure   bool
+	SameSite http.SameSite
+}
+
+// AuthService extend the struct
 type AuthService struct {
 	DB              *gorm.DB
 	JWTSecret       []byte
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	OAuthConfig     *oauth2.Config
+	CookieConfig    CookieConfig
 }
 
 type BattleNetUserInfo struct {
@@ -46,7 +67,35 @@ func NewAuthService(db *gorm.DB, jwtSecret string, redisClient *redis.Client, to
 				TokenURL: "https://eu.battle.net/oauth/token",
 			},
 		},
+		CookieConfig: CookieConfig{
+			Path:     "/",
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		},
 	}
+}
+
+// Method to handle the cookie
+func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+	c.SetCookie(
+		"access_token",
+		accessToken,
+		int(s.TokenExpiration.Seconds()),
+		s.CookieConfig.Path,
+		s.CookieConfig.Domain,
+		s.CookieConfig.Secure,
+		true, // httpOnly always true for the tokens
+	)
+
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		int((7 * 24 * time.Hour).Seconds()), // 7 days for the refresh
+		s.CookieConfig.Path,
+		s.CookieConfig.Domain,
+		s.CookieConfig.Secure,
+		true,
+	)
 }
 
 func (s *AuthService) SignUp(user *models.User) error {
@@ -64,28 +113,49 @@ func (s *AuthService) SignUp(user *models.User) error {
 	return nil
 }
 
-func (s *AuthService) Login(username, password string) (string, string, error) {
+func (s *AuthService) Login(c *gin.Context, username, password string) error {
 	var user models.User
 	if err := s.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return "", "", errors.New("invalid credentials")
+		return ErrInvalidCredentials
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return "", "", errors.New("invalid credentials")
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return ErrInvalidCredentials
 	}
 
 	accessToken, err := s.generateToken(user.ID, s.TokenExpiration)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to generate access token: %v", err)
+		return fmt.Errorf("failed to generate access token: %v", err)
 	}
 
 	refreshToken, err := s.generateRefreshToken(user.ID)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to generate refresh token: %v", err)
+		return fmt.Errorf("failed to generate refresh token: %v", err)
 	}
 
-	return accessToken, refreshToken, nil
+	s.setAuthCookies(c, accessToken, refreshToken)
+	return nil
+}
+
+func (s *AuthService) Logout(c *gin.Context) error {
+	// Retrieve the actual token to blacklist it
+	if token, err := c.Cookie("access_token"); err == nil {
+		if err := s.BlacklistToken(token, s.TokenExpiration); err != nil {
+			return fmt.Errorf("failed to blacklist token: %v", err)
+		}
+	}
+
+	// Retrieve & invalidate the refresh token
+	if refreshToken, err := c.Cookie("refresh_token"); err == nil {
+		ctx := context.Background()
+		s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken))
+	}
+
+	// Delete the cookies
+	c.SetCookie("access_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, false, true)
+	c.SetCookie("refresh_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, false, true)
+
+	return nil
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (uint, error) {
@@ -116,11 +186,13 @@ func (s *AuthService) BlacklistToken(token string, expiration time.Duration) err
 func (s *AuthService) IsTokenBlacklisted(token string) (bool, error) {
 	ctx := context.Background()
 	_, err := s.RedisClient.Get(ctx, "blacklist:"+token).Result()
-	if err == redis.Nil {
+
+	if errors.Is(err, redis.Nil) {
 		return false, nil
 	}
 	if err != nil {
-		return false, err
+
+		return false, fmt.Errorf("failed to check token blacklist: %v", err)
 	}
 	return true, nil
 }
@@ -144,24 +216,42 @@ func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
 	return refreshToken, nil
 }
 
-func (s *AuthService) RefreshToken(refreshToken string) (string, error) {
+func (s *AuthService) RefreshToken(c *gin.Context) error {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		return errors.New("invalid refresh token")
+	}
+
+	// Verify the refresh token in Redis
 	ctx := context.Background()
 	userIDStr, err := s.RedisClient.Get(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Result()
 	if err != nil {
-		return "", fmt.Errorf("invalid refresh token")
+		return errors.New("invalid refresh token")
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
 	if err != nil {
-		return "", fmt.Errorf("invalid user ID in refresh token")
+		return errors.New("invalid user ID in refresh token")
 	}
 
+	// Generate new tokens
 	newAccessToken, err := s.generateToken(uint(userID), s.TokenExpiration)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate new access token: %v", err)
+		return fmt.Errorf("failed to generate new access token: %v", err)
 	}
 
-	return newAccessToken, nil
+	newRefreshToken, err := s.generateRefreshToken(uint(userID))
+	if err != nil {
+		return fmt.Errorf("failed to generate new refresh token: %v", err)
+	}
+
+	// Update the cookies
+	s.setAuthCookies(c, newAccessToken, newRefreshToken)
+
+	// Blacklist the old refresh token
+	s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken))
+
+	return nil
 }
 
 // Battle.net OAuth methods
