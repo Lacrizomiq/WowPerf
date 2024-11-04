@@ -1,8 +1,7 @@
+// auth_handler.go
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"net/http"
 	"wowperf/internal/models"
@@ -13,16 +12,33 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type AuthHandler struct {
-	AuthService *auth.AuthService
+// Handlers struct to hold all auth handlers
+type Handlers struct {
+	AuthHandler         *AuthHandler
+	BlizzardAuthHandler *BlizzardAuthHandler
 }
 
-func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
-	return &AuthHandler{
-		AuthService: authService,
+// NewHandlers creates all auth handlers
+func NewHandlers(authService *auth.AuthService, blizzardAuthService *auth.BlizzardAuthService) *Handlers {
+	return &Handlers{
+		AuthHandler:         NewAuthHandler(authService),
+		BlizzardAuthHandler: NewBlizzardAuthHandler(blizzardAuthService, authService),
 	}
 }
 
+// AuthHandler handles user authentication endpoints
+type AuthHandler struct {
+	authService *auth.AuthService
+}
+
+// NewAuthHandler creates a new authentication handler
+func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
+	return &AuthHandler{
+		authService: authService,
+	}
+}
+
+// SignUp handles user registration
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	var userCreate models.UserCreate
 	if err := c.ShouldBindJSON(&userCreate); err != nil {
@@ -46,7 +62,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		Password: userCreate.Password,
 	}
 
-	if err := h.AuthService.SignUp(&user); err != nil {
+	if err := h.authService.SignUp(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
@@ -54,7 +70,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
-// Login is the login handlers
+// Login handles user login
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginInput struct {
 		Username string `json:"username" binding:"required"`
@@ -66,7 +82,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	if err := h.AuthService.Login(c, loginInput.Username, loginInput.Password); err != nil {
+	if err := h.authService.Login(c, loginInput.Username, loginInput.Password); err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 			return
@@ -83,82 +99,43 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// Logout handles user logout
 func (h *AuthHandler) Logout(c *gin.Context) {
-	if err := h.AuthService.Logout(c); err != nil {
+	if err := h.authService.Logout(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
 }
 
+// RefreshToken handles token refresh
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
-	if err := h.AuthService.RefreshToken(c); err != nil {
+	if err := h.authService.RefreshToken(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Refresh token successful"})
 }
 
-// Battle.net OAuth handlers
-
-// Battle.net OAuth login
-func (h *AuthHandler) HandleBattleNetLogin(c *gin.Context) {
-	state := generateRandomState()
-	c.SetCookie("oauth_state", state, 3600, "/", "", false, true)
-	url := h.AuthService.GetBattleNetAuthURL(state)
-	c.Redirect(http.StatusTemporaryRedirect, url)
-}
-
-// Battle.net OAuth callback
-func (h *AuthHandler) HandleBattleNetCallback(c *gin.Context) {
-	state, _ := c.Cookie("oauth_state")
-	if state != c.Query("state") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state"})
-		return
-	}
-
-	code := c.Query("code")
-	token, err := h.AuthService.ExchangeBattleNetCode(c.Request.Context(), code)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to exchange token"})
-		return
-	}
-
-	userInfo, err := h.AuthService.GetBattleNetUserInfo(token)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
-		return
-	}
-
-	// Assuming the user is already authenticated and we have their ID
-	userID, _ := c.Get("user_id")
-	if err := h.AuthService.LinkBattleNetAccount(userID.(uint), userInfo, token); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link Battle.net account"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Battle.net account linked successfully"})
-}
-
+// RegisterRoutes registers the authentication routes
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
 	{
-		// Public route who don't need auth
+		// Public routes
 		auth.POST("/signup", h.SignUp)
 		auth.POST("/login", h.Login)
 		auth.POST("/refresh", h.RefreshToken)
-		auth.GET("/battle-net/login", h.HandleBattleNetLogin)
 
-		// Protected route that need protection
+		// Protected routes
 		protected := auth.Group("")
-		protected.Use(authMiddleware.JWTAuth(h.AuthService))
+		protected.Use(authMiddleware.JWTAuth(h.authService))
 		{
 			protected.POST("/logout", h.Logout)
-			protected.GET("/battle-net/callback", h.HandleBattleNetCallback)
 		}
 	}
 }
 
+// Helper functions
 func formatValidationErrors(errors validator.ValidationErrors) []string {
 	var formattedErrors []string
 	for _, err := range errors {
@@ -176,12 +153,4 @@ func formatValidationError(err validator.FieldError) string {
 	default:
 		return err.Field() + " is invalid"
 	}
-}
-
-func generateRandomState() string {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return ""
-	}
-	return base64.URLEncoding.EncodeToString(b)
 }

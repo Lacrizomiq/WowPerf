@@ -76,6 +76,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	warcraftlogs *cacheMiddleware.CacheManager
 }) (
 	*auth.AuthService,
+	*auth.BlizzardAuthService,
 	*userService.UserService,
 	*serviceBlizzard.Service,
 	*serviceRaiderio.RaiderIOService,
@@ -87,7 +88,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	// Auth Service Setup
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("JWT_SECRET must be set in the environment")
+		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("JWT_SECRET must be set in the environment")
 	}
 
 	jwtExpirationStr := os.Getenv("JWT_EXPIRATION")
@@ -100,14 +101,21 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 
 	redisClient := cacheService.GetRedisClient()
 
+	// Blizzard Auth Service for OAuth2
+	blizzardAuthService := auth.NewBlizzardAuthService(db, auth.BlizzardAuthConfig{
+		ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
+		ClientSecret: os.Getenv("BLIZZARD_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("BLIZZARD_REDIRECT_URI"),
+		Region:       "eu",
+	})
+
+	// Auth Service
 	authService := auth.NewAuthService(
 		db,
 		jwtSecret,
 		redisClient,
 		jwtExpiration,
-		os.Getenv("BATTLE_NET_CLIENT_ID"),
-		os.Getenv("BATTLE_NET_CLIENT_SECRET"),
-		os.Getenv("BATTLE_NET_REDIRECT_URL"),
+		blizzardAuthService,
 	)
 
 	// User Service
@@ -116,30 +124,32 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	// Blizzard Service
 	blizzardService, err := serviceBlizzard.NewService()
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize blizzard service: %v", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize blizzard service: %v", err)
 	}
 
 	// Raider.io Service
 	rioService, err := serviceRaiderio.NewRaiderIOService()
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize raiderio service: %v", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize raiderio service: %v", err)
 	}
 
 	// WarcraftLogs Service Setup
 	warcraftLogsService, err := warcraftlogs.NewWarcraftLogsClientService()
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize warcraftlogs service: %v", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize warcraftlogs service: %v", err)
 	}
 	globalLeaderboardService := warcraftLogsLeaderboard.NewGlobalLeaderboardService(db)
 	rankingsUpdater := warcraftLogsLeaderboard.NewRankingsUpdater(db, warcraftLogsService, cacheService, cacheManagers.warcraftlogs)
-	return authService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, nil
+	return authService, blizzardAuthService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, nil
 }
 
 func setupRoutes(
 	r *gin.Engine,
 	authService *auth.AuthService,
+	blizzardAuthService *auth.BlizzardAuthService,
 	authHandler *authHandler.AuthHandler,
 	userHandler *userHandler.UserHandler,
+	blizzardAuthHandler *authHandler.BlizzardAuthHandler,
 	rioHandler *raiderio.Handler,
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
@@ -158,6 +168,9 @@ func setupRoutes(
 
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
+	if blizzardAuthHandler != nil {
+		blizzardAuthHandler.RegisterRoutes(r)
+	}
 
 	// API Routes
 	rioHandler.RegisterRoutes(r)
@@ -225,13 +238,13 @@ func main() {
 	}
 
 	// Initialize Services
-	authService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, err := initializeServices(db, cacheService, cacheManagers)
+	authService, blizzardAuthService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, err := initializeServices(db, cacheService, cacheManagers)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 
 	// Initialize Handlers
-	authHandler := authHandler.NewAuthHandler(authService)
+	authHandlers := authHandler.NewHandlers(authService, blizzardAuthService)
 	userHandler := userHandler.NewUserHandler(userSvc)
 	rioHandler := raiderio.NewHandler(rioService, db, cacheService, cacheManagers.raiderio)
 	blizzardHandler := apiBlizzard.NewHandler(blizzardService, db, cacheService, cacheManagers.blizzard)
@@ -269,8 +282,7 @@ func main() {
 
 	// Setup and Start Server
 	r := gin.Default()
-	setupRoutes(r, authService, authHandler, userHandler, rioHandler, blizzardHandler, warcraftlogsHandler)
-
+	setupRoutes(r, authService, blizzardAuthService, authHandlers.AuthHandler, userHandler, authHandlers.BlizzardAuthHandler, rioHandler, blizzardHandler, warcraftlogsHandler)
 	log.Println("Server is starting on :8080")
 	log.Fatal(r.Run(":8080"))
 }
