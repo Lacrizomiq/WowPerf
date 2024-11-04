@@ -60,8 +60,8 @@ func NewAuthService(
 		BlizzardAuth:    blizzardAuth,
 		CookieConfig: CookieConfig{
 			Path:     "/",
-			Secure:   true,
-			SameSite: http.SameSiteLaxMode,
+			Secure:   false,                   // Set to true in production for hhtps
+			SameSite: http.SameSiteStrictMode, // Set to SameSiteLaxMode in production
 		},
 	}
 }
@@ -149,8 +149,8 @@ func (s *AuthService) Logout(c *gin.Context) error {
 
 // clearAuthCookies removes authentication cookies
 func (s *AuthService) clearAuthCookies(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, false, true)
-	c.SetCookie("refresh_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, false, true)
+	c.SetCookie("access_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, s.CookieConfig.Secure, true)
+	c.SetCookie("refresh_token", "", -1, s.CookieConfig.Path, s.CookieConfig.Domain, s.CookieConfig.Secure, true)
 }
 
 // ValidateToken validates a JWT token and returns the user ID

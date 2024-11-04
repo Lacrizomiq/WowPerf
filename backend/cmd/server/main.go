@@ -105,7 +105,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	blizzardAuthService := auth.NewBlizzardAuthService(db, auth.BlizzardAuthConfig{
 		ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
 		ClientSecret: os.Getenv("BLIZZARD_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("BLIZZARD_REDIRECT_URI"),
+		RedirectURL:  os.Getenv("BLIZZARD_REDIRECT_URL"),
 		Region:       "eu",
 	})
 

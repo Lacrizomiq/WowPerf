@@ -18,9 +18,6 @@ export const authService = {
   async login(username: string, password: string) {
     try {
       const response = await api.post("/auth/login", { username, password });
-      const { access_token, refresh_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("refreshToken", refresh_token);
       return response.data;
     } catch (error) {
       console.error("Error logging in:", error);
@@ -36,32 +33,29 @@ export const authService = {
   async logout() {
     try {
       await api.post("/auth/logout");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      window.location.href = "/login"; // Redirect after logout
     } catch (error) {
       console.error("Error during logout:", error);
     }
   },
 
   async refreshToken() {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
     try {
-      const response = await api.post("/auth/refresh", {
-        refresh_token: refreshToken,
-      });
-      const { access_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      return access_token;
+      const response = await api.post("/auth/refresh");
+      return response.data;
     } catch (error) {
+      console.error("Error refreshing token:", error);
       throw error;
     }
   },
 
-  isAuthenticated() {
-    return !!localStorage.getItem("accessToken");
+  async isAuthenticated() {
+    try {
+      await api.get("/auth/check");
+      return true;
+    } catch (error) {
+      return false;
+    }
   },
 
   async initiateOAuthLogin() {
@@ -79,9 +73,6 @@ export const authService = {
       const response = await api.get("/auth/battle-net/callback", {
         params: { code, state },
       });
-      const { access_token, refresh_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("refreshToken", refresh_token);
       return response.data;
     } catch (error) {
       console.error("Error handling OAuth callback:", error);
