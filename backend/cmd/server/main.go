@@ -154,18 +154,34 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
+	// Security headers middleware
+	r.Use(func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		if os.Getenv("ENV") == "production" {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		c.Next()
+	})
+
 	// CORS Configuration
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:3000"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token"}
 	config.AllowCredentials = true
-	config.ExposeHeaders = []string{"Content-Length"}
+	config.ExposeHeaders = []string{"Content-Length", "X-CSRF-Token"}
 	config.MaxAge = 12 * time.Hour
 
 	r.Use(cors.New(config))
 	r.Use(gin.Logger())
 
+	// Initialize CSRF middleware
+	csrfSecret := os.Getenv("CSRF_SECRET")
+	if csrfSecret == "" {
+		log.Fatal("CSRF_SECRET is not set")
+	}
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
 	if blizzardAuthHandler != nil {
@@ -178,15 +194,29 @@ func setupRoutes(
 	warcraftlogsHandler.RegisterRoutes(r)
 
 	// Protected Routes
-	userHandler.RegisterRoutes(r, authService.AuthMiddleware())
+	userHandler.RegisterRoutes(r, authService)
 
 }
 
 func main() {
+
+	// Verify required environment variables
+	requiredEnvVars := []string{
+		"JWT_SECRET",
+		"CSRF_SECRET",
+		"REDIS_URL",
+	}
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
 		log.Println("Error loading .env file")
 		return
+	}
+
+	// Verify required environment variables
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			log.Fatalf("%s is not set", envVar)
+		}
 	}
 
 	// Initialize Cache and Redis

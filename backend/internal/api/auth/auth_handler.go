@@ -91,11 +91,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Get CSRF token after successful login
+	csrfToken := c.GetString("csrf_token")
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"user": gin.H{
 			"username": loginInput.Username,
 		},
+		"csrf_token": csrfToken,
 	})
 }
 
@@ -119,20 +123,40 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 // RegisterRoutes registers the authentication routes
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
+	// Initialize middlewares
+	csrfMiddleware := authMiddleware.NewCSRFMiddleware()
+	jwtMiddleware := authMiddleware.JWTAuth(h.authService)
+
+	// Public routes group
 	auth := router.Group("/auth")
 	{
-		// Public routes
+		// Routes that don't need CSRF protection (initial auth endpoints
 		auth.POST("/signup", h.SignUp)
 		auth.POST("/login", h.Login)
-		auth.POST("/refresh", h.RefreshToken)
 
-		// Protected routes
+		// Get CSRF token(needs to be public but protected by CSRF)
+		auth.GET("/csrf-token", csrfMiddleware, authMiddleware.GetCSRFToken())
+
+		// Routes that need CSRF but not JWT
+		csrfProtected := auth.Group("")
+		csrfProtected.Use(csrfMiddleware)
+		{
+			csrfProtected.POST("/refresh", h.RefreshToken)
+		}
+
+		// Protected routes that need both JWT and CSRF
 		protected := auth.Group("")
-		protected.Use(authMiddleware.JWTAuth(h.authService))
+		protected.Use(jwtMiddleware, csrfMiddleware)
 		{
 			protected.POST("/logout", h.Logout)
+			protected.GET("/check", h.CheckAuth)
 		}
 	}
+}
+
+// CheckAuth checks if the user is authenticated
+func (h *AuthHandler) CheckAuth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"authenticated": true})
 }
 
 // Helper functions
