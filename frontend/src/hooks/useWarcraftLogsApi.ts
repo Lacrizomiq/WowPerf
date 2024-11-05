@@ -9,7 +9,7 @@ import {
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
-import { PlayerRankings } from "@/types/warcraftlogs/playerRankings";
+import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 
 // Hook for global leaderboard with required limit
 export const useGetGlobalLeaderboard = (limit: number) => {
@@ -83,9 +83,10 @@ export const useGetPlayerRankings = (
   characterName: string,
   serverSlug: string,
   serverRegion: string,
-  zoneID: number
+  zoneID: number,
+  queryOptions = {}
 ) => {
-  return useQuery<PlayerRankings, Error>({
+  return useQuery<MythicPlusPlayerRankings, Error>({
     queryKey: [
       "warcraftlogs-player-rankings",
       characterName,
@@ -101,5 +102,9 @@ export const useGetPlayerRankings = (
         zoneID
       ),
     enabled: !!(characterName && serverSlug && serverRegion && zoneID), // Only fetch if all required parameters are provided
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
+    ...queryOptions, // Allow additional query options
   });
 };

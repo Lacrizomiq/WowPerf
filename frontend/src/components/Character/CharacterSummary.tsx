@@ -1,6 +1,9 @@
 import React from "react";
 import Image from "next/image";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import { useGetPlayerRankings } from "@/hooks/useWarcraftLogsApi";
+import MythicPlusRanking from "@/components/MythicPlus/CharacterPersonalRanking/Summary/MythicPlusSummary";
+import RaidRanking from "@/components/MythicPlus/CharacterPersonalRanking/Summary/RaidSummary";
 
 interface CharacterSummaryProps {
   region: string;
@@ -23,6 +26,18 @@ export default function CharacterSummary({
     error,
   } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
 
+  const {
+    data: mythicPlusPlayerRankings,
+    isLoading: isLoadingMythicPlusPlayerRankings,
+    error: mythicPlusPlayerRankingsError,
+  } = useGetPlayerRankings(name, realm, region, 39);
+
+  const {
+    data: raidPlayerRankings,
+    isLoading: isLoadingRaidPlayerRankings,
+    error: raidPlayerRankingsError,
+  } = useGetPlayerRankings(name, realm, region, 38);
+
   if (isLoading)
     return <div className="text-center p-4">Loading character data...</div>;
   if (error)
@@ -40,6 +55,9 @@ export default function CharacterSummary({
   };
 
   const defaultBackgroundClass = "bg-deep-blue";
+
+  const fallbackMythicPlusImg =
+    "https://wow.zamimg.com/images/wow/icons/large/ability_racial_chillofnight.jpg";
 
   return (
     <div
@@ -71,6 +89,25 @@ export default function CharacterSummary({
         <p className="text-gray-400">
           {character.race} {character.active_spec_name} {character.class}
         </p>
+      </div>
+      <div>
+        <MythicPlusRanking
+          seasonName="Mythic+ Season 1"
+          rank={mythicPlusPlayerRankings?.zoneRankings.allStars[0].rank}
+          classId={mythicPlusPlayerRankings?.classID || 0}
+          spec={mythicPlusPlayerRankings?.zoneRankings.allStars[0].spec || ""}
+          fallbackImageUrl={fallbackMythicPlusImg}
+          isLoading={isLoadingMythicPlusPlayerRankings}
+        />
+      </div>
+      <div>
+        <RaidRanking
+          raidName="Nerubar Palace"
+          rank={raidPlayerRankings?.zoneRankings.allStars[0].rank}
+          classId={raidPlayerRankings?.classID || 0}
+          spec={raidPlayerRankings?.zoneRankings.allStars[0].spec || ""}
+          isLoading={isLoadingRaidPlayerRankings}
+        />
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    setIsAuthenticated(authService.isAuthenticated());
+    authService.isAuthenticated().then(setIsAuthenticated);
   }, []);
 
   const login = async (username: string, password: string) => {

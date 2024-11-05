@@ -8,7 +8,7 @@ import {
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
-import { PlayerRankings } from "@/types/warcraftlogs/playerRankings";
+import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 
 // Get global leaderboard
 export const getGlobalLeaderboard = async (limit: number = 100) => {
@@ -110,7 +110,7 @@ export const getPlayerRankings = async (
   zoneID: number
 ) => {
   try {
-    const { data } = await api.get<PlayerRankings>(
+    const { data } = await api.get<MythicPlusPlayerRankings>(
       `/warcraftlogs/character/ranking/player`,
       {
         params: { characterName, serverSlug, serverRegion, zoneID },

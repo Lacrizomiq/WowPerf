@@ -13,6 +13,8 @@ query getCharacterRanking($characterName: String!, $serverSlug: String!, $server
     characterData {
         character(name: $characterName, serverSlug: $serverSlug, serverRegion: $serverRegion) {
             name
+						classID
+						id
             zoneRankings(zoneID: $zoneID)
         }
     }
