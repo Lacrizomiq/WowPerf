@@ -88,29 +88,37 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     <div className="p-6 rounded-xl shadow-lg m-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white">Mythic+ Dungeons</h2>
-        <SeasonsSelector
-          seasons={seasons}
-          onSeasonChange={handleSeasonChange}
-          selectedSeason={selectedSeason}
-        />
       </div>
 
       {mythicPlusPlayerRankings && (
         <div className="mb-6">
-          <MythicPlusPlayerPerformance playerData={mythicPlusPlayerRankings} />
+          <h3 className="text-xl text-white mb-2">
+            Personal Performance for {selectedSeason.name}
+          </h3>
+          <MythicPlusPlayerPerformance
+            playerData={mythicPlusPlayerRankings}
+            dungeonData={dungeonData}
+          />
         </div>
       )}
 
       {mythicPlusSeasonInfo && (
-        <div className="mb-6">
-          <p className="text-xl text-white">
-            Season Mythic Rating:{" "}
-            <span
-              style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
-            >
-              {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
-            </span>
-          </p>
+        <div className="flex justify-between items-center mb-6">
+          <div className="mb-6">
+            <p className="text-xl text-white">
+              Season Mythic Rating:{" "}
+              <span
+                style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
+              >
+                {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
+              </span>
+            </p>
+          </div>
+          <SeasonsSelector
+            seasons={seasons}
+            onSeasonChange={handleSeasonChange}
+            selectedSeason={selectedSeason}
+          />
         </div>
       )}
 

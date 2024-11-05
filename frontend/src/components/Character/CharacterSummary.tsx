@@ -49,6 +49,12 @@ export default function CharacterSummary({
   if (!character)
     return <div className="text-center p-4">No character data found</div>;
 
+  // Check if allStars data is available
+  const allStarsMythicPlusData =
+    mythicPlusPlayerRankings?.zoneRankings?.allStars?.[0];
+  const allStarsRaidData = raidPlayerRankings?.zoneRankings?.allStars?.[0];
+  const isDataAvailable = !!allStarsMythicPlusData || !!allStarsRaidData;
+
   const backgroundStyle = {
     backgroundSize: "cover",
     backgroundPosition: "top",
@@ -93,9 +99,9 @@ export default function CharacterSummary({
       <div>
         <MythicPlusRanking
           seasonName="Mythic+ Season 1"
-          rank={mythicPlusPlayerRankings?.zoneRankings.allStars[0].rank}
+          rank={allStarsMythicPlusData?.rank}
           classId={mythicPlusPlayerRankings?.classID || 0}
-          spec={mythicPlusPlayerRankings?.zoneRankings.allStars[0].spec || ""}
+          spec={allStarsMythicPlusData?.spec || ""}
           fallbackImageUrl={fallbackMythicPlusImg}
           isLoading={isLoadingMythicPlusPlayerRankings}
         />
@@ -103,9 +109,9 @@ export default function CharacterSummary({
       <div>
         <RaidRanking
           raidName="Nerubar Palace"
-          rank={raidPlayerRankings?.zoneRankings.allStars[0].rank}
+          rank={allStarsRaidData?.rank}
           classId={raidPlayerRankings?.classID || 0}
-          spec={raidPlayerRankings?.zoneRankings.allStars[0].spec || ""}
+          spec={allStarsRaidData?.spec || ""}
           isLoading={isLoadingRaidPlayerRankings}
         />
       </div>
