@@ -13,6 +13,8 @@ import {
   MythicPlusSeasonInfo,
   Season,
 } from "@/types/mythicPlusRuns";
+import { useGetPlayerRankings } from "@/hooks/useWarcraftLogsApi";
+import MythicPlusPlayerPerformance from "./CharacterPersonalRanking/MythicPlusPlayerPerformance";
 
 const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   characterName,
@@ -46,6 +48,12 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     locale,
     selectedSeason.id.toString()
   );
+
+  const {
+    data: mythicPlusPlayerRankings,
+    isLoading: isLoadingMythicPlusPlayerRankings,
+    error: mythicPlusPlayerRankingsError,
+  } = useGetPlayerRankings(characterName, realmSlug, region, 39);
 
   const handleSeasonChange = (seasonSlug: string) => {
     const newSeason = seasons.find((s) => s.slug === seasonSlug);
@@ -86,6 +94,12 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
           selectedSeason={selectedSeason}
         />
       </div>
+
+      {mythicPlusPlayerRankings && (
+        <div className="mb-6">
+          <MythicPlusPlayerPerformance playerData={mythicPlusPlayerRankings} />
+        </div>
+      )}
 
       {mythicPlusSeasonInfo && (
         <div className="mb-6">

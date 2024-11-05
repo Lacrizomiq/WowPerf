@@ -20,14 +20,14 @@ const RaidRanking: FC<RaidRankingProps> = ({
   const imageUrl = getSpecIconById(classId, spec);
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-4 py-2.5 min-w-[140px]">
+    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-4 py-2.5 min-w-[180px]">
       <div className="text-sm text-slate-300/90 mb-2 w-full text-center border-b border-slate-700/50 pb-2">
         {raidName}
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-center">
           {imageUrl && (
-            <Image src={imageUrl} alt={spec} width={24} height={24} />
+            <Image src={imageUrl} alt={spec} width={32} height={32} />
           )}
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
