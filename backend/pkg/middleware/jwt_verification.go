@@ -3,10 +3,12 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"log"
 	"net/http"
 	"time"
 	"wowperf/internal/services/auth"
+
+	"github.com/dgrijalva/jwt-go"
 
 	"github.com/gin-gonic/gin"
 )
@@ -118,8 +120,8 @@ func setUserContext(c *gin.Context, token *jwt.Token) error {
 
 // handleTokenRefresh attempts to refresh the access token
 func handleTokenRefresh(c *gin.Context, authService *auth.AuthService) error {
-	err := authService.RefreshToken(c)
-	if err != nil {
+	if err := authService.RefreshToken(c); err != nil {
+		log.Printf("Token refresh failed: %v", err)
 		return fmt.Errorf("failed to refresh token: %w", err)
 	}
 	return nil

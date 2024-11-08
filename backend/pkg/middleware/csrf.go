@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-// CSRFConfing holds the configuration for the CSRF middleware
-type CSRFConfing struct {
+// CSRFConfig holds the configuration for the CSRF middleware
+type CSRFConfig struct {
 	Secret   []byte
 	Secure   bool
 	Domain   string
@@ -26,9 +26,9 @@ func NewCSRFMiddleware() gin.HandlerFunc {
 		log.Fatal("CSRF_SECRET is not set")
 	}
 
-	config := &CSRFConfing{
+	config := &CSRFConfig{
 		Secret:   []byte(secret),
-		Secure:   false,
+		Secure:   false, // Set to true in production
 		Path:     "/",
 		MaxAge:   86400,
 		SameSite: csrf.SameSiteLaxMode,
@@ -36,13 +36,11 @@ func NewCSRFMiddleware() gin.HandlerFunc {
 
 	csrfMiddleware := csrf.Protect(
 		config.Secret,
-		csrf.Secure(config.Secure), // Set to true in production
+		csrf.Secure(config.Secure),
 		csrf.Path(config.Path),
 		csrf.MaxAge(config.MaxAge),
 		csrf.SameSite(config.SameSite),
 		csrf.HttpOnly(true),
-		csrf.RequestHeader("X-CSRF-Token"),
-		csrf.FieldName("_csrf"),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Printf("CSRF error: %v", csrf.FailureReason(r))
 			w.WriteHeader(http.StatusForbidden)
@@ -52,33 +50,35 @@ func NewCSRFMiddleware() gin.HandlerFunc {
 	)
 
 	return func(c *gin.Context) {
-		// Skip CSRF check for safe methods
-		if isSafeMethod(c.Request.Method) {
+		// Skip CSRF check for the token endpoint and safe methods
+		if c.Request.URL.Path == "/api/csrf-token" || isSafeMethod(c.Request.Method) {
 			c.Next()
 			return
 		}
 
 		csrfHandler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := csrf.Token(r)
-			log.Printf("Generated CSRF Token: %s", token)
-			c.Set("csrf_token", token)
 			c.Next()
-
 		}))
 
 		csrfHandler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
-// GetCSRFToken returns the CSRF token from the context
+// GetCSRFToken returns a new CSRF token
 func GetCSRFToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := csrf.Token(c.Request)
-		c.JSON(http.StatusOK, gin.H{"csrf_token": token})
+		secret := os.Getenv("CSRF_SECRET")
+		csrfMiddleware := csrf.Protect([]byte(secret), csrf.Secure(false))
+
+		csrfHandler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := csrf.Token(r)
+			c.JSON(http.StatusOK, gin.H{"csrf_token": token})
+		}))
+
+		csrfHandler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
-// isSafeMethod checks if the HTTP method is safe
 func isSafeMethod(method string) bool {
 	return method == "GET" || method == "HEAD" || method == "OPTIONS"
 }

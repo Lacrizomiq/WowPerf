@@ -35,6 +35,7 @@ import (
 	// Internal Packages - Utils
 	cacheMiddleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
+	csrf "wowperf/pkg/middleware"
 )
 
 func checkUpdateState(db *gorm.DB) {
@@ -178,10 +179,11 @@ func setupRoutes(
 	r.Use(gin.Logger())
 
 	// Initialize CSRF middleware
-	csrfSecret := os.Getenv("CSRF_SECRET")
-	if csrfSecret == "" {
-		log.Fatal("CSRF_SECRET is not set")
-	}
+	csrfMiddleware := csrf.NewCSRFMiddleware()
+	r.Use(csrfMiddleware)
+	// CSRF Token endpoint
+	r.GET("/api/csrf-token", csrf.GetCSRFToken())
+
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
 	if blizzardAuthHandler != nil {

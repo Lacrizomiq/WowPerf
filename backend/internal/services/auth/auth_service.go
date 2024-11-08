@@ -5,16 +5,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"wowperf/internal/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"wowperf/internal/models"
 )
 
 // Common errors returned by the auth service
@@ -195,11 +197,15 @@ func (s *AuthService) IsTokenBlacklisted(token string) (bool, error) {
 
 // generateToken creates a new JWT token
 func (s *AuthService) generateToken(userID uint, expiration time.Duration) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	now := time.Now()
+	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(expiration).Unix(),
-	})
+		"exp":     now.Add(expiration).Unix(),
+		"iat":     now.Unix(),
+		"type":    "access",
+	}
 
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(s.JWTSecret)
 }
 
@@ -216,34 +222,81 @@ func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
 
 // RefreshToken handles token refresh
 func (s *AuthService) RefreshToken(c *gin.Context) error {
+
+	// Get refresh token from cookie
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		return errors.New("invalid refresh token")
 	}
 
+	// Create context for redis
 	ctx := context.Background()
+
+	// Try to acquire a lock on the refresh token
+	lockKey := fmt.Sprintf("refresh_lock:%s", refreshToken)
+	lock := s.RedisClient.SetNX(ctx, lockKey, "locked", 10*time.Second)
+	if !lock.Val() {
+		return errors.New("refresh already in progress")
+	}
+	defer s.RedisClient.Del(ctx, lockKey)
+
+	// Verify refresh token
 	userIDStr, err := s.RedisClient.Get(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Result()
 	if err != nil {
-		return errors.New("invalid refresh token")
+		if errors.Is(err, redis.Nil) {
+			return ErrRefreshTokenNotFound
+		}
+		return fmt.Errorf("failed to verify refresh token: %w", err)
 	}
 
+	// Parse user ID from string
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
 	if err != nil {
 		return errors.New("invalid user ID in refresh token")
 	}
 
+	// Generate new access token
 	newAccessToken, err := s.generateToken(uint(userID), s.TokenExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
+	// Generate new refresh token
 	newRefreshToken, err := s.generateRefreshToken(uint(userID))
 	if err != nil {
 		return fmt.Errorf("failed to generate new refresh token: %w", err)
 	}
 
+	// Set new cookie
 	s.setAuthCookies(c, newAccessToken, newRefreshToken)
-	s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken))
+
+	// Delete old refresh token
+	err = s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Err()
+	if err != nil {
+		log.Printf("Warning: Failed to delete old refresh token: %v", err)
+	}
 
 	return nil
+}
+
+// Helper method to check if token is about to expire
+func (s *AuthService) isTokenNearExpiry(token string) (bool, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return s.JWTSecret, nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return false, ErrTokenInvalid
+		}
+	}
+
+	if exp, ok := claims["exp"].(float64); ok {
+		// Check if token expires in the next 10 minutes
+		timeUntilExpiry := time.Unix(int64(exp), 0).Sub(time.Now())
+		return timeUntilExpiry < 10*time.Minute, nil
+	}
+
+	return false, errors.New("invalid token claims")
 }
