@@ -64,10 +64,12 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
               </p>
             </div>
             <div className="h-px bg-border my-2" />
+            {/* TODO: Add upgrade page 
             <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
               <Sparkles className="mr-2 h-4 w-4 inline" />
               Upgrade to Pro
             </button>
+            */}
             <button
               className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
               onClick={() => router.push("/profile")}
@@ -75,14 +77,18 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
               <BadgeCheck className="mr-2 h-4 w-4 inline" />
               Account
             </button>
+            {/* TODO: Add billing page 
             <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
               <CreditCard className="mr-2 h-4 w-4 inline" />
               Billing
             </button>
+            */}
+            {/* TODO: Add notifications page 
             <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
               <Bell className="mr-2 h-4 w-4 inline" />
               Notifications
             </button>
+            */}
             <div className="h-px bg-border my-2" />
             <button
               onClick={logout}
