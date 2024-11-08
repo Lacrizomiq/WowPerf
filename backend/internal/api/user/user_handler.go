@@ -2,7 +2,9 @@ package user
 
 import (
 	"net/http"
+	"wowperf/internal/services/auth"
 	"wowperf/internal/services/user"
+	"wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -105,14 +107,26 @@ func (h *UserHandler) DeleteAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Account deleted successfully"})
 }
 
-func (h *UserHandler) RegisterRoutes(router *gin.Engine, authMiddleware gin.HandlerFunc) {
+func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthService) {
+	// Initialize middlewares
+	jwtMiddleware := middleware.JWTAuth(authService)
+	csrfMiddleware := middleware.NewCSRFMiddleware()
+
+	// All user routes require JWT auth
 	user := router.Group("/user")
-	user.Use(authMiddleware)
+	user.Use(jwtMiddleware)
 	{
+		// Routes that only need JWT (read operations)
 		user.GET("/profile", h.GetProfile)
-		user.PUT("/email", h.UpdateEmail)
-		user.PUT("/password", h.ChangePassword)
-		user.PUT("/username", h.ChangeUsername)
-		user.DELETE("/account", h.DeleteAccount)
+
+		// Routes that need both JWT and CSRF (write operations)
+		protected := user.Group("")
+		protected.Use(csrfMiddleware)
+		{
+			user.PUT("/email", h.UpdateEmail)
+			user.PUT("/password", h.ChangePassword)
+			user.PUT("/username", h.ChangeUsername)
+			user.DELETE("/account", h.DeleteAccount)
+		}
 	}
 }

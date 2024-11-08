@@ -11,15 +11,17 @@ import (
 // User is the struct for the user model
 type User struct {
 	gorm.Model
-	ID                   uint       `gorm:"primaryKey" json:"id"`
-	Username             string     `gorm:"uniqueIndex;not null" json:"username" validate:"required,min=3,max=50"`
-	Email                string     `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
-	Password             string     `gorm:"not null" json:"-" validate:"required,strongpassword"`
-	BattleNetID          *int       `gorm:"uniqueIndex" json:"battle_net_id"`
-	BattleTag            *string    `gorm:"uniqueIndex" json:"battle_tag"`
-	EncryptedToken       []byte     `gorm:"type:bytea" json:"-"`
-	BattleNetExpiresAt   *time.Time `json:"battle_net_expires_at"`
-	LastUsernameChangeAt time.Time  `json:"last_username_change_at"`
+	ID                    uint      `gorm:"primaryKey" json:"id"`
+	Username              string    `gorm:"uniqueIndex;not null" json:"username" validate:"required,min=3,max=50"`
+	Email                 string    `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
+	Password              string    `gorm:"not null" json:"-" validate:"required,strongpassword"`
+	BattleNetID           *int      `gorm:"uniqueIndex" json:"battle_net_id"`
+	BattleTag             *string   `gorm:"uniqueIndex" json:"battle_tag"`
+	EncryptedToken        []byte    `gorm:"type:bytea" json:"-"`
+	BattleNetRefreshToken string    `gorm:"type:text" json:"-"`
+	BattleNetTokenType    string    `gorm:"type:varchar(50)" json:"-"`
+	BattleNetExpiresAt    time.Time `json:"battle_net_expires_at"`
+	LastUsernameChangeAt  time.Time `json:"last_username_change_at"`
 }
 
 // UserCreate is the struct for creating a new user

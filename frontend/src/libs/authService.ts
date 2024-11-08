@@ -1,33 +1,43 @@
 import api from "./api";
 import axios, { AxiosError } from "axios";
 
+interface AuthError {
+  error: string;
+  message?: string;
+}
+
 export const authService = {
   async signup(username: string, email: string, password: string) {
     try {
-      const response = await api.post("/auth/signup", {
+      const response = await api.post<{ message: string }>("/auth/signup", {
         username,
         email,
         password,
       });
       return response.data;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<AuthError>;
+        throw new Error(err.response?.data?.message || "Signup failed");
+      }
       throw error;
     }
   },
 
   async login(username: string, password: string) {
     try {
-      const response = await api.post("/auth/login", { username, password });
-      const { access_token, refresh_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("refreshToken", refresh_token);
+      const response = await api.post<{ message: string }>("/auth/login", {
+        username,
+        password,
+      });
       return response.data;
     } catch (error) {
-      console.error("Error logging in:", error);
       if (axios.isAxiosError(error)) {
-        if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
           throw new Error("Invalid credentials");
         }
+        const err = error as AxiosError<AuthError>;
+        throw new Error(err.response?.data?.message || "Login failed");
       }
       throw new Error("An error occurred during login");
     }
@@ -35,41 +45,49 @@ export const authService = {
 
   async logout() {
     try {
+      // La vérification CSRF sera gérée par l'interceptor
       await api.post("/auth/logout");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      // Ne pas rediriger ici, laisser le contexte gérer la redirection
+      return true;
     } catch (error) {
       console.error("Error during logout:", error);
-    }
-  },
-
-  async refreshToken() {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-    try {
-      const response = await api.post("/auth/refresh", {
-        refresh_token: refreshToken,
-      });
-      const { access_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      return access_token;
-    } catch (error) {
       throw error;
     }
   },
 
-  isAuthenticated() {
-    return !!localStorage.getItem("accessToken");
+  async refreshToken() {
+    try {
+      const response = await api.post<{ message: string }>("/auth/refresh");
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<AuthError>;
+        throw new Error(err.response?.data?.message || "Token refresh failed");
+      }
+      throw error;
+    }
+  },
+
+  async isAuthenticated() {
+    try {
+      const response = await api.get<{ authenticated: boolean }>("/auth/check");
+      return response.data.authenticated;
+    } catch (error) {
+      return false;
+    }
   },
 
   async initiateOAuthLogin() {
     try {
-      const response = await api.get("/auth/battle-net/login");
-      window.location.href = response.data.url;
+      const response = await api.get<{ url: string }>("/auth/battle-net/login");
+      return response.data.url;
     } catch (error) {
-      console.error("Error initiating OAuth login:", error);
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<AuthError>;
+        throw new Error(
+          err.response?.data?.message || "OAuth initiation failed"
+        );
+      }
       throw error;
     }
   },
@@ -79,12 +97,12 @@ export const authService = {
       const response = await api.get("/auth/battle-net/callback", {
         params: { code, state },
       });
-      const { access_token, refresh_token } = response.data;
-      localStorage.setItem("accessToken", access_token);
-      localStorage.setItem("refreshToken", refresh_token);
       return response.data;
     } catch (error) {
-      console.error("Error handling OAuth callback:", error);
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<AuthError>;
+        throw new Error(err.response?.data?.message || "OAuth callback failed");
+      }
       throw error;
     }
   },

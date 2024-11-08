@@ -1,4 +1,4 @@
-// types
+// Types for class and spec icons
 export interface SpecIcons {
   [key: string]: string;
 }
@@ -10,6 +10,37 @@ export interface ClassData {
 
 export type ClassIconsMapping = {
   [key: string]: ClassData;
+};
+
+// Types for WarcraftLogs API data
+export interface WowSpec {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface WowClass {
+  id: number;
+  name: string;
+  slug: string;
+  specs: WowSpec[];
+}
+
+// Mapping between WarcraftLogs class IDs and class names
+export const CLASS_ID_MAPPING: { [key: number]: string } = {
+  1: "DeathKnight",
+  2: "Druid",
+  3: "Hunter",
+  4: "Mage",
+  5: "Monk",
+  6: "Paladin",
+  7: "Priest",
+  8: "Rogue",
+  9: "Shaman",
+  10: "Warlock",
+  11: "Warrior",
+  12: "DemonHunter",
+  13: "Evoker",
 };
 
 // constants
@@ -167,6 +198,33 @@ export const CLASS_ICONS_MAPPING: ClassIconsMapping = {
   },
 };
 
+// Function to get class name from WarcraftLogs class ID
+export const getClassNameById = (classId: number): string => {
+  const className = CLASS_ID_MAPPING[classId];
+  if (!className) {
+    console.warn(`Class ID not found: ${classId}`);
+    return "";
+  }
+  return className;
+};
+
+// Function to get class icon using WarcraftLogs class ID
+export const getClassIconById = (classId: number): string => {
+  const className = getClassNameById(classId);
+  if (!className) return "";
+
+  return getClassIcon(className);
+};
+
+// Function to get spec icon using WarcraftLogs class ID and spec name
+export const getSpecIconById = (classId: number, specName: string): string => {
+  const className = getClassNameById(classId);
+  if (!className) return "";
+
+  const normalizedSpecName = normalizeWowName(specName);
+  return getSpecIcon(className, normalizedSpecName);
+};
+
 // utils functions to get spec icons
 export const getSpecIcon = (className: string, specName: string): string => {
   const classData = CLASS_ICONS_MAPPING[className];
@@ -205,4 +263,18 @@ export const normalizeWowName = (name: string): string => {
     .split(/(?=[A-Z])/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join("");
+};
+
+// Function to get spec data from WarcraftLogs spec name and class ID
+export const getSpecData = (
+  classId: number,
+  specName: string
+): { icon: string; name: string } => {
+  const className = getClassNameById(classId);
+  const normalizedSpecName = normalizeWowName(specName);
+
+  return {
+    icon: getSpecIcon(className, normalizedSpecName),
+    name: specName,
+  };
 };

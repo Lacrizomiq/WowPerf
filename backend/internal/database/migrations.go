@@ -46,6 +46,7 @@ func Migrate(db *gorm.DB) error {
 		{"011_clean_rankings_update_state", cleanRankingsUpdateState},
 		{"012_clean_and_constrain_rankings_update_state", cleanAndConstrainRankingsUpdateState},
 		{"013_clean_and_fix_rankings_update_state", cleanAndFixRankingsUpdateState},
+		{"014_update_user_model", updateUserModel},
 	}
 
 	for _, m := range migrations {
@@ -393,5 +394,39 @@ func cleanAndFixRankingsUpdateState(db *gorm.DB) error {
 					VALUES (1)
 					ON CONFLICT (id) DO NOTHING
 			`).Error
+	})
+}
+
+func updateUserModel(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Add new columns
+		if err := tx.Exec(`
+            ALTER TABLE users 
+            ADD COLUMN IF NOT EXISTS battle_net_refresh_token TEXT,
+            ADD COLUMN IF NOT EXISTS battle_net_token_type VARCHAR(50),
+            ALTER COLUMN encrypted_token TYPE BYTEA USING encrypted_token::bytea,
+            ALTER COLUMN battle_net_expires_at SET DEFAULT CURRENT_TIMESTAMP;
+
+            -- Update existing nullable columns if needed
+            ALTER TABLE users
+            ALTER COLUMN battle_net_id DROP NOT NULL,
+            ALTER COLUMN battle_tag DROP NOT NULL,
+            ALTER COLUMN battle_net_expires_at DROP NOT NULL;
+
+            -- Add or update constraints
+            ALTER TABLE users
+            DROP CONSTRAINT IF EXISTS users_battle_net_id_key,
+            ADD CONSTRAINT users_battle_net_id_key UNIQUE (battle_net_id),
+            DROP CONSTRAINT IF EXISTS users_battle_tag_key,
+            ADD CONSTRAINT users_battle_tag_key UNIQUE (battle_tag),
+            DROP CONSTRAINT IF EXISTS users_username_key,
+            ADD CONSTRAINT users_username_key UNIQUE (username),
+            DROP CONSTRAINT IF EXISTS users_email_key,
+            ADD CONSTRAINT users_email_key UNIQUE (email);
+        `).Error; err != nil {
+			return fmt.Errorf("failed to update user table: %v", err)
+		}
+
+		return nil
 	})
 }

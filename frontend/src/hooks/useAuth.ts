@@ -3,9 +3,21 @@ import { authService } from "@/libs/authService";
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   useEffect(() => {
-    setIsAuthenticated(authService.isAuthenticated());
+    const checkAuth = async () => {
+      try {
+        const isAuth = await authService.isAuthenticated();
+        setIsAuthenticated(isAuth);
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
@@ -27,17 +39,17 @@ export function useAuth() {
   }, []);
 
   const signup = useCallback(
-    async (username: string, email: string, password: string) => {
-      try {
-        const response = await authService.signup(username, email, password);
-        setIsAuthenticated(true);
-        return response;
-      } catch (error) {
-        throw error;
-      }
-    },
-    []
+      async (username: string, email: string, password: string) => {
+        try {
+          const response = await authService.signup(username, email, password);
+          setIsAuthenticated(true);
+          return response;
+        } catch (error) {
+          throw error;
+        }
+      },
+      []
   );
 
-  return { isAuthenticated, login, logout, signup };
+  return { isAuthenticated, isLoading, login, logout, signup };
 }
