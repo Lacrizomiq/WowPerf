@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -9,76 +10,98 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-// CSRFConfig holds the configuration for the CSRF middleware
+// CSRFConfig struct for CSRF middleware configuration
 type CSRFConfig struct {
-	Secret   []byte
-	Secure   bool
-	Domain   string
-	Path     string
-	MaxAge   int
-	SameSite csrf.SameSiteMode
+	isDevelopment bool
+	Domain        string
+	AllowedHosts  []string
 }
 
-// NewCSRFMiddleware creates a new CSRF middleware
-func NewCSRFMiddleware() gin.HandlerFunc {
+// CSRFMiddleware is the CSRF middleware available for the app
+var CSRFMiddleware func(http.Handler) http.Handler
+
+// InitCSRFMiddleware initializes the CSRF middleware
+func InitCSRFMiddleware() {
 	secret := os.Getenv("CSRF_SECRET")
 	if secret == "" {
 		log.Fatal("CSRF_SECRET is not set")
 	}
 
-	config := &CSRFConfig{
-		Secret:   []byte(secret),
-		Secure:   false, // Set to true in production
-		Path:     "/",
-		MaxAge:   86400,
-		SameSite: csrf.SameSiteLaxMode,
-	}
+	isDev := os.Getenv("ENV") != "production"
 
-	csrfMiddleware := csrf.Protect(
-		config.Secret,
-		csrf.Secure(config.Secure),
-		csrf.Path(config.Path),
-		csrf.MaxAge(config.MaxAge),
-		csrf.SameSite(config.SameSite),
-		csrf.HttpOnly(true),
+	CSRFMiddleware = csrf.Protect(
+		[]byte(secret),
+		csrf.Secure(!isDev),
+		csrf.Path("/"),
+		csrf.SameSite(csrf.SameSiteLaxMode),
+		csrf.RequestHeader("X-CSRF-Token"),
+		csrf.CookieName("_csrf"),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("CSRF error: %v", csrf.FailureReason(r))
-			w.WriteHeader(http.StatusForbidden)
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"error": "CSRF token invalid"}`))
+			w.WriteHeader(http.StatusForbidden)
+
+			errorReason := csrf.FailureReason(r)
+			log.Printf("CSRF Error: %v", errorReason)
+
+			json.NewEncoder(w).Encode(gin.H{
+				"error":   "CSRF validation failed",
+				"code":    "INVALID_CSRF_TOKEN",
+				"details": errorReason.Error(),
+			})
 		})),
 	)
+}
+
+func NewCSRFHandler() gin.HandlerFunc {
+	// Initialize the CSRF middleware if it's not already done
+	if CSRFMiddleware == nil {
+		InitCSRFMiddleware()
+	}
 
 	return func(c *gin.Context) {
-		// Skip CSRF check for the token endpoint and safe methods
-		if c.Request.URL.Path == "/api/csrf-token" || isSafeMethod(c.Request.Method) {
+		// Skip csrf for GET, HEAD, OPTIONS
+		if c.Request.Method == "GET" ||
+			c.Request.Method == "HEAD" ||
+			c.Request.Method == "OPTIONS" {
 			c.Next()
 			return
 		}
 
-		csrfHandler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		csrfHandler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			c.Next()
 		}))
-
 		csrfHandler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
-// GetCSRFToken returns a new CSRF token
+// GetCSRFToken generates and returns a new CSRF token
 func GetCSRFToken() gin.HandlerFunc {
+	if CSRFMiddleware == nil {
+		InitCSRFMiddleware()
+	}
+
 	return func(c *gin.Context) {
-		secret := os.Getenv("CSRF_SECRET")
-		csrfMiddleware := csrf.Protect([]byte(secret), csrf.Secure(false))
-
-		csrfHandler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := csrf.Token(r)
-			c.JSON(http.StatusOK, gin.H{"csrf_token": token})
+			c.Header("X-CSRF-Token", token)
+			c.JSON(http.StatusOK, gin.H{
+				"token":  token,
+				"header": "X-CSRF-Token",
+			})
 		}))
-
-		csrfHandler.ServeHTTP(c.Writer, c.Request)
+		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
-func isSafeMethod(method string) bool {
-	return method == "GET" || method == "HEAD" || method == "OPTIONS"
+// GetTokenFromRequest gets the CSRF token from the request
+func GetTokenFromRequest(c *gin.Context, handler func(token string)) {
+	if CSRFMiddleware == nil {
+		InitCSRFMiddleware()
+	}
+
+	wrapped := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := csrf.Token(r)
+		handler(token)
+	}))
+	wrapped.ServeHTTP(c.Writer, c.Request)
 }

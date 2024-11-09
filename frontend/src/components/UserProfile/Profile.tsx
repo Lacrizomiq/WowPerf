@@ -4,13 +4,31 @@ import React from "react";
 import ProfileSidebar from "./ProfileSidebar";
 import PersonalInfo from "@/components/UserProfile/PersonalInfo";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/providers/AuthContext";
+import { useRequireAuth } from "@/providers/AuthContext";
 
 const Profile: React.FC = () => {
-  const { profile, isLoading, error, updateEmail, isUpdatingEmail } =
-    useUserProfile();
+  // Protection de la route
+  useRequireAuth();
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  const { user } = useAuth();
+  const { profile, isLoading, error, mutationStates } = useUserProfile();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        {error instanceof Error ? error.message : "An error occurred"}
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-black">
@@ -19,8 +37,7 @@ const Profile: React.FC = () => {
         {profile && (
           <PersonalInfo
             profile={profile}
-            onUpdate={updateEmail}
-            isUpdating={isUpdatingEmail}
+            isBattleNetLinked={!!user?.battlenet_id}
           />
         )}
       </main>

@@ -3,30 +3,47 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { UserServiceError, UserErrorCode } from "@/libs/userService";
 
-interface ChangeEmailProps {
-  onUpdateEmail: (newEmail: string) => Promise<void>;
-  isUpdating: boolean;
-}
-
-const ChangeEmail: React.FC<ChangeEmailProps> = ({
-  onUpdateEmail,
-  isUpdating,
-}) => {
+const ChangeEmail: React.FC = () => {
   const [newEmail, setNewEmail] = useState("");
   const router = useRouter();
 
+  const { updateEmail, mutationStates } = useUserProfile();
+  const { isPending: isUpdating } = mutationStates.updateEmail;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      await toast.promise(onUpdateEmail(newEmail), {
-        loading: "Updating email...",
-        success: "Email updated successfully!",
-        error: "Failed to update email",
-      });
-      router.push("/profile");
+      const result = await updateEmail(newEmail);
+
+      if (result.success) {
+        toast.success("Email updated successfully!");
+        router.push("/profile");
+      } else {
+        toast.error(result.error || "Failed to update email");
+      }
     } catch (error) {
-      console.error("Error updating email:", error);
+      if (error instanceof UserServiceError) {
+        switch (error.code) {
+          case UserErrorCode.INVALID_EMAIL:
+            toast.error("Please enter a valid email address");
+            break;
+          case UserErrorCode.EMAIL_EXISTS:
+            toast.error("This email is already in use");
+            break;
+          case UserErrorCode.UNAUTHORIZED:
+            toast.error("Session expired. Please login again");
+            router.push("/login");
+            break;
+          default:
+            toast.error(error.message);
+        }
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
 

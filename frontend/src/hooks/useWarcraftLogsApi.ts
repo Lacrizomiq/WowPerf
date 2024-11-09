@@ -10,7 +10,7 @@ import {
 } from "../types/warcraftlogs/globalLeaderboard";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
-
+import { RaidRankingsResponse } from "@/types/warcraftlogs/character/raidPlayerRankings";
 // Hook for global leaderboard with required limit
 export const useGetGlobalLeaderboard = (limit: number) => {
   return useQuery<GlobalLeaderboardEntry[], Error>({
@@ -78,8 +78,8 @@ export const useGetDungeonLeaderboard = (
   });
 };
 
-// Hook for player rankings
-export const useGetPlayerRankings = (
+// Hook for player Mythic+ rankings
+export const useGetPlayerMythicPlusRankings = (
   characterName: string,
   serverSlug: string,
   serverRegion: string,
@@ -95,7 +95,38 @@ export const useGetPlayerRankings = (
       zoneID,
     ],
     queryFn: () =>
-      warcraftLogsApiService.getPlayerRankings(
+      warcraftLogsApiService.getPlayerMythicPlusRankings(
+        characterName,
+        serverSlug,
+        serverRegion,
+        zoneID
+      ),
+    enabled: !!(characterName && serverSlug && serverRegion && zoneID), // Only fetch if all required parameters are provided
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
+    ...queryOptions, // Allow additional query options
+  });
+};
+
+// Hook for player raid rankings
+export const useGetPlayerRaidRankings = (
+  characterName: string,
+  serverSlug: string,
+  serverRegion: string,
+  zoneID: number,
+  queryOptions = {}
+) => {
+  return useQuery<RaidRankingsResponse, Error>({
+    queryKey: [
+      "warcraftlogs-player-raid-rankings",
+      characterName,
+      serverSlug,
+      serverRegion,
+      zoneID,
+    ],
+    queryFn: () =>
+      warcraftLogsApiService.getPlayerRaidRankings(
         characterName,
         serverSlug,
         serverRegion,

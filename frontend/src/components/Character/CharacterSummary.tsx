@@ -1,7 +1,10 @@
 import React from "react";
 import Image from "next/image";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
-import { useGetPlayerRankings } from "@/hooks/useWarcraftLogsApi";
+import {
+  useGetPlayerRaidRankings,
+  useGetPlayerMythicPlusRankings,
+} from "@/hooks/useWarcraftLogsApi";
 import MythicPlusRanking from "@/components/MythicPlus/CharacterPersonalRanking/Summary/MythicPlusSummary";
 import RaidRanking from "@/components/MythicPlus/CharacterPersonalRanking/Summary/RaidSummary";
 
@@ -30,13 +33,13 @@ export default function CharacterSummary({
     data: mythicPlusPlayerRankings,
     isLoading: isLoadingMythicPlusPlayerRankings,
     error: mythicPlusPlayerRankingsError,
-  } = useGetPlayerRankings(name, realm, region, 39);
+  } = useGetPlayerMythicPlusRankings(name, realm, region, 39);
 
   const {
     data: raidPlayerRankings,
     isLoading: isLoadingRaidPlayerRankings,
     error: raidPlayerRankingsError,
-  } = useGetPlayerRankings(name, realm, region, 38);
+  } = useGetPlayerRaidRankings(name, realm, region, 38);
 
   if (isLoading)
     return <div className="text-center p-4">Loading character data...</div>;
@@ -64,6 +67,17 @@ export default function CharacterSummary({
 
   const fallbackMythicPlusImg =
     "https://wow.zamimg.com/images/wow/icons/large/ability_racial_chillofnight.jpg";
+
+  const is500Error = (error: any) => {
+    return error?.response?.status === 500 || error?.status === 500;
+  };
+
+  const shouldShowMythicPlusRanking =
+    !is500Error(mythicPlusPlayerRankingsError) &&
+    !isLoadingMythicPlusPlayerRankings;
+
+  const shouldShowRaidRanking =
+    !is500Error(raidPlayerRankingsError) && !isLoadingRaidPlayerRankings;
 
   return (
     <div
@@ -96,25 +110,29 @@ export default function CharacterSummary({
           {character.race} {character.active_spec_name} {character.class}
         </p>
       </div>
-      <div>
-        <MythicPlusRanking
-          seasonName="Mythic+ Season 1"
-          rank={allStarsMythicPlusData?.rank}
-          classId={mythicPlusPlayerRankings?.classID || 0}
-          spec={allStarsMythicPlusData?.spec || ""}
-          fallbackImageUrl={fallbackMythicPlusImg}
-          isLoading={isLoadingMythicPlusPlayerRankings}
-        />
-      </div>
-      <div>
-        <RaidRanking
-          raidName="Nerubar Palace"
-          rank={allStarsRaidData?.rank}
-          classId={raidPlayerRankings?.classID || 0}
-          spec={allStarsRaidData?.spec || ""}
-          isLoading={isLoadingRaidPlayerRankings}
-        />
-      </div>
+      {shouldShowMythicPlusRanking && (
+        <div>
+          <MythicPlusRanking
+            seasonName="Mythic+ Season 1"
+            rank={allStarsMythicPlusData?.rank}
+            classId={mythicPlusPlayerRankings?.classID || 0}
+            spec={allStarsMythicPlusData?.spec || ""}
+            fallbackImageUrl={fallbackMythicPlusImg}
+            isLoading={isLoadingMythicPlusPlayerRankings}
+          />
+        </div>
+      )}
+      {shouldShowRaidRanking && (
+        <div>
+          <RaidRanking
+            raidName="Nerubar Palace"
+            rank={allStarsRaidData?.rank}
+            classId={raidPlayerRankings?.classID || 0}
+            spec={allStarsRaidData?.spec || ""}
+            isLoading={isLoadingRaidPlayerRankings}
+          />
+        </div>
+      )}
     </div>
   );
 }

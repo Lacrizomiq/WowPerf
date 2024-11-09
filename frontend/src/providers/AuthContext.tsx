@@ -7,12 +7,15 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { authService } from "@/libs/authService";
+import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import { resetCSRFToken } from "@/libs/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  user: UserData | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
@@ -20,25 +23,89 @@ interface AuthContextType {
   handleOAuthCallback: (code: string, state: string) => Promise<void>;
 }
 
+interface UserData {
+  username: string;
+  email?: string;
+  battlenet_id?: string;
+}
+
+interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: UserData | null;
+}
+
+const initialState: AuthState = {
+  isAuthenticated: false,
+  isLoading: true,
+  user: null,
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
+
+  const updateState = useCallback((updates: Partial<AuthState>) => {
+    setState((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const resetState = useCallback(() => {
+    setState(initialState);
+  }, []);
+
+  const handleAuthError = useCallback(
+    async (error: unknown): Promise<string> => {
+      if (error instanceof AuthError) {
+        switch (error.code) {
+          case AuthErrorCode.INVALID_CREDENTIALS:
+            return "Invalid username or password";
+          case AuthErrorCode.USERNAME_EXISTS:
+            return "Username already exists";
+          case AuthErrorCode.EMAIL_EXISTS:
+            return "Email already exists";
+          case AuthErrorCode.NETWORK_ERROR:
+            return "Network error, please try again";
+          default:
+            return error.message;
+        }
+      }
+
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError;
+        if (err.response?.status === 401) {
+          updateState({
+            isAuthenticated: false,
+            user: null,
+          });
+          resetCSRFToken();
+          router.push("/login");
+          return "Session expired";
+        }
+      }
+
+      return "An unexpected error occurred";
+    },
+    [router, updateState]
+  );
 
   const checkAuth = useCallback(async () => {
     try {
       const isAuth = await authService.isAuthenticated();
-      setIsAuthenticated(isAuth);
+      updateState({
+        isAuthenticated: isAuth,
+        isLoading: false,
+      });
     } catch (error) {
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
+      updateState({
+        isAuthenticated: false,
+        isLoading: false,
+      });
     }
-  }, []);
+  }, [updateState]);
 
   useEffect(() => {
     checkAuth();
@@ -47,37 +114,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (username: string, password: string) => {
       try {
-        await authService.login(username, password);
-        setIsAuthenticated(true);
-        router.push("/dashboard"); // Redirection after successful login
+        const response = await authService.login(username, password);
+        updateState({
+          isAuthenticated: true,
+          user: {
+            username: response.user.username,
+          },
+        });
+        router.push("/profile");
       } catch (error) {
-        throw error;
+        const errorMessage = await handleAuthError(error);
+        throw new Error(errorMessage);
       }
     },
-    [router]
+    [router, handleAuthError, updateState]
   );
 
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-      setIsAuthenticated(false);
-      router.push("/login"); // Handle redirection here rather than in the service
+      updateState({
+        isAuthenticated: false,
+        user: null,
+      });
+      resetCSRFToken();
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      throw error;
+      // Even in case of error, reset the state
+      updateState({
+        isAuthenticated: false,
+        user: null,
+      });
+      resetCSRFToken();
+      router.push("/login");
     }
-  }, [router]);
+  }, [router, updateState]);
 
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
       try {
         await authService.signup(username, email, password);
-        await login(username, password); // Auto login after signup
+        // Auto-login after successful signup
+        await login(username, password);
       } catch (error) {
-        throw error;
+        const errorMessage = await handleAuthError(error);
+        throw new Error(errorMessage);
       }
     },
-    [login]
+    [login, handleAuthError]
   );
 
   const initiateOAuthLogin = useCallback(async () => {
@@ -85,28 +170,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const url = await authService.initiateOAuthLogin();
       window.location.href = url;
     } catch (error) {
-      console.error("OAuth initiation failed:", error);
-      throw error;
+      const errorMessage = await handleAuthError(error);
+      throw new Error(errorMessage);
     }
-  }, []);
+  }, [handleAuthError]);
 
   const handleOAuthCallback = useCallback(
     async (code: string, state: string) => {
       try {
-        await authService.handleOAuthCallback(code, state);
-        setIsAuthenticated(true);
-        router.push("/dashboard");
+        const response = await authService.handleOAuthCallback(code, state);
+        updateState({
+          isAuthenticated: true,
+          user: {
+            username: response.user.username,
+          },
+        });
+        router.push("/profile");
       } catch (error) {
-        console.error("OAuth callback failed:", error);
-        router.push("/login?error=oauth_failed");
+        const errorMessage = await handleAuthError(error);
+        throw new Error(errorMessage);
       }
     },
-    [router]
+    [router, handleAuthError, updateState]
   );
 
   const value = {
-    isAuthenticated,
-    isLoading,
+    isAuthenticated: state.isAuthenticated,
+    isLoading: state.isLoading,
+    user: state.user,
     login,
     logout,
     signup,
@@ -114,17 +205,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     handleOAuthCallback,
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (state.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// Hook to use the authentication context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+};
+
+// Utility hook for redirection if not authenticated
+export const useRequireAuth = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  return { isAuthenticated, isLoading };
 };

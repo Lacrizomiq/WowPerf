@@ -3,6 +3,7 @@ package auth
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
@@ -56,6 +57,24 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
+	// Check if user already exists
+	var existingUser models.User
+	if err := h.authService.DB.Where("username = ? OR email = ?",
+		userCreate.Username, userCreate.Email).First(&existingUser).Error; err == nil {
+		if existingUser.Username == userCreate.Username {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Username already exists",
+				"code":  "username_exists",
+			})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Email already exists",
+				"code":  "email_exists",
+			})
+		}
+		return
+	}
+
 	user := models.User{
 		Username: userCreate.Username,
 		Email:    userCreate.Email,
@@ -64,6 +83,16 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 
 	if err := h.authService.SignUp(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	// Auto-login the user after signup
+	if err := h.authService.Login(c, user.Username, userCreate.Password); err != nil {
+		log.Println("Failed to auto-login user after signup:", err)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "User created successfully",
+			"code":    "signup_success_login_required",
+		})
 		return
 	}
 
@@ -78,28 +107,38 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&loginInput); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+			"code":  "invalid_input",
+		})
 		return
 	}
 
 	if err := h.authService.Login(c, loginInput.Username, loginInput.Password); err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid credentials",
+				"code":  "invalid_credentials",
+			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to login"})
+		log.Printf("Login error for user %s: %v", loginInput.Username, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to login",
+			"code":  "login_error",
+		})
 		return
 	}
 
-	// Get CSRF token after successful login
-	csrfToken := c.GetString("csrf_token")
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"user": gin.H{
-			"username": loginInput.Username,
-		},
-		"csrf_token": csrfToken,
+	// Get the CSRF token from the request
+	authMiddleware.GetTokenFromRequest(c, func(token string) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Login successful",
+			"user": gin.H{
+				"username": loginInput.Username,
+			},
+			"csrf_token": token,
+		})
 	})
 }
 
@@ -123,34 +162,23 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 // RegisterRoutes registers the authentication routes
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
-	// Initialize middlewares
-	csrfMiddleware := authMiddleware.NewCSRFMiddleware()
-	jwtMiddleware := authMiddleware.JWTAuth(h.authService)
-
-	// Public routes group
+	// Group for the auth
 	auth := router.Group("/auth")
+
+	// public route
+	auth.GET("/csrf-token", authMiddleware.GetCSRFToken())
+
+	// Base auth routes
+	auth.POST("/signup", h.SignUp)
+	auth.POST("/login", h.Login)
+
+	// Protected routes with JWT
+	protected := auth.Group("")
+	protected.Use(authMiddleware.JWTAuth(h.authService))
 	{
-		// Routes that don't need CSRF protection (initial auth endpoints
-		auth.POST("/signup", h.SignUp)
-		auth.POST("/login", h.Login)
-
-		// Get CSRF token(needs to be public but protected by CSRF)
-		auth.GET("/csrf-token", csrfMiddleware, authMiddleware.GetCSRFToken())
-
-		// Routes that need CSRF but not JWT
-		csrfProtected := auth.Group("")
-		csrfProtected.Use(csrfMiddleware)
-		{
-			csrfProtected.POST("/refresh", h.RefreshToken)
-		}
-
-		// Protected routes that need both JWT and CSRF
-		protected := auth.Group("")
-		protected.Use(jwtMiddleware, csrfMiddleware)
-		{
-			protected.POST("/logout", h.Logout)
-			protected.GET("/check", h.CheckAuth)
-		}
+		protected.POST("/refresh", h.RefreshToken)
+		protected.POST("/logout", h.Logout)
+		protected.GET("/check", h.CheckAuth)
 	}
 }
 

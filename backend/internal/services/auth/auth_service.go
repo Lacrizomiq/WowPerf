@@ -19,6 +19,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	AccessTokenDuration  = 7 * 24 * time.Hour  // 7 days
+	RefreshTokenDuration = 30 * 24 * time.Hour // 30 days
+)
+
 // Common errors returned by the auth service
 var (
 	ErrInvalidCredentials   = errors.New("invalid credentials")
@@ -51,14 +56,13 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
-	tokenExpiration time.Duration,
 	blizzardAuth *BlizzardAuthService,
 ) *AuthService {
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
-		TokenExpiration: tokenExpiration,
+		TokenExpiration: AccessTokenDuration,
 		BlizzardAuth:    blizzardAuth,
 		CookieConfig: CookieConfig{
 			Path:     "/",
@@ -73,7 +77,7 @@ func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken s
 	c.SetCookie(
 		"access_token",
 		accessToken,
-		int(s.TokenExpiration.Seconds()),
+		int(AccessTokenDuration.Seconds()),
 		s.CookieConfig.Path,
 		s.CookieConfig.Domain,
 		s.CookieConfig.Secure,
@@ -83,7 +87,7 @@ func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken s
 	c.SetCookie(
 		"refresh_token",
 		refreshToken,
-		int((7 * 24 * time.Hour).Seconds()),
+		int(RefreshTokenDuration.Seconds()),
 		s.CookieConfig.Path,
 		s.CookieConfig.Domain,
 		s.CookieConfig.Secure,
@@ -213,7 +217,7 @@ func (s *AuthService) generateToken(userID uint, expiration time.Duration) (stri
 func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
 	ctx := context.Background()
 	refreshToken := fmt.Sprintf("%d", time.Now().UnixNano())
-	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, 7*24*time.Hour).Err()
+	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, RefreshTokenDuration).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to store refresh token: %w", err)
 	}

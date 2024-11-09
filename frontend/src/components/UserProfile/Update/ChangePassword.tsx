@@ -3,40 +3,58 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { UserServiceError, UserErrorCode } from "@/libs/userService";
 
-interface ChangePasswordProps {
-  onChangePassword: (
-    currentPassword: string,
-    newPassword: string
-  ) => Promise<void>;
-  isChanging: boolean;
-}
-
-const ChangePassword: React.FC<ChangePasswordProps> = ({
-  onChangePassword,
-  isChanging,
-}) => {
+const ChangePassword: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
 
+  const { changePassword, mutationStates } = useUserProfile();
+  const { isPending: isChanging } = mutationStates.changePassword;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword === confirmPassword) {
-      try {
-        await toast.promise(onChangePassword(currentPassword, newPassword), {
-          loading: "Changing password...",
-          success: "Password changed successfully!",
-          error: "Failed to change password",
-        });
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    // Validation du mot de passe
+    const passwordRegex = /^(?=.*[!@#$%^&*()_+]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      toast.error(
+        "Password must be at least 8 characters and contain at least one special character"
+      );
+      return;
+    }
+
+    try {
+      const result = await changePassword(currentPassword, newPassword);
+
+      if (result.success) {
+        toast.success("Password changed successfully!");
         router.push("/profile");
-      } catch (error) {
-        console.error("Error changing password:", error);
       }
-    } else {
-      // Handle password mismatch error
-      alert("New passwords do not match");
+    } catch (error) {
+      if (error instanceof UserServiceError) {
+        switch (error.code) {
+          case UserErrorCode.INVALID_PASSWORD:
+            toast.error("Current password is incorrect");
+            break;
+          case UserErrorCode.UNAUTHORIZED:
+            toast.error("Session expired. Please login again");
+            router.push("/login");
+            break;
+          default:
+            toast.error(error.message);
+        }
+      } else {
+        toast.error("An unexpected error occurred");
+      }
     }
   };
 
@@ -57,6 +75,8 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:text-gray-200"
+            required
+            disabled={isChanging}
           />
         </div>
         <div>
@@ -72,7 +92,13 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:text-gray-200"
+            required
+            pattern="(?=.*[!@#$%^&*()_+]).{8,}"
+            disabled={isChanging}
           />
+          <p className="mt-1 text-sm text-gray-400">
+            Must be at least 8 characters with at least one special character
+          </p>
         </div>
         <div>
           <label
@@ -87,13 +113,16 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:text-gray-200"
+            required
+            disabled={isChanging}
           />
         </div>
         <button
           type="submit"
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={isChanging}
+          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
         >
-          Change Password
+          {isChanging ? "Changing Password..." : "Change Password"}
         </button>
       </form>
     </section>
