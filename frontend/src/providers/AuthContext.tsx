@@ -26,6 +26,7 @@ interface AuthContextType {
 interface UserData {
   username: string;
   email?: string;
+  battlenet_id?: string;
 }
 
 interface AuthState {
