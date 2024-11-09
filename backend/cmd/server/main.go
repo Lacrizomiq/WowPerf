@@ -92,14 +92,6 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("JWT_SECRET must be set in the environment")
 	}
 
-	jwtExpirationStr := os.Getenv("JWT_EXPIRATION")
-	jwtExpiration := 24 * time.Hour
-	if jwtExpirationStr != "" {
-		if duration, err := time.ParseDuration(jwtExpirationStr); err == nil {
-			jwtExpiration = duration
-		}
-	}
-
 	redisClient := cacheService.GetRedisClient()
 
 	// Blizzard Auth Service for OAuth2
@@ -115,7 +107,6 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		db,
 		jwtSecret,
 		redisClient,
-		jwtExpiration,
 		blizzardAuthService,
 	)
 
@@ -144,6 +135,18 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	return authService, blizzardAuthService, userSvc, blizzardService, rioService, warcraftLogsService, globalLeaderboardService, rankingsUpdater, nil
 }
 
+func securityHeaders() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		if os.Getenv("ENV") == "production" {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		c.Next()
+	}
+}
+
 func setupRoutes(
 	r *gin.Engine,
 	authService *auth.AuthService,
@@ -155,32 +158,34 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
+
+	// Initialize the CSRF middleware
+	csrf.InitCSRFMiddleware()
+
 	// Security headers middleware
-	r.Use(func(c *gin.Context) {
-		c.Header("X-Content-Type-Options", "nosniff")
-		c.Header("X-Frame-Options", "DENY")
-		c.Header("X-XSS-Protection", "1; mode=block")
-		if os.Getenv("ENV") == "production" {
-			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		}
-		c.Next()
-	})
+	r.Use(securityHeaders())
 
 	// CORS Configuration
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000"}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token"}
-	config.AllowCredentials = true
-	config.ExposeHeaders = []string{"Content-Length", "X-CSRF-Token"}
-	config.MaxAge = 12 * time.Hour
-
-	r.Use(cors.New(config))
+	corsConfig := cors.Config{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Length",
+			"Content-Type",
+			"Authorization",
+			"X-CSRF-Token",
+		},
+		ExposeHeaders:    []string{"Content-Length", "X-CSRF-Token"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	r.Use(cors.New(corsConfig))
 	r.Use(gin.Logger())
 
 	// Initialize CSRF middleware
-	csrfMiddleware := csrf.NewCSRFMiddleware()
-	r.Use(csrfMiddleware)
+	r.Use(csrf.NewCSRFHandler())
+
 	// CSRF Token endpoint
 	r.GET("/api/csrf-token", csrf.GetCSRFToken())
 

@@ -108,25 +108,21 @@ func (h *UserHandler) DeleteAccount(c *gin.Context) {
 }
 
 func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthService) {
-	// Initialize middlewares
+	// Initialize JWT middleware
 	jwtMiddleware := middleware.JWTAuth(authService)
-	csrfMiddleware := middleware.NewCSRFMiddleware()
 
 	// All user routes require JWT auth
 	user := router.Group("/user")
 	user.Use(jwtMiddleware)
 	{
-		// Routes that only need JWT (read operations)
+		// Routes for read operations
 		user.GET("/profile", h.GetProfile)
 
-		// Routes that need both JWT and CSRF (write operations)
-		protected := user.Group("")
-		protected.Use(csrfMiddleware)
-		{
-			user.PUT("/email", h.UpdateEmail)
-			user.PUT("/password", h.ChangePassword)
-			user.PUT("/username", h.ChangeUsername)
-			user.DELETE("/account", h.DeleteAccount)
-		}
+		// Routes for write operations
+		// Note: CSRF protection is now handled globally, so we don't need to add it here
+		user.PUT("/email", h.UpdateEmail)
+		user.PUT("/password", h.ChangePassword)
+		user.PUT("/username", h.ChangeUsername)
+		user.DELETE("/account", h.DeleteAccount)
 	}
 }
