@@ -404,6 +404,7 @@ func updateUserModel(db *gorm.DB) error {
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS battle_net_refresh_token TEXT,
             ADD COLUMN IF NOT EXISTS battle_net_token_type VARCHAR(50),
+            ADD COLUMN IF NOT EXISTS battle_net_scopes TEXT[],
             ALTER COLUMN encrypted_token TYPE BYTEA USING encrypted_token::bytea,
             ALTER COLUMN battle_net_expires_at SET DEFAULT CURRENT_TIMESTAMP;
 

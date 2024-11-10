@@ -21,6 +21,7 @@ type User struct {
 	BattleNetRefreshToken string    `gorm:"type:text" json:"-"`
 	BattleNetTokenType    string    `gorm:"type:varchar(50)" json:"-"`
 	BattleNetExpiresAt    time.Time `json:"battle_net_expires_at"`
+	BattleNetScopes       []string  `gorm:"type:text[]" json:"-"`
 	LastUsernameChangeAt  time.Time `json:"last_username_change_at"`
 }
 
@@ -49,4 +50,29 @@ func (u *User) GetBattleNetToken() (string, error) {
 		return "", err
 	}
 	return string(decrypted), nil
+}
+
+// HasScope checks if the user has a specific scope
+func (u *User) HasScope(scope string) bool {
+	for _, s := range u.BattleNetScopes {
+		if s == scope {
+			return true
+		}
+	}
+	return false
+}
+
+// HasRequiredScopes checks if the user has all the required scopes
+func (u *User) HasRequiredScopes(requiredScopes []string) bool {
+	scopeMap := make(map[string]bool)
+	for _, scope := range u.BattleNetScopes {
+		scopeMap[scope] = true
+	}
+
+	for _, requiredScope := range requiredScopes {
+		if !scopeMap[requiredScope] {
+			return false
+		}
+	}
+	return true
 }

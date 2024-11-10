@@ -8,7 +8,7 @@ import { useAuth } from "@/providers/AuthContext";
 import { useRequireAuth } from "@/providers/AuthContext";
 
 const Profile: React.FC = () => {
-  // Protection de la route
+  // Route protection
   useRequireAuth();
 
   const { user } = useAuth();

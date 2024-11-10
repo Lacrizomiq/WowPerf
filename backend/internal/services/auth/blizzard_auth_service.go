@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -14,6 +15,19 @@ import (
 
 	models "wowperf/internal/models"
 )
+
+// BlizzardScopes are the scopes available for Battle.net OAuth2 authentication.
+const (
+	ScopeOpenID        = "openid"
+	ScopeWowProfile    = "wow.profile"
+	ScopeWowCharacters = "wow.profile.characters"
+)
+
+// RequiredScopes are the scopes required for Battle.net OAuth2 authentication.
+var RequiredScopes = []string{
+	ScopeOpenID,
+	ScopeWowProfile,
+}
 
 // BlizzardAuthConfig holds the configuration for Battle.net authentication.
 // All fields are required for the service to function properly.
@@ -88,6 +102,7 @@ func NewBlizzardAuthService(db *gorm.DB, config BlizzardAuthConfig) *BlizzardAut
 // Returns:
 //   - The complete authorization URL to redirect the user to
 func (s *BlizzardAuthService) GetAuthorizationURL(state string) string {
+	s.oauthConfig.Scopes = RequiredScopes
 	return s.oauthConfig.AuthCodeURL(state)
 }
 
@@ -182,10 +197,18 @@ func (s *BlizzardAuthService) UpdateUserBattleNetTokens(user *models.User, token
 		return fmt.Errorf("failed to encrypt access token: %w", err)
 	}
 
+	// Extract scopes from the token
+	scope, ok := token.Extra("scope").(string)
+	var scopes []string
+	if ok {
+		scopes = strings.Split(scope, " ")
+	}
+
 	updates := map[string]interface{}{
 		"battle_net_refresh_token": token.RefreshToken,
 		"battle_net_expires_at":    token.Expiry,
 		"battle_net_token_type":    token.TokenType,
+		"battle_net_scopes":        scopes,
 	}
 
 	if err := s.db.Model(user).Updates(updates).Error; err != nil {
@@ -279,4 +302,9 @@ func (s *BlizzardAuthService) ValidateToken(token *oauth2.Token) bool {
 	defer resp.Body.Close()
 
 	return resp.StatusCode == http.StatusOK
+}
+
+// ValidateScopes checks if the token has the required scopes
+func (s *BlizzardAuthService) ValidateScopes(user *models.User) bool {
+	return user.HasRequiredScopes(RequiredScopes)
 }

@@ -3,10 +3,12 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"wowperf/internal/models"
 	"wowperf/internal/services/auth"
 	"wowperf/pkg/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 type BlizzardAuthHandler struct {
@@ -59,18 +61,56 @@ func (h *BlizzardAuthHandler) HandleBattleNetCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Battle.net account linked successfully"})
 }
 
+// GetLinkStatus returns the status of the Battle.net link
+func (h *BlizzardAuthHandler) GetLinkStatus(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	var user models.User
+	if err := h.AuthService.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"linked":    user.BattleNetID != nil,
+		"battleTag": user.BattleTag,
+	})
+}
+
+// UnlinkBattleNetAccount unlinks the Battle.net account
+func (h *BlizzardAuthHandler) UnlinkBattleNetAccount(c *gin.Context) {
+	userID := c.GetUint("user_id")
+
+	updates := map[string]interface{}{
+		"battle_net_id":            nil,
+		"battle_tag":               nil,
+		"encrypted_token":          nil,
+		"battle_net_refresh_token": nil,
+		"battle_net_token_type":    nil,
+		"battle_net_expires_at":    nil,
+		"battle_net_scopes":        nil,
+	}
+
+	if err := h.AuthService.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unlink Battle.net account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Battle.net account unlinked successfully"})
+}
+
 // RegisterRoutes registers Battle.net OAuth routes
 func (h *BlizzardAuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth/battle-net")
 	{
-		// Public route
-		auth.GET("/login", h.HandleBattleNetLogin)
 
-		// Protected route
+		// Protected route for Battle.net OAuth that need to be authenticated into WowPerf
 		protected := auth.Group("")
 		protected.Use(middleware.JWTAuth(h.AuthService))
 		{
-			protected.GET("/callback", h.HandleBattleNetCallback)
+			protected.GET("/link", h.HandleBattleNetLogin)        // Initiate Battle.net OAuth flow
+			protected.GET("/callback", h.HandleBattleNetCallback) // Handle Battle.net OAuth callback
+			protected.GET("/status", h.GetLinkStatus)             // Get Battle.net link status
+			protected.DELETE("/unlink", h.UnlinkBattleNetAccount) // Unlink Battle.net account
 		}
 	}
 }
