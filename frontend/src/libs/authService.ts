@@ -25,17 +25,6 @@ interface AuthCheckResponse {
   authenticated: boolean;
 }
 
-interface OAuthResponse {
-  url: string;
-}
-
-interface OAuthCallbackResponse extends AuthResponse {
-  user: {
-    username: string;
-    battlenet_id: string;
-  };
-}
-
 // Possible errors
 export enum AuthErrorCode {
   INVALID_CREDENTIALS = "invalid_credentials",
@@ -202,58 +191,6 @@ export const authService = {
     } catch (error) {
       // In case of error, consider the user not authenticated
       return false;
-    }
-  },
-
-  async initiateOAuthLogin(): Promise<string> {
-    try {
-      const response = await api.get<OAuthResponse>("/auth/battle-net/login");
-      return response.data.url;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const err = error as AxiosError<APIError>;
-        throw new AuthError(
-          AuthErrorCode.OAUTH_ERROR,
-          err.response?.data?.error || "Failed to initiate OAuth login",
-          err
-        );
-      }
-
-      throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during OAuth initiation",
-        error
-      );
-    }
-  },
-
-  async handleOAuthCallback(
-    code: string,
-    state: string
-  ): Promise<OAuthCallbackResponse> {
-    try {
-      const response = await api.get<OAuthCallbackResponse>(
-        "/auth/battle-net/callback",
-        {
-          params: { code, state },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const err = error as AxiosError<APIError>;
-        throw new AuthError(
-          AuthErrorCode.OAUTH_ERROR,
-          err.response?.data?.error || "OAuth callback failed",
-          err
-        );
-      }
-
-      throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during OAuth callback",
-        error
-      );
     }
   },
 };

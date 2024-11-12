@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   battleNetService,
   BattleNetError,
@@ -10,7 +10,7 @@ import { useAuth } from "@/providers/AuthContext";
 export function useBattleNetLink() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
-
+  const [isLinking, setIsLinking] = useState(false);
   // Query for Battle.net link status
   const {
     data: linkStatus,
@@ -41,8 +41,7 @@ export function useBattleNetLink() {
   // Initiate linking
   const initiateLink = useCallback(async () => {
     try {
-      const url = await battleNetService.initiateLinking();
-      window.location.href = url;
+      await battleNetService.initiateLinking();
       return { success: true as const };
     } catch (error) {
       return {
@@ -75,5 +74,6 @@ export function useBattleNetLink() {
     unlinkAccount,
     isUnlinking: unlinkMutation.isPending,
     unlinkError: unlinkMutation.error,
+    isLinking,
   };
 }

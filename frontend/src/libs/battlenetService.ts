@@ -20,6 +20,10 @@ export enum BattleNetErrorCode {
   UNLINK_FAILED = "battle_net_unlink_failed",
   NETWORK_ERROR = "battle_net_network_error",
   UNAUTHORIZED = "battle_net_unauthorized",
+  CALLBACK_FAILED = "battle_net_callback_failed",
+  INVALID_STATE = "battle_net_invalid_state",
+  INVALID_CODE = "battle_net_invalid_code",
+  INVALID_GRANT = "battle_net_invalid_grant",
 }
 
 // Battle.net error
@@ -37,23 +41,24 @@ export class BattleNetError extends Error {
 // Battle.net service
 export const battleNetService = {
   // Initiate Battle.net OAuth flow to link account
-  async initiateLinking(): Promise<string> {
+  async initiateLinking(): Promise<void> {
     try {
-      const response = await api.get<{ url: string }>("/auth/battle-net/link");
-      return response.data.url;
+      const response = await api.get<{ url: string }>("/auth/battle-net/link", {
+        withCredentials: true,
+      });
+      window.location.href = response.data.url;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
         throw new BattleNetError(
           BattleNetErrorCode.LINK_FAILED,
-          err.response?.data.error ||
-            "Failed to initiate Battle.net OAuth flow",
+          err.response?.data?.error || "Failed to initiate Battle.net linking",
           err
         );
       }
       throw new BattleNetError(
         BattleNetErrorCode.NETWORK_ERROR,
-        "An unexpected network error occurred",
+        "Network error during Battle.net linking",
         error
       );
     }

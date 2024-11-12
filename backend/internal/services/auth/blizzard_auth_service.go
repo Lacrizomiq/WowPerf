@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 
@@ -79,7 +81,7 @@ func NewBlizzardAuthService(db *gorm.DB, config BlizzardAuthConfig) *BlizzardAut
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		RedirectURL:  config.RedirectURL,
-		Scopes:       []string{"openid", "wow.profile"},
+		Scopes:       RequiredScopes,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://oauth.battle.net/authorize",
 			TokenURL: "https://oauth.battle.net/token",
@@ -103,7 +105,7 @@ func NewBlizzardAuthService(db *gorm.DB, config BlizzardAuthConfig) *BlizzardAut
 //   - The complete authorization URL to redirect the user to
 func (s *BlizzardAuthService) GetAuthorizationURL(state string) string {
 	s.oauthConfig.Scopes = RequiredScopes
-	return s.oauthConfig.AuthCodeURL(state)
+	return s.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
 // ExchangeCodeForToken exchanges an authorization code for an OAuth token.
@@ -117,16 +119,12 @@ func (s *BlizzardAuthService) GetAuthorizationURL(state string) string {
 //   - Token: The OAuth2 token if successful
 //   - error: Any error that occurred during the exchange
 func (s *BlizzardAuthService) ExchangeCodeForToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	log.Printf("Exchanging code for token with redirect_uri: %s", s.oauthConfig.RedirectURL)
+
 	token, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
+		log.Printf("Token exchange failed: %v", err)
 		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
-	}
-
-	// Calculate explicit expiration time if not provided
-	if token.Expiry.IsZero() {
-		if expiresIn, ok := token.Extra("expires_in").(float64); ok {
-			token.Expiry = time.Now().Add(time.Duration(expiresIn) * time.Second)
-		}
 	}
 
 	return token, nil
@@ -199,9 +197,9 @@ func (s *BlizzardAuthService) UpdateUserBattleNetTokens(user *models.User, token
 
 	// Extract scopes from the token
 	scope, ok := token.Extra("scope").(string)
-	var scopes []string
+	var scopes pq.StringArray
 	if ok {
-		scopes = strings.Split(scope, " ")
+		scopes = pq.StringArray(strings.Split(scope, " "))
 	}
 
 	updates := map[string]interface{}{
@@ -229,6 +227,8 @@ func (s *BlizzardAuthService) UpdateUserBattleNetTokens(user *models.User, token
 // Returns:
 //   - error: Any error that occurred during the linking process
 func (s *BlizzardAuthService) LinkBattleNetAccount(userID uint, battleNetInfo *BattleNetUserInfo, token *oauth2.Token) error {
+	log.Printf("Starting Battle.net account linking for userID: %d, BattleTag: %s", userID, battleNetInfo.BattleTag)
+
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
@@ -240,16 +240,21 @@ func (s *BlizzardAuthService) LinkBattleNetAccount(userID uint, battleNetInfo *B
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	// Check if BattleTag is already linked to another account
+	// Vérification du BattleTag
 	var existingUser models.User
 	err := tx.Where("battle_tag = ? AND id != ?", battleNetInfo.BattleTag, userID).First(&existingUser).Error
+
 	if err == nil {
 		tx.Rollback()
 		return fmt.Errorf("battle tag already linked to another account")
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		tx.Rollback()
 		return fmt.Errorf("failed to check battle tag uniqueness: %w", err)
 	}
+
+	log.Printf("BattleTag %s is available for linking", battleNetInfo.BattleTag)
 
 	// Update Battle.net information
 	updates := map[string]interface{}{
@@ -257,21 +262,26 @@ func (s *BlizzardAuthService) LinkBattleNetAccount(userID uint, battleNetInfo *B
 		"battle_tag":    battleNetInfo.BattleTag,
 	}
 
+	log.Printf("Updating user information with: %+v", updates)
 	if err := tx.Model(&user).Updates(updates).Error; err != nil {
 		tx.Rollback()
+		log.Printf("Failed to update user information: %v", err)
 		return fmt.Errorf("failed to update user battle.net info: %w", err)
 	}
 
 	// Update tokens
 	if err := s.UpdateUserBattleNetTokens(&user, token); err != nil {
 		tx.Rollback()
+		log.Printf("Failed to update tokens: %v", err)
 		return fmt.Errorf("failed to update user battle.net tokens: %w", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		log.Printf("Failed to commit transaction: %v", err)
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	log.Printf("Successfully linked Battle.net account for user ID %d", userID)
 	return nil
 }
 
@@ -307,4 +317,59 @@ func (s *BlizzardAuthService) ValidateToken(token *oauth2.Token) bool {
 // ValidateScopes checks if the token has the required scopes
 func (s *BlizzardAuthService) ValidateScopes(user *models.User) bool {
 	return user.HasRequiredScopes(RequiredScopes)
+}
+
+// CompleteOAuthFlow manages the entire OAuth process in a single function
+func (s *BlizzardAuthService) CompleteOAuthFlow(ctx context.Context, userID uint, code string) (string, error) {
+	// 1. Exchange code for a token
+	token, err := s.oauthConfig.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange code: %w", err)
+	}
+
+	// 2. Get user information
+	userInfo, err := s.GetUserInfo(token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	// 3. Begin a transaction
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return "", fmt.Errorf("failed to begin transaction: %w", tx.Error)
+	}
+
+	// 4. Verify if the BattleTag is already linked
+	var existingUser models.User
+	err = tx.Where("battle_tag = ? AND id != ?", userInfo.BattleTag, userID).First(&existingUser).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return "", fmt.Errorf("failed to check battletag uniqueness: %w", err)
+	}
+	if err == nil {
+		tx.Rollback()
+		return "", fmt.Errorf("battletag already linked to another account")
+	}
+
+	// 5. Update user
+	updates := map[string]interface{}{
+		"battle_net_id":            userInfo.ID,
+		"battle_tag":               userInfo.BattleTag,
+		"battle_net_refresh_token": token.RefreshToken,
+		"battle_net_expires_at":    token.Expiry,
+		"battle_net_token_type":    token.TokenType,
+		"battle_net_scopes":        strings.Split(token.TokenType, " "),
+	}
+
+	if err := tx.Model(&models.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		tx.Rollback()
+		return "", fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// 6. Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return userInfo.BattleTag, nil
 }
