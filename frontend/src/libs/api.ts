@@ -3,7 +3,7 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosHeaders,
 } from "axios";
-
+import https from "https";
 // Custom Axios request config
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -12,8 +12,8 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 // CSRF response
 interface CSRFResponse {
-  token: string; // CSRF token
-  header: string; // Header name
+  token: string;
+  header: string;
 }
 
 // API error
@@ -23,10 +23,17 @@ interface APIError {
   details?: string;
 }
 
+// Create custom HTTPS agent
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false, // Important for self-signed certificates
+});
+
 class CSRFTokenManager {
   private static instance: CSRFTokenManager;
   private token: string | null = null;
   private tokenPromise: Promise<string> | null = null;
+  private tokenExpiryTime: number | null = null;
+  private readonly TOKEN_LIFETIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
   private constructor() {}
 
@@ -37,12 +44,24 @@ class CSRFTokenManager {
     return CSRFTokenManager.instance;
   }
 
+  private isTokenExpired(): boolean {
+    return !this.tokenExpiryTime || Date.now() > this.tokenExpiryTime;
+  }
+
   private async fetchToken(): Promise<string> {
     try {
       const response = await axios.get<CSRFResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`,
         {
           withCredentials: true,
+          headers: {
+            Accept: "application/json",
+          },
+          ...(process.env.NODE_ENV === "development" && {
+            httpsAgent: new (require("https").Agent)({
+              rejectUnauthorized: false,
+            }),
+          }),
         }
       );
 
@@ -51,22 +70,25 @@ class CSRFTokenManager {
       }
 
       this.token = response.data.token;
+      this.tokenExpiryTime = Date.now() + this.TOKEN_LIFETIME;
       return this.token;
     } catch (error) {
       console.error("Failed to fetch CSRF token:", error);
       this.token = null;
       this.tokenPromise = null;
+      this.tokenExpiryTime = null;
       throw error;
     }
   }
 
   async getToken(forceRefresh = false): Promise<string> {
-    if (forceRefresh) {
+    if (forceRefresh || this.isTokenExpired()) {
       this.token = null;
       this.tokenPromise = null;
+      this.tokenExpiryTime = null;
     }
 
-    if (this.token) {
+    if (this.token && !this.isTokenExpired()) {
       return this.token;
     }
 
@@ -83,6 +105,7 @@ class CSRFTokenManager {
   clearToken(): void {
     this.token = null;
     this.tokenPromise = null;
+    this.tokenExpiryTime = null;
   }
 }
 
@@ -96,6 +119,13 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  // Support for self-signed certificates in development
+  ...(process.env.NODE_ENV === "development" && {
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0",
+    }),
+  }),
+  timeout: 10000,
 });
 
 // Request interceptor
@@ -112,20 +142,17 @@ api.interceptors.request.use(
     }
 
     try {
-      // Log request details
-      console.log("Request details:", {
-        url: config.url,
-        method: config.method,
-        headers: config.headers,
-        withCredentials: config.withCredentials,
-      });
+      // Log request details in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Request details:", {
+          url: config.url,
+          method: config.method,
+          headers: config.headers,
+          withCredentials: config.withCredentials,
+        });
+      }
 
       const token = await csrfManager.getToken();
-      console.log("CSRF Token details:", {
-        exists: !!token,
-        length: token?.length,
-      });
-
       if (!token) {
         throw new Error("No CSRF token available");
       }
@@ -134,11 +161,13 @@ api.interceptors.request.use(
       headers.set("X-CSRF-Token", token);
       config.headers = headers;
 
-      // Log final request configuration
-      console.log("Final request config:", {
-        headers: config.headers,
-        withCredentials: config.withCredentials,
-      });
+      // Log final request configuration in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Final request config:", {
+          headers: config.headers,
+          withCredentials: config.withCredentials,
+        });
+      }
 
       return config;
     } catch (error) {
@@ -154,7 +183,15 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`✅ Response success:`, {
+        status: response.status,
+        data: response.data,
+      });
+    }
+    return response;
+  },
   async (error: AxiosError<APIError>) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
@@ -163,18 +200,20 @@ api.interceptors.response.use(
     }
 
     // Detailed error log
-    console.log(
-      `API Error for ${originalRequest.method} ${originalRequest.url}:`,
-      {
-        status: error.response?.status,
-        data: error.response?.data,
-        config: {
-          headers: originalRequest.headers,
-          method: originalRequest.method,
-          url: originalRequest.url,
-        },
-      }
-    );
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `❌ API Error for ${originalRequest.method} ${originalRequest.url}:`,
+        {
+          status: error.response?.status,
+          data: error.response?.data,
+          config: {
+            headers: originalRequest.headers,
+            method: originalRequest.method,
+            url: originalRequest.url,
+          },
+        }
+      );
+    }
 
     // CSRF error handling
     if (
@@ -186,7 +225,6 @@ api.interceptors.response.use(
       originalRequest._csrfRetry = true;
 
       try {
-        // Force the token refresh
         const newToken = await csrfManager.getToken(true);
         const headers = new AxiosHeaders(originalRequest.headers);
         headers.set("X-CSRF-Token", newToken);
@@ -205,8 +243,8 @@ api.interceptors.response.use(
 
     // Authentication error handling
     if (error.response?.status === 401) {
-      // Clear CSRF token on authentication errors
       csrfManager.clearToken();
+      // I can add here a redirection to the login page or other actions
     }
 
     return Promise.reject(error);
@@ -215,12 +253,11 @@ api.interceptors.response.use(
 
 export default api;
 
-// Utility function to reset the CSRF token
+// Utility functions
 export const resetCSRFToken = () => {
   csrfManager.clearToken();
 };
 
-// Utility function to pre-load a CSRF token
 export const preloadCSRFToken = () => {
   return csrfManager.getToken();
 };

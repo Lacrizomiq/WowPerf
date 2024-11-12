@@ -30,6 +30,7 @@ import (
 
 	// Internal Packages - Models & Database
 	"wowperf/internal/database"
+	migrations "wowperf/internal/database/migrations"
 	models "wowperf/internal/models/raiderio/mythicrundetails"
 
 	// Internal Packages - Utils
@@ -158,16 +159,24 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
-
 	// Initialize the CSRF middleware
 	csrf.InitCSRFMiddleware()
 
-	// Security headers middleware
+	// Security headers middleware with HTTPS support
 	r.Use(securityHeaders())
+
+	// Get environment variables
+	environment := os.Getenv("ENVIRONMENT")
+	allowedOrigins := []string{"https://localhost"}
+
+	// Add production domain if in production
+	if environment == "production" {
+		allowedOrigins = append(allowedOrigins, os.Getenv("FRONTEND_URL"))
+	}
 
 	// CORS Configuration
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-CSRF-Token"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -196,7 +205,6 @@ func setupRoutes(
 
 	// Protected Routes
 	userHandler.RegisterRoutes(r, authService)
-
 }
 
 func main() {
@@ -233,7 +241,7 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	if err := database.Migrate(db); err != nil {
+	if err := migrations.RunMigrations(db); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
