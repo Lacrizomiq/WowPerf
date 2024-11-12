@@ -1,26 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { UserProfile } from "@/libs/userService";
-import { useAuth } from "@/providers/AuthContext";
+import { useBattleNetLink } from "@/hooks/useBattleNetLink";
 
 interface PersonalInfoProps {
   profile: UserProfile;
-  isBattleNetLinked: boolean;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({
-  profile,
-  isBattleNetLinked,
-}) => {
-  const { initiateOAuthLogin } = useAuth();
+const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
+  const queryClient = useQueryClient();
+  const {
+    linkStatus,
+    isLoading,
+    error,
+    initiateLink,
+    unlinkAccount,
+    isUnlinking,
+  } = useBattleNetLink();
+
+  useEffect(() => {
+    // Rafraîchir le statut de la liaison quand le composant est monté
+    // et quand l'URL contient success=true
+    if (window.location.search.includes("success=true")) {
+      // Force refresh du status
+      queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] });
+      // Nettoyer l'URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [queryClient]);
 
   const handleBattleNetConnect = async () => {
     try {
-      await initiateOAuthLogin();
+      await initiateLink();
     } catch (error) {
       console.error("Failed to initiate OAuth:", error);
+    }
+  };
+
+  const handleBattleNetUnlink = async () => {
+    try {
+      await unlinkAccount();
+    } catch (error) {
+      console.error("Failed to unlink Battle.net:", error);
     }
   };
 
@@ -51,10 +75,19 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
           Link your Battle.net account
         </h2>
         <div className="flex items-center">
-          {isBattleNetLinked ? (
-            <div className="text-green-500 flex items-center">
-              <span className="mr-2">✓</span>
-              Connected to Battle.net
+          {linkStatus?.linked ? (
+            <div className="space-y-4">
+              <div className="text-green-500 flex items-center">
+                <span className="mr-2">✓</span>
+                Connected as {linkStatus.battleTag}
+              </div>
+              <button
+                onClick={handleBattleNetUnlink}
+                disabled={isUnlinking}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200 disabled:opacity-50"
+              >
+                {isUnlinking ? "Unlinking..." : "Unlink Battle.net Account"}
+              </button>
             </div>
           ) : (
             <button

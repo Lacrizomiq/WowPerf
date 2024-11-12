@@ -92,6 +92,10 @@ const csrfManager = CSRFTokenManager.getInstance();
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
 });
 
 // Request interceptor
@@ -108,10 +112,33 @@ api.interceptors.request.use(
     }
 
     try {
+      // Log request details
+      console.log("Request details:", {
+        url: config.url,
+        method: config.method,
+        headers: config.headers,
+        withCredentials: config.withCredentials,
+      });
+
       const token = await csrfManager.getToken();
+      console.log("CSRF Token details:", {
+        exists: !!token,
+        length: token?.length,
+      });
+
+      if (!token) {
+        throw new Error("No CSRF token available");
+      }
+
       const headers = new AxiosHeaders(config.headers);
       headers.set("X-CSRF-Token", token);
       config.headers = headers;
+
+      // Log final request configuration
+      console.log("Final request config:", {
+        headers: config.headers,
+        withCredentials: config.withCredentials,
+      });
 
       return config;
     } catch (error) {

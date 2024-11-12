@@ -19,8 +19,6 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
-  initiateOAuthLogin: () => Promise<void>;
-  handleOAuthCallback: (code: string, state: string) => Promise<void>;
 }
 
 interface UserData {
@@ -165,35 +163,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [login, handleAuthError]
   );
 
-  const initiateOAuthLogin = useCallback(async () => {
-    try {
-      const url = await authService.initiateOAuthLogin();
-      window.location.href = url;
-    } catch (error) {
-      const errorMessage = await handleAuthError(error);
-      throw new Error(errorMessage);
-    }
-  }, [handleAuthError]);
-
-  const handleOAuthCallback = useCallback(
-    async (code: string, state: string) => {
-      try {
-        const response = await authService.handleOAuthCallback(code, state);
-        updateState({
-          isAuthenticated: true,
-          user: {
-            username: response.user.username,
-          },
-        });
-        router.push("/profile");
-      } catch (error) {
-        const errorMessage = await handleAuthError(error);
-        throw new Error(errorMessage);
-      }
-    },
-    [router, handleAuthError, updateState]
-  );
-
   const value = {
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
@@ -201,8 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     login,
     logout,
     signup,
-    initiateOAuthLogin,
-    handleOAuthCallback,
   };
 
   if (state.isLoading) {

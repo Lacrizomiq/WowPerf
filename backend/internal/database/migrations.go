@@ -47,6 +47,7 @@ func Migrate(db *gorm.DB) error {
 		{"012_clean_and_constrain_rankings_update_state", cleanAndConstrainRankingsUpdateState},
 		{"013_clean_and_fix_rankings_update_state", cleanAndFixRankingsUpdateState},
 		{"014_update_user_model", updateUserModel},
+		{"015_add_battle_net_scopes", addBattleNetScopes},
 	}
 
 	for _, m := range migrations {
@@ -404,6 +405,7 @@ func updateUserModel(db *gorm.DB) error {
             ALTER TABLE users 
             ADD COLUMN IF NOT EXISTS battle_net_refresh_token TEXT,
             ADD COLUMN IF NOT EXISTS battle_net_token_type VARCHAR(50),
+            ADD COLUMN IF NOT EXISTS battle_net_scopes TEXT[],
             ALTER COLUMN encrypted_token TYPE BYTEA USING encrypted_token::bytea,
             ALTER COLUMN battle_net_expires_at SET DEFAULT CURRENT_TIMESTAMP;
 
@@ -427,6 +429,19 @@ func updateUserModel(db *gorm.DB) error {
 			return fmt.Errorf("failed to update user table: %v", err)
 		}
 
+		return nil
+	})
+}
+
+func addBattleNetScopes(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Add battle_net_scopes column
+		if err := tx.Exec(`
+            ALTER TABLE users 
+            ADD COLUMN IF NOT EXISTS battle_net_scopes TEXT[]
+        `).Error; err != nil {
+			return fmt.Errorf("failed to add battle_net_scopes column: %w", err)
+		}
 		return nil
 	})
 }

@@ -25,7 +25,7 @@ const DeleteAccount: React.FC = () => {
 
       if (result.success) {
         toast.success("Account deleted successfully");
-        await logout(); // Utilise la fonction logout du AuthContext
+        await logout(); // use the logout function from the AuthContext
       }
     } catch (error) {
       if (error instanceof UserServiceError) {
