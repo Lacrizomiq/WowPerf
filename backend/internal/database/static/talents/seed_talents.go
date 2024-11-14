@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	talentsFilePath = "./static/talents.json"
+	talentsFilePath = "./data/static/talents.json"
 )
 
 // TalentTreeInput represents the input structure for a talent tree

@@ -43,14 +43,20 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	var userCreate models.UserCreate
 	if err := c.ShouldBindJSON(&userCreate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input format", "code": "invalid_input"})
+		return
+	}
+
+	// Validate the user create struct
+	if len(userCreate.Password) < 8 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be at least 8 characters long", "code": "password_too_short"})
 		return
 	}
 
 	if err := models.Validate.Struct(userCreate); err != nil {
 		validationErrors, ok := err.(validator.ValidationErrors)
 		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation error", "code": "validation_error"})
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(validationErrors)})
@@ -82,7 +88,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 
 	if err := h.authService.SignUp(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user", "code": "server_error"})
 		return
 	}
 
@@ -96,7 +102,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "code": "signup_success"})
 }
 
 // Login handles user login

@@ -65,9 +65,10 @@ func NewAuthService(
 		TokenExpiration: AccessTokenDuration,
 		BlizzardAuth:    blizzardAuth,
 		CookieConfig: CookieConfig{
+			Domain:   ".localhost", // Add . to the domain to allow subdomains
 			Path:     "/",
-			Secure:   false,                   // Set to true in production for hhtps
-			SameSite: http.SameSiteStrictMode, // Set to SameSiteLaxMode in production
+			Secure:   true,                 // Set to true in production for https
+			SameSite: http.SameSiteLaxMode, // Set to SameSiteLaxMode in production
 		},
 	}
 }

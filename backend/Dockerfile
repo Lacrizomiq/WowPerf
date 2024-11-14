@@ -7,9 +7,11 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code and static files
+# Copy backend source code
 COPY . .
-COPY data/static ./static
+
+# Create necessary directories
+RUN mkdir -p /app/data/static /app/internal/database/migrations/files
 
 # Build for production
 RUN go build -o main ./cmd/server
@@ -19,7 +21,7 @@ FROM golang:1.23 AS development
 
 WORKDIR /app
 
-# Install Air avec le nouveau chemin
+# Install Air
 RUN go install github.com/air-verse/air@latest
 
 # Create .air.toml configuration
@@ -29,7 +31,7 @@ tmp_dir = "tmp"\n\
 [build]\n\
 cmd = "go build -o ./tmp/main ./cmd/server"\n\
 bin = "tmp/main"\n\
-include_ext = ["go", "tpl", "tmpl", "html", "env"]\n\
+include_ext = ["go", "tpl", "tmpl", "html", "env", "sql", "json"]\n\
 exclude_dir = ["assets", "tmp", "vendor"]\n\
 delay = 1000\n\
 stop_on_error = true\n\
@@ -49,9 +51,8 @@ clean_on_exit = true' > .air.toml
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code and static files
+# Copy all source code
 COPY . .
-COPY data/static ./static
 
 EXPOSE 8080
 
@@ -63,9 +64,10 @@ FROM golang:1.23 AS production
 
 WORKDIR /app
 
-# Copy binary and static files from builder
+# Copy binary and required files from builder
 COPY --from=builder /app/main .
-COPY --from=builder /app/static ./static
+COPY --from=builder /app/data/static ./data/static
+COPY --from=builder /app/internal/database/migrations/files ./internal/database/migrations/files
 
 EXPOSE 8080
 

@@ -1,7 +1,40 @@
 version: "3.8"
 
 services:
-  # Frontend
+  # Traefik configuration for local development
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--log.level=DEBUG"
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--serversTransport.insecureSkipVerify=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/certs:ro
+      - ./traefik:/etc/traefik/dynamic:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`monitor.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+    networks:
+      - traefik-public
+    restart: unless-stopped
+
+  # Frontend Next.js
   frontend:
     build:
       context: ./frontend
@@ -15,57 +48,88 @@ services:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-    ports:
-      - "3000:3000"
+      - NODE_TLS_REJECT_UNAUTHORIZED=0 # To accept self-signed certificates in development
+      - NEXT_PUBLIC_API_URL=https://api.localhost # Important for HTTPS
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - traefik-public
+      - internal
     depends_on:
       - backend
 
-  # Backend
+  # Backend Go
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development # Use the development stage
+      target: development
     volumes:
-      - ./backend:/app:cached # Mount the source code for hot-reloading
-      - backend_go:/go:delegated # Persistent cache for Go modules
+      - ./backend:/app:cached
+      - backend_go:/go:delegated
+      - ./backend/internal/database/migrations/files:/app/internal/database/migrations/files
+      - ./backend/data/static:/app/data/static:ro
     environment:
       - DB_HOST=db
-      - DB_USER=wowperf_user
-      - DB_PASSWORD=wowperf
-      - DB_NAME=wowperf_db
-      - DB_SSL_MODE=disable
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSL_MODE=disable # SSL disabled for local development
       - REDIS_URL=redis:6379
-    ports:
-      - "8080:8080"
+      - JWT_SECRET=${JWT_SECRET}
+      - CSRF_SECRET=${CSRF_SECRET}
+      - BLIZZARD_CLIENT_ID=${BLIZZARD_CLIENT_ID}
+      - BLIZZARD_CLIENT_SECRET=${BLIZZARD_CLIENT_SECRET}
+      - BLIZZARD_REDIRECT_URL=https://localhost/auth/blizzard/callback
+      - ENVIRONMENT=development
+      - FRONTEND_URL=https://localhost
+      - ALLOWED_ORIGINS=https://localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+    networks:
+      - traefik-public
+      - internal
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
-  # Database Postgres
+  # PostgreSQL database
   db:
     image: postgres:15.3
     environment:
-      - POSTGRES_USER=wowperf_user
-      - POSTGRES_PASSWORD=wowperf
-      - POSTGRES_DB=wowperf_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - "5432:5432"
+    networks:
+      - internal
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wowperf_user -d wowperf_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Redis
+  # Redis for caching
   redis:
     image: redis:alpine
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
+    networks:
+      - internal
     volumes:
       - redis_data:/data
     healthcheck:
@@ -73,13 +137,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Adminer
+  # Adminer for the database management in development
   adminer:
     image: adminer
     restart: always
-    ports:
-      - "8081:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.localhost`)"
+      - "traefik.http.routers.adminer.tls=true"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+    networks:
+      - internal
+      - traefik-public
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+      - ADMINER_DESIGN=nette
+    depends_on:
+      - db
+
+networks:
+  traefik-public:
+    external: true # Indicates that the network already exists
+  internal:
+    driver: bridge
 
 volumes:
   postgres_data:

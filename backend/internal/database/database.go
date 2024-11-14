@@ -19,18 +19,20 @@ import (
 
 	rankingsModels "wowperf/internal/models/warcraftlogs/mythicplus"
 
+	migrations "wowperf/internal/database/migrations"
+
 	"gorm.io/gorm"
 )
 
 const (
-	staticMythicPlusPath = "./static/M+/"
-	staticRaidsPath      = "./static/Raid/"
+	staticMythicPlusPath = "./data/static/M+"
+	staticRaidsPath      = "./data/static/Raid"
 )
 
 func InitializeDatabase(db *gorm.DB) error {
 	log.Println("Initializing database...")
 
-	if err := Migrate(db); err != nil {
+	if err := migrations.RunMigrations(db); err != nil {
 		return fmt.Errorf("error performing migrations: %v", err)
 	}
 
