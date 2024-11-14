@@ -50,20 +50,23 @@ class CSRFTokenManager {
 
   private async fetchToken(): Promise<string> {
     try {
-      const response = await axios.get<CSRFResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`,
-        {
-          withCredentials: true,
-          headers: {
-            Accept: "application/json",
-          },
-          ...(process.env.NODE_ENV === "development" && {
-            httpsAgent: new (require("https").Agent)({
-              rejectUnauthorized: false,
-            }),
+      // Create a specific Axios instance for the CSRF request
+      const csrfAxios = axios.create({
+        baseURL: process.env.NEXT_PUBLIC_API_URL,
+        withCredentials: true,
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        ...(process.env.NODE_ENV === "development" && {
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false,
+            keepAlive: true,
           }),
-        }
-      );
+        }),
+      });
+
+      const response = await csrfAxios.get<CSRFResponse>("/api/csrf-token");
 
       if (!response.data.token) {
         throw new Error("No CSRF token in response");
@@ -114,18 +117,18 @@ const csrfManager = CSRFTokenManager.getInstance();
 // Create axios instance
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true,
+  withCredentials: true, // Important for cookies
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest",
   },
-  // Support for self-signed certificates in development
   ...(process.env.NODE_ENV === "development" && {
     httpsAgent: new https.Agent({
-      rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0",
+      rejectUnauthorized: false,
+      keepAlive: true, // Keep the connection alive
     }),
   }),
-  timeout: 10000,
 });
 
 // Request interceptor
@@ -159,6 +162,7 @@ api.interceptors.request.use(
 
       const headers = new AxiosHeaders(config.headers);
       headers.set("X-CSRF-Token", token);
+      headers.set("X-Requested-With", "XMLHttpRequest");
       config.headers = headers;
 
       // Log final request configuration in development

@@ -16,32 +16,22 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
+      - "--serversTransport.insecureSkipVerify=true"
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Dashboard
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/etc/certs:ro # Self-signed certificates
-      - ./traefik:/etc/traefik/dynamic:ro # Dynamic configuration
+      - ./certs:/etc/certs:ro
+      - ./traefik:/etc/traefik/dynamic:ro
     labels:
       - "traefik.enable=true"
-      # Dashboard
       - "traefik.http.routers.dashboard.rule=Host(`monitor.localhost`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
-      # Middleware CORS
-      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
-      - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=https://localhost,https://*.localhost"
-      - "traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true"
-      - "traefik.http.middlewares.cors.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.cors.headers.addvaryheader=true"
     networks:
       - traefik-public
-    depends_on:
-      - backend
-      - frontend
     restart: unless-stopped
 
   # Frontend Next.js
@@ -70,7 +60,6 @@ services:
       - internal
     depends_on:
       - backend
-    restart: unless-stopped
 
   # Backend Go
   backend:
@@ -97,12 +86,12 @@ services:
       - BLIZZARD_REDIRECT_URL=https://localhost/auth/blizzard/callback
       - ENVIRONMENT=development
       - FRONTEND_URL=https://localhost
+      - ALLOWED_ORIGINS=https://localhost
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
-      - "traefik.http.routers.backend.middlewares=cors@docker"
     networks:
       - traefik-public
       - internal

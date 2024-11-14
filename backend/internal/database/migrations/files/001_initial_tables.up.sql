@@ -1,8 +1,9 @@
 -- 001_initial_tables.up.sql
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(255),
-    email VARCHAR(255),
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     battle_net_id INTEGER UNIQUE,
     battle_tag VARCHAR(255) UNIQUE,
     encrypted_token BYTEA,

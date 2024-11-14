@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -148,6 +149,15 @@ func securityHeaders() gin.HandlerFunc {
 	}
 }
 
+func setupHealthCheck(r *gin.Engine) {
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "healthy",
+			"timestamp": time.Now().Unix(),
+		})
+	})
+}
+
 func setupRoutes(
 	r *gin.Engine,
 	authService *auth.AuthService,
@@ -159,6 +169,9 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
+	// Health check endpoint
+	setupHealthCheck(r)
+
 	// Initialize the CSRF middleware
 	csrf.InitCSRFMiddleware()
 
@@ -167,24 +180,68 @@ func setupRoutes(
 
 	// Get environment variables
 	environment := os.Getenv("ENVIRONMENT")
-	allowedOrigins := []string{"https://localhost"}
+	frontendURL := os.Getenv("FRONTEND_URL")
+
+	// Default allowed origins
+	allowedOrigins := []string{
+		"https://localhost",
+		"https://*.localhost",
+		"https://api.localhost",
+		frontendURL,
+	}
 
 	// Add production domain if in production
 	if environment == "production" {
-		allowedOrigins = append(allowedOrigins, os.Getenv("FRONTEND_URL"))
+		// In production, only allow the specific frontend URL
+		allowedOrigins = []string{frontendURL}
 	}
 
 	// CORS Configuration
 	corsConfig := cors.Config{
-		AllowOrigins:     allowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-CSRF-Token"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowOrigins: allowedOrigins,
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Accept",
+			"Authorization",
+			"X-CSRF-Token",
+			"X-Requested-With",
+			"Cookie",
+			"Set-Cookie",
+		},
+		ExposeHeaders: []string{
+			"Content-Length",
+			"Content-Type",
+			"Set-Cookie",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
+		// Important: Add custom handling for OPTIONS requests
+		AllowWildcard: true,
 	}
 	r.Use(cors.New(corsConfig))
+
+	// Add OPTIONS handler for preflight requests
+	r.OPTIONS("/*path", func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", c.GetHeader("Origin"))
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Status(http.StatusOK)
+	})
+	// Logger middleware
 	r.Use(gin.Logger())
+
+	r.Use(func(c *gin.Context) {
+		log.Printf("📨 Request: %s %s", c.Request.Method, c.Request.URL.Path)
+		log.Printf("📝 Headers: %v", c.Request.Header)
+
+		c.Next()
+
+		log.Printf("📤 Response Status: %d", c.Writer.Status())
+		log.Printf("📤 Response Headers: %v", c.Writer.Header())
+	})
 
 	// Initialize CSRF middleware
 	r.Use(csrf.NewCSRFHandler())
