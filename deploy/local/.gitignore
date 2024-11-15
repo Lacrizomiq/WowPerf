@@ -1,0 +1,8 @@
+# Environment
+.env
+
+# Traefik files
+/traefik/acme/*
+/traefik/config/*
+/traefik/certs/*
+

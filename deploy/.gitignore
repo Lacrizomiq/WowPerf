@@ -1,0 +1,3 @@
+/traefik/certs/*
+/cloudflared/*
+/traefik/config/*
