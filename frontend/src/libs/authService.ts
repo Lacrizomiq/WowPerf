@@ -36,6 +36,7 @@ export enum AuthErrorCode {
   NETWORK_ERROR = "network_error",
   OAUTH_ERROR = "oauth_error",
   UNKNOWN_ERROR = "unknown_error",
+  CSRF_ERROR = "csrf_error",
 }
 
 export class AuthError extends Error {
@@ -56,17 +57,25 @@ export const authService = {
     password: string
   ): Promise<SignupResponse> {
     try {
-      console.log("AuthService: Starting signup request");
+      console.log("AuthService: Starting signup request", {
+        username,
+        email,
+        password: "[REDACTED]",
+      });
+
       const response = await api.post<SignupResponse>("/auth/signup", {
         username,
         email,
         password,
       });
 
-      console.log("AuthService: Signup successful");
+      console.log("AuthService: Signup successful", response.data);
       return response.data;
     } catch (error) {
-      console.error("AuthService: Signup error:", error);
+      console.error("AuthService: Signup error:", {
+        status: axios.isAxiosError(error) ? error.response?.status : "unknown",
+        data: axios.isAxiosError(error) ? error.response?.data : error,
+      });
 
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
@@ -75,31 +84,29 @@ export const authService = {
           case "username_exists":
             throw new AuthError(
               AuthErrorCode.USERNAME_EXISTS,
-              "Username already exists"
+              "This username is already taken. Please choose another one."
             );
           case "email_exists":
             throw new AuthError(
               AuthErrorCode.EMAIL_EXISTS,
-              "Email already exists"
+              "This email is already registered. Please use another email or try logging in."
             );
           case "invalid_input":
             throw new AuthError(
               AuthErrorCode.INVALID_INPUT,
-              "Invalid signup data"
+              err.response.data.error || "Invalid input data"
             );
           default:
             throw new AuthError(
-              AuthErrorCode.SIGNUP_ERROR,
-              err.response?.data?.error || "Signup failed",
-              err
+              AuthErrorCode.UNKNOWN_ERROR,
+              err.response?.data?.error || "An unexpected error occurred"
             );
         }
       }
 
       throw new AuthError(
         AuthErrorCode.UNKNOWN_ERROR,
-        "An unexpected error occurred during signup",
-        error
+        "An unexpected error occurred during signup"
       );
     }
   },

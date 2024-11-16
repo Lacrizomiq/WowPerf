@@ -10,7 +10,7 @@ import React, {
 import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
-import { resetCSRFToken } from "@/libs/api";
+import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -19,6 +19,12 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
+}
+
+interface CSRFErrorResponse {
+  code: string;
+  error?: string;
+  details?: string;
 }
 
 interface UserData {
@@ -46,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
+  const [csrfInitialized, setCsrfInitialized] = useState(false);
 
   const updateState = useCallback((updates: Partial<AuthState>) => {
     setState((prev) => ({ ...prev, ...updates }));
@@ -59,6 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     async (error: unknown): Promise<string> => {
       if (error instanceof AuthError) {
         switch (error.code) {
+          case AuthErrorCode.CSRF_ERROR:
+            resetCSRFToken();
+            await preloadCSRFToken(); // Récupérer un nouveau token
+            return "Security verification failed. Please try again.";
           case AuthErrorCode.INVALID_CREDENTIALS:
             return "Invalid username or password";
           case AuthErrorCode.USERNAME_EXISTS:
@@ -73,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (axios.isAxiosError(error)) {
-        const err = error as AxiosError;
+        const err = error as AxiosError<CSRFErrorResponse>;
         if (err.response?.status === 401) {
           updateState({
             isAuthenticated: false,
@@ -82,6 +93,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           resetCSRFToken();
           router.push("/login");
           return "Session expired";
+        }
+
+        if (
+          err.response?.status === 403 &&
+          err.response.data &&
+          "code" in err.response.data &&
+          err.response.data.code === "INVALID_CSRF_TOKEN"
+        ) {
+          resetCSRFToken();
+          await preloadCSRFToken();
+          return "Security verification failed. Please try again.";
         }
       }
 
@@ -105,9 +127,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [updateState]);
 
+  // Initialiser CSRF au démarrage
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const initializeCSRF = async () => {
+      try {
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
+      } catch (error) {
+        console.error("Failed to initialize CSRF token:", error);
+        // Retry after 2 seconds
+        setTimeout(initializeCSRF, 2000);
+      }
+    };
+
+    if (!csrfInitialized) {
+      initializeCSRF();
+    }
+  }, [csrfInitialized]);
+
+  // Vérifier l'authentification après l'initialisation du CSRF
+  useEffect(() => {
+    if (csrfInitialized) {
+      checkAuth();
+    }
+  }, [checkAuth, csrfInitialized]);
 
   const login = useCallback(
     async (username: string, password: string) => {
@@ -165,14 +208,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = {
     isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading,
+    isLoading: state.isLoading || !csrfInitialized,
     user: state.user,
     login,
     logout,
     signup,
   };
 
-  if (state.isLoading) {
+  if (state.isLoading || !csrfInitialized) {
     return (
       <div className="flex items-center justify-center h-screen">
         Loading...

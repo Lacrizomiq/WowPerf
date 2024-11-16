@@ -85,7 +85,7 @@ case $COMMAND in
     "up")
         log_exec "Starting $ENV environment..."
         cd "$ENV"
-        docker-compose $COMPOSE_FILES up -d
+        docker-compose $COMPOSE_FILES up
         log_exec "Environment $ENV started successfully"
         docker-compose $COMPOSE_FILES ps
         ;;
@@ -99,7 +99,7 @@ case $COMMAND in
         log_exec "Restarting $ENV environment..."
         cd "$ENV"
         docker-compose $COMPOSE_FILES down
-        docker-compose $COMPOSE_FILES up -d
+        docker-compose $COMPOSE_FILES up
         log_exec "Environment $ENV restarted"
         docker-compose $COMPOSE_FILES ps
         ;;
