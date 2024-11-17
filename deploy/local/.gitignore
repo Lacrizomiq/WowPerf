@@ -1,8 +1,8 @@
 # Environment
 .env
+.env.local
 
 # Traefik files
 /traefik/acme/*
-/traefik/config/*
 /traefik/certs/*
 
