@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -38,6 +39,7 @@ import (
 	// Internal Packages - Utils
 	cacheMiddleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
+	"wowperf/pkg/middleware"
 	csrf "wowperf/pkg/middleware"
 )
 
@@ -191,17 +193,10 @@ func setupRoutes(
 	environment := os.Getenv("ENVIRONMENT")
 	frontendURL := os.Getenv("FRONTEND_URL")
 	allowedOrigins := []string{
-		os.Getenv("FRONTEND_URL"),
+		frontendURL,
+		strings.Replace(frontendURL, "https://", "http://", 1),
 	}
 	domain := os.Getenv("DOMAIN")
-
-	// Log config in local env
-	if environment == "local" {
-		log.Printf("🌍 Environment: %s", environment)
-		log.Printf("🔗 Frontend URL: %s", frontendURL)
-		log.Printf("✅ Allowed Origins: %v", allowedOrigins)
-		log.Printf("🌐 Domain: %s", domain)
-	}
 
 	// Initialize CSRF middleware with proper configuration
 	csrf.InitCSRFMiddleware(csrf.Config{
@@ -213,7 +208,7 @@ func setupRoutes(
 
 	// CORS Configuration
 	corsConfig := cors.Config{
-		AllowOrigins: []string{frontendURL}, // Simplifions pour n'autoriser que le frontend
+		AllowOrigins: allowedOrigins,
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			"Origin",
@@ -230,6 +225,7 @@ func setupRoutes(
 			"X-CSRF-Token",
 		},
 		AllowCredentials: true,
+		AllowWildcard:    false,
 		MaxAge:           12 * time.Hour,
 	}
 
@@ -261,11 +257,34 @@ func setupRoutes(
 		})
 	*/
 
-	// CSRF Token endpoint
-	r.GET("/api/csrf-token", csrf.GetCSRFToken())
+	// Group all API routes under /api
+	api := r.Group("/api")
+	{
+		// CSRF Token endpoint
+		api.GET("/csrf-token", csrf.GetCSRFToken())
+
+		// Auth Routes (with CSRF protection)
+		auth := api.Group("/auth")
+		auth.Use(csrf.NewCSRFHandler()) // CSRF middleware only on auth routes
+		{
+			auth.POST("/signup", authHandler.SignUp)
+			auth.POST("/login", authHandler.Login)
+
+			// Protected routes with JWT
+			protected := auth.Group("")
+			protected.Use(middleware.JWTAuth(authService))
+			{
+				protected.POST("/refresh", authHandler.RefreshToken)
+				protected.POST("/logout", authHandler.Logout)
+				protected.GET("/check", authHandler.CheckAuth)
+			}
+		}
+	}
+
+	r.Use(middleware.DebugMiddleware())
 
 	// Auth Routes
-	authHandler.RegisterRoutes(r)
+	// authHandler.RegisterRoutes(r)
 	if blizzardAuthHandler != nil {
 		blizzardAuthHandler.RegisterRoutes(r)
 	}

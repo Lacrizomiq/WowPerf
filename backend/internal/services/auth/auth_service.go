@@ -74,7 +74,7 @@ func NewAuthService(
 			Domain:   domain,
 			Path:     "/",
 			Secure:   isSecure, // True in production, false in local
-			SameSite: http.SameSiteLaxMode,
+			SameSite: http.SameSiteStrictMode,
 		},
 	}
 }

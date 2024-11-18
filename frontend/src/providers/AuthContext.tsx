@@ -143,13 +143,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     async (username: string, email: string, password: string) => {
       try {
         await authService.signup(username, email, password);
-        await login(username, password);
       } catch (error) {
         const errorMessage = await handleAuthError(error);
         throw new Error(errorMessage);
       }
     },
-    [login, handleAuthError]
+    [handleAuthError]
   );
 
   const value = {

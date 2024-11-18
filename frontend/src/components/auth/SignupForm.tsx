@@ -101,6 +101,9 @@ const SignupForm: React.FC = () => {
 
       if (err instanceof AuthError) {
         switch (err.code) {
+          case AuthErrorCode.CSRF_ERROR:
+            setError("Session expired. Please try again.");
+            break;
           case AuthErrorCode.USERNAME_EXISTS:
             setUsernameError("This username is already taken");
             break;

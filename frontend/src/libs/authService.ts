@@ -64,11 +64,16 @@ export const authService = {
     password: string
   ): Promise<SignupResponse> {
     try {
-      const response = await api.post<SignupResponse>("/auth/signup", {
+      const response = await api.post<SignupResponse>("/api/auth/signup", {
         username,
         email,
         password,
       });
+      // If signup successful, perform login separately
+      if (response.data.code === "signup_success") {
+        await this.login(username, password);
+      }
+
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -111,7 +116,7 @@ export const authService = {
 
   async login(username: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await api.post<LoginResponse>("/auth/login", {
+      const response = await api.post<LoginResponse>("/api/auth/login", {
         username,
         password,
       });
@@ -146,7 +151,7 @@ export const authService = {
 
   async logout(): Promise<void> {
     try {
-      await api.post<AuthResponse>("/auth/logout");
+      await api.post<AuthResponse>("/api/auth/logout");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
@@ -163,7 +168,7 @@ export const authService = {
 
   async isAuthenticated(): Promise<boolean> {
     try {
-      const response = await api.get<AuthCheckResponse>("/auth/check");
+      const response = await api.get<AuthCheckResponse>("/api/auth/check");
       return response.data.authenticated;
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
-	"wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -47,9 +46,8 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	if err := c.ShouldBindJSON(&userCreate); err != nil {
 		log.Printf("SignUp binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid input format",
-			"code":    "invalid_input",
-			"details": err.Error(),
+			"error": "Invalid input format",
+			"code":  "invalid_input",
 		})
 		return
 	}
@@ -64,18 +62,18 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
-	// Check if user already exists BEFORE other validations
+	// Check if user exists
 	var existingUser models.User
-	if err := h.authService.DB.Where("username = ? OR email = ?",
-		userCreate.Username, userCreate.Email).First(&existingUser).Error; err == nil {
+	err := h.authService.DB.Where("username = ? OR email = ?",
+		userCreate.Username, userCreate.Email).First(&existingUser).Error
+
+	if err == nil {
 		if existingUser.Username == userCreate.Username {
-			log.Printf("Username already exists: %s", userCreate.Username)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Username already exists",
 				"code":  "username_exists",
 			})
 		} else {
-			log.Printf("Email already exists: %s", userCreate.Email)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Email already exists",
 				"code":  "email_exists",
@@ -113,30 +111,36 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		Password: userCreate.Password,
 	}
 
+	tx := h.authService.DB.Begin()
+
 	if err := h.authService.SignUp(&user); err != nil {
+		tx.Rollback()
 		log.Printf("Failed to create user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to create user",
-			"code":    "server_error",
-			"details": err.Error(),
+			"error": "Failed to create user",
+			"code":  "server_error",
 		})
 		return
 	}
 
-	// Auto-login the user after signup
-	if err := h.authService.Login(c, user.Username, userCreate.Password); err != nil {
-		log.Printf("Failed to auto-login user after signup: %v", err)
-		c.JSON(http.StatusOK, gin.H{
-			"message": "User created successfully, but login failed",
-			"code":    "signup_success_login_failed",
-		})
-		return
-	}
+	// Commit the transaction
+	tx.Commit()
 
-	c.JSON(http.StatusOK, gin.H{
+	// Create response
+	response := gin.H{
 		"message": "User created successfully",
 		"code":    "signup_success",
-	})
+		"user": gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	}
+
+	// Use c.Set to pass data to subsequent middleware if needed
+	c.Set("signup_response", response)
+
+	// Send final response
+	c.JSON(http.StatusOK, response)
 }
 
 // Login handles user login
@@ -201,6 +205,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 // RegisterRoutes registers the authentication routes
+/*
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	// Group for the auth
 	auth := router.Group("/auth")
@@ -221,6 +226,7 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 		protected.GET("/check", h.CheckAuth)
 	}
 }
+*/
 
 // CheckAuth checks if the user is authenticated
 func (h *AuthHandler) CheckAuth(c *gin.Context) {
