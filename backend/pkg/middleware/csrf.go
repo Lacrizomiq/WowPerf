@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
@@ -37,13 +38,13 @@ func InitCSRFMiddleware(config Config) {
 
 	CSRFMiddleware = csrf.Protect(
 		[]byte(secret),
-		csrf.Secure(true), // Always true because we use HTTPS
+		csrf.Secure(true),
 		csrf.Path("/"),
 		csrf.Domain(config.Domain),
 		csrf.SameSite(csrf.SameSiteLaxMode),
 		csrf.RequestHeader("X-CSRF-Token"),
 		csrf.CookieName("_csrf"),
-		csrf.TrustedOrigins(config.AllowedOrigins),
+		csrf.TrustedOrigins([]string{"localhost"}),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Printf("CSRF Error Details - Headers: %v", r.Header)
 			log.Printf("CSRF Error Details - Method: %s", r.Method)
@@ -75,9 +76,18 @@ func NewCSRFHandler() gin.HandlerFunc {
 
 		// Skip CSRF check for safe methods
 		if c.Request.Method == "GET" || c.Request.Method == "HEAD" ||
-			c.Request.Method == "OPTIONS" || c.Request.URL.Path == "/api/csrf-token" {
+			c.Request.Method == "OPTIONS" || strings.HasSuffix(c.Request.URL.Path, "/csrf-token") {
 			c.Next()
 			return
+		}
+
+		// Ajout des headers CORS pour les requêtes CSRF
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token")
+			c.Header("Access-Control-Expose-Headers", "X-CSRF-Token")
 		}
 
 		handler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,13 +112,17 @@ func GetCSRFToken() gin.HandlerFunc {
 				return
 			}
 
-			// Set CORS headers specifically for the token response
+			// Configuration CORS spécifique pour le token
 			origin := c.GetHeader("Origin")
-			if origin != "" {
+			if origin != "" && isAllowedOrigin(origin, c.GetString("allowed_origins")) {
 				c.Header("Access-Control-Allow-Origin", origin)
 				c.Header("Access-Control-Allow-Credentials", "true")
-				c.Header("Access-Control-Expose-Headers", "X-CSRF-Token")
+				c.Header("Access-Control-Expose-Headers", "X-CSRF-Token, Set-Cookie")
 			}
+
+			// Définir le cookie avec SameSite=None et Secure=true
+			c.SetSameSite(http.SameSiteNoneMode)
+			c.SetCookie("_csrf", token, 3600, "/", "localhost", true, true)
 
 			c.Header("X-CSRF-Token", token)
 			c.JSON(http.StatusOK, gin.H{
@@ -117,6 +131,17 @@ func GetCSRFToken() gin.HandlerFunc {
 		}))
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+// Helper function to check if origin is allowed
+func isAllowedOrigin(origin string, allowedOrigins string) bool {
+	origins := strings.Split(allowedOrigins, ",")
+	for _, allowed := range origins {
+		if strings.TrimSpace(allowed) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 // GetTokenFromRequest gets the CSRF token from the request

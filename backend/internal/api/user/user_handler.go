@@ -111,18 +111,20 @@ func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthS
 	// Initialize JWT middleware
 	jwtMiddleware := middleware.JWTAuth(authService)
 
-	// All user routes require JWT auth
+	// Group for user routes
 	user := router.Group("/user")
 	user.Use(jwtMiddleware)
-	{
-		// Routes for read operations
-		user.GET("/profile", h.GetProfile)
 
-		// Routes for write operations
-		// Note: CSRF protection is now handled globally, so we don't need to add it here
-		user.PUT("/email", h.UpdateEmail)
-		user.PUT("/password", h.ChangePassword)
-		user.PUT("/username", h.ChangeUsername)
-		user.DELETE("/account", h.DeleteAccount)
+	// Read-only routes (no CSRF)
+	user.GET("/profile", h.GetProfile)
+
+	// Routes that modify data (with CSRF)
+	csrfProtected := user.Group("")
+	csrfProtected.Use(middleware.NewCSRFHandler())
+	{
+		csrfProtected.PUT("/email", h.UpdateEmail)
+		csrfProtected.PUT("/password", h.ChangePassword)
+		csrfProtected.PUT("/username", h.ChangeUsername)
+		csrfProtected.DELETE("/account", h.DeleteAccount)
 	}
 }

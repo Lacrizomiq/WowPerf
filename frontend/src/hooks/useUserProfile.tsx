@@ -1,3 +1,4 @@
+// src/hooks/useUserProfile.tsx
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +11,8 @@ import {
 import { useAuth } from "@/providers/AuthContext";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
-import { resetCSRFToken } from "@/libs/api";
+import { csrfService } from "@/libs/csrfService";
+import { APIError } from "@/libs/api";
 
 // Mutation states
 interface MutationState {
@@ -31,6 +33,10 @@ export function useUserProfile() {
 
       if (error instanceof UserServiceError) {
         switch (error.code) {
+          case UserErrorCode.UNAUTHORIZED:
+            csrfService.clearToken();
+            await logout();
+            return "Session expired. Please login again.";
           case UserErrorCode.UNAUTHORIZED:
             // Proper logout if unauthorized
             await logout();
@@ -63,8 +69,9 @@ export function useUserProfile() {
       }
 
       if (error instanceof AxiosError) {
-        if (error.response?.status === 401) {
-          resetCSRFToken();
+        const err = error as AxiosError<APIError>;
+        if (err.response?.status === 401) {
+          csrfService.clearToken();
           await logout();
           return "Session expired. Please login again.";
         }

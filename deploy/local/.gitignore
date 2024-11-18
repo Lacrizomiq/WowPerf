@@ -2,7 +2,6 @@
 .env
 .env.local
 
-# Traefik files
-/traefik/acme/*
-/traefik/certs/*
 
+# Certificates
+/certs/*

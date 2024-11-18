@@ -1,4 +1,6 @@
-import api, { APIError, resetCSRFToken } from "./api";
+// src/libs/authService.ts
+import api, { APIError } from "./api";
+import { csrfService } from "./csrfService";
 import axios, { AxiosError } from "axios";
 
 // Precise types for API responses
@@ -149,12 +151,9 @@ export const authService = {
   async logout(): Promise<void> {
     try {
       await api.post<AuthResponse>("/auth/logout");
-      // Reset the CSRF token after logout
-      resetCSRFToken();
+      csrfService.clearToken();
     } catch (error) {
-      console.error("Logout error:", error);
-      // Reset the CSRF token even in case of error
-      resetCSRFToken();
+      csrfService.clearToken();
       throw error;
     }
   },
@@ -166,28 +165,15 @@ export const authService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
-
-        // If the refresh token is invalid or expired
         if (err.response?.status === 401) {
-          resetCSRFToken(); // Reset CSRF token
+          csrfService.clearToken();
           throw new AuthError(
             AuthErrorCode.INVALID_CREDENTIALS,
             "Session expired"
           );
         }
-
-        throw new AuthError(
-          AuthErrorCode.UNKNOWN_ERROR,
-          err.response?.data?.error || "Token refresh failed",
-          err
-        );
       }
-
-      throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during token refresh",
-        error
-      );
+      throw error;
     }
   },
 

@@ -205,20 +205,18 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	// Group for the auth
 	auth := router.Group("/auth")
 
-	// public route
+	// Public routes (without CSRF)
 	auth.GET("/csrf-token", authMiddleware.GetCSRFToken())
+	auth.GET("/check", h.CheckAuth)
 
-	// Base auth routes
-	auth.POST("/signup", h.SignUp)
-	auth.POST("/login", h.Login)
-
-	// Protected routes with JWT
-	protected := auth.Group("")
-	protected.Use(authMiddleware.JWTAuth(h.authService))
+	// Routes that require CSRF
+	csrfProtected := auth.Group("")
+	csrfProtected.Use(authMiddleware.NewCSRFHandler())
 	{
-		protected.POST("/refresh", h.RefreshToken)
-		protected.POST("/logout", h.Logout)
-		protected.GET("/check", h.CheckAuth)
+		csrfProtected.POST("/signup", h.SignUp)
+		csrfProtected.POST("/login", h.Login)
+		csrfProtected.POST("/refresh", h.RefreshToken)
+		csrfProtected.POST("/logout", h.Logout)
 	}
 }
 

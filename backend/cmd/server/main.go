@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -172,8 +171,6 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
-	// Health check endpoint
-	setupHealthCheck(r)
 
 	// Security headers middleware with HTTPS support
 	r.Use(securityHeaders())
@@ -192,44 +189,28 @@ func setupRoutes(
 		log.Printf("🌐 Domain: %s", domain)
 	}
 
-	// Parse the authorized origins
-	allowedOrigins := strings.Split(allowedOriginsStr, ",")
-
 	// Initialize CSRF middleware with proper configuration
 	csrf.InitCSRFMiddleware(csrf.Config{
-		Domain:         domain,
-		AllowedOrigins: allowedOrigins,
-		Environment:    environment,
+		Domain:         "localhost",
+		AllowedOrigins: []string{"https://localhost"},
+		Environment:    os.Getenv("ENVIRONMENT"),
 	})
 
 	// CORS Configuration
 	corsConfig := cors.Config{
-		AllowOrigins: allowedOrigins,
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin",
-			"Content-Type",
-			"Accept",
-			"Authorization",
-			"X-CSRF-Token",
-			"X-Requested-With",
-		},
-		ExposeHeaders: []string{
-			"Content-Length",
-			"Content-Type",
-			"Set-Cookie",
-			"X-CSRF-Token",
-			"Access-Control-Allow-Origin",
-			"Access-Control-Allow-Credentials",
-			"Access-Control-Expose-Headers",
-		},
+		AllowOrigins:     []string{"https://localhost"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Accept", "Authorization", "X-CSRF-Token", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Set-Cookie", "X-CSRF-Token"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
 
 	// Apply middlewares in the correct order
 	r.Use(cors.New(corsConfig))
-	r.Use(csrf.NewCSRFHandler())
+
+	// Health check endpoint
+	setupHealthCheck(r)
 
 	// Logger middleware
 	r.Use(gin.Logger())
@@ -252,9 +233,8 @@ func setupRoutes(
 
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
-	if blizzardAuthHandler != nil {
-		blizzardAuthHandler.RegisterRoutes(r)
-	}
+
+	blizzardAuthHandler.RegisterRoutes(r)
 
 	// API Routes
 	rioHandler.RegisterRoutes(r)

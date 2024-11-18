@@ -59,7 +59,12 @@ func NewAuthService(
 	redisClient *redis.Client,
 	blizzardAuth *BlizzardAuthService,
 ) *AuthService {
+
 	domain := os.Getenv("DOMAIN")
+
+	// Configuration pour le développement
+	secure := true
+
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
@@ -69,8 +74,8 @@ func NewAuthService(
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
-			Secure:   true,                 // Set to true in production for https
-			SameSite: http.SameSiteLaxMode, // Set to SameSiteLaxMode in production
+			Secure:   secure, // true pour HTTPS
+			SameSite: http.SameSiteLaxMode,
 		},
 	}
 }

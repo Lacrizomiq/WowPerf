@@ -58,18 +58,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  const resetState = useCallback(() => {
-    setState(initialState);
-  }, []);
+  const checkAuth = useCallback(async () => {
+    try {
+      const isAuth = await authService.isAuthenticated();
+      updateState({
+        isAuthenticated: isAuth,
+        isLoading: false,
+      });
+    } catch (error) {
+      // Ne pas rediriger, juste mettre à jour l'état
+      updateState({
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    }
+  }, [updateState]);
+
+  // Initialize CSRF only for protected routes
+  useEffect(() => {
+    const initializeCSRF = async () => {
+      if (!csrfInitialized) {
+        try {
+          await preloadCSRFToken();
+          setCsrfInitialized(true);
+        } catch (error) {
+          console.error("Failed to initialize CSRF token:", error);
+          setTimeout(initializeCSRF, 2000);
+        }
+      }
+    };
+
+    initializeCSRF();
+  }, [csrfInitialized]);
+
+  // Check authentication after CSRF initialization
+  useEffect(() => {
+    if (csrfInitialized) {
+      checkAuth();
+    }
+  }, [checkAuth, csrfInitialized]);
 
   const handleAuthError = useCallback(
     async (error: unknown): Promise<string> => {
       if (error instanceof AuthError) {
         switch (error.code) {
           case AuthErrorCode.CSRF_ERROR:
-            resetCSRFToken();
-            await preloadCSRFToken(); // Récupérer un nouveau token
-            return "Security verification failed. Please try again.";
+            try {
+              await preloadCSRFToken();
+              return "Please try again";
+            } catch (e) {
+              resetCSRFToken();
+              return "Security verification failed. Please try again.";
+            }
           case AuthErrorCode.INVALID_CREDENTIALS:
             return "Invalid username or password";
           case AuthErrorCode.USERNAME_EXISTS:
@@ -91,66 +131,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             user: null,
           });
           resetCSRFToken();
-          router.push("/login");
           return "Session expired";
-        }
-
-        if (
-          err.response?.status === 403 &&
-          err.response.data &&
-          "code" in err.response.data &&
-          err.response.data.code === "INVALID_CSRF_TOKEN"
-        ) {
-          resetCSRFToken();
-          await preloadCSRFToken();
-          return "Security verification failed. Please try again.";
         }
       }
 
       return "An unexpected error occurred";
     },
-    [router, updateState]
+    [updateState]
   );
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const isAuth = await authService.isAuthenticated();
-      updateState({
-        isAuthenticated: isAuth,
-        isLoading: false,
-      });
-    } catch (error) {
-      updateState({
-        isAuthenticated: false,
-        isLoading: false,
-      });
-    }
-  }, [updateState]);
-
-  // Initialiser CSRF au démarrage
-  useEffect(() => {
-    const initializeCSRF = async () => {
-      try {
-        await preloadCSRFToken();
-        setCsrfInitialized(true);
-      } catch (error) {
-        console.error("Failed to initialize CSRF token:", error);
-        // Retry after 2 seconds
-        setTimeout(initializeCSRF, 2000);
-      }
-    };
-
-    if (!csrfInitialized) {
-      initializeCSRF();
-    }
-  }, [csrfInitialized]);
-
-  // Vérifier l'authentification après l'initialisation du CSRF
-  useEffect(() => {
-    if (csrfInitialized) {
-      checkAuth();
-    }
-  }, [checkAuth, csrfInitialized]);
 
   const login = useCallback(
     async (username: string, password: string) => {
@@ -179,18 +167,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user: null,
       });
       resetCSRFToken();
-      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      // Even in case of error, reset the state
       updateState({
         isAuthenticated: false,
         user: null,
       });
       resetCSRFToken();
-      router.push("/login");
     }
-  }, [router, updateState]);
+  }, [updateState]);
 
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
@@ -236,15 +221,3 @@ export const useAuth = () => {
 };
 
 // Utility hook for redirection if not authenticated
-export const useRequireAuth = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  return { isAuthenticated, isLoading };
-};
