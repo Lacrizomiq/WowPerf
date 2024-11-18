@@ -1,4 +1,3 @@
-// auth_handler.go
 package auth
 
 import (
@@ -8,10 +7,11 @@ import (
 	"regexp"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
-	authMiddleware "wowperf/pkg/middleware"
+	"wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/csrf"
 )
 
 // Handlers struct to hold all auth handlers
@@ -170,15 +170,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Get the CSRF token from the request
-	authMiddleware.GetTokenFromRequest(c, func(token string) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Login successful",
-			"user": gin.H{
-				"username": loginInput.Username,
-			},
-			"csrf_token": token,
-		})
+	// Get CSRF token directly
+	token := csrf.Token(c.Request)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"user": gin.H{
+			"username": loginInput.Username,
+		},
+		"csrf_token": token,
 	})
 }
 
@@ -205,8 +205,8 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	// Group for the auth
 	auth := router.Group("/auth")
 
-	// public route
-	auth.GET("/csrf-token", authMiddleware.GetCSRFToken())
+	// public route for CSRF token
+	auth.GET("/csrf-token", middleware.GetCSRFToken())
 
 	// Base auth routes
 	auth.POST("/signup", h.SignUp)
@@ -214,7 +214,7 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 
 	// Protected routes with JWT
 	protected := auth.Group("")
-	protected.Use(authMiddleware.JWTAuth(h.authService))
+	protected.Use(middleware.JWTAuth(h.authService))
 	{
 		protected.POST("/refresh", h.RefreshToken)
 		protected.POST("/logout", h.Logout)

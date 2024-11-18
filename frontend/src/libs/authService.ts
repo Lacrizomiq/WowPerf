@@ -1,7 +1,7 @@
-import api, { APIError, resetCSRFToken } from "./api";
+import api from "./api";
 import axios, { AxiosError } from "axios";
 
-// Precise types for API responses
+// Response Types
 interface AuthResponse {
   message: string;
   user?: {
@@ -25,7 +25,13 @@ interface AuthCheckResponse {
   authenticated: boolean;
 }
 
-// Possible errors
+interface APIError {
+  error: string;
+  code: string;
+  details?: string;
+}
+
+// Error Handling
 export enum AuthErrorCode {
   INVALID_CREDENTIALS = "invalid_credentials",
   INVALID_INPUT = "invalid_input",
@@ -50,6 +56,7 @@ export class AuthError extends Error {
   }
 }
 
+// Auth Service Implementation
 export const authService = {
   async signup(
     username: string,
@@ -57,57 +64,48 @@ export const authService = {
     password: string
   ): Promise<SignupResponse> {
     try {
-      console.log("AuthService: Starting signup request", {
-        username,
-        email,
-        password: "[REDACTED]",
-      });
-
       const response = await api.post<SignupResponse>("/auth/signup", {
         username,
         email,
         password,
       });
-
-      console.log("AuthService: Signup successful", response.data);
       return response.data;
     } catch (error) {
-      console.error("AuthService: Signup error:", {
-        status: axios.isAxiosError(error) ? error.response?.status : "unknown",
-        data: axios.isAxiosError(error) ? error.response?.data : error,
-      });
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        const data = err.response?.data;
 
-        switch (err.response?.data?.code) {
+        if (data?.code === "INVALID_CSRF_TOKEN") {
+          throw new AuthError(
+            AuthErrorCode.CSRF_ERROR,
+            "Security verification failed"
+          );
+        }
+
+        switch (data?.code) {
           case "username_exists":
             throw new AuthError(
               AuthErrorCode.USERNAME_EXISTS,
-              "This username is already taken. Please choose another one."
+              "Username already taken"
             );
           case "email_exists":
             throw new AuthError(
               AuthErrorCode.EMAIL_EXISTS,
-              "This email is already registered. Please use another email or try logging in."
+              "Email already registered"
             );
           case "invalid_input":
             throw new AuthError(
               AuthErrorCode.INVALID_INPUT,
-              err.response.data.error || "Invalid input data"
+              data.error || "Invalid input"
             );
           default:
             throw new AuthError(
               AuthErrorCode.UNKNOWN_ERROR,
-              err.response?.data?.error || "An unexpected error occurred"
+              data?.error || "Signup failed"
             );
         }
       }
-
-      throw new AuthError(
-        AuthErrorCode.UNKNOWN_ERROR,
-        "An unexpected error occurred during signup"
-      );
+      throw new AuthError(AuthErrorCode.NETWORK_ERROR, "Network error");
     }
   },
 
@@ -117,12 +115,18 @@ export const authService = {
         username,
         password,
       });
-
-      // Store user information if needed
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        const data = err.response?.data;
+
+        if (data?.code === "INVALID_CSRF_TOKEN") {
+          throw new AuthError(
+            AuthErrorCode.CSRF_ERROR,
+            "Security verification failed"
+          );
+        }
 
         if (err.response?.status === 401) {
           throw new AuthError(
@@ -133,61 +137,27 @@ export const authService = {
 
         throw new AuthError(
           AuthErrorCode.LOGIN_ERROR,
-          err.response?.data?.error || "Login failed",
-          err
+          data?.error || "Login failed"
         );
       }
-
-      throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during login",
-        error
-      );
+      throw new AuthError(AuthErrorCode.NETWORK_ERROR, "Network error");
     }
   },
 
   async logout(): Promise<void> {
     try {
       await api.post<AuthResponse>("/auth/logout");
-      // Reset the CSRF token after logout
-      resetCSRFToken();
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Reset the CSRF token even in case of error
-      resetCSRFToken();
-      throw error;
-    }
-  },
-
-  async refreshToken(): Promise<AuthResponse> {
-    try {
-      const response = await api.post<AuthResponse>("/auth/refresh");
-      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
-
-        // If the refresh token is invalid or expired
-        if (err.response?.status === 401) {
-          resetCSRFToken(); // Reset CSRF token
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
           throw new AuthError(
-            AuthErrorCode.INVALID_CREDENTIALS,
-            "Session expired"
+            AuthErrorCode.CSRF_ERROR,
+            "Security verification failed"
           );
         }
-
-        throw new AuthError(
-          AuthErrorCode.UNKNOWN_ERROR,
-          err.response?.data?.error || "Token refresh failed",
-          err
-        );
       }
-
-      throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during token refresh",
-        error
-      );
+      throw new AuthError(AuthErrorCode.UNKNOWN_ERROR, "Logout failed");
     }
   },
 
@@ -196,7 +166,18 @@ export const authService = {
       const response = await api.get<AuthCheckResponse>("/auth/check");
       return response.data.authenticated;
     } catch (error) {
-      // In case of error, consider the user not authenticated
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<APIError>;
+        if (err.response?.status === 401) {
+          return false;
+        }
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
+          throw new AuthError(
+            AuthErrorCode.CSRF_ERROR,
+            "Security verification failed"
+          );
+        }
+      }
       return false;
     }
   },

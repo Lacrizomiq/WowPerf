@@ -1,43 +1,40 @@
-// csrf.go
 package middleware
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
 )
 
-// CSRFConfig struct for CSRF middleware configuration
+// Config contains the CSRF middleware configuration
 type Config struct {
+	Secret         string
 	Domain         string
 	AllowedOrigins []string
 	Environment    string
 }
 
-// CSRFMiddleware is the CSRF middleware available for the app
+// CSRFMiddleware is the CSRF middleware instance
 var CSRFMiddleware func(http.Handler) http.Handler
 
-// InitCSRFMiddleware initializes the CSRF middleware with the provided configuration
+// InitCSRFMiddleware initializes the CSRF middleware
 func InitCSRFMiddleware(config Config) {
-	secret := os.Getenv("CSRF_SECRET")
-	if secret == "" {
+	if config.Secret == "" {
 		log.Fatal("CSRF_SECRET is not set")
 	}
 
-	// Log CSRF configuration in local environment
+	secure := config.Environment != "local"
+
 	if config.Environment == "local" {
-		log.Printf("🔒 Initializing CSRF middleware with config:")
-		log.Printf("   Domain: %s", config.Domain)
-		log.Printf("   Allowed Origins: %v", config.AllowedOrigins)
+		log.Printf("🔒 CSRF Config - Domain: %s, Secure: %v", config.Domain, secure)
 	}
 
 	CSRFMiddleware = csrf.Protect(
-		[]byte(secret),
-		csrf.Secure(true), // Always true because we use HTTPS
+		[]byte(config.Secret),
+		csrf.Secure(secure),
 		csrf.Path("/"),
 		csrf.Domain(config.Domain),
 		csrf.SameSite(csrf.SameSiteLaxMode),
@@ -45,37 +42,25 @@ func InitCSRFMiddleware(config Config) {
 		csrf.CookieName("_csrf"),
 		csrf.TrustedOrigins(config.AllowedOrigins),
 		csrf.ErrorHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("CSRF Error Details - Headers: %v", r.Header)
-			log.Printf("CSRF Error Details - Method: %s", r.Method)
-			log.Printf("CSRF Error Details - URL: %s", r.URL.String())
-			log.Printf("CSRF Error Details - Domain: %s", config.Domain)
-			log.Printf("CSRF Error Details - Allowed Origins: %v", config.AllowedOrigins)
-
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
-
-			errorReason := csrf.FailureReason(r)
-			log.Printf("CSRF Error: %v", errorReason)
-
 			json.NewEncoder(w).Encode(gin.H{
-				"error":   "CSRF validation failed",
-				"code":    "INVALID_CSRF_TOKEN",
-				"details": errorReason.Error(),
+				"error": "CSRF validation failed",
+				"code":  "INVALID_CSRF_TOKEN",
 			})
 		})),
 	)
 }
 
-// NewCSRFHandler creates a new CSRF middleware handler for Gin
+// NewCSRFHandler returns a Gin middleware handler for CSRF protection
 func NewCSRFHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if CSRFMiddleware == nil {
 			log.Fatal("CSRF middleware not initialized")
 		}
 
-		// Skip CSRF check for safe methods
-		if c.Request.Method == "GET" || c.Request.Method == "HEAD" ||
-			c.Request.Method == "OPTIONS" || c.Request.URL.Path == "/api/csrf-token" {
+		// Skip CSRF for safe methods
+		if isSafeMethod(c.Request.Method) || c.Request.URL.Path == "/api/csrf-token" {
 			c.Next()
 			return
 		}
@@ -83,6 +68,7 @@ func NewCSRFHandler() gin.HandlerFunc {
 		handler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			c.Next()
 		}))
+
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
@@ -97,37 +83,18 @@ func GetCSRFToken() gin.HandlerFunc {
 
 		handler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := csrf.Token(r)
-			if token == "" {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate CSRF token"})
-				return
-			}
-
-			// Set CORS headers specifically for the token response
-			origin := c.GetHeader("Origin")
-			if origin != "" {
-				c.Header("Access-Control-Allow-Origin", origin)
-				c.Header("Access-Control-Allow-Credentials", "true")
-				c.Header("Access-Control-Expose-Headers", "X-CSRF-Token")
-			}
-
-			c.Header("X-CSRF-Token", token)
 			c.JSON(http.StatusOK, gin.H{
 				"token": token,
 			})
 		}))
+
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
-// GetTokenFromRequest gets the CSRF token from the request
-func GetTokenFromRequest(c *gin.Context, handler func(token string)) {
-	if CSRFMiddleware == nil {
-		log.Fatal("CSRF middleware not initialized")
-	}
-
-	wrapped := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := csrf.Token(r)
-		handler(token)
-	}))
-	wrapped.ServeHTTP(c.Writer, c.Request)
+// Helper function to check if method is safe
+func isSafeMethod(method string) bool {
+	return method == "GET" ||
+		method == "HEAD" ||
+		method == "OPTIONS"
 }

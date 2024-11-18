@@ -1,278 +1,140 @@
-import axios, {
-  AxiosError,
-  InternalAxiosRequestConfig,
-  AxiosHeaders,
-} from "axios";
-import https from "https";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Custom Axios request config
+// Types definitions
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
-  _csrfRetry?: boolean;
 }
 
-// CSRF response
 interface CSRFResponse {
   token: string;
 }
 
-// API error
-interface APIError {
+interface CSRFErrorResponse {
   error: string;
   code: string;
-  details?: string;
 }
 
-// Configuration base on the environment
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-const isLocalEnv = process.env.NODE_ENV === "development";
-
-// Conditionnal logger
-const logDebug = (message: string, data?: any) => {
-  if (isLocalEnv) {
-    console.log(`🔧 [API Debug] ${message}`, data || "");
-  }
-};
-
-class CSRFTokenManager {
-  private static instance: CSRFTokenManager;
-  private token: string | null = null;
-  private tokenPromise: Promise<string> | null = null;
-  private tokenExpiryTime: number | null = null;
-  private readonly TOKEN_LIFETIME = 60 * 60 * 1000; // 1 hour in milliseconds
-
-  private constructor() {}
-
-  static getInstance(): CSRFTokenManager {
-    if (!CSRFTokenManager.instance) {
-      CSRFTokenManager.instance = new CSRFTokenManager();
-    }
-    return CSRFTokenManager.instance;
-  }
-
-  private isTokenExpired(): boolean {
-    return !this.tokenExpiryTime || Date.now() > this.tokenExpiryTime;
-  }
-
-  // api.ts - dans la classe CSRFTokenManager
-  private async fetchToken(): Promise<string> {
-    try {
-      const csrfAxios = axios.create({
-        baseURL: API_URL,
-        withCredentials: true,
-        headers: {
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        ...(isLocalEnv && {
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false,
-            keepAlive: true,
-          }),
-        }),
-      });
-
-      const response = await csrfAxios.get<CSRFResponse>("/api/csrf-token");
-      const headerToken = response.headers["x-csrf-token"];
-      const dataToken = response.data.token;
-      const token = headerToken || dataToken;
-
-      if (!token) {
-        throw new Error("No CSRF token in response");
-      }
-
-      this.token = token as string; // Cast explicite pour TypeScript
-      this.tokenExpiryTime = Date.now() + this.TOKEN_LIFETIME;
-
-      logDebug("CSRF Token fetched", {
-        token: token.substring(0, 10) + "...",
-        expiresIn: this.TOKEN_LIFETIME,
-      });
-
-      return this.token;
-    } catch (error) {
-      logDebug("Failed to fetch CSRF token:", error);
-      this.token = null;
-      this.tokenPromise = null;
-      this.tokenExpiryTime = null;
-      throw error;
-    }
-  }
-
-  async getToken(forceRefresh = false): Promise<string> {
-    if (forceRefresh || this.isTokenExpired()) {
-      this.token = null;
-      this.tokenPromise = null;
-      this.tokenExpiryTime = null;
-    }
-
-    if (this.token && !this.isTokenExpired()) {
-      return this.token;
-    }
-
-    if (this.tokenPromise) {
-      return this.tokenPromise;
-    }
-
-    this.tokenPromise = this.fetchToken();
-    const token = await this.tokenPromise;
-    this.tokenPromise = null;
-    return token;
-  }
-
-  clearToken(): void {
-    this.token = null;
-    this.tokenPromise = null;
-    this.tokenExpiryTime = null;
-    logDebug("CSRF Token cleared");
-  }
-}
-
-const csrfManager = CSRFTokenManager.getInstance();
-
-// Create axios instance avec la configuration appropriée
+// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    "X-Requested-With": "XMLHttpRequest",
   },
-  ...(isLocalEnv && {
-    httpsAgent: new https.Agent({
-      rejectUnauthorized: false,
-      keepAlive: true,
-    }),
-  }),
 });
 
-// Initial log of the local config
-if (isLocalEnv) {
-  logDebug("API Configuration:", {
-    apiUrl: API_URL,
-    appUrl: APP_URL,
-    environment: process.env.NODE_ENV,
-  });
-}
+// CSRF token management
+let csrfToken: string | null = null;
+let tokenPromise: Promise<string> | null = null;
 
-// Request interceptor
-api.interceptors.request.use(
-  async (config: CustomAxiosRequestConfig) => {
-    if (
-      config.method?.toLowerCase() === "get" ||
-      config.method?.toLowerCase() === "head" ||
-      config.method?.toLowerCase() === "options" ||
-      config.url === "/api/csrf-token"
-    ) {
-      return config;
-    }
+// Get CSRF token with caching
+const getCSRFToken = async (): Promise<string> => {
+  // Return existing token if available
+  if (csrfToken) {
+    return csrfToken;
+  }
 
-    try {
-      logDebug("Request:", {
-        url: config.url,
-        method: config.method,
-      });
+  // Return pending request if exists
+  if (tokenPromise) {
+    return tokenPromise;
+  }
 
-      const token = await csrfManager.getToken();
-      if (!token) {
-        throw new Error("No CSRF token available");
+  // Create new token request
+  tokenPromise = api
+    .get<CSRFResponse>("/api/csrf-token")
+    .then((response) => {
+      if (!response.data.token) {
+        throw new Error("No token received from server");
       }
-
-      const headers = new AxiosHeaders(config.headers);
-      headers.set("X-CSRF-Token", token);
-      headers.set("X-Requested-With", "XMLHttpRequest");
-      config.headers = headers;
-
-      logDebug("Request headers set:", {
-        csrf: token,
-        url: config.url,
-      });
-
-      return config;
-    } catch (error) {
-      logDebug("Request Error:", error);
+      csrfToken = response.data.token;
+      tokenPromise = null;
+      return response.data.token;
+    })
+    .catch((error) => {
+      tokenPromise = null;
       throw error;
-    }
-  },
-  (error) => {
-    logDebug("Request Interceptor Error:", error);
+    });
+
+  return tokenPromise;
+};
+
+// Request interceptor to add CSRF token
+api.interceptors.request.use(async (config: CustomAxiosRequestConfig) => {
+  const method = config.method?.toLowerCase();
+
+  // Skip CSRF for safe methods
+  if (["get", "head", "options"].includes(method || "")) {
+    return config;
+  }
+
+  try {
+    const token = await getCSRFToken();
+    // Ensure headers object exists
+    config.headers = config.headers || {};
+    config.headers["X-CSRF-Token"] = token;
+    return config;
+  } catch (error) {
+    console.error("Failed to fetch CSRF token:", error);
     return Promise.reject(error);
   }
-);
+});
 
-// Response interceptor
+// Response interceptor to handle CSRF errors
 api.interceptors.response.use(
-  (response) => {
-    logDebug("Response Success:", {
-      url: response.config.url,
-      status: response.status,
-    });
-    return response;
-  },
-  async (error: AxiosError<APIError>) => {
-    const originalRequest = error.config as CustomAxiosRequestConfig;
+  (response) => response,
+  async (error: AxiosError<CSRFErrorResponse>) => {
+    const config = error.config as CustomAxiosRequestConfig;
 
-    if (!originalRequest) {
-      return Promise.reject(error);
-    }
-
-    logDebug("Response Error:", {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-
-    // CSRF error handling
+    // Handle CSRF validation failures
     if (
       error.response?.status === 403 &&
-      error.response.data?.code === "INVALID_CSRF_TOKEN" &&
-      !originalRequest._csrfRetry
+      error.response?.data?.code === "INVALID_CSRF_TOKEN" &&
+      !config._retry
     ) {
-      logDebug("CSRF validation failed, retrying with new token");
-      originalRequest._csrfRetry = true;
-
-      try {
-        const newToken = await csrfManager.getToken(true);
-        const headers = new AxiosHeaders(originalRequest.headers);
-        headers.set("X-CSRF-Token", newToken);
-        originalRequest.headers = headers;
-
-        return api(originalRequest);
-      } catch (retryError) {
-        logDebug("Failed to retry request with new CSRF token:", retryError);
-        csrfManager.clearToken();
-        return Promise.reject(retryError);
-      }
-    }
-
-    // Authentication error handling
-    if (error.response?.status === 401) {
-      logDebug("Authentication error detected");
-      csrfManager.clearToken();
+      config._retry = true;
+      csrfToken = null; // Reset token
+      return api(config); // Retry request
     }
 
     return Promise.reject(error);
   }
 );
 
-export default api;
-
 // Utility functions
-export const resetCSRFToken = () => {
-  csrfManager.clearToken();
+export const resetCSRFToken = (): void => {
+  csrfToken = null;
+  tokenPromise = null;
 };
 
-export const preloadCSRFToken = () => {
-  return csrfManager.getToken();
-};
+// Debug logging for development
+if (process.env.NODE_ENV === "development") {
+  api.interceptors.request.use((request) => {
+    console.log("🔄 Request:", {
+      url: request.url,
+      method: request.method,
+      headers: request.headers,
+    });
+    return request;
+  });
 
-export const getApiConfig = () => ({
-  apiUrl: API_URL,
-  appUrl: APP_URL,
-  isLocal: isLocalEnv,
-});
+  api.interceptors.response.use(
+    (response) => {
+      console.log("✅ Response:", {
+        status: response.status,
+        headers: response.headers,
+        data: response.data,
+      });
+      return response;
+    },
+    (error) => {
+      console.log("❌ Response Error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      return Promise.reject(error);
+    }
+  );
+}
 
-// Types for better usage
-export type { APIError, CSRFResponse };
+export default api;

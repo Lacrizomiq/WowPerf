@@ -59,7 +59,11 @@ func NewAuthService(
 	redisClient *redis.Client,
 	blizzardAuth *BlizzardAuthService,
 ) *AuthService {
+	environment := os.Getenv("ENVIRONMENT")
 	domain := os.Getenv("DOMAIN")
+
+	isSecure := environment != "local"
+
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
@@ -69,8 +73,8 @@ func NewAuthService(
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
-			Secure:   true,                 // Set to true in production for https
-			SameSite: http.SameSiteLaxMode, // Set to SameSiteLaxMode in production
+			Secure:   isSecure, // True in production, false in local
+			SameSite: http.SameSiteLaxMode,
 		},
 	}
 }

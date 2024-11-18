@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -140,10 +140,22 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 
 func securityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Check Cloudflare headers
+		if c.GetHeader("CF-Visitor") != "" {
+			cfVisitor := struct {
+				Scheme string `json:"scheme"`
+			}{}
+			json.Unmarshal([]byte(c.GetHeader("CF-Visitor")), &cfVisitor)
+			if cfVisitor.Scheme == "https" {
+				c.Request.Header.Set("X-Forwarded-Proto", "https")
+				c.Request.URL.Scheme = "https"
+			}
+		}
+
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("X-XSS-Protection", "1; mode=block")
-		if os.Getenv("ENV") == "production" {
+		if os.Getenv("ENVIRONMENT") == "production" {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
 		c.Next()
@@ -152,10 +164,7 @@ func securityHeaders() gin.HandlerFunc {
 
 func setupHealthCheck(r *gin.Engine) {
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "healthy",
-			"timestamp": time.Now().Unix(),
-		})
+		c.Status(http.StatusOK)
 	})
 }
 
@@ -181,22 +190,22 @@ func setupRoutes(
 	// Get environment variables
 	environment := os.Getenv("ENVIRONMENT")
 	frontendURL := os.Getenv("FRONTEND_URL")
-	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
+	allowedOrigins := []string{
+		os.Getenv("FRONTEND_URL"),
+	}
 	domain := os.Getenv("DOMAIN")
 
 	// Log config in local env
 	if environment == "local" {
 		log.Printf("🌍 Environment: %s", environment)
 		log.Printf("🔗 Frontend URL: %s", frontendURL)
-		log.Printf("✅ Allowed Origins: %s", allowedOriginsStr)
+		log.Printf("✅ Allowed Origins: %v", allowedOrigins)
 		log.Printf("🌐 Domain: %s", domain)
 	}
 
-	// Parse the authorized origins
-	allowedOrigins := strings.Split(allowedOriginsStr, ",")
-
 	// Initialize CSRF middleware with proper configuration
 	csrf.InitCSRFMiddleware(csrf.Config{
+		Secret:         os.Getenv("CSRF_SECRET"),
 		Domain:         domain,
 		AllowedOrigins: allowedOrigins,
 		Environment:    environment,
@@ -204,7 +213,7 @@ func setupRoutes(
 
 	// CORS Configuration
 	corsConfig := cors.Config{
-		AllowOrigins: allowedOrigins,
+		AllowOrigins: []string{frontendURL}, // Simplifions pour n'autoriser que le frontend
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			"Origin",
@@ -219,12 +228,17 @@ func setupRoutes(
 			"Content-Type",
 			"Set-Cookie",
 			"X-CSRF-Token",
-			"Access-Control-Allow-Origin",
-			"Access-Control-Allow-Credentials",
-			"Access-Control-Expose-Headers",
 		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
+	}
+
+	// Log CORS configuration in local environment
+	if environment == "local" {
+		log.Printf("🔒 CORS Configuration:")
+		log.Printf("   Allow Origins: %v", corsConfig.AllowOrigins)
+		log.Printf("   Allow Credentials: %v", corsConfig.AllowCredentials)
+		log.Printf("   Environment: %s", environment)
 	}
 
 	// Apply middlewares in the correct order
