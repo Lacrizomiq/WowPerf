@@ -6,3 +6,7 @@
 /traefik/acme/*
 /traefik/certs/*
 
+# Cloudflare
+/cloudflare/*
+/cloudflare
+
