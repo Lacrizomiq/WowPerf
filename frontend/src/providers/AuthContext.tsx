@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 "use client";
 
 import React, {
@@ -9,8 +10,8 @@ import React, {
 } from "react";
 import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
-import axios, { AxiosError } from "axios";
 import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
+import { csrfService } from "@/libs/csrfService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,16 +22,9 @@ interface AuthContextType {
   signup: (username: string, email: string, password: string) => Promise<void>;
 }
 
-interface CSRFErrorResponse {
-  code: string;
-  error?: string;
-  details?: string;
-}
-
 interface UserData {
   username: string;
   email?: string;
-  battlenet_id?: string;
 }
 
 interface AuthState {
@@ -52,12 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
+
+  // Using a state to track CSRF initialization only if necessary
   const [csrfInitialized, setCsrfInitialized] = useState(false);
 
   const updateState = useCallback((updates: Partial<AuthState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
+  // Checking authentication
   const checkAuth = useCallback(async () => {
     try {
       const isAuth = await authService.isAuthenticated();
@@ -65,48 +62,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: isAuth,
         isLoading: false,
       });
+
+      // If authenticated, preload the CSRF token
+      if (isAuth && !csrfInitialized) {
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
+      }
     } catch (error) {
-      // Ne pas rediriger, juste mettre à jour l'état
       updateState({
         isAuthenticated: false,
         isLoading: false,
+        user: null,
       });
     }
-  }, [updateState]);
+  }, [updateState, csrfInitialized]);
 
-  // Initialize CSRF only for protected routes
+  // Effect for initial authentication check
   useEffect(() => {
-    const initializeCSRF = async () => {
-      if (!csrfInitialized) {
-        try {
-          await preloadCSRFToken();
-          setCsrfInitialized(true);
-        } catch (error) {
-          console.error("Failed to initialize CSRF token:", error);
-          setTimeout(initializeCSRF, 2000);
-        }
-      }
-    };
-
-    initializeCSRF();
-  }, [csrfInitialized]);
-
-  // Check authentication after CSRF initialization
-  useEffect(() => {
-    if (csrfInitialized) {
-      checkAuth();
-    }
-  }, [checkAuth, csrfInitialized]);
+    checkAuth();
+  }, [checkAuth]);
 
   const handleAuthError = useCallback(
     async (error: unknown): Promise<string> => {
       if (error instanceof AuthError) {
         switch (error.code) {
-          case AuthErrorCode.CSRF_ERROR:
+          case AuthErrorCode.INVALID_CSRF_TOKEN:
             try {
+              // Attempt to refresh the CSRF token
               await preloadCSRFToken();
-              return "Please try again";
-            } catch (e) {
+              return "Please try again. Security token refreshed.";
+            } catch {
               resetCSRFToken();
               return "Security verification failed. Please try again.";
             }
@@ -117,39 +102,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           case AuthErrorCode.EMAIL_EXISTS:
             return "Email already exists";
           case AuthErrorCode.NETWORK_ERROR:
-            return "Network error, please try again";
+            return "Connection error. Please check your internet connection.";
+          case AuthErrorCode.UNAUTHORIZED:
+            updateState({
+              isAuthenticated: false,
+              user: null,
+            });
+            resetCSRFToken();
+            router.push("/login");
+            return "Session expired. Please log in again.";
           default:
-            return error.message;
+            return error.message || "An unexpected error occurred";
         }
       }
-
-      if (axios.isAxiosError(error)) {
-        const err = error as AxiosError<CSRFErrorResponse>;
-        if (err.response?.status === 401) {
-          updateState({
-            isAuthenticated: false,
-            user: null,
-          });
-          resetCSRFToken();
-          return "Session expired";
-        }
-      }
-
       return "An unexpected error occurred";
     },
-    [updateState]
+    [router, updateState]
   );
 
   const login = useCallback(
     async (username: string, password: string) => {
       try {
         const response = await authService.login(username, password);
+
         updateState({
           isAuthenticated: true,
           user: {
             username: response.user.username,
           },
         });
+
+        // Preload the CSRF token after successful login
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
         router.push("/profile");
       } catch (error) {
         const errorMessage = await handleAuthError(error);
@@ -167,15 +152,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user: null,
       });
       resetCSRFToken();
+      setCsrfInitialized(false);
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
+      // Cleaning the state even in case of error
       updateState({
         isAuthenticated: false,
         user: null,
       });
       resetCSRFToken();
+      setCsrfInitialized(false);
+      router.push("/login");
     }
-  }, [updateState]);
+  }, [router, updateState]);
 
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
@@ -193,14 +183,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = {
     isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading || !csrfInitialized,
+    isLoading: state.isLoading,
     user: state.user,
     login,
     logout,
     signup,
   };
 
-  if (state.isLoading || !csrfInitialized) {
+  if (state.isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         Loading...
@@ -219,5 +209,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Utility hook for redirection if not authenticated

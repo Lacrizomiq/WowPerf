@@ -2,10 +2,13 @@
 import axios, { AxiosInstance } from "axios";
 import https from "https";
 
+// Routes requiring CSRF protection (non-GET methods only)
 const CSRF_PROTECTED_ROUTES = [
-  "/auth/login",
-  "/auth/signup",
+  // Auth routes protected by CSRF
   "/auth/logout",
+  "/auth/refresh",
+
+  // User routes protected by CSRF
   "/user/email",
   "/user/password",
   "/user/username",
@@ -16,7 +19,7 @@ class CSRFService {
   private static instance: CSRFService;
   private token: string | null = null;
   private tokenExpiryTime: number | null = null;
-  private readonly TOKEN_LIFETIME = 60 * 60 * 1000;
+  private readonly TOKEN_LIFETIME = 3600 * 1000; // 1 hour, consistent with backend
   private readonly csrfAxios: AxiosInstance;
 
   private constructor() {
@@ -24,6 +27,7 @@ class CSRFService {
       baseURL: process.env.NEXT_PUBLIC_API_URL,
       withCredentials: true,
       headers: {
+        "Content-Type": "application/json",
         Accept: "application/json",
         "X-Requested-With": "XMLHttpRequest",
       },
@@ -43,27 +47,43 @@ class CSRFService {
   }
 
   isProtectedRoute(url: string, method: string): boolean {
-    return (
-      method.toLowerCase() !== "get" &&
-      CSRF_PROTECTED_ROUTES.some((route) => url.includes(route))
+    // CSRF protection is only required for non-GET methods
+    if (method.toLowerCase() === "get") {
+      return false;
+    }
+
+    // Check if the URL matches a protected route
+    return CSRF_PROTECTED_ROUTES.some(
+      (route) => url.endsWith(route) || url.includes(`${route}/`)
     );
   }
 
   async getToken(forceRefresh = false): Promise<string | null> {
+    // If we force a refresh or if the token is expired/missing
     if (forceRefresh || !this.token || this.isTokenExpired()) {
       try {
-        const response = await this.csrfAxios.get("/auth/csrf-token", {
+        const response = await this.csrfAxios.get("/api/csrf-token", {
           headers: {
             Origin: process.env.NEXT_PUBLIC_APP_URL,
+            "X-Requested-With": "XMLHttpRequest",
           },
         });
-        this.token = response.data.token;
-        this.tokenExpiryTime = Date.now() + this.TOKEN_LIFETIME;
+
+        if (response.data.token) {
+          this.token = response.data.token;
+          this.tokenExpiryTime = Date.now() + this.TOKEN_LIFETIME;
+          return this.token;
+        }
+
+        console.warn("No CSRF token in response");
+        return null;
       } catch (error) {
         console.error("Failed to fetch CSRF token:", error);
+        this.clearToken();
         return null;
       }
     }
+
     return this.token;
   }
 
@@ -74,6 +94,14 @@ class CSRFService {
   clearToken(): void {
     this.token = null;
     this.tokenExpiryTime = null;
+  }
+
+  // New method to check if a route requires a token reset
+  shouldResetToken(error: any): boolean {
+    return (
+      error?.response?.data?.code === "INVALID_CSRF_TOKEN" ||
+      error?.response?.status === 403
+    );
   }
 }
 

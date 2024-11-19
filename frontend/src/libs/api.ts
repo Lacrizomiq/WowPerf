@@ -10,8 +10,8 @@ export interface APIError {
 
 export interface ApiResponse {
   message: string;
+  code: string;
   error?: string;
-  code?: string;
 }
 
 const api = axios.create({
@@ -24,38 +24,66 @@ const api = axios.create({
   },
 });
 
+// Interceptor for requests
 api.interceptors.request.use(
   async (config) => {
     if (config.url && config.method) {
+      // Check if the route requires CSRF protection
       if (csrfService.isProtectedRoute(config.url, config.method)) {
-        const token = await csrfService.getToken();
-        if (token) {
-          config.headers["X-CSRF-Token"] = token;
+        try {
+          const token = await csrfService.getToken();
+          if (token) {
+            config.headers["X-CSRF-Token"] = token;
+          } else {
+            console.warn("No CSRF token available for protected route");
+          }
+        } catch (error) {
+          console.error("Failed to get CSRF token:", error);
         }
       }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
+// Interceptor for responses
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
+    // Specific handling of CSRF errors
     if (
-      error.response?.status === 403 &&
-      error.response.data?.code === "INVALID_CSRF_TOKEN" &&
+      csrfService.shouldResetToken(error) &&
       !originalRequest._retry &&
       csrfService.isProtectedRoute(originalRequest.url, originalRequest.method)
     ) {
       originalRequest._retry = true;
-      const token = await csrfService.getToken(true);
-      if (token) {
-        originalRequest.headers["X-CSRF-Token"] = token;
-        return api(originalRequest);
+
+      try {
+        // Force the token refresh
+        const token = await csrfService.getToken(true);
+        if (token) {
+          originalRequest.headers["X-CSRF-Token"] = token;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error("Failed to refresh CSRF token:", refreshError);
+        csrfService.clearToken();
+        return Promise.reject({
+          ...error,
+          message: "CSRF token refresh failed",
+        });
       }
+    }
+
+    // Handling other errors
+    if (error.response?.status === 401) {
+      // Session expired or not authenticated
+      csrfService.clearToken();
     }
 
     return Promise.reject(error);
@@ -64,5 +92,10 @@ api.interceptors.response.use(
 
 export default api;
 
+// Utility functions for CSRF management
 export const resetCSRFToken = () => csrfService.clearToken();
 export const preloadCSRFToken = () => csrfService.getToken();
+
+// Utility function to check if a route is protected
+export const isProtectedRoute = (url: string, method: string) =>
+  csrfService.isProtectedRoute(url, method);

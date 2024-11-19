@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -177,37 +178,27 @@ func setupRoutes(
 
 	// Get environment variables
 	environment := os.Getenv("ENVIRONMENT")
-	frontendURL := os.Getenv("FRONTEND_URL")
-	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
-	domain := os.Getenv("DOMAIN")
+	allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 
 	// Log config in local env
 	if environment == "local" {
 		log.Printf("🌍 Environment: %s", environment)
-		log.Printf("🔗 Frontend URL: %s", frontendURL)
-		log.Printf("✅ Allowed Origins: %s", allowedOriginsStr)
-		log.Printf("🌐 Domain: %s", domain)
+		log.Printf("✅ Allowed Origins: %s", allowedOrigins)
 	}
 
-	// Initialize CSRF middleware with proper configuration
-	csrf.InitCSRFMiddleware(csrf.Config{
-		Domain:         "localhost",
-		AllowedOrigins: []string{"https://localhost"},
-		Environment:    os.Getenv("ENVIRONMENT"),
-	})
-
-	// CORS Configuration
-	corsConfig := cors.Config{
-		AllowOrigins:     []string{"https://localhost"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Accept", "Authorization", "X-CSRF-Token", "X-Requested-With"},
-		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Set-Cookie", "X-CSRF-Token"},
+	// Configure CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: allowedOrigins,
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With"},
+		ExposeHeaders: []string{
+			"Content-Length",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}
-
-	// Apply middlewares in the correct order
-	r.Use(cors.New(corsConfig))
+	}))
 
 	// Health check endpoint
 	setupHealthCheck(r)
@@ -233,7 +224,6 @@ func setupRoutes(
 
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
-
 	blizzardAuthHandler.RegisterRoutes(r)
 
 	// API Routes

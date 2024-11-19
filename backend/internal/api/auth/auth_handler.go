@@ -5,10 +5,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
-	authMiddleware "wowperf/pkg/middleware"
+	"wowperf/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -170,59 +171,59 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Get the CSRF token from the request
-	authMiddleware.GetTokenFromRequest(c, func(token string) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Login successful",
-			"user": gin.H{
-				"username": loginInput.Username,
-			},
-			"csrf_token": token,
-		})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"code":    "LOGIN_SUCCESS",
 	})
 }
 
 // Logout handles user logout
 func (h *AuthHandler) Logout(c *gin.Context) {
 	if err := h.authService.Logout(c); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout", "code": "logout_error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Logout successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "Logout successful", "code": "logout_success"})
 }
 
 // RefreshToken handles token refresh
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	if err := h.authService.RefreshToken(c); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to refresh token", "code": "refresh_token_error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Refresh token successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "Refresh token successful", "code": "refresh_token_success"})
 }
 
 // RegisterRoutes registers the authentication routes
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
-	// Group for the auth
 	auth := router.Group("/auth")
-
-	// Public routes (without CSRF)
-	auth.GET("/csrf-token", authMiddleware.GetCSRFToken())
-	auth.GET("/check", h.CheckAuth)
-
-	// Routes that require CSRF
-	csrfProtected := auth.Group("")
-	csrfProtected.Use(authMiddleware.NewCSRFHandler())
 	{
-		csrfProtected.POST("/signup", h.SignUp)
-		csrfProtected.POST("/login", h.Login)
-		csrfProtected.POST("/refresh", h.RefreshToken)
-		csrfProtected.POST("/logout", h.Logout)
+		// Public routes - no CSRF or JWT
+		auth.POST("/signup", h.SignUp)
+		auth.POST("/login", h.Login)
+
+		// Routes protected by JWT only
+		jwtProtected := auth.Group("")
+		jwtProtected.Use(middleware.JWTAuth(h.authService))
+		{
+			jwtProtected.GET("/check", h.CheckAuth)
+		}
+
+		// Routes protected by JWT and CSRF
+		csrfProtected := auth.Group("")
+		csrfProtected.Use(middleware.JWTAuth(h.authService))
+		csrfProtected.Use(middleware.InitCSRFMiddleware(middleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
+		{
+			csrfProtected.POST("/logout", h.Logout)
+			csrfProtected.POST("/refresh", h.RefreshToken)
+		}
 	}
 }
 
 // CheckAuth checks if the user is authenticated
 func (h *AuthHandler) CheckAuth(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"authenticated": true})
+	c.JSON(http.StatusOK, gin.H{"authenticated": true, "code": "check_auth_success"})
 }
 
 // Helper functions

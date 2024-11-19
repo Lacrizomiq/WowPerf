@@ -2,6 +2,7 @@ package user
 
 import (
 	"net/http"
+	"os"
 	"wowperf/internal/services/auth"
 	"wowperf/internal/services/user"
 	"wowperf/pkg/middleware"
@@ -108,23 +109,22 @@ func (h *UserHandler) DeleteAccount(c *gin.Context) {
 }
 
 func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthService) {
-	// Initialize JWT middleware
-	jwtMiddleware := middleware.JWTAuth(authService)
+	userRoutes := router.Group("/user")
 
-	// Group for user routes
-	user := router.Group("/user")
-	user.Use(jwtMiddleware)
-
-	// Read-only routes (no CSRF)
-	user.GET("/profile", h.GetProfile)
-
-	// Routes that modify data (with CSRF)
-	csrfProtected := user.Group("")
-	csrfProtected.Use(middleware.NewCSRFHandler())
+	// All user endpoints require JWT
+	userRoutes.Use(middleware.JWTAuth(authService))
 	{
-		csrfProtected.PUT("/email", h.UpdateEmail)
-		csrfProtected.PUT("/password", h.ChangePassword)
-		csrfProtected.PUT("/username", h.ChangeUsername)
-		csrfProtected.DELETE("/account", h.DeleteAccount)
+		// Read-only routes - no CSRF
+		userRoutes.GET("/profile", h.GetProfile)
+
+		// Modification routes - need CSRF
+		protected := userRoutes.Group("")
+		protected.Use(middleware.InitCSRFMiddleware(middleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
+		{
+			protected.PUT("/email", h.UpdateEmail)
+			protected.PUT("/password", h.ChangePassword)
+			protected.PUT("/username", h.ChangeUsername)
+			protected.DELETE("/account", h.DeleteAccount)
+		}
 	}
 }
