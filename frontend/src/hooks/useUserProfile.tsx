@@ -7,18 +7,25 @@ import {
   userService,
   UserServiceError,
   UserErrorCode,
+  type UserProfile,
+  type ApiResponse,
 } from "@/libs/userService";
 import { useAuth } from "@/providers/AuthContext";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 import { csrfService } from "@/libs/csrfService";
-import { APIError } from "@/libs/api";
 
-// Mutation states
+// Types améliorés pour les mutations
 interface MutationState {
   isError: boolean;
   error: Error | null;
   isPending: boolean;
+  errorCode?: UserErrorCode;
+}
+
+interface MutationResponse {
+  success: boolean;
+  error?: string;
+  code?: UserErrorCode;
 }
 
 export function useUserProfile() {
@@ -26,58 +33,66 @@ export function useUserProfile() {
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
 
-  // Centralized error handler
+  // Improved centralized error handler
   const handleError = useCallback(
-    async (error: unknown) => {
+    async (error: unknown): Promise<MutationResponse> => {
       console.error("User profile error:", error);
 
       if (error instanceof UserServiceError) {
         switch (error.code) {
+          case UserErrorCode.INVALID_CSRF_TOKEN:
+            try {
+              // Attempt to refresh the CSRF token
+              await csrfService.getToken(true);
+              return {
+                success: false,
+                error: "Security token refreshed. Please try again.",
+                code: error.code,
+              };
+            } catch {
+              await logout();
+              return {
+                success: false,
+                error: "Security verification failed. Please log in again.",
+                code: error.code,
+              };
+            }
+
           case UserErrorCode.UNAUTHORIZED:
             csrfService.clearToken();
             await logout();
-            return "Session expired. Please login again.";
-          case UserErrorCode.UNAUTHORIZED:
-            // Proper logout if unauthorized
-            await logout();
-            return "Session expired. Please login again.";
-
-          case UserErrorCode.PROFILE_NOT_FOUND:
-            return "Profile not found";
+            return {
+              success: false,
+              error: "Session expired. Please login again.",
+              code: error.code,
+            };
 
           case UserErrorCode.EMAIL_EXISTS:
-            return "This email is already in use";
-
-          case UserErrorCode.INVALID_EMAIL:
-            return "Invalid email format";
-
           case UserErrorCode.USERNAME_EXISTS:
-            return "This username is already taken";
-
-          case UserErrorCode.USERNAME_CHANGE_LIMIT:
-            return "Username can only be changed once every 30 days";
-
+          case UserErrorCode.INVALID_EMAIL:
+          case UserErrorCode.INVALID_USERNAME:
           case UserErrorCode.INVALID_PASSWORD:
-            return "Invalid password format";
-
-          case UserErrorCode.NETWORK_ERROR:
-            return "Network error. Please try again";
+          case UserErrorCode.USERNAME_CHANGE_LIMIT:
+            return {
+              success: false,
+              error: error.message,
+              code: error.code,
+            };
 
           default:
-            return error.message;
+            return {
+              success: false,
+              error: "An unexpected error occurred",
+              code: UserErrorCode.SERVER_ERROR,
+            };
         }
       }
 
-      if (error instanceof AxiosError) {
-        const err = error as AxiosError<APIError>;
-        if (err.response?.status === 401) {
-          csrfService.clearToken();
-          await logout();
-          return "Session expired. Please login again.";
-        }
-      }
-
-      return "An unexpected error occurred";
+      return {
+        success: false,
+        error: "An unexpected error occurred",
+        code: UserErrorCode.SERVER_ERROR,
+      };
     },
     [logout]
   );
@@ -87,7 +102,7 @@ export function useUserProfile() {
     data: profile,
     isLoading,
     error: queryError,
-  } = useQuery({
+  } = useQuery<UserProfile>({
     queryKey: ["userProfile"],
     queryFn: userService.getProfile,
     enabled: isAuthenticated,
@@ -99,95 +114,80 @@ export function useUserProfile() {
     },
   });
 
-  // Mutation for email update
-  const updateEmailMutation = useMutation({
+  // Mutations with improved CSRF handling
+  const updateEmailMutation = useMutation<ApiResponse, Error, string>({
     mutationFn: userService.updateEmail,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: async (error) => {
-      const errorMessage = await handleError(error);
-      throw new Error(errorMessage);
+      const response = await handleError(error);
+      throw new Error(response.error);
     },
   });
 
-  // Mutation for password change
-  const changePasswordMutation = useMutation({
-    mutationFn: ({
-      currentPassword,
-      newPassword,
-    }: {
-      currentPassword: string;
-      newPassword: string;
-    }) => userService.changePassword(currentPassword, newPassword),
+  const changePasswordMutation = useMutation<
+    ApiResponse,
+    Error,
+    { currentPassword: string; newPassword: string }
+  >({
+    mutationFn: ({ currentPassword, newPassword }) =>
+      userService.changePassword(currentPassword, newPassword),
     onError: async (error) => {
-      const errorMessage = await handleError(error);
-      throw new Error(errorMessage);
+      const response = await handleError(error);
+      throw new Error(response.error);
     },
   });
 
-  // Mutation for username change
-  const changeUsernameMutation = useMutation({
+  const changeUsernameMutation = useMutation<ApiResponse, Error, string>({
     mutationFn: userService.changeUsername,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: async (error) => {
-      const errorMessage = await handleError(error);
-      throw new Error(errorMessage);
+      const response = await handleError(error);
+      throw new Error(response.error);
     },
   });
 
-  // Mutation for account deletion
-  const deleteAccountMutation = useMutation({
+  const deleteAccountMutation = useMutation<ApiResponse, Error, void>({
     mutationFn: userService.deleteAccount,
     onSuccess: async () => {
       await logout();
       queryClient.clear();
+      router.push("/login");
     },
     onError: async (error) => {
-      const errorMessage = await handleError(error);
-      throw new Error(errorMessage);
+      const response = await handleError(error);
+      throw new Error(response.error);
     },
   });
 
-  // Query error handling
+  // Error handling for query
   useEffect(() => {
-    const handleQueryError = async () => {
-      if (queryError) {
-        const errorMessage = await handleError(queryError);
-        console.error(errorMessage);
-
-        if (
-          queryError instanceof UserServiceError &&
-          queryError.code === UserErrorCode.UNAUTHORIZED
-        ) {
+    if (queryError) {
+      handleError(queryError).then((response) => {
+        if (response.code === UserErrorCode.UNAUTHORIZED) {
           router.push("/login");
         }
-      }
-    };
-
-    handleQueryError();
+      });
+    }
   }, [queryError, router, handleError]);
 
-  // Wrapped methods with error handling
-  const updateEmail = async (newEmail: string) => {
+  // Wrapper methods with improved error handling
+  const updateEmail = async (newEmail: string): Promise<MutationResponse> => {
     try {
       await updateEmailMutation.mutateAsync(newEmail);
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to update email",
-      };
+      return await handleError(error);
     }
   };
 
   const changePassword = async (
     currentPassword: string,
     newPassword: string
-  ) => {
+  ): Promise<MutationResponse> => {
     try {
       await changePasswordMutation.mutateAsync({
         currentPassword,
@@ -195,61 +195,55 @@ export function useUserProfile() {
       });
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to change password",
-      };
+      return await handleError(error);
     }
   };
 
-  const changeUsername = async (newUsername: string) => {
+  const changeUsername = async (
+    newUsername: string
+  ): Promise<MutationResponse> => {
     try {
       await changeUsernameMutation.mutateAsync(newUsername);
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to change username",
-      };
+      return await handleError(error);
     }
   };
 
-  const deleteAccount = async () => {
+  const deleteAccount = async (): Promise<MutationResponse> => {
     try {
       await deleteAccountMutation.mutateAsync();
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to delete account",
-      };
+      return await handleError(error);
     }
   };
 
-  // Mutation states for UI
+  // Mutation states for the UI
   const mutationStates: Record<string, MutationState> = {
     updateEmail: {
       isError: updateEmailMutation.isError,
       error: updateEmailMutation.error as Error | null,
       isPending: updateEmailMutation.isPending,
+      errorCode: (updateEmailMutation.error as UserServiceError)?.code,
     },
     changePassword: {
       isError: changePasswordMutation.isError,
       error: changePasswordMutation.error as Error | null,
       isPending: changePasswordMutation.isPending,
+      errorCode: (changePasswordMutation.error as UserServiceError)?.code,
     },
     changeUsername: {
       isError: changeUsernameMutation.isError,
       error: changeUsernameMutation.error as Error | null,
       isPending: changeUsernameMutation.isPending,
+      errorCode: (changeUsernameMutation.error as UserServiceError)?.code,
     },
     deleteAccount: {
       isError: deleteAccountMutation.isError,
       error: deleteAccountMutation.error as Error | null,
       isPending: deleteAccountMutation.isPending,
+      errorCode: (deleteAccountMutation.error as UserServiceError)?.code,
     },
   };
 

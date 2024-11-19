@@ -7,7 +7,7 @@ import axios, { AxiosError } from "axios";
 interface AuthResponse {
   message: string;
   code: string;
-  user?: {
+  user: {
     username: string;
     email?: string;
   };
@@ -103,15 +103,33 @@ export const authService = {
 
   async login(username: string, password: string): Promise<AuthResponse> {
     try {
+      console.log("Attempting login for username:", username);
+
       const response = await api.post<AuthResponse>("/auth/login", {
         username,
         password,
       });
 
+      console.log("Login response:", response.data);
+
+      if (!response.data.user) {
+        console.error("Invalid server response - missing user:", response.data);
+        throw new AuthError(
+          AuthErrorCode.LOGIN_ERROR,
+          "Invalid server response - missing user data"
+        );
+      }
+
       return response.data;
     } catch (error) {
+      console.error("Login error:", error);
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        console.log("Axios error details:", {
+          status: err.response?.status,
+          data: err.response?.data,
+          message: err.message,
+        });
 
         if (err.response?.status === 401) {
           throw new AuthError(

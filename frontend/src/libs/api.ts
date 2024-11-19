@@ -27,6 +27,12 @@ const api = axios.create({
 // Interceptor for requests
 api.interceptors.request.use(
   async (config) => {
+    console.log("Making request:", {
+      url: config.url,
+      method: config.method,
+      data: config.data,
+      headers: config.headers,
+    });
     if (config.url && config.method) {
       // Check if the route requires CSRF protection
       if (csrfService.isProtectedRoute(config.url, config.method)) {
@@ -45,14 +51,32 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error("Request error:", error);
     return Promise.reject(error);
   }
 );
 
 // Interceptor for responses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("Response received:", {
+      status: response.status,
+      data: response.data,
+      headers: response.headers,
+    });
+    return response;
+  },
   async (error) => {
+    console.error("Response error:", {
+      message: error.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      config: {
+        url: error?.config?.url,
+        method: error?.config?.method,
+        data: error?.config?.data,
+      },
+    });
     const originalRequest = error.config;
 
     // Specific handling of CSRF errors

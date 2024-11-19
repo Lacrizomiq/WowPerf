@@ -5,29 +5,59 @@ import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { UserProfile } from "@/libs/userService";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
+import { UserErrorCode } from "@/libs/userService";
+
+// Définition des types pour les mutations
+interface MutationState {
+  isError: boolean;
+  error: Error | null;
+  isPending: boolean;
+  errorCode?: UserErrorCode;
+}
+
+interface MutationResponse {
+  success: boolean;
+  error?: string;
+  code?: UserErrorCode;
+}
 
 interface PersonalInfoProps {
   profile: UserProfile;
+  mutationStates: {
+    changeUsername: MutationState;
+    updateEmail: MutationState;
+    changePassword?: MutationState;
+    deleteAccount?: MutationState;
+  };
+  onUpdateEmail: (email: string) => Promise<MutationResponse>;
+  onChangeUsername: (username: string) => Promise<MutationResponse>;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
+// Interface pour le statut Battle.net (si non défini dans useBattleNetLink)
+interface BattleNetLinkStatus {
+  linked: boolean;
+  battleTag?: string;
+}
+
+const PersonalInfo: React.FC<PersonalInfoProps> = ({
+  profile,
+  mutationStates,
+  onUpdateEmail,
+  onChangeUsername,
+}) => {
   const queryClient = useQueryClient();
   const {
     linkStatus,
-    isLoading,
-    error,
+    isLoading: isLinkLoading,
+    error: linkError,
     initiateLink,
     unlinkAccount,
     isUnlinking,
   } = useBattleNetLink();
 
   useEffect(() => {
-    // Rafraîchir le statut de la liaison quand le composant est monté
-    // et quand l'URL contient success=true
     if (window.location.search.includes("success=true")) {
-      // Force refresh du status
       queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] });
-      // Nettoyer l'URL
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [queryClient]);
@@ -43,6 +73,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
   const handleBattleNetUnlink = async () => {
     try {
       await unlinkAccount();
+      queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] });
     } catch (error) {
       console.error("Failed to unlink Battle.net:", error);
     }
@@ -55,25 +86,36 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
           Personal Information
         </h2>
         <div className="space-y-4">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between">
             <p className="block text-sm font-medium text-[#e2e8f0]">
               <span className="font-bold text-lg">Username: </span>
               {profile.username}
             </p>
+            {mutationStates.changeUsername.isError && (
+              <p className="text-red-500 text-sm">
+                {mutationStates.changeUsername.error?.message}
+              </p>
+            )}
           </div>
-          <div>
+          <div className="flex items-center justify-between">
             <p className="block text-sm font-medium text-[#e2e8f0]">
               <span className="font-bold text-lg">Email: </span>
               {profile.email}
             </p>
+            {mutationStates.updateEmail.isError && (
+              <p className="text-red-500 text-sm">
+                {mutationStates.updateEmail.error?.message}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
       <section className="bg-deep-blue shadow rounded-lg p-6 mt-4 border border-gray-800">
         <h2 className="text-2xl font-bold mb-4 text-[#e2e8f0]">
-          Link your Battle.net account
+          Battle.net Account
         </h2>
+        {linkError && <p className="text-red-500 mb-4">{linkError.message}</p>}
         <div className="flex items-center">
           {linkStatus?.linked ? (
             <div className="space-y-4">
@@ -92,7 +134,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
           ) : (
             <button
               onClick={handleBattleNetConnect}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center"
+              disabled={isLinkLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200 flex items-center disabled:opacity-50"
             >
               <Image
                 src="https://cdn.raiderio.net/assets/img/battlenet-icon-e75d33039b37cf7cd82eff67d292f478.png"
@@ -101,7 +144,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ profile }) => {
                 height={24}
                 className="mr-2"
               />
-              Connect to Battle.net
+              {isLinkLoading ? "Connecting..." : "Connect to Battle.net"}
             </button>
           )}
         </div>

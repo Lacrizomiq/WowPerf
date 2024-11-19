@@ -12,6 +12,7 @@ import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
 import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
 import { csrfService } from "@/libs/csrfService";
+import { usePathname } from "next/navigation";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -20,6 +21,16 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
+}
+
+interface LoginResponse {
+  message: string;
+  code: string;
+  user: {
+    // Make user required for login
+    username: string;
+    email?: string;
+  };
 }
 
 interface UserData {
@@ -123,20 +134,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = useCallback(
     async (username: string, password: string) => {
       try {
+        console.log("Starting login process...");
         const response = await authService.login(username, password);
+        console.log("Login successful:", response);
 
         updateState({
           isAuthenticated: true,
-          user: {
-            username: response.user.username,
-          },
+          user: response.user,
+          isLoading: false,
         });
 
-        // Preload the CSRF token after successful login
-        await preloadCSRFToken();
-        setCsrfInitialized(true);
+        console.log("State updated after login");
+
+        try {
+          await preloadCSRFToken();
+          setCsrfInitialized(true);
+          console.log("CSRF token preloaded");
+        } catch (csrfError) {
+          console.error("Failed to preload CSRF token:", csrfError);
+        }
+
+        // Add a small delay before redirect
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        console.log("Redirecting to profile...");
         router.push("/profile");
       } catch (error) {
+        console.error("Login process failed:", error);
         const errorMessage = await handleAuthError(error);
         throw new Error(errorMessage);
       }
@@ -170,15 +193,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
       try {
-        await authService.signup(username, email, password);
-        // Auto-login after successful signup
-        await login(username, password);
+        const signupResponse = await authService.signup(
+          username,
+          email,
+          password
+        );
+
+        updateState({
+          isAuthenticated: true,
+          user: signupResponse.user,
+        });
+
+        // Preload the CSRF token
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
+
+        // Redirect
+        router.push("/profile");
       } catch (error) {
         const errorMessage = await handleAuthError(error);
         throw new Error(errorMessage);
       }
     },
-    [login, handleAuthError]
+    [router, handleAuthError, updateState]
   );
 
   const value = {
@@ -208,4 +245,19 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+};
+
+export const useRequireAuth = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // Store the current page to redirect after login if necessary
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthenticated, isLoading, router, pathname]);
+
+  return { isAuthenticated, isLoading };
 };

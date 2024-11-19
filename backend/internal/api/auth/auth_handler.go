@@ -134,9 +134,12 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 
+	log.Printf("User created successfully: %s, %s", user.Username, user.Email)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User created successfully",
 		"code":    "signup_success",
+		"user":    gin.H{"username": user.Username, "email": user.Email},
 	})
 }
 
@@ -171,9 +174,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	log.Printf("Sending login response: %+v", gin.H{
+		"message": "Login successful",
+		"code":    "LOGIN_SUCCESS",
+		"user": gin.H{
+			"username": loginInput.Username,
+		},
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"code":    "LOGIN_SUCCESS",
+		"user":    gin.H{"username": loginInput.Username},
 	})
 }
 

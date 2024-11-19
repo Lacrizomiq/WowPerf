@@ -3,13 +3,13 @@ import api, { APIError } from "./api";
 import axios, { AxiosError } from "axios";
 
 // API response types aligned with the backend
-interface UserProfile {
+export interface UserProfile {
   id: number;
   username: string;
   email: string;
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   message: string;
   code: string;
   error?: string;

@@ -108,13 +108,28 @@ const SignupForm: React.FC = () => {
             setEmailError("This email is already registered");
             break;
           case AuthErrorCode.INVALID_INPUT:
-            setError("Please check your input and try again");
+            // Check if the error message contains specific details
+            if (err.message.includes("username")) {
+              setUsernameError(err.message);
+            } else if (err.message.includes("email")) {
+              setEmailError(err.message);
+            } else if (err.message.includes("password")) {
+              setPasswordError(err.message);
+            } else {
+              setError("Please check your input and try again");
+            }
+            break;
+          case AuthErrorCode.SIGNUP_ERROR:
+            setError(err.message);
             break;
           case AuthErrorCode.NETWORK_ERROR:
             setError("Network error, please try again");
             break;
+          case AuthErrorCode.SERVER_ERROR:
+            setError("Server error, please try again later");
+            break;
           default:
-            setError(err.message);
+            setError(err.message || "An unexpected error occurred");
         }
       } else if (err instanceof AxiosError) {
         setError("Server error. Please try again later.");
