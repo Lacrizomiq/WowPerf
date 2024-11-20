@@ -122,7 +122,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 </div>
               </div>
             </td>
-            <td className="text-right">{entry.total_score}</td>
+            <td className="text-right">{entry.total_score.toFixed(0)}</td>
           </tr>
         ))}
       </tbody>
