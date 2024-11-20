@@ -14,12 +14,13 @@ import (
 )
 
 type Handler struct {
-	MythicPlusBestRun    *raiderioMythicPlus.MythicPlusBestRunHandler
-	MythicPlusRunDetails *raiderioMythicPlus.MythicPlusRunDetailsHandler
-	RaidLeaderboard      *raiderioRaid.RaidLeaderboardHandler
-	DungeonStats         *raiderioMythicPlus.DungeonStatsHandler
-	cache                cache.CacheService
-	cacheManager         *middleware.CacheManager
+	MythicPlusBestRun           *raiderioMythicPlus.MythicPlusBestRunHandler
+	MythicPlusRunDetails        *raiderioMythicPlus.MythicPlusRunDetailsHandler
+	RaidLeaderboard             *raiderioRaid.RaidLeaderboardHandler
+	DungeonStats                *raiderioMythicPlus.DungeonStatsHandler
+	CharacterMythicPlusBestRuns *raiderioMythicPlus.CharacterMythicPlusBestRunsHandler
+	cache                       cache.CacheService
+	cacheManager                *middleware.CacheManager
 }
 
 func NewHandler(service *raiderio.RaiderIOService, db *gorm.DB, cache cache.CacheService, cacheManager *middleware.CacheManager) *Handler {
@@ -32,12 +33,13 @@ func NewHandler(service *raiderio.RaiderIOService, db *gorm.DB, cache cache.Cach
 	}
 
 	return &Handler{
-		MythicPlusBestRun:    raiderioMythicPlus.NewMythicPlusBestRunHandler(service),
-		MythicPlusRunDetails: raiderioMythicPlus.NewMythicPlusRunDetailsHandler(service),
-		RaidLeaderboard:      raiderioRaid.NewRaidLeaderboardHandler(service),
-		DungeonStats:         raiderioMythicPlus.NewDungeonStatsHandler(service, db),
-		cache:                cache,
-		cacheManager:         middleware.NewCacheManager(cacheConfig),
+		MythicPlusBestRun:           raiderioMythicPlus.NewMythicPlusBestRunHandler(service),
+		MythicPlusRunDetails:        raiderioMythicPlus.NewMythicPlusRunDetailsHandler(service),
+		RaidLeaderboard:             raiderioRaid.NewRaidLeaderboardHandler(service),
+		DungeonStats:                raiderioMythicPlus.NewDungeonStatsHandler(service, db),
+		CharacterMythicPlusBestRuns: raiderioMythicPlus.NewCharacterMythicPlusBestRunsHandler(service),
+		cache:                       cache,
+		cacheManager:                middleware.NewCacheManager(cacheConfig),
 	}
 }
 
@@ -54,6 +56,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 			mythicplus.GET("/best-runs", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlusBestRun.GetMythicPlusBestRuns)
 			mythicplus.GET("/run-details", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlusRunDetails.GetMythicPlusRunDetails)
 			mythicplus.GET("/dungeon-stats", h.cacheManager.CacheMiddleware(routeConfig), h.DungeonStats.GetDungeonStats)
+			mythicplus.GET("/character-best-runs", h.cacheManager.CacheMiddleware(routeConfig), h.CharacterMythicPlusBestRuns.GetCharacterMythicPlusBestRuns)
 		}
 
 		// Raids API for raider.io Raids API Data
