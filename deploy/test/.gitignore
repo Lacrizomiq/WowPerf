@@ -1,1 +1,5 @@
 .env
+
+traefik/acme/acme.json
+*.pem
+*.key
