@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -58,6 +59,12 @@ func NewAuthService(
 	redisClient *redis.Client,
 	blizzardAuth *BlizzardAuthService,
 ) *AuthService {
+
+	domain := os.Getenv("DOMAIN")
+
+	// Configuration pour le développement
+	secure := true
+
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
@@ -65,10 +72,10 @@ func NewAuthService(
 		TokenExpiration: AccessTokenDuration,
 		BlizzardAuth:    blizzardAuth,
 		CookieConfig: CookieConfig{
-			Domain:   ".localhost", // Add . to the domain to allow subdomains
+			Domain:   domain,
 			Path:     "/",
-			Secure:   true,                 // Set to true in production for https
-			SameSite: http.SameSiteLaxMode, // Set to SameSiteLaxMode in production
+			Secure:   secure, // true pour HTTPS
+			SameSite: http.SameSiteLaxMode,
 		},
 	}
 }
@@ -98,17 +105,22 @@ func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken s
 
 // SignUp registers a new user
 func (s *AuthService) SignUp(user *models.User) error {
+	log.Printf("Starting SignUp process for user: %s", user.Username)
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	user.Password = string(hashedPassword)
 
 	if err := s.DB.Create(user).Error; err != nil {
+		log.Printf("Failed to create user in database: %v", err)
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
+	log.Printf("User created successfully: %s", user.Username)
 	return nil
 }
 

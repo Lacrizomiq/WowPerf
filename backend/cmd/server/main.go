@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -158,6 +159,8 @@ func setupHealthCheck(r *gin.Engine) {
 	})
 }
 
+// main.go - fonction setupRoutes
+
 func setupRoutes(
 	r *gin.Engine,
 	authService *auth.AuthService,
@@ -169,91 +172,59 @@ func setupRoutes(
 	blizzardHandler *apiBlizzard.Handler,
 	warcraftlogsHandler *apiWarcraftlogs.Handler,
 ) {
-	// Health check endpoint
-	setupHealthCheck(r)
-
-	// Initialize the CSRF middleware
-	csrf.InitCSRFMiddleware()
 
 	// Security headers middleware with HTTPS support
 	r.Use(securityHeaders())
 
 	// Get environment variables
 	environment := os.Getenv("ENVIRONMENT")
-	frontendURL := os.Getenv("FRONTEND_URL")
+	allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 
-	// Default allowed origins
-	allowedOrigins := []string{
-		"https://localhost",
-		"https://*.localhost",
-		"https://api.localhost",
-		frontendURL,
+	// Log config in local env
+	if environment == "local" {
+		log.Printf("🌍 Environment: %s", environment)
+		log.Printf("✅ Allowed Origins: %s", allowedOrigins)
 	}
 
-	// Add production domain if in production
-	if environment == "production" {
-		// In production, only allow the specific frontend URL
-		allowedOrigins = []string{frontendURL}
-	}
-
-	// CORS Configuration
-	corsConfig := cors.Config{
+	// Configure CORS
+	r.Use(cors.New(cors.Config{
 		AllowOrigins: allowedOrigins,
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin",
-			"Content-Type",
-			"Accept",
-			"Authorization",
-			"X-CSRF-Token",
-			"X-Requested-With",
-			"Cookie",
-			"Set-Cookie",
-		},
+		AllowHeaders: []string{"Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With"},
 		ExposeHeaders: []string{
 			"Content-Length",
 			"Content-Type",
-			"Set-Cookie",
-			"Access-Control-Allow-Origin",
-			"Access-Control-Allow-Credentials",
+			"X-CSRF-Token",
 		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-		// Important: Add custom handling for OPTIONS requests
-		AllowWildcard: true,
-	}
-	r.Use(cors.New(corsConfig))
+	}))
 
-	// Add OPTIONS handler for preflight requests
-	r.OPTIONS("/*path", func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", c.GetHeader("Origin"))
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Status(http.StatusOK)
-	})
+	// Health check endpoint
+	setupHealthCheck(r)
+
 	// Logger middleware
 	r.Use(gin.Logger())
 
-	r.Use(func(c *gin.Context) {
-		log.Printf("📨 Request: %s %s", c.Request.Method, c.Request.URL.Path)
-		log.Printf("📝 Headers: %v", c.Request.Header)
+	// Request/Response logging middleware
+	/*
+		r.Use(func(c *gin.Context) {
+			log.Printf("📨 Request: %s %s", c.Request.Method, c.Request.URL.Path)
+			log.Printf("📝 Headers: %v", c.Request.Header)
 
-		c.Next()
+			c.Next()
 
-		log.Printf("📤 Response Status: %d", c.Writer.Status())
-		log.Printf("📤 Response Headers: %v", c.Writer.Header())
-	})
-
-	// Initialize CSRF middleware
-	r.Use(csrf.NewCSRFHandler())
+			log.Printf("📤 Response Status: %d", c.Writer.Status())
+			log.Printf("📤 Response Headers: %v", c.Writer.Header())
+		})
+	*/
 
 	// CSRF Token endpoint
 	r.GET("/api/csrf-token", csrf.GetCSRFToken())
 
 	// Auth Routes
 	authHandler.RegisterRoutes(r)
-	if blizzardAuthHandler != nil {
-		blizzardAuthHandler.RegisterRoutes(r)
-	}
+	blizzardAuthHandler.RegisterRoutes(r)
 
 	// API Routes
 	rioHandler.RegisterRoutes(r)

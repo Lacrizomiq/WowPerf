@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   useGetBlizzardRaidsByExpansion,
   useGetBlizzardCharacterEncounterRaid,
 } from "@/hooks/useBlizzardApi";
+import { useGetPlayerRaidRankings } from "@/hooks/useWarcraftLogsApi";
 import ExpansionSelector from "./ExpansionSelector";
 import StaticRaidsList from "./StaticRaidsList";
 import RaidDetails from "./RaidDetails";
-import { StaticRaid, RaidProgressionData } from "@/types/raids";
+import RaidsPlayerPerformance from "./CharacterPersonnalRanking/RaidsPlayerPerformance";
+import { StaticRaid } from "@/types/raids";
+import { RAID_ZONE_MAPPING } from "@/utils/s1_tww_mapping";
 
 interface RaidOverviewProps {
   characterName: string;
@@ -30,6 +33,7 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
 
   const { data: staticRaids, isLoading: isStaticLoading } =
     useGetBlizzardRaidsByExpansion(selectedExpansion);
+
   const { data: raidProgressionData, isLoading: isProgressionLoading } =
     useGetBlizzardCharacterEncounterRaid(
       region,
@@ -38,6 +42,10 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
       namespace,
       locale
     );
+
+  // Add WarcraftLogs data fetch
+  const { data: raidRankings, isLoading: isRankingsLoading } =
+    useGetPlayerRaidRankings(characterName, realmSlug, region, 38);
 
   const handleExpansionChange = (newExpansion: string) => {
     setSelectedExpansion(newExpansion);
@@ -56,19 +64,26 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
 
   return (
     <div className="p-6 rounded-xl shadow-lg m-4">
-      <div className="flex justify-between items-center mb-6">
+      {raidRankings && (
+        <div className="mt-6">
+          <RaidsPlayerPerformance playerData={raidRankings} />
+        </div>
+      )}
+      <div className="flex justify-between items-center mb-6 mt-6">
         <h2 className="text-2xl font-bold text-white">Raids Progression</h2>
         <ExpansionSelector
           currentExpansion={selectedExpansion}
           onExpansionChange={handleExpansionChange}
         />
       </div>
+
       <StaticRaidsList
         raids={staticRaids || []}
         raidProgressionData={raidProgressionData}
         onRaidSelect={handleRaidSelect}
         selectedRaid={selectedRaid}
       />
+
       {selectedRaid && (
         <RaidDetails
           staticRaid={selectedRaid}

@@ -1,44 +1,42 @@
+// src/libs/userService.ts
 import api, { APIError } from "./api";
 import axios, { AxiosError } from "axios";
 
-// API response types
-interface UserProfile {
+// API response types aligned with the backend
+export interface UserProfile {
   id: number;
   username: string;
   email: string;
-  created_at: string;
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   message: string;
+  code: string;
   error?: string;
-  code?: string;
 }
 
-interface UpdateEmailResponse extends ApiResponse {
-  email: string;
-}
-
-interface UpdateUsernameResponse extends ApiResponse {
-  username: string;
-}
-
-interface UpdatePasswordResponse extends ApiResponse {}
-
-interface DeleteAccountResponse extends ApiResponse {}
-
-// Error codes
+// Standardized error codes
 export enum UserErrorCode {
-  PROFILE_NOT_FOUND = "profile_not_found",
+  // Validation errors
   INVALID_EMAIL = "invalid_email",
-  EMAIL_EXISTS = "email_exists",
   INVALID_PASSWORD = "invalid_password",
   INVALID_USERNAME = "invalid_username",
+
+  // Conflict errors
+  EMAIL_EXISTS = "email_exists",
   USERNAME_EXISTS = "username_exists",
-  USERNAME_CHANGE_LIMIT = "username_change_limit",
+
+  // Security errors
   UNAUTHORIZED = "unauthorized",
+  INVALID_CSRF_TOKEN = "INVALID_CSRF_TOKEN",
+
+  // Limitation errors
+  USERNAME_CHANGE_LIMIT = "username_change_limit",
+
+  // Technical errors
+  PROFILE_NOT_FOUND = "profile_not_found",
   NETWORK_ERROR = "network_error",
-  UNKNOWN_ERROR = "unknown_error",
+  SERVER_ERROR = "server_error",
 }
 
 export class UserServiceError extends Error {
@@ -53,17 +51,15 @@ export class UserServiceError extends Error {
 }
 
 export const userService = {
+  // Route protected by JWT only
   async getProfile(): Promise<UserProfile> {
     try {
       const response = await api.get<UserProfile>("/user/profile");
       return response.data;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
 
-        // Check HTTP status
         if (err.response?.status === 401) {
           throw new UserServiceError(
             UserErrorCode.UNAUTHORIZED,
@@ -77,43 +73,32 @@ export const userService = {
             "Profile not found"
           );
         }
-
-        throw new UserServiceError(
-          UserErrorCode.UNKNOWN_ERROR,
-          err.response?.data?.error || "Failed to fetch profile",
-          err
-        );
       }
-
       throw new UserServiceError(
         UserErrorCode.NETWORK_ERROR,
-        "Network error while fetching profile",
-        error
+        "Failed to fetch profile"
       );
     }
   },
 
-  async updateEmail(newEmail: string): Promise<UpdateEmailResponse> {
+  // Route protected by JWT + CSRF
+  async updateEmail(newEmail: string): Promise<ApiResponse> {
     try {
-      const response = await api.put<UpdateEmailResponse>("/user/email", {
+      const response = await api.put<ApiResponse>("/user/email", {
         new_email: newEmail,
       });
       return response.data;
     } catch (error) {
-      console.error("Error updating email:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
 
-        // Check HTTP status
-        if (err.response?.status === 401) {
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
           throw new UserServiceError(
-            UserErrorCode.UNAUTHORIZED,
-            "Not authorized to update email"
+            UserErrorCode.INVALID_CSRF_TOKEN,
+            "Security verification failed"
           );
         }
 
-        // Check custom error codes
         switch (err.response?.data?.code) {
           case "invalid_email":
             throw new UserServiceError(
@@ -127,46 +112,40 @@ export const userService = {
             );
           default:
             throw new UserServiceError(
-              UserErrorCode.UNKNOWN_ERROR,
-              err.response?.data?.error || "Failed to update email",
-              err
+              UserErrorCode.SERVER_ERROR,
+              err.response?.data?.error || "Failed to update email"
             );
         }
       }
-
       throw new UserServiceError(
         UserErrorCode.NETWORK_ERROR,
-        "Network error while updating email",
-        error
+        "Network error while updating email"
       );
     }
   },
 
+  // Route protected by JWT + CSRF
   async changePassword(
     currentPassword: string,
     newPassword: string
-  ): Promise<UpdatePasswordResponse> {
+  ): Promise<ApiResponse> {
     try {
-      const response = await api.put<UpdatePasswordResponse>("/user/password", {
+      const response = await api.put<ApiResponse>("/user/password", {
         current_password: currentPassword,
         new_password: newPassword,
       });
       return response.data;
     } catch (error) {
-      console.error("Error changing password:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
 
-        // Check HTTP status
-        if (err.response?.status === 401) {
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
           throw new UserServiceError(
-            UserErrorCode.UNAUTHORIZED,
-            "Not authorized to change password"
+            UserErrorCode.INVALID_CSRF_TOKEN,
+            "Security verification failed"
           );
         }
 
-        // Check custom error codes
         switch (err.response?.data?.code) {
           case "invalid_current_password":
             throw new UserServiceError(
@@ -180,38 +159,33 @@ export const userService = {
             );
           default:
             throw new UserServiceError(
-              UserErrorCode.UNKNOWN_ERROR,
-              err.response?.data?.error || "Failed to change password",
-              err
+              UserErrorCode.SERVER_ERROR,
+              "Failed to change password"
             );
         }
       }
-
       throw new UserServiceError(
         UserErrorCode.NETWORK_ERROR,
-        "Network error while changing password",
-        error
+        "Network error while changing password"
       );
     }
   },
 
-  async changeUsername(newUsername: string): Promise<UpdateUsernameResponse> {
+  // Route protected by JWT + CSRF
+  async changeUsername(newUsername: string): Promise<ApiResponse> {
     try {
-      const response = await api.put<UpdateUsernameResponse>("/user/username", {
+      const response = await api.put<ApiResponse>("/user/username", {
         new_username: newUsername,
       });
       return response.data;
     } catch (error) {
-      console.error("Error changing username:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
 
-        // Check HTTP status
-        if (err.response?.status === 401) {
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
           throw new UserServiceError(
-            UserErrorCode.UNAUTHORIZED,
-            "Not authorized to change username"
+            UserErrorCode.INVALID_CSRF_TOKEN,
+            "Security verification failed"
           );
         }
 
@@ -222,7 +196,6 @@ export const userService = {
           );
         }
 
-        // Check custom error codes
         switch (err.response?.data?.code) {
           case "username_exists":
             throw new UserServiceError(
@@ -236,61 +209,45 @@ export const userService = {
             );
           default:
             throw new UserServiceError(
-              UserErrorCode.UNKNOWN_ERROR,
-              err.response?.data?.error || "Failed to change username",
-              err
+              UserErrorCode.SERVER_ERROR,
+              "Failed to change username"
             );
         }
       }
-
       throw new UserServiceError(
         UserErrorCode.NETWORK_ERROR,
-        "Network error while changing username",
-        error
+        "Network error while changing username"
       );
     }
   },
 
-  async deleteAccount(): Promise<DeleteAccountResponse> {
+  // Route protected by JWT + CSRF
+  async deleteAccount(): Promise<ApiResponse> {
     try {
-      const response = await api.delete<DeleteAccountResponse>("/user/account");
+      const response = await api.delete<ApiResponse>("/user/account");
       return response.data;
     } catch (error) {
-      console.error("Error deleting account:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
 
-        // Check HTTP status
+        if (err.response?.data?.code === "INVALID_CSRF_TOKEN") {
+          throw new UserServiceError(
+            UserErrorCode.INVALID_CSRF_TOKEN,
+            "Security verification failed"
+          );
+        }
+
         if (err.response?.status === 401) {
           throw new UserServiceError(
             UserErrorCode.UNAUTHORIZED,
             "Not authorized to delete account"
           );
         }
-
-        throw new UserServiceError(
-          UserErrorCode.UNKNOWN_ERROR,
-          err.response?.data?.error || "Failed to delete account",
-          err
-        );
       }
-
       throw new UserServiceError(
         UserErrorCode.NETWORK_ERROR,
-        "Network error while deleting account",
-        error
+        "Network error while deleting account"
       );
     }
   },
-};
-
-// Export types
-export type {
-  UserProfile,
-  ApiResponse,
-  UpdateEmailResponse,
-  UpdateUsernameResponse,
-  UpdatePasswordResponse,
-  DeleteAccountResponse,
 };

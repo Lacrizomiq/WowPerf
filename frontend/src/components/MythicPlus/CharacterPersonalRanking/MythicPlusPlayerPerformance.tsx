@@ -110,7 +110,9 @@ const MythicPlusPlayerPerformance: React.FC<
                 ),
               }}
             >
-              {playerData.zoneRankings.bestPerformanceAverage.toFixed(1)}
+              {Math.floor(
+                playerData.zoneRankings.bestPerformanceAverage
+              ).toFixed(0)}
             </p>
           </div>
           <div className="text-right">
@@ -263,14 +265,14 @@ const MythicPlusPlayerPerformance: React.FC<
                           color: getPerformanceColor(dungeon.rankPercent),
                         }}
                       >
-                        {dungeon.rankPercent.toFixed()}
+                        {Math.floor(dungeon.rankPercent)}
                       </span>
                     </div>
                   </td>
 
                   {/* Score */}
                   <td className="py-2 px-4 text-green-600">
-                    {dungeon.allStars.points}
+                    {dungeon.allStars.points.toFixed(0)}
                   </td>
 
                   {/* Number of Runs */}
