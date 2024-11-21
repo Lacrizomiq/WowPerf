@@ -2,20 +2,14 @@
 .env
 backend/.env
 frontend/.env
-docker-compose.yml
+./docker-compose.yml  # Ignorer seulement à la racine
 
-# But keep the examples
-!.env.example
-!backend/.env.example
-!frontend/.env.example
+# Certificates
+/certs/*.key
+/certs/*.crt
+/certs/*.pem
+/certs/
 
-# Certificats
-certs/*.key
-certs/*.crt
-certs/*.pem
-certs/
-
-# Traefik
-traefik/
-traefik/tls.yml
-
+# Dev environment
+/deploy/local/traefik/tls.yml
+/deploy/local/certs/
