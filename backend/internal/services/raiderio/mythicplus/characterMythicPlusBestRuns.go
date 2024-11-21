@@ -10,11 +10,12 @@ import (
 
 // RunInfo contains the essential information of a run
 type RunInfo struct {
-	DungeonName string  `json:"dungeon"`
-	RunID       string  `json:"run_id"`
-	Level       int     `json:"mythic_level"`
-	Score       float64 `json:"score"`
-	URL         string  `json:"url"`
+	DungeonName     string  `json:"dungeon"`
+	ChallengeModeID int     `json:"challenge_mode_id"`
+	RunID           string  `json:"run_id"`
+	Level           int     `json:"mythic_level"`
+	Score           float64 `json:"score"`
+	URL             string  `json:"url"`
 }
 
 // GetCharacterMythicPlusBestRuns returns the best runs for a character with extracted run IDs
