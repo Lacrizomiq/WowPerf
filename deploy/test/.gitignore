@@ -1,5 +1,4 @@
 .env
+traefik/acme/*
+!traefik/acme/.gitkeep
 
-traefik/acme/acme.json
-*.pem
-*.key
