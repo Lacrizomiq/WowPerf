@@ -5,7 +5,8 @@ import (
 	"os"
 	"wowperf/internal/services/auth"
 	"wowperf/internal/services/user"
-	"wowperf/pkg/middleware"
+	csrfMiddleware "wowperf/pkg/middleware"
+	authMiddleware "wowperf/pkg/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -112,14 +113,14 @@ func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthS
 	userRoutes := router.Group("/user")
 
 	// All user endpoints require JWT
-	userRoutes.Use(middleware.JWTAuth(authService))
+	userRoutes.Use(authMiddleware.JWTAuth(authService))
 	{
 		// Read-only routes - no CSRF
 		userRoutes.GET("/profile", h.GetProfile)
 
 		// Modification routes - need CSRF
 		protected := userRoutes.Group("")
-		protected.Use(middleware.InitCSRFMiddleware(middleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
+		protected.Use(csrfMiddleware.InitCSRFMiddleware(csrfMiddleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
 		{
 			protected.PUT("/email", h.UpdateEmail)
 			protected.PUT("/password", h.ChangePassword)

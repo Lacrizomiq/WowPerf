@@ -62,7 +62,7 @@ class CSRFService {
     // If we force a refresh or if the token is expired/missing
     if (forceRefresh || !this.token || this.isTokenExpired()) {
       try {
-        const response = await this.csrfAxios.get("/api/csrf-token", {
+        const response = await this.csrfAxios.get("/csrf-token", {
           headers: {
             Origin: process.env.NEXT_PUBLIC_APP_URL,
             "X-Requested-With": "XMLHttpRequest",

@@ -49,7 +49,6 @@ type AuthService struct {
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
-	BlizzardAuth    *BlizzardAuthService // Reference to Battle.net auth service
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -57,7 +56,6 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
-	blizzardAuth *BlizzardAuthService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -70,7 +68,6 @@ func NewAuthService(
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
-		BlizzardAuth:    blizzardAuth,
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",

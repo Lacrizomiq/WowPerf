@@ -27,33 +27,39 @@ const api = axios.create({
 // Interceptor for requests
 api.interceptors.request.use(
   async (config) => {
-    console.log("Making request:", {
-      url: config.url,
-      method: config.method,
-      data: config.data,
-      headers: config.headers,
-    });
+    // Skip CSRF for OAuth routes
+    if (config.headers["X-Skip-CSRF"]) {
+      return config;
+    }
+
     if (config.url && config.method) {
-      // Check if the route requires CSRF protection
       if (csrfService.isProtectedRoute(config.url, config.method)) {
         try {
-          const token = await csrfService.getToken();
-          if (token) {
-            config.headers["X-CSRF-Token"] = token;
-          } else {
-            console.warn("No CSRF token available for protected route");
+          const maxRetries = 3;
+          let retries = 0;
+
+          while (retries < maxRetries) {
+            try {
+              const token = await csrfService.getToken();
+              if (token) {
+                config.headers["X-CSRF-Token"] = token;
+                break;
+              }
+            } catch (error) {
+              retries++;
+              if (retries === maxRetries) throw error;
+              // Wait a bit before retrying
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
           }
         } catch (error) {
-          console.error("Failed to get CSRF token:", error);
+          console.error("Failed to get CSRF token after retries:", error);
         }
       }
     }
     return config;
   },
-  (error) => {
-    console.error("Request error:", error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Interceptor for responses

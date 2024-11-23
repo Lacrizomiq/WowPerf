@@ -1,23 +1,13 @@
-# Builder
-FROM node:18-alpine AS builder
+# Frontend Dockerfile for development
+FROM node:18-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+RUN npm install
 
-# Runner
 FROM node:18-alpine AS runner
 WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Copy necessary files
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
 EXPOSE 3000
-
-CMD ["node", "server.js"]
+CMD ["npm", "run", "dev"]

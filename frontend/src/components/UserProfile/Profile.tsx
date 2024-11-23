@@ -63,8 +63,7 @@ const Profile: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-black">
-      <ProfileSidebar />
-      <main className="flex-1 p-8">
+      <main className="flex-1">
         <PersonalInfo
           profile={profile}
           mutationStates={personalInfoMutationStates}

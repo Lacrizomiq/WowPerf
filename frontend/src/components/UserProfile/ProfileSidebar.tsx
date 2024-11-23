@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Camera, Edit2, Key, Mail, Trash2 } from "lucide-react";
@@ -14,7 +16,7 @@ const ProfileSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="bg-deep-blue relative z-20 m-8 rounded-lg shadow-2xl border border-gray-800">
+    <aside className="bg-deep-blue relative z-20 m-4  rounded-lg shadow-2xl border border-gray-800">
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-6 text-white dark:text-gray-200">
           Account Settings

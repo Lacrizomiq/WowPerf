@@ -1,17 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import {
   battleNetService,
   BattleNetError,
   BattleNetErrorCode,
+  BattleNetStatusResponse,
 } from "@/libs/battlenetService";
 import { useAuth } from "@/providers/AuthContext";
 
-export function useBattleNetLink() {
+export interface BattleNetLinkState {
+  linkStatus: BattleNetStatusResponse | null;
+  isLoading: boolean;
+  error: Error | null;
+  isLinking: boolean;
+  isUnlinking: boolean;
+  initiateLink: () => Promise<{ success: boolean; error?: string }>;
+  unlinkAccount: () => Promise<{ success: boolean; error?: string }>;
+}
+
+export function useBattleNetLink(): BattleNetLinkState {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [isLinking, setIsLinking] = useState(false);
-  // Query for Battle.net link status
+
+  // Query pour le statut de la liaison
   const {
     data: linkStatus,
     isLoading,
@@ -20,7 +33,7 @@ export function useBattleNetLink() {
     queryKey: ["battleNetLinkStatus"],
     queryFn: battleNetService.getLinkStatus,
     enabled: isAuthenticated,
-    retry: (failureCount, error) => {
+    retry: (failureCount, error: unknown) => {
       if (error instanceof BattleNetError) {
         return (
           error.code !== BattleNetErrorCode.UNAUTHORIZED && failureCount < 3
@@ -28,52 +41,79 @@ export function useBattleNetLink() {
       }
       return failureCount < 3;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
   });
 
-  // Mutation for unlinking account
+  // Gérer les erreurs via useEffect
+  useEffect(() => {
+    if (
+      queryError instanceof BattleNetError &&
+      queryError.code !== BattleNetErrorCode.UNAUTHORIZED
+    ) {
+      toast.error(queryError.message);
+    }
+  }, [queryError]);
+
+  // Mutation pour le unlinking
   const unlinkMutation = useMutation({
     mutationFn: battleNetService.unlinkAccount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] });
+      toast.success("Battle.net account unlinked successfully");
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof BattleNetError
+          ? error.message
+          : "Failed to unlink Battle.net account";
+      toast.error(message);
     },
   });
 
-  // Initiate linking
+  // Initier la liaison
   const initiateLink = useCallback(async () => {
+    setIsLinking(true);
     try {
-      await battleNetService.initiateLinking();
-      return { success: true as const };
+      const { url } = await battleNetService.initiateLinking();
+      window.location.href = url;
+      return { success: true };
     } catch (error) {
-      return {
-        success: false as const,
-        error:
-          error instanceof Error ? error.message : "Failed to initiate linking",
-      };
+      const message =
+        error instanceof BattleNetError
+          ? error.message
+          : "Failed to initiate Battle.net linking";
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLinking(false);
     }
   }, []);
 
-  // Unlink account
+  // Délier le compte
   const unlinkAccount = async () => {
+    const toastId = toast.loading("Unlinking Battle.net account...");
     try {
       await unlinkMutation.mutateAsync();
-      return { success: true as const };
+      toast.success("Account unlinked successfully", { id: toastId });
+      return { success: true };
     } catch (error) {
-      return {
-        success: false as const,
-        error:
-          error instanceof Error ? error.message : "Failed to unlink account",
-      };
+      const message =
+        error instanceof BattleNetError
+          ? error.message
+          : "Failed to unlink Battle.net account";
+      toast.error(message, { id: toastId });
+      return { success: false, error: message };
     }
   };
 
   return {
-    linkStatus,
+    linkStatus: linkStatus || null,
     isLoading,
-    error: queryError,
+    error: queryError as Error | null,
     initiateLink,
     unlinkAccount,
     isUnlinking: unlinkMutation.isPending,
-    unlinkError: unlinkMutation.error,
     isLinking,
   };
 }

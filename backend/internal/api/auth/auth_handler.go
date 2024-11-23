@@ -9,25 +9,12 @@ import (
 	"regexp"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
-	"wowperf/pkg/middleware"
+	csrfMiddleware "wowperf/pkg/middleware"
+	authMiddleware "wowperf/pkg/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
-
-// Handlers struct to hold all auth handlers
-type Handlers struct {
-	AuthHandler         *AuthHandler
-	BlizzardAuthHandler *BlizzardAuthHandler
-}
-
-// NewHandlers creates all auth handlers
-func NewHandlers(authService *auth.AuthService, blizzardAuthService *auth.BlizzardAuthService) *Handlers {
-	return &Handlers{
-		AuthHandler:         NewAuthHandler(authService),
-		BlizzardAuthHandler: NewBlizzardAuthHandler(blizzardAuthService, authService),
-	}
-}
 
 // AuthHandler handles user authentication endpoints
 type AuthHandler struct {
@@ -217,15 +204,15 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 
 		// Routes protected by JWT only
 		jwtProtected := auth.Group("")
-		jwtProtected.Use(middleware.JWTAuth(h.authService))
+		jwtProtected.Use(authMiddleware.JWTAuth(h.authService))
 		{
 			jwtProtected.GET("/check", h.CheckAuth)
 		}
 
 		// Routes protected by JWT and CSRF
 		csrfProtected := auth.Group("")
-		csrfProtected.Use(middleware.JWTAuth(h.authService))
-		csrfProtected.Use(middleware.InitCSRFMiddleware(middleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
+		csrfProtected.Use(authMiddleware.JWTAuth(h.authService))
+		csrfProtected.Use(csrfMiddleware.InitCSRFMiddleware(csrfMiddleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
 		{
 			csrfProtected.POST("/logout", h.Logout)
 			csrfProtected.POST("/refresh", h.RefreshToken)

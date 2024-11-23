@@ -42,8 +42,6 @@ interface BattleNetLinkStatus {
 const PersonalInfo: React.FC<PersonalInfoProps> = ({
   profile,
   mutationStates,
-  onUpdateEmail,
-  onChangeUsername,
 }) => {
   const queryClient = useQueryClient();
   const {

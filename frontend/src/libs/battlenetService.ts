@@ -1,19 +1,24 @@
 import api, { APIError } from "./api";
 import axios, { AxiosError } from "axios";
 
-// Response types
-interface BattleNetLinkResponse {
+// More detailed response types
+export interface BattleNetLinkResponse {
+  linked: boolean;
+  battleTag?: string;
   message: string;
-  linked: boolean;
-  battleTag?: string;
+  code: string;
+  expiresIn?: number;
+  scope?: string;
 }
 
-interface BattleNetStatusResponse {
+export interface BattleNetStatusResponse {
   linked: boolean;
   battleTag?: string;
+  error?: string;
+  code?: string;
 }
 
-// Error handling
+// Detailed error codes
 export enum BattleNetErrorCode {
   ALREADY_LINKED = "battle_net_already_linked",
   LINK_FAILED = "battle_net_link_failed",
@@ -24,36 +29,38 @@ export enum BattleNetErrorCode {
   INVALID_STATE = "battle_net_invalid_state",
   INVALID_CODE = "battle_net_invalid_code",
   INVALID_GRANT = "battle_net_invalid_grant",
+  TOKEN_EXPIRED = "battle_net_token_expired",
+  SCOPE_MISSING = "battle_net_scope_missing",
 }
 
-// Battle.net error
 export class BattleNetError extends Error {
   constructor(
     public code: BattleNetErrorCode,
     message: string,
-    public originalError?: unknown
+    public originalError?: unknown,
+    public details?: any
   ) {
     super(message);
     this.name = "BattleNetError";
   }
 }
 
-// Battle.net service
 export const battleNetService = {
-  // Initiate Battle.net OAuth flow to link account
-  async initiateLinking(): Promise<void> {
+  // Initiates the Battle.net OAuth flow
+  async initiateLinking(): Promise<{ url: string }> {
     try {
       const response = await api.get<{ url: string }>("/auth/battle-net/link", {
         withCredentials: true,
       });
-      window.location.href = response.data.url;
+      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
         throw new BattleNetError(
           BattleNetErrorCode.LINK_FAILED,
           err.response?.data?.error || "Failed to initiate Battle.net linking",
-          err
+          err,
+          err.response?.data
         );
       }
       throw new BattleNetError(
@@ -64,7 +71,7 @@ export const battleNetService = {
     }
   },
 
-  // Get Battle.net link status
+  // Gets the status of the Battle.net link
   async getLinkStatus(): Promise<BattleNetStatusResponse> {
     try {
       const response = await api.get<BattleNetStatusResponse>(
@@ -74,21 +81,29 @@ export const battleNetService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        if (err.response?.status === 401) {
+          throw new BattleNetError(
+            BattleNetErrorCode.UNAUTHORIZED,
+            "Unauthorized access",
+            err
+          );
+        }
         throw new BattleNetError(
-          BattleNetErrorCode.UNAUTHORIZED,
-          err.response?.data.error || "Failed to get Battle.net link status",
-          err
+          BattleNetErrorCode.NETWORK_ERROR,
+          err.response?.data.error || "Failed to get Battle.net status",
+          err,
+          err.response?.data
         );
       }
       throw new BattleNetError(
         BattleNetErrorCode.NETWORK_ERROR,
-        "An unexpected network error occurred",
+        "Network error while getting status",
         error
       );
     }
   },
 
-  // Unlink Battle.net account
+  // Unlinks the Battle.net account
   async unlinkAccount(): Promise<void> {
     try {
       await api.post("/auth/battle-net/unlink");
@@ -98,16 +113,15 @@ export const battleNetService = {
         throw new BattleNetError(
           BattleNetErrorCode.UNLINK_FAILED,
           err.response?.data.error || "Failed to unlink Battle.net account",
-          err
+          err,
+          err.response?.data
         );
       }
       throw new BattleNetError(
         BattleNetErrorCode.NETWORK_ERROR,
-        "An unexpected network error occurred",
+        "Network error while unlinking account",
         error
       );
     }
   },
 };
-
-export type { BattleNetLinkResponse, BattleNetStatusResponse };
