@@ -4,6 +4,7 @@ import (
 	"os"
 	"wowperf/internal/services/blizzard/auth"
 
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ func NewGameDataService(client *GameDataClient) *GameDataService {
 	}
 }
 
-func NewService(db *gorm.DB) (*Service, error) {
+func NewService(db *gorm.DB, redisClient *redis.Client) (*Service, error) {
 	client, err := NewClient()
 	if err != nil {
 		return nil, err
@@ -48,7 +49,7 @@ func NewService(db *gorm.DB) (*Service, error) {
 		return nil, err
 	}
 
-	battleNetAuth, err := auth.NewBattleNetAuthService(db)
+	battleNetAuth, err := auth.NewBattleNetAuthService(db, redisClient)
 	if err != nil {
 		return nil, err
 	}

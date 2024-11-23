@@ -56,9 +56,14 @@ export const battleNetService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        const errorCode =
+          err.response?.data?.code || BattleNetErrorCode.LINK_FAILED;
+        const errorMessage =
+          err.response?.data?.error || "Failed to initiate Battle.net linking";
+
         throw new BattleNetError(
-          BattleNetErrorCode.LINK_FAILED,
-          err.response?.data?.error || "Failed to initiate Battle.net linking",
+          errorCode as BattleNetErrorCode,
+          errorMessage,
           err,
           err.response?.data
         );

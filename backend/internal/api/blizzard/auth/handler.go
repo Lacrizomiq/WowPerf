@@ -2,11 +2,9 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	bnAuth "wowperf/internal/services/blizzard/auth"
 	"wowperf/pkg/middleware/blizzard"
-	"wowperf/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -31,19 +29,19 @@ func NewBattleNetAuthHandler(
 func (h *BattleNetAuthHandler) RegisterRoutes(r *gin.Engine, requireAuth gin.HandlerFunc) {
 	battleNet := r.Group("/auth/battle-net")
 	{
-		// Route publique pour le callback OAuth
-		battleNet.GET("/callback", h.HandleCallback)
+		// Public route for OAuth callback
 
-		// Routes protégées par authentification utilisateur
+		// Protected routes requiring user authentication
 		authed := battleNet.Group("")
 		authed.Use(requireAuth)
 		{
 			authed.GET("/link", h.InitiateAuth)
+			authed.GET("/callback", h.HandleCallback)
 			authed.GET("/status", h.GetLinkStatus)
 			authed.POST("/unlink", h.UnlinkAccount)
 		}
 
-		// Routes nécessitant un compte Battle.net lié
+		// Routes requiring a linked Battle.net account
 		bnetProtected := authed.Group("")
 		bnetProtected.Use(h.middleware.RequireBattleNetAccount())
 		bnetProtected.Use(h.middleware.RequireValidToken())
@@ -55,21 +53,26 @@ func (h *BattleNetAuthHandler) RegisterRoutes(r *gin.Engine, requireAuth gin.Han
 
 // InitiateAuth starts the Battle.net OAuth flow
 func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
-	state := utils.GenerateRandomString(32)
+	// Get user ID from context
+	userID := c.GetUint("user_id")
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+			"code":  "user_not_authenticated",
+		})
+		return
+	}
 
-	// Store state in a secure cookie
-	c.SetCookie(
-		"oauth_state",
-		state,
-		3600, // 1 hour expiry
-		"/",
-		"",
-		true, // Secure
-		true, // HttpOnly
-	)
-
-	// Get authorization URL
-	authURL := h.BattleNetAuthService.GetAuthorizationURL(state)
+	// Initiate the OAuth flow with the user ID
+	authURL, err := h.BattleNetAuthService.InitiateAuth(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to initiate Battle.net authentication",
+			"code":    "auth_initiation_failed",
+			"details": err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"url":  authURL,
@@ -78,92 +81,48 @@ func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 }
 
 // HandleCallback processes the Battle.net OAuth callback
-// HandleCallback processes the Battle.net OAuth callback
 func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
-	log.Printf("Processing Battle.net callback: %s", c.Request.URL.String())
-
-	// Vérifier le state
-	state := c.Query("state")
-	storedState, err := c.Cookie("oauth_state")
-	log.Printf("State verification - Received: %s, Stored: %s, Cookie Error: %v", state, storedState, err)
-
-	if err != nil {
-		log.Printf("State cookie not found: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "State cookie not found",
-			"code":    "invalid_state",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	if state == "" {
-		log.Printf("State parameter missing")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "State parameter missing",
-			"code":  "invalid_state",
-		})
-		return
-	}
-
-	if state != storedState {
-		log.Printf("State mismatch - Received: %s, Expected: %s", state, storedState)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "State mismatch",
-			"code":  "invalid_state",
-		})
-		return
-	}
-
-	// Get authorization code
 	code := c.Query("code")
-	log.Printf("Received authorization code: %s", code)
+	state := c.Query("state")
 
-	// Exchange code for token
-	ctx := c.Request.Context()
-	token, err := h.BattleNetAuthService.ExchangeCodeForToken(ctx, code)
-	if err != nil {
-		log.Printf("Token exchange failed: %v", err)
+	if code == "" || state == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Missing required OAuth parameters",
+			"code":  "invalid_oauth_params",
+		})
+		return
+	}
+
+	// Exchange the code for a token and validate the state
+	token, userID, err := h.BattleNetAuthService.ExchangeCodeForToken(c.Request.Context(), code, state)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to exchange code for token",
 			"code":    "token_exchange_failed",
 			"details": err.Error(),
 		})
 		return
 	}
-	log.Printf("Successfully exchanged code for token")
 
-	// Get user info
-	userInfo, err := h.BattleNetAuthService.GetUserInfo(ctx, token)
-	if err != nil {
-		log.Printf("Failed to get user info: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Failed to get user info",
-			"code":    "user_info_failed",
+	// Link the Battle.net account to the user
+	if err := h.BattleNetAuthService.LinkUserAccount(c.Request.Context(), token, fmt.Sprint(userID)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to link Battle.net account",
+			"code":    "link_failed",
 			"details": err.Error(),
 		})
 		return
 	}
-	log.Printf("Retrieved user info for BattleTag: %s", userInfo.BattleTag)
 
-	// Clear state cookie
-	c.SetCookie("oauth_state", "", -1, "/", "", true, true)
-
-	// Si on a un user ID dans le contexte, on lie le compte
-	if userID, exists := c.Get("user_id"); exists {
-		log.Printf("Linking account for user ID: %v", userID)
-		if err := h.BattleNetAuthService.LinkUserAccount(ctx, token, fmt.Sprint(userID.(uint))); err != nil {
-			log.Printf("Account linking failed: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "Failed to link account",
-				"code":    "link_failed",
-				"details": err.Error(),
-			})
-			return
-		}
-		log.Printf("Successfully linked Battle.net account")
-	} else {
-		log.Printf("No user ID found in context, skipping account linking")
+	// Get user info for the response
+	userInfo, err := h.BattleNetAuthService.GetUserInfo(c.Request.Context(), token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to get Battle.net user info",
+			"code":    "user_info_failed",
+			"details": err.Error(),
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

@@ -25,7 +25,7 @@ import (
 	// Internal Packages - Services
 	auth "wowperf/internal/services/auth"
 	serviceBlizzard "wowperf/internal/services/blizzard"
-	bnetAuth "wowperf/internal/services/blizzard/auth" // Nouveau chemin pour le service Battle.net
+	bnetAuth "wowperf/internal/services/blizzard/auth"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
 	userService "wowperf/internal/services/user"
@@ -82,23 +82,29 @@ type CacheManagers struct {
 
 // Initialisation des services
 func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManagers CacheManagers) (*AppServices, error) {
-	// Configuration Battle.net
-	battleNetService, err := bnetAuth.NewBattleNetAuthService(db)
+	// Get Redis client from cache service
+	redisClient := cacheService.GetRedisClient()
+	if redisClient == nil {
+		return nil, fmt.Errorf("failed to get Redis client from cache service")
+	}
+
+	// Configuration for Battle.net auth service
+	battleNetService, err := bnetAuth.NewBattleNetAuthService(db, redisClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize battle.net auth service: %w", err)
 	}
 
-	// Service d'authentification principal
+	// Main authentication service
 	authService := auth.NewAuthService(
 		db,
 		os.Getenv("JWT_SECRET"),
-		cacheService.GetRedisClient(),
+		redisClient,
 	)
 
-	// Autres services...
+	// Other services...
 	userSvc := userService.NewUserService(db)
 
-	blizzardService, err := serviceBlizzard.NewService(db)
+	blizzardService, err := serviceBlizzard.NewService(db, redisClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize blizzard service: %w", err)
 	}

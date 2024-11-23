@@ -2,12 +2,15 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 	"wowperf/internal/models"
+
+	"encoding/json"
+
+	"github.com/go-redis/redis/v8"
 
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
@@ -36,10 +39,11 @@ type BattleNetAuthService struct {
 	db          *gorm.DB
 	oauthConfig *oauth2.Config
 	region      string
+	redisClient *redis.Client
 }
 
 // NewBattleNetAuthService creates a new Battle.net authentication service
-func NewBattleNetAuthService(db *gorm.DB) (*BattleNetAuthService, error) {
+func NewBattleNetAuthService(db *gorm.DB, redisClient *redis.Client) (*BattleNetAuthService, error) {
 	// Create OAuth2 config with Battle.net specific settings
 	config := &oauth2.Config{
 		ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
@@ -59,21 +63,83 @@ func NewBattleNetAuthService(db *gorm.DB) (*BattleNetAuthService, error) {
 		db:          db,
 		oauthConfig: config,
 		region:      os.Getenv("BLIZZARD_REGION"),
+		redisClient: redisClient,
 	}, nil
 }
 
+// storeOAuthState stores the OAuth state in Redis
+func (s *BattleNetAuthService) storeOAuthState(ctx context.Context, state *OAuthState) error {
+	// Generate Redis key
+	redisKey := fmt.Sprintf("oauth_state:%s", state.State)
+
+	// Marshal state to JSON
+	stateJSON, err := state.Marshal()
+	if err != nil {
+		return fmt.Errorf("failed to marshal state: %w", err)
+	}
+
+	// Store in Redis with expiration
+	duration := time.Until(state.ExpiresAt)
+	if err := s.redisClient.Set(ctx, redisKey, stateJSON, duration).Err(); err != nil {
+		return fmt.Errorf("failed to store OAuth state: %w", err)
+	}
+
+	return nil
+}
+
+// getAndValidateOAuthState retrieves and validates the OAuth state from Redis
+func (s *BattleNetAuthService) getAndValidateOAuthState(ctx context.Context, stateParam string) (*OAuthState, error) {
+	// Get state from Redis
+	redisKey := fmt.Sprintf("oauth_state:%s", stateParam)
+	stateJSON, err := s.redisClient.Get(ctx, redisKey).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve OAuth state: %w", err)
+	}
+
+	// Delete state immediately to prevent replay attacks
+	s.redisClient.Del(ctx, redisKey)
+
+	// Unmarshal and validate state
+	state, err := UnmarshalOAuthState(stateJSON)
+	if err != nil {
+		return nil, fmt.Errorf("invalid OAuth state: %w", err)
+	}
+
+	return state, nil
+}
+
 // InitiateAuth starts the OAuth2 flow by generating the authorization URL
-func (s *BattleNetAuthService) GetAuthorizationURL(state string) string {
-	return s.oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+func (s *BattleNetAuthService) InitiateAuth(ctx context.Context, userID uint) (string, error) {
+	// Generate a new OAuth state
+	state, err := NewOAuthState(userID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create OAuth state: %w", err)
+	}
+
+	// Store the state in Redis
+	if err := s.storeOAuthState(ctx, state); err != nil {
+		return "", fmt.Errorf("failed to store OAuth state: %w", err)
+	}
+
+	// Generate the authorization URL
+	return s.oauthConfig.AuthCodeURL(state.State, oauth2.AccessTypeOffline), nil
 }
 
 // ExchangeCodeForToken exchanges an authorization code for access and refresh tokens
-func (s *BattleNetAuthService) ExchangeCodeForToken(ctx context.Context, code string) (*oauth2.Token, error) {
+func (s *BattleNetAuthService) ExchangeCodeForToken(ctx context.Context, code, stateParam string) (*oauth2.Token, uint, error) {
+	// Verify and get the state
+	state, err := s.getAndValidateOAuthState(ctx, stateParam)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid OAuth state: %w", err)
+	}
+
+	// Exchange code for token
 	token, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
+		return nil, 0, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
-	return token, nil
+
+	return token, state.UserID, nil
 }
 
 // GetUserInfo retrieves the user's Battle.net profile information

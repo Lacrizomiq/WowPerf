@@ -7,6 +7,7 @@ export interface UserProfile {
   id: number;
   username: string;
   email: string;
+  battle_tag?: string;
 }
 
 export interface ApiResponse {

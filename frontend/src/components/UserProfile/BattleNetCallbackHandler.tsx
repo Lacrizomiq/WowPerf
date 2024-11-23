@@ -30,23 +30,24 @@ export function BattleNetCallbackHandler() {
           return;
         }
 
-        // Increase timeout to 30 seconds
         const response = await api.get("/auth/battle-net/callback", {
           params: {
-            code: searchParams.get("code"),
-            state: searchParams.get("state"),
+            code,
+            state,
           },
-          withCredentials: true, // Important pour les cookies
-          timeout: 30000,
+          withCredentials: true,
         });
 
         console.log("Battle.net callback response:", response.data);
 
         if (response.data.linked) {
-          // Invalidate the cache immediately
-          await queryClient.invalidateQueries({
-            queryKey: ["battleNetLinkStatus"],
-          });
+          // Invalidate both queries
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: ["battleNetLinkStatus"],
+            }),
+            queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+          ]);
           toast.success(`Successfully linked to ${response.data.battleTag}`, {
             id: toastId,
           });
@@ -62,23 +63,11 @@ export function BattleNetCallbackHandler() {
         console.error("Battle.net callback error:", error);
 
         if (axios.isAxiosError(error)) {
-          // Handle timeouts specifically
-          if (error.code === "ECONNABORTED") {
-            toast.error("Connection timed out. Please try again.", {
-              id: toastId,
-            });
-          } else {
-            toast.error(
-              error.response?.data?.error ||
-                "Failed to link Battle.net account",
-              { id: toastId }
-            );
-          }
+          const errorMessage =
+            error.response?.data?.error || "Failed to link Battle.net account";
+          const errorCode = error.response?.data?.code || "unknown_error";
 
-          // Redirect with the appropriate error code
-          const errorCode =
-            error.response?.data?.code ||
-            (error.code === "ECONNABORTED" ? "timeout" : "api_error");
+          toast.error(errorMessage, { id: toastId });
           router.push(`/profile?error=${errorCode}`);
         } else {
           toast.error("An unexpected error occurred", { id: toastId });

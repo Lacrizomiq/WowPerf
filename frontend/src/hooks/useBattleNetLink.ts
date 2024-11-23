@@ -45,7 +45,7 @@ export function useBattleNetLink(): BattleNetLinkState {
     refetchOnWindowFocus: true,
   });
 
-  // Gérer les erreurs via useEffect
+  // Handle errors via useEffect
   useEffect(() => {
     if (
       queryError instanceof BattleNetError &&
@@ -55,7 +55,7 @@ export function useBattleNetLink(): BattleNetLinkState {
     }
   }, [queryError]);
 
-  // Mutation pour le unlinking
+  // Mutation for unlinking
   const unlinkMutation = useMutation({
     mutationFn: battleNetService.unlinkAccount,
     onSuccess: () => {
@@ -71,11 +71,15 @@ export function useBattleNetLink(): BattleNetLinkState {
     },
   });
 
-  // Initier la liaison
+  // Initiate linking
   const initiateLink = useCallback(async () => {
     setIsLinking(true);
     try {
       const { url } = await battleNetService.initiateLinking();
+
+      // Optional: Add a delay before redirecting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       window.location.href = url;
       return { success: true };
     } catch (error) {
@@ -83,14 +87,19 @@ export function useBattleNetLink(): BattleNetLinkState {
         error instanceof BattleNetError
           ? error.message
           : "Failed to initiate Battle.net linking";
+
       toast.error(message);
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: message,
+        code: error instanceof BattleNetError ? error.code : "unknown_error",
+      };
     } finally {
       setIsLinking(false);
     }
   }, []);
 
-  // Délier le compte
+  // Unlink account
   const unlinkAccount = async () => {
     const toastId = toast.loading("Unlinking Battle.net account...");
     try {

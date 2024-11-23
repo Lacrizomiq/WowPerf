@@ -71,7 +71,10 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
   const handleBattleNetUnlink = async () => {
     try {
       await unlinkAccount();
-      queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["battleNetLinkStatus"] }),
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+      ]);
     } catch (error) {
       console.error("Failed to unlink Battle.net:", error);
     }
@@ -84,6 +87,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
           Personal Information
         </h2>
         <div className="space-y-4">
+          {/* Username */}
           <div className="flex items-center justify-between">
             <p className="block text-sm font-medium text-[#e2e8f0]">
               <span className="font-bold text-lg">Username: </span>
@@ -95,6 +99,8 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
               </p>
             )}
           </div>
+
+          {/* Email */}
           <div className="flex items-center justify-between">
             <p className="block text-sm font-medium text-[#e2e8f0]">
               <span className="font-bold text-lg">Email: </span>
@@ -106,21 +112,27 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
               </p>
             )}
           </div>
+
+          {/* Battle.net Tag */}
+          {profile.battle_tag && (
+            <div className="flex items-center justify-between">
+              <p className="block text-sm font-medium text-[#e2e8f0]">
+                <span className="font-bold text-lg">Battle Tag: </span>
+                <span className="text-blue-400">{profile.battle_tag}</span>
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
       <section className="bg-deep-blue shadow rounded-lg p-6 mt-4 border border-gray-800">
         <h2 className="text-2xl font-bold mb-4 text-[#e2e8f0]">
-          Battle.net Account
+          Battle.net Account {linkStatus?.linked ? "Linked" : "Not Linked"}
         </h2>
         {linkError && <p className="text-red-500 mb-4">{linkError.message}</p>}
         <div className="flex items-center">
           {linkStatus?.linked ? (
             <div className="space-y-4">
-              <div className="text-green-500 flex items-center">
-                <span className="mr-2">✓</span>
-                Connected as {linkStatus.battleTag}
-              </div>
               <button
                 onClick={handleBattleNetUnlink}
                 disabled={isUnlinking}
