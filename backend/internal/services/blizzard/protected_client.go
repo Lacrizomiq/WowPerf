@@ -10,34 +10,35 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/oauth2"
+	"wowperf/internal/services/blizzard/auth"
 )
 
 // ProtectedClient is a client for the Blizzard API that is protected by OAuth.
 type ProtectedClient struct {
-	httpClient  *http.Client
-	region      string
-	oauthConfig *oauth2.Config
+	httpClient    *http.Client
+	region        string
+	battleNetAuth *auth.BattleNetAuthService
 }
 
 // NewProtectedClient creates a new ProtectedClient.
-func NewProtectedClient(region string, oauthConfig *oauth2.Config) *ProtectedClient {
+func NewProtectedClient(region string, battleNetAuth *auth.BattleNetAuthService) *ProtectedClient {
 	return &ProtectedClient{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		region:      region,
-		oauthConfig: oauthConfig,
+		region:        region,
+		battleNetAuth: battleNetAuth,
 	}
 }
 
 // MakeProtectedRequest makes a request to the Blizzard API with OAuth protection.
-func (c *ProtectedClient) MakeProtectedRequest(ctx context.Context, userToken *oauth2.Token, endpoint, namespace, locale string) ([]byte, error) {
-	// Verify if the user token is valid
-	if userToken.Expiry.Before(time.Now()) {
-		log.Println("User token is expired, refreshing")
-		return nil, fmt.Errorf("user token is expired")
+func (c *ProtectedClient) MakeProtectedRequest(ctx context.Context, userID uint, endpoint, namespace, locale string) ([]byte, error) {
+	// Get the user token
+	token, err := c.battleNetAuth.GetUserToken(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user token: %w", err)
 	}
+	log.Printf("Token: %s", token.AccessToken)
 
 	// Create the URL with the params
 	params := url.Values{}
@@ -58,7 +59,7 @@ func (c *ProtectedClient) MakeProtectedRequest(ctx context.Context, userToken *o
 	}
 
 	// Add the Authorization header
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", userToken.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
 	req.Header.Set("Battlenet-Namespace", namespace)
 	req.Header.Set("Accept", "application/json")
 

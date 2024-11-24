@@ -18,6 +18,7 @@ import (
 	authHandler "wowperf/internal/api/auth"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	bnetAuthHandler "wowperf/internal/api/blizzard/auth"
+	protectedProfileHandler "wowperf/internal/api/blizzard/protected/profile"
 	"wowperf/internal/api/raiderio"
 	userHandler "wowperf/internal/api/user"
 	apiWarcraftlogs "wowperf/internal/api/warcraftlogs"
@@ -57,12 +58,13 @@ type AppServices struct {
 }
 
 type AppHandlers struct {
-	Auth         *authHandler.AuthHandler
-	User         *userHandler.UserHandler
-	BattleNet    *bnetAuthHandler.BattleNetAuthHandler
-	RaiderIO     *raiderio.Handler
-	Blizzard     *apiBlizzard.Handler
-	WarcraftLogs *apiWarcraftlogs.Handler
+	Auth             *authHandler.AuthHandler
+	User             *userHandler.UserHandler
+	BattleNet        *bnetAuthHandler.BattleNetAuthHandler
+	RaiderIO         *raiderio.Handler
+	Blizzard         *apiBlizzard.Handler
+	WarcraftLogs     *apiWarcraftlogs.Handler
+	ProtectedProfile *protectedProfileHandler.Handler
 }
 
 type AppConfig struct {
@@ -154,6 +156,7 @@ func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.C
 			cacheService,
 			cacheManagers.WarcraftLogs,
 		),
+		ProtectedProfile: protectedProfileHandler.NewHandler(services.Blizzard.ProtectedProfile),
 	}
 }
 
@@ -185,6 +188,9 @@ func setupRoutes(
 		bnetProtected := protected.Group("")
 		bnetProtected.Use(bnetMiddleware.RequireBattleNetAccount())
 		bnetProtected.Use(bnetMiddleware.RequireValidToken())
+
+		// Protected Blizzard API routes
+		handlers.ProtectedProfile.RegisterRoutes(bnetProtected)
 
 		// Other API routes
 		handlers.RaiderIO.RegisterRoutes(r)

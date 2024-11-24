@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -170,13 +171,17 @@ func (s *BattleNetAuthService) GetUserInfo(ctx context.Context, token *oauth2.To
 
 // LinkUserAccount links a Battle.net account to a user account
 func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth2.Token, userID string) error {
+	log.Printf("Linking Battle.net account to user: userID=%s", userID)
+
 	tx := s.db.Begin()
 	if tx.Error != nil {
+		log.Printf("Transaction start failed: %v", tx.Error)
 		return fmt.Errorf("failed to start transaction: %w", tx.Error)
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in LinkUserAccount: %v", r)
 			tx.Rollback()
 		}
 	}()
@@ -184,9 +189,11 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	// Get Battle.net user info
 	userInfo, err := s.GetUserInfo(ctx, token)
 	if err != nil {
+		log.Printf("Failed to get user info: %v", err)
 		tx.Rollback()
 		return fmt.Errorf("failed to get user info: %w", err)
 	}
+	log.Printf("Got user info: battleTag=%s, id=%d", userInfo.BattleTag, userInfo.ID)
 
 	// Convert BattleNetID to string
 	battleNetID := fmt.Sprintf("%d", userInfo.ID)
@@ -195,6 +202,7 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	var existingUser models.User
 	err = tx.Where("battle_tag = ? AND id != ?", userInfo.BattleTag, userID).First(&existingUser).Error
 	if err == nil {
+		log.Printf("Battle tag already linked to another user: %s", userInfo.BattleTag)
 		tx.Rollback()
 		return fmt.Errorf("battle tag already linked to another user: %s", userInfo.BattleTag)
 	}
@@ -202,29 +210,33 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	// Get current user
 	var user models.User
 	if err := tx.First(&user, userID).Error; err != nil {
+		log.Printf("User not found: %v", err)
 		tx.Rollback()
 		return fmt.Errorf("user not found: %w", err)
 	}
 
 	// Set encrypted tokens
+	log.Printf("Setting tokens for user %s", userID)
 	if err := user.SetBattleNetTokens(token.AccessToken, token.RefreshToken); err != nil {
+		log.Printf("Failed to set Battle.net tokens: %v", err)
 		tx.Rollback()
 		return fmt.Errorf("failed to encrypt tokens: %w", err)
 	}
 
 	// Update user with Battle.net information
-	updates := map[string]interface{}{
-		"battle_net_id":         battleNetID,
-		"battle_tag":            userInfo.BattleTag,
-		"battle_net_expires_at": token.Expiry,
-		"battle_net_token_type": token.TokenType,
-	}
+	user.BattleNetID = battleNetID
+	user.BattleTag = userInfo.BattleTag
+	user.BattleNetExpiresAt = token.Expiry
+	user.BattleNetTokenType = token.TokenType
 
-	if err := tx.Model(&user).Updates(updates).Error; err != nil {
+	// Save user to database
+	if err := tx.Save(&user).Error; err != nil {
+		log.Printf("Failed to save user: %v", err)
 		tx.Rollback()
-		return fmt.Errorf("failed to update user: %w", err)
+		return fmt.Errorf("failed to save user: %w", err)
 	}
 
+	log.Printf("Successfully linked account and updated user %s", userID)
 	return tx.Commit().Error
 }
 

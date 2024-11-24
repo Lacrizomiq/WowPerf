@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"wowperf/pkg/crypto"
@@ -38,21 +39,37 @@ type UserCreate struct {
 
 // Token management methods
 func (u *User) SetBattleNetTokens(accessToken, refreshToken string) error {
+	log.Printf("Starting SetBattleNetTokens: access_token_length=%d refresh_token_length=%d",
+		len(accessToken), len(refreshToken))
+
+	if accessToken == "" {
+		return fmt.Errorf("access token is empty")
+	}
+
 	// Encrypt access token
 	encryptedAccess, err := crypto.Encrypt([]byte(accessToken))
 	if err != nil {
+		log.Printf("Failed to encrypt access token: %v", err)
 		return fmt.Errorf("failed to encrypt access token: %w", err)
 	}
+	log.Printf("Access token encrypted successfully: length=%d", len(encryptedAccess))
 
-	// Encrypt refresh token
-	encryptedRefresh, err := crypto.Encrypt([]byte(refreshToken))
-	if err != nil {
-		return fmt.Errorf("failed to encrypt refresh token: %w", err)
+	// Encrypt refresh token if present
+	var encryptedRefresh []byte
+	if refreshToken != "" {
+		encryptedRefresh, err = crypto.Encrypt([]byte(refreshToken))
+		if err != nil {
+			log.Printf("Failed to encrypt refresh token: %v", err)
+			return fmt.Errorf("failed to encrypt refresh token: %w", err)
+		}
+		log.Printf("Refresh token encrypted successfully: length=%d", len(encryptedRefresh))
 	}
 
 	u.EncryptedAccessToken = encryptedAccess
 	u.EncryptedRefreshToken = encryptedRefresh
 	u.LastTokenRefresh = time.Now()
+
+	log.Printf("Tokens set successfully")
 	return nil
 }
 

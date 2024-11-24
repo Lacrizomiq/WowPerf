@@ -3,20 +3,24 @@ package blizzard
 import (
 	"os"
 	"wowperf/internal/services/blizzard/auth"
+	protectedProfile "wowperf/internal/services/blizzard/protected/profile"
+	"wowperf/internal/services/blizzard/types"
 
 	"github.com/go-redis/redis/v8"
-	"golang.org/x/oauth2"
 	"gorm.io/gorm"
 )
 
 type Service struct {
-	Client          *Client
-	ProtectedClient *ProtectedClient
-	GameDataClient  *GameDataClient
-	Profile         *ProfileService
-	GameData        *GameDataService
-	BattleNetAuth   *auth.BattleNetAuthService
+	Client           *Client
+	ProtectedClient  *ProtectedClient
+	GameDataClient   *GameDataClient
+	Profile          *ProfileService
+	ProtectedProfile *protectedProfile.ProtectedProfileService
+	GameData         *GameDataService
+	BattleNetAuth    *auth.BattleNetAuthService
 }
+
+var _ types.ProtectedClientInterface = (*ProtectedClient)(nil)
 
 type ProfileService struct {
 	Client *Client
@@ -54,25 +58,15 @@ func NewService(db *gorm.DB, redisClient *redis.Client) (*Service, error) {
 		return nil, err
 	}
 
-	oauthConfig := &oauth2.Config{
-		ClientID:     os.Getenv("BLIZZARD_CLIENT_ID"),
-		ClientSecret: os.Getenv("BLIZZARD_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("BLIZZARD_REDIRECT_URL"),
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://oauth.battle.net/authorize",
-			TokenURL: "https://oauth.battle.net/token",
-		},
-		Scopes: []string{"wow.profile"},
-	}
-
-	protectedClient := NewProtectedClient(os.Getenv("BLIZZARD_REGION"), oauthConfig)
-
+	protectedClient := NewProtectedClient(os.Getenv("BLIZZARD_REGION"), battleNetAuth)
+	protectedProfileService := protectedProfile.NewProtectedProfileService(protectedClient)
 	return &Service{
-		Client:          client,
-		ProtectedClient: protectedClient,
-		GameDataClient:  gameDataClient,
-		Profile:         NewProfileService(client),
-		GameData:        NewGameDataService(gameDataClient),
-		BattleNetAuth:   battleNetAuth,
+		Client:           client,
+		ProtectedClient:  protectedClient,
+		GameDataClient:   gameDataClient,
+		Profile:          NewProfileService(client),
+		GameData:         NewGameDataService(gameDataClient),
+		BattleNetAuth:    battleNetAuth,
+		ProtectedProfile: protectedProfileService,
 	}, nil
 }

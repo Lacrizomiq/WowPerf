@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	bnAuth "wowperf/internal/services/blizzard/auth"
 	"wowperf/pkg/middleware/blizzard"
@@ -82,6 +83,7 @@ func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 
 // HandleCallback processes the Battle.net OAuth callback
 func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
+	log.Printf("Starting Oauth callback process")
 	code := c.Query("code")
 	state := c.Query("state")
 
@@ -103,6 +105,8 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		})
 		return
 	}
+	log.Printf("Token exchange successful: userID=%d, token_type=%s, expires=%v",
+		userID, token.TokenType, token.Expiry)
 
 	// Link the Battle.net account to the user
 	if err := h.BattleNetAuthService.LinkUserAccount(c.Request.Context(), token, fmt.Sprint(userID)); err != nil {
@@ -113,6 +117,7 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		})
 		return
 	}
+	log.Printf("Battle.net account linked: userID=%d", userID)
 
 	// Get user info for the response
 	userInfo, err := h.BattleNetAuthService.GetUserInfo(c.Request.Context(), token)
