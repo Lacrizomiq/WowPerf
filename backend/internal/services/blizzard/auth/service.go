@@ -123,7 +123,7 @@ func (s *BattleNetAuthService) InitiateAuth(ctx context.Context, userID uint) (s
 	}
 
 	// Generate the authorization URL
-	return s.oauthConfig.AuthCodeURL(state.State, oauth2.AccessTypeOffline), nil
+	return s.oauthConfig.AuthCodeURL(state.State), nil
 }
 
 // ExchangeCodeForToken exchanges an authorization code for access and refresh tokens
@@ -171,7 +171,7 @@ func (s *BattleNetAuthService) GetUserInfo(ctx context.Context, token *oauth2.To
 
 // LinkUserAccount links a Battle.net account to a user account
 func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth2.Token, userID string) error {
-	log.Printf("Linking Battle.net account to user: userID=%s", userID)
+	log.Printf("Starting LinkUserAccount for userID=%s", userID)
 
 	tx := s.db.Begin()
 	if tx.Error != nil {
@@ -195,19 +195,8 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	}
 	log.Printf("Got user info: battleTag=%s, id=%d", userInfo.BattleTag, userInfo.ID)
 
-	// Convert BattleNetID to string
 	battleNetID := fmt.Sprintf("%d", userInfo.ID)
 
-	// Check if battle tag is already linked to another user
-	var existingUser models.User
-	err = tx.Where("battle_tag = ? AND id != ?", userInfo.BattleTag, userID).First(&existingUser).Error
-	if err == nil {
-		log.Printf("Battle tag already linked to another user: %s", userInfo.BattleTag)
-		tx.Rollback()
-		return fmt.Errorf("battle tag already linked to another user: %s", userInfo.BattleTag)
-	}
-
-	// Get current user
 	var user models.User
 	if err := tx.First(&user, userID).Error; err != nil {
 		log.Printf("User not found: %v", err)
@@ -215,21 +204,20 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Set encrypted tokens
-	log.Printf("Setting tokens for user %s", userID)
-	if err := user.SetBattleNetTokens(token.AccessToken, token.RefreshToken); err != nil {
-		log.Printf("Failed to set Battle.net tokens: %v", err)
+	// Chiffrer et sauvegarder uniquement l'access token
+	if err := user.SetBattleNetTokens(token.AccessToken, ""); err != nil {
+		log.Printf("Failed to set Battle.net token: %v", err)
 		tx.Rollback()
-		return fmt.Errorf("failed to encrypt tokens: %w", err)
+		return fmt.Errorf("failed to encrypt token: %w", err)
 	}
 
-	// Update user with Battle.net information
+	// Mise à jour des champs
 	user.BattleNetID = battleNetID
 	user.BattleTag = userInfo.BattleTag
 	user.BattleNetExpiresAt = token.Expiry
 	user.BattleNetTokenType = token.TokenType
 
-	// Save user to database
+	// Sauvegarder l'utilisateur
 	if err := tx.Save(&user).Error; err != nil {
 		log.Printf("Failed to save user: %v", err)
 		tx.Rollback()

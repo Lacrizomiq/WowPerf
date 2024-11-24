@@ -6,8 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/url"
 	"wowperf/internal/services/blizzard/types"
 )
 
@@ -38,29 +36,62 @@ func (s *ProtectedProfileService) GetAccountProfile(ctx context.Context, userID 
 		params.Locale = "en_US"
 	}
 
-	// Construction de l'URL
-	baseURL := fmt.Sprintf(apiURL, params.Region)
-	u, err := url.Parse(baseURL + accountEndpoint)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse URL: %w", err)
-	}
+	// Construction de l'endpoint (sans le baseURL)
+	endpoint := "/profile/user/wow"
 
-	query := url.Values{}
-	query.Add("namespace", params.Namespace)
-	query.Add("locale", params.Locale)
-	u.RawQuery = query.Encode()
-
+	// Appel au client protégé avec juste l'endpoint
 	data, err := s.protectedClient.MakeProtectedRequest(
 		ctx,
 		userID,
-		u.String(),
+		endpoint, // Juste l'endpoint, pas l'URL complète
 		params.Namespace,
 		params.Locale,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get WoW profile: %w", err)
 	}
-	log.Printf("Profile data: %s", string(data))
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse profile data: %w", err)
+	}
+
+	return result, nil
+}
+
+func (s *ProtectedProfileService) GetProtectedCharacterProfile(
+	ctx context.Context,
+	userID uint,
+	realmId string,
+	characterId string,
+	params types.ProfileServiceParams,
+) (map[string]interface{}, error) {
+	// Validation
+	if params.Region == "" {
+		return nil, fmt.Errorf("region is required")
+	}
+	if params.Namespace == "" {
+		return nil, fmt.Errorf("namespace is required")
+	}
+
+	if params.Locale == "" {
+		params.Locale = "en_US"
+	}
+
+	// Build the endpoint
+	endpoint := fmt.Sprintf("/profile/user/wow/protected-character/%s-%s", realmId, characterId)
+
+	// Call the protected client
+	data, err := s.protectedClient.MakeProtectedRequest(
+		ctx,
+		userID,
+		endpoint,
+		params.Namespace,
+		params.Locale,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get protected character profile: %w", err)
+	}
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(data, &result); err != nil {

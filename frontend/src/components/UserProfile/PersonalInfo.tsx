@@ -6,6 +6,7 @@ import Image from "next/image";
 import { UserProfile } from "@/libs/userService";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
 import { UserErrorCode } from "@/libs/userService";
+import { WoWProfile } from "@/components/UserProfile/WoWAccount/AccountProfile";
 
 // Définition des types pour les mutations
 interface MutationState {
@@ -157,6 +158,21 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
               {isLinkLoading ? "Connecting..." : "Connect to Battle.net"}
             </button>
           )}
+        </div>
+
+        {/* Character List Section */}
+        <div className="mt-8 space-y-4">
+          <div>
+            <h2 className="text-2xl font-bold text-[#e2e8f0]">
+              Character list of your account
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Only characters from the same region as your Battle.net account
+              will be displayed, and only level 80 characters will be shown.
+            </p>
+          </div>
+
+          <WoWProfile />
         </div>
       </section>
     </>

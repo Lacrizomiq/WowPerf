@@ -1,6 +1,7 @@
 package blizzard
 
 import (
+	"log"
 	"net/http"
 	"wowperf/internal/services/blizzard/auth"
 
@@ -21,19 +22,21 @@ func NewBattleNetMiddleware(authService *auth.BattleNetAuthService) *BattleNetMi
 // RequireValidToken checks that the user has a valid Battle.net token
 func (m *BattleNetMiddleware) RequireValidToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("user_id")
-		if !exists {
+		userID := c.GetUint("user_id")
+		if userID == 0 {
+			log.Printf("No user ID found in context")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "User not authenticated",
-				"code":  "user_not_found",
+				"code":  "user_not_authenticated",
 			})
 			c.Abort()
 			return
 		}
 
-		// Retrieve and verify the token
-		token, err := m.authService.GetUserToken(c.Request.Context(), userID.(uint))
+		// Get the token
+		token, err := m.authService.GetUserToken(c.Request.Context(), userID)
 		if err != nil {
+			log.Printf("Error getting token: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Battle.net token not found or invalid",
 				"code":  "token_invalid",
@@ -42,18 +45,12 @@ func (m *BattleNetMiddleware) RequireValidToken() gin.HandlerFunc {
 			return
 		}
 
-		// Verify the token validity
-		if err := m.authService.ValidateToken(c.Request.Context(), token); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Battle.net token expired or invalid",
-				"code":  "token_expired",
-			})
-			c.Abort()
-			return
-		}
-
-		// Store the token in the context for future use
+		// Set it in context
 		c.Set("blizzard_token", token)
+
+		// Debug log
+		log.Printf("Token set in context for user %d", userID)
+
 		c.Next()
 	}
 }
