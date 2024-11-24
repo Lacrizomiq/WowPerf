@@ -1,0 +1,67 @@
+"https://localhost/apiblizzard/data/connected-realm/3691/mythic-leaderboard/index?region=eu&namespace=dynamic-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/?namespace=dynamic-eu"
+    }
+  },
+  "current_leaderboards": [
+    {
+      "id": 353,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/353/period/986?namespace=dynamic-eu"
+      },
+      "name": "Siege of Boralus"
+    },
+    {
+      "id": 375,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/375/period/986?namespace=dynamic-eu"
+      },
+      "name": "Mists of Tirna Scithe"
+    },
+    {
+      "id": 376,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/376/period/986?namespace=dynamic-eu"
+      },
+      "name": "The Necrotic Wake"
+    },
+    {
+      "id": 501,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/501/period/986?namespace=dynamic-eu"
+      },
+      "name": "The Stonevault"
+    },
+    {
+      "id": 502,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/502/period/986?namespace=dynamic-eu"
+      },
+      "name": "City of Threads"
+    },
+    {
+      "id": 503,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/503/period/986?namespace=dynamic-eu"
+      },
+      "name": "Ara-Kara, City of Echoes"
+    },
+    {
+      "id": 505,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/505/period/986?namespace=dynamic-eu"
+      },
+      "name": "The Dawnbreaker"
+    },
+    {
+      "id": 507,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/connected-realm/3691/mythic-leaderboard/507/period/986?namespace=dynamic-eu"
+      },
+      "name": "Grim Batol"
+    }
+  ]
+}
