@@ -39,9 +39,6 @@ func (h *Handler) GetAccountProfile(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
-	log.Printf("User ID: %d", userID)
-
-	log.Printf("Headers: %v", c.Request.Header)
 
 	// Get the region (required)
 	region := c.GetHeader("Region")

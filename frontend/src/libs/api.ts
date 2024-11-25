@@ -1,5 +1,5 @@
 // src/libs/api.ts
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { csrfService } from "./csrfService";
 
 export interface APIError {
@@ -32,29 +32,19 @@ api.interceptors.request.use(
       return config;
     }
 
-    if (config.url && config.method) {
-      if (csrfService.isProtectedRoute(config.url, config.method)) {
-        try {
-          const maxRetries = 3;
-          let retries = 0;
-
-          while (retries < maxRetries) {
-            try {
-              const token = await csrfService.getToken();
-              if (token) {
-                config.headers["X-CSRF-Token"] = token;
-                break;
-              }
-            } catch (error) {
-              retries++;
-              if (retries === maxRetries) throw error;
-              // Wait a bit before retrying
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-          }
-        } catch (error) {
-          console.error("Failed to get CSRF token after retries:", error);
+    if (
+      config.method &&
+      config.method.toLowerCase() !== "get" &&
+      config.url &&
+      csrfService.isProtectedRoute(config.url, config.method)
+    ) {
+      try {
+        const token = await csrfService.getToken();
+        if (token) {
+          config.headers["X-CSRF-Token"] = token;
         }
+      } catch (error) {
+        console.error("Error setting CSRF token:", error);
       }
     }
     return config;
@@ -83,6 +73,7 @@ api.interceptors.response.use(
         data: error?.config?.data,
       },
     });
+
     const originalRequest = error.config;
 
     // Specific handling of CSRF errors

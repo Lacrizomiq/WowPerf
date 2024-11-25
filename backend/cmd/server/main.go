@@ -40,7 +40,7 @@ import (
 	// Internal Packages - Middleware & Utils
 	cacheMiddleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
-	csrf "wowperf/pkg/middleware"
+	csrfMiddleware "wowperf/pkg/middleware"
 	authMiddleware "wowperf/pkg/middleware/auth"             // JWT middleware
 	blizzardAuthMiddleware "wowperf/pkg/middleware/blizzard" // Battle.net middleware
 )
@@ -171,7 +171,7 @@ func setupRoutes(
 	bnetMiddleware := blizzardAuthMiddleware.NewBattleNetMiddleware(services.BattleNet)
 
 	// CSRF Token endpoint
-	r.GET("/csrf-token", csrf.GetCSRFToken())
+	r.GET("/csrf-token", csrfMiddleware.GetCSRFToken())
 
 	// Authentication routes
 	handlers.Auth.RegisterRoutes(r)
@@ -198,6 +198,16 @@ func setupRoutes(
 		handlers.WarcraftLogs.RegisterRoutes(r)
 		handlers.User.RegisterRoutes(r, services.Auth)
 	}
+}
+
+// Helper function for CORS
+func isAllowedOrigin(origin string, allowedOrigins []string) bool {
+	for _, allowed := range allowedOrigins {
+		if strings.TrimSpace(allowed) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 // Redis initialization
