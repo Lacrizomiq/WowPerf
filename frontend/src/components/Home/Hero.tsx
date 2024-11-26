@@ -25,15 +25,15 @@ export default function Hero() {
         />
       )}
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-        <div className="text-center text-white z-10 max-w-4xl bg-black/30 p-4 rounded-xl backdrop-blur-sm">
+        <div className="text-center text-white z-10 max-w-4xl bg-black/30 p-8 rounded-xl backdrop-blur-sm">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 text-left">
             Elevate your WoW experience
           </h1>
           <p className="text-lg md:text-xl mb-8 text-gray-300 text-left">
-            Explore characters equipments, talents, mythic + and raids
-            progression to stay at the state of the art in World of Warcraft.
+            Track, analyze, and improve your characters with comprehensive data
+            from the world&apos;s top players.
           </p>
-          <div className="w-full max-w-xl">
+          <div className="w-full">
             <SearchBar />
           </div>
         </div>
