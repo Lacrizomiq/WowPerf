@@ -107,9 +107,6 @@ func (c *Client) MakeRequest(endpoint, namespace, locale string) ([]byte, error)
 	req.Header.Set("Battlenet-Namespace", namespace)
 	req.Header.Set("Accept", "application/json")
 
-	log.Printf("Request URL: %s", req.URL.String())
-	log.Printf("Request headers: %s", logSafeHeaders(req.Header))
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
