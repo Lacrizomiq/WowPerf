@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Header from "@/components/Header/Header";
+import React, { useState } from "react";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
@@ -39,10 +38,6 @@ export default function CharacterLayout({
   );
 
   useWowheadTooltips();
-
-  console.log("Character Profile Loading:", isLoading);
-  console.log("Character Profile Error:", error);
-  console.log("Character Profile Data:", characterProfile);
 
   const renderContent = () => {
     return (
@@ -174,18 +169,19 @@ export default function CharacterLayout({
               ))}
             </nav>
           </div>
-          <div
-            className={`max-w-7xl mx-auto rounded-2xl shadow-2xl ${
-              characterProfile?.spec_id
-                ? `bg-spec-${characterProfile.spec_id}`
-                : defaultBackgroundClass
-            }`}
-            style={backgroundStyle}
-          >
-            {renderContent()}
-          </div>
+          <div>{renderContent()}</div>
         </div>
       </div>
     </div>
   );
 }
+
+// for background image based on spec
+/*
+className={`max-w-7xl mx-auto rounded-2xl shadow-2xl ${
+              characterProfile?.spec_id
+                ? `bg-spec-${characterProfile.spec_id}`
+                : defaultBackgroundClass
+            }`}
+            style={backgroundStyle}
+*/
