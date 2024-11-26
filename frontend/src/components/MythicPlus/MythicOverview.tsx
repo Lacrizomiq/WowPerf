@@ -102,9 +102,11 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
         </div>
       )}
 
-      {mythicPlusSeasonInfo && (
-        <div className="flex justify-between items-center mb-6">
-          <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex-1">
+          {" "}
+          {/* Cette div prend l'espace disponible */}
+          {mythicPlusSeasonInfo ? (
             <p className="text-xl text-white">
               Season Mythic Rating:{" "}
               <span
@@ -113,14 +115,21 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
                 {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
               </span>
             </p>
-          </div>
+          ) : (
+            <p className="text-xl text-white">No score for this season</p>
+          )}
+        </div>
+
+        <div>
+          {" "}
+          {/* Cette div ne prend que l'espace nécessaire */}
           <SeasonsSelector
             seasons={seasons}
             onSeasonChange={handleSeasonChange}
             selectedSeason={selectedSeason}
           />
         </div>
-      )}
+      </div>
 
       <StaticDungeonList
         dungeons={dungeonData.dungeons}

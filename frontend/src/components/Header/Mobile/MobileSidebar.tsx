@@ -109,7 +109,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                     <select
                       value={region}
                       onChange={(e) => setRegion(e.target.value)}
-                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-black"
+                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-white bg-deep-blue"
                     >
                       <option value="" disabled>
                         Select Region
@@ -123,7 +123,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                     <select
                       value={realm}
                       onChange={(e) => setRealm(e.target.value)}
-                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-black"
+                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-white bg-deep-blue"
                       disabled={!region}
                     >
                       <option value="" disabled>
@@ -141,7 +141,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                       placeholder="Character Name"
                       value={character}
                       onChange={(e) => setCharacter(e.target.value)}
-                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-black"
+                      className="w-full px-3 py-2 bg-sidebar-secondary rounded-md border border-sidebar-border text-white bg-deep-blue"
                     />
 
                     <Button
