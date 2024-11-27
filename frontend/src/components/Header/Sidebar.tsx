@@ -29,7 +29,7 @@ import {
   Rows4,
 } from "lucide-react";
 import { eu, us, tw, kr } from "@/data/realms";
-
+import Link from "next/link";
 import UserMenuOverlay from "./UserMenuOverlay";
 
 interface AppSidebarProps {
@@ -102,7 +102,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/">
+              <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Home className="size-4" />
                 </div>
@@ -111,7 +111,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     <span className="truncate font-semibold">WoW Perf</span>
                   </div>
                 )}
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
