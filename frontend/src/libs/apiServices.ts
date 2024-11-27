@@ -168,3 +168,23 @@ export const getBlizzardCharacterEncounterRaid = async (
     throw error;
   }
 };
+
+// GetBlizzardCharacterStats retrieves the stats for a character
+export const getBlizzardCharacterStats = async (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  try {
+    const { data } = await api.get(
+      `/blizzard/characters/${realmSlug}/${characterName}/stats`,
+      { params: { region, namespace, locale } }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error in getBlizzardCharacterStats:", error);
+    throw error;
+  }
+};
