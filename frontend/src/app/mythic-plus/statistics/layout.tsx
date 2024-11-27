@@ -118,19 +118,19 @@ function StatisticsNav() {
         <div className="flex space-x-4">
           <Link
             href="/mythic-plus/statistics"
-            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors hover:bg-blue-200"
+            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors hover:bg-blue-400/50"
           >
             Overall Stats
           </Link>
           <Link
             href="/mythic-plus/statistics/spec"
-            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors hover:bg-blue-400/50"
           >
             Spec Distribution
           </Link>
           <Link
             href="/mythic-plus/statistics/team"
-            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white hover:bg-deep-blue/50 transition-colors hover:bg-blue-400/50"
           >
             Team Compositions
           </Link>
