@@ -50,58 +50,47 @@ func InitCSRFMiddleware(config CSRFConfig) gin.HandlerFunc {
 	)
 
 	return func(c *gin.Context) {
-		// Skip for safe methods
 		if c.Request.Method == "GET" || c.Request.Method == "HEAD" ||
 			c.Request.Method == "OPTIONS" {
 			c.Next()
 			return
 		}
 
-		// CORS management for CSRF
-		origin := c.GetHeader("Origin")
-		if origin != "" {
-			if isAllowedOrigin(origin, config.AllowedOrigins) {
-				c.Header("Access-Control-Allow-Origin", origin)
-				c.Header("Access-Control-Allow-Credentials", "true")
-				c.Header("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token")
-				c.Header("Access-Control-Expose-Headers", "X-CSRF-Token")
-			}
-		}
-
 		handler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			c.Next()
 		}))
+
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
 // GetCSRFToken generate a new CSRF token
 func GetCSRFToken() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := csrf.Token(c.Request)
-		if token == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate CSRF token"})
-			return
-		}
+	config := NewCSRFConfig(os.Getenv("ENVIRONMENT"))
+	csrfMiddleware := csrf.Protect(
+		[]byte(config.Secret),
+		csrf.Secure(config.Secure),
+		csrf.Path("/"),
+		csrf.Domain(config.Domain),
+		csrf.SameSite(csrf.SameSiteStrictMode),
+		csrf.RequestHeader("X-CSRF-Token"),
+		csrf.CookieName("csrf"),
+	)
 
-		// Consistent cookie configuration
-		c.SetSameSite(http.SameSiteStrictMode)
-		c.SetCookie(
-			"csrf",              // name
-			token,               // value
-			3600,                // maxAge (1 heure)
-			"/",                 // path
-			os.Getenv("DOMAIN"), // domain
-			true,                // secure (HTTPS only)
-			false,               // httpOnly (false car besoin d'accès JS)
-		)
-		c.Header("X-CSRF-Token", token)
+	return func(c *gin.Context) {
+		var token string
+		handler := csrfMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token = csrf.Token(r)
+		}))
+
+		handler.ServeHTTP(c.Writer, c.Request)
 
 		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
 }
 
 func handleCSRFError(w http.ResponseWriter, r *http.Request) {
+	log.Printf("CSRF validation failed for request: %s %s", r.Method, r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 

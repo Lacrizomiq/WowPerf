@@ -74,10 +74,15 @@ export default function CharacterSummary({
 
   const shouldShowMythicPlusRanking =
     !is500Error(mythicPlusPlayerRankingsError) &&
-    !isLoadingMythicPlusPlayerRankings;
+    !isLoadingMythicPlusPlayerRankings &&
+    allStarsMythicPlusData?.rank !== undefined &&
+    allStarsMythicPlusData?.rank !== null;
 
   const shouldShowRaidRanking =
-    !is500Error(raidPlayerRankingsError) && !isLoadingRaidPlayerRankings;
+    !is500Error(raidPlayerRankingsError) &&
+    !isLoadingRaidPlayerRankings &&
+    allStarsRaidData?.rank !== undefined &&
+    allStarsRaidData?.rank !== null;
 
   return (
     <div
@@ -110,10 +115,10 @@ export default function CharacterSummary({
           {character.race} {character.active_spec_name} {character.class}
         </p>
       </div>
-      {shouldShowMythicPlusRanking && (
+      {shouldShowMythicPlusRanking && allStarsMythicPlusData && (
         <div>
           <MythicPlusRanking
-            seasonName="Mythic+ Season 1"
+            seasonName="TWW M+ S1"
             rank={allStarsMythicPlusData?.rank}
             classId={mythicPlusPlayerRankings?.classID || 0}
             spec={allStarsMythicPlusData?.spec || ""}
@@ -122,7 +127,7 @@ export default function CharacterSummary({
           />
         </div>
       )}
-      {shouldShowRaidRanking && (
+      {shouldShowRaidRanking && allStarsRaidData && (
         <div>
           <RaidRanking
             raidName="Nerubar Palace"

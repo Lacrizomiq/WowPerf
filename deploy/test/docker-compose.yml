@@ -1,4 +1,4 @@
-# /deploy/test/docker-compose.yml
+# deploy/test/docker-compose.yml
 services:
   traefik:
     image: traefik:v2.10
@@ -11,7 +11,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/config.yml:/etc/traefik/config.yml:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
-      - ./traefik/acme:/etc/traefik/acme # For Let's Encrypt
+      - ./traefik/acme:/etc/traefik/acme
     networks:
       - traefik
       - internal

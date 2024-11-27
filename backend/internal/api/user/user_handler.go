@@ -5,7 +5,8 @@ import (
 	"os"
 	"wowperf/internal/services/auth"
 	"wowperf/internal/services/user"
-	"wowperf/pkg/middleware"
+	csrfMiddleware "wowperf/pkg/middleware"
+	authMiddleware "wowperf/pkg/middleware/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,9 +29,10 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":       profile.ID,
-		"username": profile.Username,
-		"email":    profile.Email,
+		"id":         profile.ID,
+		"username":   profile.Username,
+		"email":      profile.Email,
+		"battle_tag": profile.BattleTag,
 	})
 }
 
@@ -81,19 +83,34 @@ func (h *UserHandler) ChangeUsername(c *gin.Context) {
 	var input struct {
 		NewUsername string `json:"new_username" binding:"required,min=3,max=50"`
 	}
+
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+			"code":  "INVALID_INPUT",
+		})
 		return
 	}
+
 	if err := h.userService.UpdateUsername(userID, input.NewUsername); err != nil {
-		if err.Error() == "username can only be changed once every 30 days" {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": err.Error()})
+		if err.Error() == "30 days must pass before changing username again" {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": err.Error(),
+				"code":  "RATE_LIMIT_EXCEEDED",
+			})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to change username"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to change username",
+				"code":  "UPDATE_FAILED",
+			})
 		}
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Username changed successfully"})
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Username changed successfully",
+		"code":    "USERNAME_UPDATED",
+	})
 }
 
 // DeleteAccount deletes the user's account
@@ -112,18 +129,18 @@ func (h *UserHandler) RegisterRoutes(router *gin.Engine, authService *auth.AuthS
 	userRoutes := router.Group("/user")
 
 	// All user endpoints require JWT
-	userRoutes.Use(middleware.JWTAuth(authService))
+	userRoutes.Use(authMiddleware.JWTAuth(authService))
 	{
 		// Read-only routes - no CSRF
 		userRoutes.GET("/profile", h.GetProfile)
 
 		// Modification routes - need CSRF
 		protected := userRoutes.Group("")
-		protected.Use(middleware.InitCSRFMiddleware(middleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
+		protected.Use(csrfMiddleware.InitCSRFMiddleware(csrfMiddleware.NewCSRFConfig(os.Getenv("ENVIRONMENT"))))
 		{
+			protected.PUT("/username", h.ChangeUsername)
 			protected.PUT("/email", h.UpdateEmail)
 			protected.PUT("/password", h.ChangePassword)
-			protected.PUT("/username", h.ChangeUsername)
 			protected.DELETE("/account", h.DeleteAccount)
 		}
 	}

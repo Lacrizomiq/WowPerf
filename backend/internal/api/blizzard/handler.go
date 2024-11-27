@@ -13,40 +13,43 @@ import (
 )
 
 type Handler struct {
-	CharacterProfile            *profile.CharacterProfileHandler
-	CharacterMedia              *profile.CharacterMediaHandler
-	Equipment                   *profile.EquipmentHandler
-	ItemMedia                   *gamedata.ItemMediaHandler
-	MythicKeystoneProfile       *profile.MythicKeystoneProfileHandler
-	MythicKeystoneSeasonDetails *profile.MythicKeystoneSeasonDetailsHandler
-	Specializations             *profile.SpecializationsHandler
-	SpellMedia                  *gamedata.SpellMediaHandler
-	TalentTreeIndex             *gamedata.TalentTreeIndexHandler
-	TalentTree                  *gamedata.TalentTreeHandler
-	TalentTreeNodes             *gamedata.TalentTreeNodesHandler
-	TalentIndex                 *gamedata.TalentIndexHandler
-	TalentByID                  *gamedata.TalentByIDHandler
-	MythicKeystoneAffixIndex    *gamedata.MythicKeystoneAffixIndexHandler
-	MythicKeystoneAffixByID     *gamedata.MythicKeystoneAffixByIDHandler
-	MythicKeystoneAffixMedia    *gamedata.MythicKeystoneAffixMediaHandler
-	MythicKeystoneIndex         *gamedata.MythicKeystoneIndexHandler
-	MythicKeystoneDungeonsIndex *gamedata.MythicKeystoneDungeonsIndexHandler
-	MythicKeystoneByID          *gamedata.MythicKeystoneByIDHandler
-	MythicKeystonePeriodsIndex  *gamedata.MythicKeystonePeriodsIndexHandler
-	MythicKeystonePeriodByID    *gamedata.MythicKeystonePeriodByIDHandler
-	MythicKeystoneSeasonsIndex  *gamedata.MythicKeystoneSeasonsIndexHandler
-	MythicKeystoneSeasonByID    *gamedata.MythicKeystoneSeasonByIDHandler
-	JournalInstanceIndex        *gamedata.JournalInstanceIndexHandler
-	JournalInstanceByID         *gamedata.JournalInstanceByIDHandler
-	JournalInstanceMedia        *gamedata.JournalInstanceMediaHandler
-	GetSeasonDungeons           *profile.GetSeasonDungeonsHandler
-	EncounterSummary            *profile.EncounterSummaryHandler
-	EncounterDungeon            *profile.EncounterDungeonHandler
-	EncounterRaid               *profile.EncounterRaidHandler
-	RaidsByExpansion            *gamedata.RaidsByExpansionHandler
-	RealmsIndex                 *gamedata.RealmsIndexHandler
-	cache                       cache.CacheService
-	cacheManager                *middleware.CacheManager
+	CharacterProfile               *profile.CharacterProfileHandler
+	CharacterMedia                 *profile.CharacterMediaHandler
+	CharacterStats                 *profile.CharacterStatsHandler
+	Equipment                      *profile.EquipmentHandler
+	ItemMedia                      *gamedata.ItemMediaHandler
+	MythicKeystoneProfile          *profile.MythicKeystoneProfileHandler
+	MythicKeystoneSeasonDetails    *profile.MythicKeystoneSeasonDetailsHandler
+	Specializations                *profile.SpecializationsHandler
+	SpellMedia                     *gamedata.SpellMediaHandler
+	TalentTreeIndex                *gamedata.TalentTreeIndexHandler
+	TalentTree                     *gamedata.TalentTreeHandler
+	TalentTreeNodes                *gamedata.TalentTreeNodesHandler
+	TalentIndex                    *gamedata.TalentIndexHandler
+	TalentByID                     *gamedata.TalentByIDHandler
+	MythicKeystoneAffixIndex       *gamedata.MythicKeystoneAffixIndexHandler
+	MythicKeystoneAffixByID        *gamedata.MythicKeystoneAffixByIDHandler
+	MythicKeystoneAffixMedia       *gamedata.MythicKeystoneAffixMediaHandler
+	MythicKeystoneIndex            *gamedata.MythicKeystoneIndexHandler
+	MythicKeystoneDungeonsIndex    *gamedata.MythicKeystoneDungeonsIndexHandler
+	MythicKeystoneByID             *gamedata.MythicKeystoneByIDHandler
+	MythicKeystonePeriodsIndex     *gamedata.MythicKeystonePeriodsIndexHandler
+	MythicKeystonePeriodByID       *gamedata.MythicKeystonePeriodByIDHandler
+	MythicKeystoneSeasonsIndex     *gamedata.MythicKeystoneSeasonsIndexHandler
+	MythicKeystoneSeasonByID       *gamedata.MythicKeystoneSeasonByIDHandler
+	MythicKeystoneLeaderboardIndex *gamedata.MythicKeystoneLeaderboardHandler
+	JournalInstanceIndex           *gamedata.JournalInstanceIndexHandler
+	JournalInstanceByID            *gamedata.JournalInstanceByIDHandler
+	JournalInstanceMedia           *gamedata.JournalInstanceMediaHandler
+	GetSeasonDungeons              *profile.GetSeasonDungeonsHandler
+	EncounterSummary               *profile.EncounterSummaryHandler
+	EncounterDungeon               *profile.EncounterDungeonHandler
+	EncounterRaid                  *profile.EncounterRaidHandler
+	RaidsByExpansion               *gamedata.RaidsByExpansionHandler
+	RealmsIndex                    *gamedata.RealmsIndexHandler
+	ConnectedRealmIndex            *gamedata.ConnectedRealmIndexHandler
+	cache                          cache.CacheService
+	cacheManager                   *middleware.CacheManager
 }
 
 func NewHandler(service *blizzard.Service, db *gorm.DB, cache cache.CacheService, cacheManager *middleware.CacheManager) *Handler {
@@ -59,40 +62,43 @@ func NewHandler(service *blizzard.Service, db *gorm.DB, cache cache.CacheService
 	}
 
 	return &Handler{
-		CharacterProfile:            profile.NewCharacterProfileHandler(service),
-		CharacterMedia:              profile.NewCharacterMediaHandler(service),
-		Equipment:                   profile.NewEquipmentHandler(service),
-		ItemMedia:                   gamedata.NewItemMediaHandler(service),
-		MythicKeystoneProfile:       profile.NewMythicKeystoneProfileHandler(service),
-		MythicKeystoneSeasonDetails: profile.NewMythicKeystoneSeasonDetailsHandler(service, db),
-		Specializations:             profile.NewSpecializationsHandler(service, db),
-		SpellMedia:                  gamedata.NewSpellMediaHandler(service),
-		TalentTreeIndex:             gamedata.NewTalentTreeIndexHandler(service),
-		TalentTree:                  gamedata.NewTalentTreeHandler(db),
-		TalentTreeNodes:             gamedata.NewTalentTreeNodesHandler(service),
-		TalentIndex:                 gamedata.NewTalentIndexHandler(service),
-		TalentByID:                  gamedata.NewTalentByIDHandler(service),
-		MythicKeystoneAffixIndex:    gamedata.NewMythicKeystoneAffixIndexHandler(service),
-		MythicKeystoneAffixByID:     gamedata.NewMythicKeystoneAffixByIDHandler(service),
-		MythicKeystoneAffixMedia:    gamedata.NewMythicKeystoneAffixMediaHandler(service),
-		MythicKeystoneIndex:         gamedata.NewMythicKeystoneIndexHandler(service),
-		MythicKeystoneDungeonsIndex: gamedata.NewMythicKeystoneDungeonsIndexHandler(service),
-		MythicKeystoneByID:          gamedata.NewMythicKeystoneByIDHandler(service),
-		MythicKeystonePeriodsIndex:  gamedata.NewMythicKeystonePeriodsIndexHandler(service),
-		MythicKeystonePeriodByID:    gamedata.NewMythicKeystonePeriodByIDHandler(service),
-		MythicKeystoneSeasonsIndex:  gamedata.NewMythicKeystoneSeasonsIndexHandler(service),
-		MythicKeystoneSeasonByID:    gamedata.NewMythicKeystoneSeasonByIDHandler(service),
-		JournalInstanceIndex:        gamedata.NewJournalInstanceIndexHandler(service),
-		JournalInstanceByID:         gamedata.NewJournalInstanceByIDHandler(service),
-		JournalInstanceMedia:        gamedata.NewJournalInstanceMediaHandler(service),
-		GetSeasonDungeons:           profile.NewGetSeasonDungeonsHandler(service, db),
-		EncounterSummary:            profile.NewEncounterSummaryHandler(service),
-		EncounterDungeon:            profile.NewEncounterDungeonHandler(service),
-		EncounterRaid:               profile.NewEncounterRaidHandler(service),
-		RaidsByExpansion:            gamedata.NewRaidsByExpansionHandler(db),
-		RealmsIndex:                 gamedata.NewRealmsIndexHandler(service),
-		cache:                       cache,
-		cacheManager:                middleware.NewCacheManager(cacheConfig),
+		CharacterProfile:               profile.NewCharacterProfileHandler(service),
+		CharacterMedia:                 profile.NewCharacterMediaHandler(service),
+		CharacterStats:                 profile.NewCharacterStatsHandler(service),
+		Equipment:                      profile.NewEquipmentHandler(service),
+		ItemMedia:                      gamedata.NewItemMediaHandler(service),
+		MythicKeystoneProfile:          profile.NewMythicKeystoneProfileHandler(service),
+		MythicKeystoneSeasonDetails:    profile.NewMythicKeystoneSeasonDetailsHandler(service, db),
+		Specializations:                profile.NewSpecializationsHandler(service, db),
+		SpellMedia:                     gamedata.NewSpellMediaHandler(service),
+		TalentTreeIndex:                gamedata.NewTalentTreeIndexHandler(service),
+		TalentTree:                     gamedata.NewTalentTreeHandler(db),
+		TalentTreeNodes:                gamedata.NewTalentTreeNodesHandler(service),
+		TalentIndex:                    gamedata.NewTalentIndexHandler(service),
+		TalentByID:                     gamedata.NewTalentByIDHandler(service),
+		MythicKeystoneAffixIndex:       gamedata.NewMythicKeystoneAffixIndexHandler(service),
+		MythicKeystoneAffixByID:        gamedata.NewMythicKeystoneAffixByIDHandler(service),
+		MythicKeystoneAffixMedia:       gamedata.NewMythicKeystoneAffixMediaHandler(service),
+		MythicKeystoneIndex:            gamedata.NewMythicKeystoneIndexHandler(service),
+		MythicKeystoneDungeonsIndex:    gamedata.NewMythicKeystoneDungeonsIndexHandler(service),
+		MythicKeystoneByID:             gamedata.NewMythicKeystoneByIDHandler(service),
+		MythicKeystonePeriodsIndex:     gamedata.NewMythicKeystonePeriodsIndexHandler(service),
+		MythicKeystonePeriodByID:       gamedata.NewMythicKeystonePeriodByIDHandler(service),
+		MythicKeystoneSeasonsIndex:     gamedata.NewMythicKeystoneSeasonsIndexHandler(service),
+		MythicKeystoneSeasonByID:       gamedata.NewMythicKeystoneSeasonByIDHandler(service),
+		MythicKeystoneLeaderboardIndex: gamedata.NewMythicKeystoneLeaderboardHandler(service),
+		JournalInstanceIndex:           gamedata.NewJournalInstanceIndexHandler(service),
+		JournalInstanceByID:            gamedata.NewJournalInstanceByIDHandler(service),
+		JournalInstanceMedia:           gamedata.NewJournalInstanceMediaHandler(service),
+		GetSeasonDungeons:              profile.NewGetSeasonDungeonsHandler(service, db),
+		EncounterSummary:               profile.NewEncounterSummaryHandler(service),
+		EncounterDungeon:               profile.NewEncounterDungeonHandler(service),
+		EncounterRaid:                  profile.NewEncounterRaidHandler(service),
+		RaidsByExpansion:               gamedata.NewRaidsByExpansionHandler(db),
+		RealmsIndex:                    gamedata.NewRealmsIndexHandler(service),
+		ConnectedRealmIndex:            gamedata.NewConnectedRealmIndexHandler(service),
+		cache:                          cache,
+		cacheManager:                   middleware.NewCacheManager(cacheConfig),
 	}
 }
 
@@ -108,7 +114,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/characters/:realmSlug/:characterName/media", h.cacheManager.CacheMiddleware(routeConfig), h.CharacterMedia.GetCharacterMedia)
 
 	r.GET("/blizzard/characters/:realmSlug/:characterName/equipment", h.cacheManager.CacheMiddleware(routeConfig), h.Equipment.GetCharacterEquipment)
-
+	r.GET("/blizzard/characters/:realmSlug/:characterName/stats", h.cacheManager.CacheMiddleware(routeConfig), h.CharacterStats.GetCharacterStats)
 	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile", h.cacheManager.CacheMiddleware(routeConfig), h.MythicKeystoneProfile.GetCharacterMythicKeystoneProfile)
 	r.GET("/blizzard/characters/:realmSlug/:characterName/mythic-keystone-profile/season/:seasonId", h.cacheManager.CacheMiddleware(routeConfig), h.MythicKeystoneSeasonDetails.GetCharacterMythicKeystoneSeasonBestRuns)
 
@@ -140,6 +146,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/mythic-keystone/season/index", h.MythicKeystoneSeasonsIndex.GetMythicKeystoneSeasonsIndex)
 	r.GET("/blizzard/data/mythic-keystone/season/:seasonId", h.MythicKeystoneSeasonByID.GetMythicKeystoneSeasonByID)
 
+	r.GET("/blizzard/data/connected-realm/:connectedRealmId/mythic-leaderboard/index", h.MythicKeystoneLeaderboardIndex.GetMythicKeystoneLeaderboardIndex)
+
 	r.GET("/blizzard/data/journal-instance/index", h.JournalInstanceIndex.GetJournalInstanceIndex)
 	r.GET("/blizzard/data/journal-instance/:instanceId", h.JournalInstanceByID.GetJournalInstanceByID)
 	r.GET("/blizzard/data/journal-instance/:instanceId/media", h.cacheManager.CacheMiddleware(routeConfig), h.JournalInstanceMedia.GetJournalInstanceMedia)
@@ -149,4 +157,5 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/blizzard/data/raids/:expansion", h.cacheManager.CacheMiddleware(routeConfig), h.RaidsByExpansion.GetRaidsByExpansion)
 
 	r.GET("/blizzard/data/realm/index", h.RealmsIndex.GetRealmsIndex)
+	r.GET("/blizzard/data/connected-realm/index", h.ConnectedRealmIndex.GetConnectedRealmIndex)
 }

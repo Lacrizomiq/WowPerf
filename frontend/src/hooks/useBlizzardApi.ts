@@ -192,3 +192,34 @@ export const useGetBlizzardCharacterEncounterRaid = (
     },
   });
 };
+
+// useGetBlizzardCharacterStats retrieves the stats for a character
+export const useGetBlizzardCharacterStats = (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: [
+      "characterStats",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
+      apiServices.getBlizzardCharacterStats(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale
+      ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
+  });
+};

@@ -1,5 +1,5 @@
 // src/libs/api.ts
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { csrfService } from "./csrfService";
 
 export interface APIError {
@@ -27,33 +27,29 @@ const api = axios.create({
 // Interceptor for requests
 api.interceptors.request.use(
   async (config) => {
-    console.log("Making request:", {
-      url: config.url,
-      method: config.method,
-      data: config.data,
-      headers: config.headers,
-    });
-    if (config.url && config.method) {
-      // Check if the route requires CSRF protection
-      if (csrfService.isProtectedRoute(config.url, config.method)) {
-        try {
-          const token = await csrfService.getToken();
-          if (token) {
-            config.headers["X-CSRF-Token"] = token;
-          } else {
-            console.warn("No CSRF token available for protected route");
-          }
-        } catch (error) {
-          console.error("Failed to get CSRF token:", error);
+    // Skip CSRF for OAuth routes
+    if (config.headers["X-Skip-CSRF"]) {
+      return config;
+    }
+
+    if (
+      config.method &&
+      config.method.toLowerCase() !== "get" &&
+      config.url &&
+      csrfService.isProtectedRoute(config.url, config.method)
+    ) {
+      try {
+        const token = await csrfService.getToken();
+        if (token) {
+          config.headers["X-CSRF-Token"] = token;
         }
+      } catch (error) {
+        console.error("Error setting CSRF token:", error);
       }
     }
     return config;
   },
-  (error) => {
-    console.error("Request error:", error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Interceptor for responses
@@ -77,6 +73,7 @@ api.interceptors.response.use(
         data: error?.config?.data,
       },
     });
+
     const originalRequest = error.config;
 
     // Specific handling of CSRF errors

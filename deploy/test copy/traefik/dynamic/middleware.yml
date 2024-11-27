@@ -1,0 +1,18 @@
+# /deploy/test/traefik/dynamic/middleware.yml
+http:
+  middlewares:
+    basic-auth:
+      basicAuth:
+        users:
+          - ${TRAEFIK_AUTH} # admin:password
+
+    security-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        sslRedirect: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"

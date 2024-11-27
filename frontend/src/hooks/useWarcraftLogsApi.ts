@@ -11,6 +11,7 @@ import {
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 import { RaidRankingsResponse } from "@/types/warcraftlogs/character/raidPlayerRankings";
+
 // Hook for global leaderboard with required limit
 export const useGetGlobalLeaderboard = (limit: number) => {
   return useQuery<GlobalLeaderboardEntry[], Error>({

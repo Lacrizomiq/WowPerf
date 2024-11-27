@@ -1,15 +1,18 @@
+// app/mythic-plus/statistics/page.tsx
 "use client";
 
-import React from "react";
-import DungeonStats from "@/components/Home/mythicplus/Stats/DungeonStats";
+import { useStats } from "@/providers/StatsContext";
+import { useGetDungeonStats } from "@/hooks/useRaiderioApi";
+import { OverallStats } from "@/components/Home/mythicplus/Stats/OverallStats";
+import { DungeonStat } from "@/types/dungeonStats";
 
-const MythicPlusStatisticsPage = () => {
-  return (
-    <div className="relative z-20">
-      <DungeonStats />
-      {/* <FeaturedContent /> */}
-    </div>
-  );
-};
+export default function StatisticsPage() {
+  const { season, region, dungeon } = useStats();
+  const { data: statsData } = useGetDungeonStats(season, region);
 
-export default MythicPlusStatisticsPage;
+  const currentDungeonStats =
+    statsData?.find((stat: DungeonStat) => stat.dungeon_slug === dungeon) ||
+    statsData?.[0];
+
+  return <OverallStats stats={currentDungeonStats} />;
+}

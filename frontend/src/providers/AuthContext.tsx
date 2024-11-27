@@ -11,7 +11,6 @@ import React, {
 import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
 import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
-import { csrfService } from "@/libs/csrfService";
 import { usePathname } from "next/navigation";
 
 interface AuthContextType {
@@ -21,16 +20,6 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
-}
-
-interface LoginResponse {
-  message: string;
-  code: string;
-  user: {
-    // Make user required for login
-    username: string;
-    email?: string;
-  };
 }
 
 interface UserData {

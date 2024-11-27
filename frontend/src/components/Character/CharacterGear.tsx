@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { useGetBlizzardCharacterEquipment } from "@/hooks/useBlizzardApi";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import { useGetBlizzardCharacterStats } from "@/hooks/useBlizzardApi";
+import CharacterStats from "./Stats/CharacterStats";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import Image from "next/image";
 /// <reference path="../../global.d.ts" />
@@ -93,7 +95,16 @@ export default function CharacterGear({
     locale
   );
 
+  const { data: characterStats } = useGetBlizzardCharacterStats(
+    region,
+    realm,
+    name,
+    namespace,
+    locale
+  );
+  console.log(characterProfile);
   console.log(characterData);
+  console.log(characterStats);
 
   useEffect(() => {
     if (
@@ -191,6 +202,15 @@ export default function CharacterGear({
           font-size: 14px;
         }
       `}</style>
+
+      <div className="mb-8">
+        {characterStats && characterProfile && (
+          <CharacterStats
+            stats={characterStats}
+            specId={characterProfile.spec_id}
+          />
+        )}
+      </div>
 
       <div className="text-blue-200 mb-4">
         {characterData.item_level_equipped.toFixed(1)} item lvl (Equipped)

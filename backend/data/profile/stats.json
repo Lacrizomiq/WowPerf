@@ -1,0 +1,134 @@
+"https://localhost/api/blizzard/characters/silvermoon/lacrizopump/stats?region=eu&namespace=profile-eu&locale=en_GB"
+
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/lacrizopump/statistics?namespace=profile-eu"
+    }
+  },
+  "agility": {
+    "base": 17645,
+    "effective": 17645
+  },
+  "armor": {
+    "base": 0,
+    "effective": 30147
+  },
+  "attack_power": 17645,
+  "avoidance": {
+    "rating": 1065,
+    "rating_bonus": 1.95773
+  },
+  "block": {
+    "rating": 0,
+    "rating_bonus": 0,
+    "value": 10
+  },
+  "bonus_armor": 0,
+  "character": {
+    "id": 204821478,
+    "key": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/lacrizopump?namespace=profile-eu"
+    },
+    "name": "Lacrizopump",
+    "realm": {
+      "id": 549,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+      },
+      "name": "Silvermoon",
+      "slug": "silvermoon"
+    }
+  },
+  "dodge": {
+    "rating": 0,
+    "rating_bonus": 0,
+    "value": 6.2414236
+  },
+  "health": 4918100,
+  "intellect": {
+    "base": 17646,
+    "effective": 56147
+  },
+  "lifesteal": {
+    "rating": 0,
+    "rating_bonus": 0,
+    "value": 0
+  },
+  "main_hand_damage_max": 16442.21,
+  "main_hand_damage_min": 15217.9795,
+  "main_hand_dps": 4745.2324,
+  "main_hand_speed": 3.336,
+  "mana_regen": 100000,
+  "mana_regen_combat": 100000,
+  "mastery": {
+    "rating": 3897,
+    "rating_bonus": 16.70143,
+    "value": 40.701427
+  },
+  "melee_crit": {
+    "rating": 9632,
+    "rating_bonus": 13.76,
+    "value": 18.76
+  },
+  "melee_haste": {
+    "rating": 5223,
+    "rating_bonus": 7.913636,
+    "value": 7.9136353
+  },
+  "off_hand_damage_max": 3264.616,
+  "off_hand_damage_min": 3264.616,
+  "off_hand_dps": 1761.8003,
+  "off_hand_speed": 1.853,
+  "parry": {
+    "rating": 0,
+    "rating_bonus": 0,
+    "value": 0
+  },
+  "power": 2500000,
+  "power_type": {
+    "id": 0,
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/power-type/0?namespace=static-11.0.2_55938-eu"
+    },
+    "name": "Mana"
+  },
+  "ranged_crit": {
+    "rating": 9632,
+    "rating_bonus": 13.76,
+    "value": 18.76
+  },
+  "ranged_haste": {
+    "rating": 5223,
+    "rating_bonus": 7.913636,
+    "value": 7.9136353
+  },
+  "speed": {
+    "rating": 0,
+    "rating_bonus": 0
+  },
+  "spell_crit": {
+    "rating": 9632,
+    "rating_bonus": 13.76,
+    "value": 18.76
+  },
+  "spell_haste": {
+    "rating": 5223,
+    "rating_bonus": 7.913636,
+    "value": 7.9136353
+  },
+  "spell_penetration": 0,
+  "spell_power": 56147,
+  "stamina": {
+    "base": 86453,
+    "effective": 223550
+  },
+  "strength": {
+    "base": 7590,
+    "effective": 7590
+  },
+  "versatility": 8573,
+  "versatility_damage_done_bonus": 10.991026,
+  "versatility_damage_taken_bonus": 5.495513,
+  "versatility_healing_done_bonus": 10.991026
+}

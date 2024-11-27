@@ -17,15 +17,15 @@ interface StatsProps {
 
 export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
   const prepareSpecData = () => {
+    if (!stats?.SpecStats) return [];
+
     const specStats = stats.SpecStats;
     const formattedData = [];
 
     for (const [className, specs] of Object.entries(specStats)) {
       for (const [specName, count] of Object.entries(specs)) {
         formattedData.push({
-          className,
-          specName,
-          fullName: `${specName} ${className}`,
+          name: `${specName} ${className}`,
           count,
           color: `var(--color-${className.toLowerCase().replace(" ", "-")})`,
         });
@@ -36,12 +36,12 @@ export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
   };
 
   const specData = prepareSpecData();
+  const totalPlayers = specData.reduce((sum, entry) => sum + entry.count, 0);
 
   return (
     <div className="bg-deep-blue p-4 rounded-lg shadow-2xl">
       <h3 className="text-xl font-bold text-white mb-4">
-        Specialization Distribution - Total:{" "}
-        {specData.reduce((sum, entry) => sum + entry.count, 0)} players
+        Specialization Distribution - Total: {totalPlayers} players
       </h3>
       <ResponsiveContainer
         width="100%"
@@ -50,41 +50,24 @@ export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
         <BarChart
           data={specData}
           layout="vertical"
-          margin={{ top: 20, right: 50, left: 200, bottom: 5 }}
+          margin={{ top: 20, right: 50, left: 20, bottom: 5 }}
         >
-          <XAxis type="number" domain={[0, "dataMax"]} />
+          <XAxis type="number" stroke="white" />
           <YAxis
             type="category"
-            dataKey="fullName"
+            dataKey="name"
             width={180}
-            tick={({ x, y, payload }) => (
-              <g transform={`translate(${x},${y})`}>
-                <text
-                  x={-5}
-                  y={0}
-                  dy={4}
-                  textAnchor="end"
-                  fill="white"
-                  className="text-sm"
-                >
-                  {payload.value}
-                </text>
-              </g>
-            )}
+            stroke="white"
+            tick={{ fill: "white" }}
           />
           <Tooltip
-            formatter={(value: number, name: string, props: any) => [
-              `${value} players`,
-              props.payload.fullName,
-            ]}
             contentStyle={{
-              backgroundColor: "#1a1a1a",
+              backgroundColor: "#fff",
               border: "1px solid #333",
               borderRadius: "4px",
-              color: "white",
+              color: "black",
             }}
-            labelStyle={{ color: "white" }}
-            itemStyle={{ color: "white" }}
+            cursor={{ fill: "transparent" }}
           />
           <Bar dataKey="count" name="Players">
             {specData.map((entry, index) => (
@@ -92,19 +75,9 @@ export const SpecStats: React.FC<StatsProps> = ({ stats }) => {
             ))}
             <LabelList
               dataKey="count"
-              position="insideRight"
-              content={({ x, y, width, value }) => (
-                <text
-                  x={Number(x) + Number(width) + 10}
-                  y={Number(y) + 4}
-                  fill="white"
-                  textAnchor="start"
-                  dominantBaseline="central"
-                  className="text-md"
-                >
-                  {value}
-                </text>
-              )}
+              position="right"
+              fill="white"
+              formatter={(value: number) => `${value}`}
             />
           </Bar>
         </BarChart>

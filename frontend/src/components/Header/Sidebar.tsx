@@ -35,15 +35,11 @@ import UserMenuOverlay from "./UserMenuOverlay";
 interface AppSidebarProps {
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
-  isFooterMenuOpen: boolean;
-  setIsFooterMenuOpen: (open: boolean) => void;
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({
   isExpanded,
   setIsExpanded,
-  isFooterMenuOpen,
-  setIsFooterMenuOpen,
 }) => {
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();

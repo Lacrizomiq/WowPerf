@@ -18,6 +18,8 @@ import {
   Sparkles,
   ChevronsUpDown,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface UserMenuOverlayProps {
   isExpanded: boolean;
@@ -28,6 +30,7 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
   const { isAuthenticated, logout } = useAuth();
   const { profile } = useUserProfile();
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
