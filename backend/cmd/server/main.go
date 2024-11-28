@@ -290,10 +290,13 @@ func loadConfig() (*AppConfig, error) {
 		"BLIZZARD_REDIRECT_URL",
 	}
 
+	// Clean environment variables
 	for _, envVar := range requiredEnvVars {
-		if os.Getenv(envVar) == "" {
+		val := strings.TrimSpace(os.Getenv(envVar))
+		if val == "" {
 			return nil, fmt.Errorf("%s environment variable is required", envVar)
 		}
+		os.Setenv(envVar, val) // Set the cleaned value
 	}
 
 	return &AppConfig{
