@@ -290,6 +290,12 @@ func loadConfig() (*AppConfig, error) {
 		"BLIZZARD_REDIRECT_URL",
 	}
 
+	log.Println("Environment variables:")
+	for _, envVar := range requiredEnvVars {
+		val := strings.TrimSpace(os.Getenv(envVar))
+		log.Printf("%s: [%s]", envVar, val)
+	}
+
 	// Check required variables with more logs
 	missingVars := []string{}
 	for _, envVar := range requiredEnvVars {
