@@ -58,8 +58,6 @@ jobs:
         run: |
           echo "${{ vars.ENV_TEST }}" > deploy/test/.env
           echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> deploy/test/.env
-          echo "TRAEFIK_AUTH=${{ secrets.TRAEFIK_AUTH }}" >> deploy/test/.env
-          echo "ACME_EMAIL=${{ secrets.ACME_EMAIL }}" >> deploy/test/.env
 
       - name: Copy files to server
         uses: appleboy/scp-action@master
