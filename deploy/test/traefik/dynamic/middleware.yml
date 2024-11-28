@@ -4,7 +4,7 @@ http:
     basic-auth:
       basicAuth:
         users:
-          - "${TRAEFIK_AUTH}"
+          - "admin:$2y$05$KW5lAQ6NtADssabeZAiQUufb2bTLfUPcWhTFY2wpLsVazkgBCIZCK"
 
     security-headers:
       headers:
