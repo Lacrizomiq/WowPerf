@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import MobileUserMenu from "./MobileUserMenu";
 import { eu, us, tw, kr } from "@/data/realms";
+import Link from "next/link";
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -81,12 +82,12 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
           <div className="h-full flex flex-col">
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b border-sidebar-border">
-              <a href="/" className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Home className="size-4" />
                 </div>
                 <span className="font-semibold">WoW Perf</span>
-              </a>
+              </Link>
             </div>
 
             {/* Content */}
