@@ -9,6 +9,8 @@ services:
       - "443:443"
     environment:
       - ACME_EMAIL=${ACME_EMAIL}
+      - CF_API_EMAIL=${CF_API_EMAIL}
+      - CF_API_KEY=${CF_API_KEY}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/config.yml:/etc/traefik/config.yml:ro
@@ -24,6 +26,9 @@ services:
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.middlewares=basic-auth@file"
       - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.middlewares.cf-real-ip.headers.customrequestheaders.X-Real-IP=CF-Connecting-IP"
+      - "traefik.http.routers.backend.middlewares=cf-real-ip@docker"
+      - "traefik.http.routers.dashboard.tls.certresolver=cloudflare"
     restart: unless-stopped
 
   frontend:

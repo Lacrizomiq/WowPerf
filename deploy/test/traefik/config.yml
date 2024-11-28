@@ -1,4 +1,3 @@
-# /deploy/test/traefik/config.yml
 api:
   dashboard: true
   insecure: false
@@ -9,14 +8,20 @@ log:
 entryPoints:
   web:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     address: ":443"
     http:
       tls:
-        certResolver: letsencrypt
+        certResolver: cloudflare
 
 providers:
   docker:
+    endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: traefik
   file:
@@ -24,9 +29,13 @@ providers:
     watch: true
 
 certificatesResolvers:
-  letsencrypt:
+  cloudflare:
     acme:
       email: ${ACME_EMAIL}
       storage: /etc/traefik/acme/acme.json
-      httpChallenge:
-        entryPoint: web
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 30
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
