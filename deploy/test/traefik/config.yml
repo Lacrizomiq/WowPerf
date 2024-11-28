@@ -9,11 +9,6 @@ log:
 entryPoints:
   web:
     address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
   websecure:
     address: ":443"
     http:
@@ -31,7 +26,7 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: ${ACME_EMAIL} # À changer
+      email: ${ACME_EMAIL}
       storage: /etc/traefik/acme/acme.json
       httpChallenge:
         entryPoint: web

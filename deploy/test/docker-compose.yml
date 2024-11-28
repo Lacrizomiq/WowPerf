@@ -7,6 +7,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - TRAEFIK_AUTH=${TRAEFIK_AUTH}
+      - ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/config.yml:/etc/traefik/config.yml:ro
@@ -54,6 +57,10 @@ services:
       - CSRF_SECRET=${CSRF_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - BLIZZARD_CLIENT_ID=${BLIZZARD_CLIENT_ID}
+      - BLIZZARD_CLIENT_SECRET=${BLIZZARD_CLIENT_SECRET}
+      - BLIZZARD_REDIRECT_URL=${BLIZZARD_REDIRECT_URL}
+      - BLIZZARD_REGION=${BLIZZARD_REGION}
       - ENVIRONMENT=test
     networks:
       - traefik
