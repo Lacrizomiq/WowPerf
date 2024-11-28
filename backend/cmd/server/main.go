@@ -277,10 +277,10 @@ func initializeDatabase() (*gorm.DB, error) {
 
 // Load configuration
 func loadConfig() (*AppConfig, error) {
-	if err := godotenv.Load(); err != nil {
-		log.Println("Warning: Error loading .env file")
-	}
+	// Ignore silently the .env loading error
+	_ = godotenv.Load()
 
+	// Required environment variables
 	requiredEnvVars := []string{
 		"JWT_SECRET",
 		"CSRF_SECRET",
@@ -290,22 +290,31 @@ func loadConfig() (*AppConfig, error) {
 		"BLIZZARD_REDIRECT_URL",
 	}
 
-	// Clean environment variables
+	// Check required variables with more logs
+	missingVars := []string{}
 	for _, envVar := range requiredEnvVars {
 		val := strings.TrimSpace(os.Getenv(envVar))
 		if val == "" {
-			return nil, fmt.Errorf("%s environment variable is required", envVar)
+			missingVars = append(missingVars, envVar)
 		}
-		os.Setenv(envVar, val) // Set the cleaned value
 	}
 
-	return &AppConfig{
-		Environment:    os.Getenv("ENVIRONMENT"),
-		AllowedOrigins: strings.Split(os.Getenv("ALLOWED_ORIGINS"), ","),
+	// If some variables are missing, log the details and return an error
+	if len(missingVars) > 0 {
+		log.Printf("Missing required environment variables: %v", missingVars)
+		return nil, fmt.Errorf("missing required environment variables: %v", missingVars)
+	}
+
+	// If all variables are present, create and return the config
+	config := &AppConfig{
+		Environment:    getEnvOrDefault("ENVIRONMENT", "development"),
+		AllowedOrigins: strings.Split(getEnvOrDefault("ALLOWED_ORIGINS", "http://localhost:3000"), ","),
 		Port:           getEnvOrDefault("PORT", "8080"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
 		CSRFSecret:     os.Getenv("CSRF_SECRET"),
-	}, nil
+	}
+
+	return config, nil
 }
 
 // Setup server middleware
