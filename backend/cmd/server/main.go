@@ -378,24 +378,28 @@ func startPeriodicTasks(db *gorm.DB, services *AppServices) {
 }
 
 func main() {
+	log.Println("Starting server...")
+
 	// Load configuration
 	config, err := loadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+	log.Println("Configuration loaded successfully")
 
 	// Initialize components
 	db, err := initializeDatabase()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
+	log.Println("Database initialized successfully")
 
 	cacheService, err := initializeCacheService()
 	if err != nil {
 		log.Fatalf("Failed to initialize cache service: %v", err)
 	}
 	defer cacheService.Close()
-
+	log.Println("Cache service initialized successfully")
 	cacheManagers := initializeCacheManagers(cacheService)
 
 	// Initialize services
@@ -403,18 +407,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
+	log.Println("Services initialized successfully")
 
 	// Initialize handlers
 	handlers := initializeHandlers(services, db, cacheService, cacheManagers)
+	log.Println("Handlers initialized successfully")
 
 	// Setup server
 	r := gin.New()
 	setupMiddleware(r, config)
 	setupHealthCheck(r)
 	setupRoutes(r, services, handlers)
+	log.Println("Routes setup successfully")
 
 	// Start periodic tasks
 	startPeriodicTasks(db, services)
+	log.Println("Periodic tasks started successfully")
 
 	// Start server
 	serverAddr := fmt.Sprintf(":%s", config.Port)
