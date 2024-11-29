@@ -14,8 +14,11 @@ export interface ApiResponse {
   error?: string;
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://test.wowperf.com/api";
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -23,6 +26,8 @@ const api = axios.create({
     "X-Requested-With": "XMLHttpRequest",
   },
 });
+
+console.log("API initialized with baseURL:", API_BASE_URL);
 
 // Interceptor for requests
 api.interceptors.request.use(

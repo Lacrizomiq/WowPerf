@@ -308,7 +308,7 @@ func loadConfig() (*AppConfig, error) {
 	// If all variables are present, create and return the config
 	config := &AppConfig{
 		Environment:    getEnvOrDefault("ENVIRONMENT", "development"),
-		AllowedOrigins: strings.Split(getEnvOrDefault("ALLOWED_ORIGINS", "http://localhost:3000"), ","),
+		AllowedOrigins: strings.Split(getEnvOrDefault("ALLOWED_ORIGINS", "https://test.wowperf.com"), ","),
 		Port:           getEnvOrDefault("PORT", "8080"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
 		CSRFSecret:     os.Getenv("CSRF_SECRET"),
