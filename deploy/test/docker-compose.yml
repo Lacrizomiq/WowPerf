@@ -9,7 +9,7 @@ services:
       - "443:443"
     environment:
       - CLOUDFLARE_EMAIL=${CF_API_EMAIL}
-      - CLOUDFLARE_API_KEY=${CF_API_KEY}
+      - CLOUDFLARE_DNS_API_TOKEN=${CF_API_KEY}
       - ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -77,10 +77,10 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.backend-api.rule=Host(`test.wowperf.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.backend-api.entrypoints=websecure"
-      - "traefik.http.routers.backend-api.tls.certresolver=cloudflare"
-      - "traefik.http.routers.backend-api.middlewares=strip-api@docker,security-headers@file,cloudflare-ipwhitelist@docker"
+      - "traefik.http.routers.backend-api.tls=true"
       - "traefik.http.services.backend-api.loadbalancer.server.port=8080"
       - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend-api.middlewares=strip-api@docker"
     depends_on:
       db:
         condition: service_healthy

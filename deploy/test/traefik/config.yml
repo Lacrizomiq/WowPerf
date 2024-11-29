@@ -13,11 +13,11 @@ entryPoints:
         entryPoint:
           to: websecure
           scheme: https
+          permanent: true
   websecure:
     address: ":443"
     http:
-      tls:
-        certResolver: cloudflare
+      tls: {}
 
 providers:
   docker:
@@ -31,11 +31,10 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
-      email: "${ACME_EMAIL}"
+      email: "${CF_API_EMAIL}"
       storage: /etc/traefik/acme/acme.json
       dnsChallenge:
         provider: cloudflare
-        delayBeforeCheck: 30
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
