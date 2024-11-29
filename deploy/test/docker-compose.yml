@@ -42,11 +42,15 @@ services:
       - "traefik.http.routers.frontend.rule=Host(`test.wowperf.com`) && !PathPrefix(`/api`, `/traefik`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=cloudflare"
-      - "traefik.http.routers.frontend.middlewares=security-headers@file,cloudflare-ipwhitelist@docker"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.services.frontend-service.loadbalancer.server.port=3000"
+      - "traefik.http.routers.frontend.service=frontend-service@docker"
     environment:
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+
     restart: unless-stopped
 
   backend:
