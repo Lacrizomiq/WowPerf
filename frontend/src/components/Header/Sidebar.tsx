@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthContext";
 import {
@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Home,
-  Search,
   Sword,
   Hourglass,
   ChevronDown,
@@ -28,9 +27,9 @@ import {
   ChartColumnDecreasing,
   Rows4,
 } from "lucide-react";
-import { eu, us, tw, kr } from "@/data/realms";
 import Link from "next/link";
 import UserMenuOverlay from "./UserMenuOverlay";
+import SidebarSearchBar from "./SidebarSearchBar";
 
 interface AppSidebarProps {
   isExpanded: boolean;
@@ -45,47 +44,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   const { isAuthenticated, logout } = useAuth();
   const [mythicPlusExpanded, setMythicPlusExpanded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [region, setRegion] = useState("");
-  const [realm, setRealm] = useState("");
-  const [character, setCharacter] = useState("");
-  const [realms, setRealms] = useState<
-    { id: number; name: string; slug: string }[]
-  >([]);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (region && realm && character) {
-      router.push(
-        `/character/${region.toLowerCase()}/${realm.toLowerCase()}/${character.toLowerCase()}`
-      );
-      setSearchOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    let selectedRealms: { id: number; name: string; slug: string }[] = [];
-    switch (region) {
-      case "eu":
-        selectedRealms = eu.realms;
-        break;
-      case "us":
-        selectedRealms = us.realms;
-        break;
-      case "tw":
-        selectedRealms = tw.realms;
-        break;
-      case "kr":
-        selectedRealms = kr.realms;
-        break;
-      default:
-        selectedRealms = [];
-    }
-    const sortedRealms = selectedRealms.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-    setRealms(sortedRealms);
-    setRealm("");
-  }, [region]);
 
   return (
     <Sidebar
@@ -118,7 +76,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </SidebarHeader>
 
       {/* Content */}
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -126,73 +83,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               <SidebarMenuItem
                 className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
               >
-                <SidebarMenuButton onClick={() => setSearchOpen(!searchOpen)}>
-                  <div
-                    className={`flex items-center w-full mb-2 ${
-                      isExpanded ? "w-full" : "justify-center"
-                    }`}
-                  >
-                    <Search className={isExpanded ? "mr-4" : ""} />
-                    {isExpanded && (
-                      <>
-                        <span>Search</span>
-                        {searchOpen ? (
-                          <ChevronUp className="ml-auto" />
-                        ) : (
-                          <ChevronDown className="ml-auto" />
-                        )}
-                      </>
-                    )}
-                  </div>
-                </SidebarMenuButton>
-                {isExpanded && searchOpen && (
-                  <SidebarMenuSub>
-                    <form onSubmit={handleSubmit} className="px-4 py-4">
-                      <select
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value)}
-                        className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-                      >
-                        <option value="" disabled>
-                          Select Region
-                        </option>
-                        <option value="eu">EU</option>
-                        <option value="us">US</option>
-                        <option value="kr">KR</option>
-                        <option value="tw">TW</option>
-                      </select>
-                      <select
-                        value={realm}
-                        onChange={(e) => setRealm(e.target.value)}
-                        className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-                        disabled={!region}
-                      >
-                        <option value="" disabled>
-                          Select Realm
-                        </option>
-                        {realms.map((realm) => (
-                          <option key={realm.id} value={realm.slug}>
-                            {realm.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Character Name"
-                        value={character}
-                        onChange={(e) => setCharacter(e.target.value)}
-                        className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-                      />
-                      <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
-                      >
-                        Search
-                      </button>
-                    </form>
-                  </SidebarMenuSub>
-                )}
+                <SidebarSearchBar
+                  isExpanded={isExpanded}
+                  searchOpen={searchOpen}
+                  setSearchOpen={setSearchOpen}
+                />
               </SidebarMenuItem>
+
               <SidebarMenuItem
                 className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
               >
@@ -227,7 +124,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                         <span className="cursor-pointer">Leaderboard</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
-                    <SidebarMenuSubItem className="py-4 ">
+                    <SidebarMenuSubItem className="py-4">
                       <SidebarMenuSubButton
                         onClick={() => router.push("/mythic-plus/best-runs")}
                       >
@@ -246,6 +143,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                   </SidebarMenuSub>
                 )}
               </SidebarMenuItem>
+
               <SidebarMenuItem
                 className={!isExpanded ? "flex justify-center mt-4" : "mt-4"}
               >
