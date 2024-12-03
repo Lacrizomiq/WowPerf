@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, Trophy, LineChart, Users, Star, Layout } from "lucide-react";
+import Link from "next/link";
 
 export default function Feature() {
   return (
@@ -9,17 +10,19 @@ export default function Feature() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Leaderboards */}
-            <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm">
-              <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
-                <Trophy className="text-blue-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                Global Leaderboards
-              </h3>
-              <p className="text-slate-300">
-                Track the world&apos;s top players by role, spec, and dungeon.
-                Updated daily with the latest rankings.
-              </p>
+            <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300">
+              <Link href="/mythic-plus/leaderboards">
+                <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
+                  <Trophy className="text-blue-400" size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Mythic+ Global Leaderboards
+                </h3>
+                <p className="text-slate-300">
+                  Track the world&apos;s top players by role, spec, and dungeon.
+                  Updated daily with the latest rankings.
+                </p>
+              </Link>
             </div>
 
             {/* Statistics */}
@@ -27,7 +30,9 @@ export default function Feature() {
               <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
                 <LineChart className="text-blue-400" size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Analytics</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Mythic+ Statistics
+              </h3>
               <p className="text-slate-300">
                 Detailed statistics on class distribution, team compositions,
                 and success rates in high-level content.
@@ -40,7 +45,7 @@ export default function Feature() {
                 <Star className="text-blue-400" size={24} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
-                Best M+ Runs
+                Best Mythic+ Runs
               </h3>
               <p className="text-slate-300">
                 Explore the highest scoring Mythic+ runs with detailed team

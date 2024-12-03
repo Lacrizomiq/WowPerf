@@ -3,11 +3,11 @@ import React from "react";
 
 export default function Statistics() {
   return (
-    <div className="bg-slate-800/50 py-20">
+    <div className="bg-slate-800/50 py-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Live Statistics
+            Mythic+ Statistics
           </h2>
           <p className="text-slate-300">
             Real-time insights from the top players and teams

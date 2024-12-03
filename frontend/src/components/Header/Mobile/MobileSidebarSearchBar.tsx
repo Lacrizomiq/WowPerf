@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Search, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import { useSearchBlizzardCharacter } from "@/hooks/useBlizzardApi";
 import { eu, us, tw, kr } from "@/data/realms";
 import { SidebarMenuButton, SidebarMenuSub } from "@/components/ui/sidebar";
 
@@ -33,7 +33,7 @@ const MobileSidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { refetch: checkCharacter } = useGetBlizzardCharacterProfile(
+  const { refetch: checkCharacter } = useSearchBlizzardCharacter(
     region.toLowerCase(),
     realm.toLowerCase(),
     character.toLowerCase(),

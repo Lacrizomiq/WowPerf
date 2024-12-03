@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Search, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import { Search, ChevronDown, ChevronUp, Loader2, CircleX } from "lucide-react";
+import { useSearchBlizzardCharacter } from "@/hooks/useBlizzardApi";
 import { eu, us, tw, kr } from "@/data/realms";
 import { SidebarMenuButton, SidebarMenuSub } from "@/components/ui/sidebar";
 
@@ -31,7 +31,7 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { refetch: checkCharacter } = useGetBlizzardCharacterProfile(
+  const { refetch: checkCharacter } = useSearchBlizzardCharacter(
     region.toLowerCase(),
     realm.toLowerCase(),
     character.toLowerCase(),
@@ -161,8 +161,13 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
             />
 
             {error && (
-              <Alert variant="destructive" className="mb-2">
-                <AlertTitle>Error</AlertTitle>
+              <Alert
+                variant="destructive"
+                className="mb-2 text-red-500 flex items-center"
+              >
+                <AlertTitle>
+                  <CircleX className="size-4 text-red-500 mr-2" />
+                </AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}

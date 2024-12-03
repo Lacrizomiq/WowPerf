@@ -1,6 +1,7 @@
 // components/Footer/Footer.tsx
 import Image from "next/image";
 import { Github, Twitter } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -8,7 +9,7 @@ export default function Footer() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/tww.png" // Assurez-vous que l'image est dans votre dossier public
+          src="/tww.png"
           alt="Background"
           fill
           className="object-cover object-top brightness-[0.35]"
@@ -25,36 +26,36 @@ export default function Footer() {
               <h3 className="text-blue-400 font-semibold mb-4">Features</h3>
               <ul className="space-y-2">
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Character Search
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/mythic-plus/leaderboards"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Mythic+ Leaderboards
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/raids"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Raid Progress
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/mythic-plus/statistics"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
-                    Statistics
-                  </a>
+                    Mythic+ Statistics
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -64,20 +65,20 @@ export default function Footer() {
               <h3 className="text-blue-400 font-semibold mb-4">Resources</h3>
               <ul className="space-y-2">
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Documentation
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     FAQ
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -87,29 +88,29 @@ export default function Footer() {
               <h3 className="text-blue-400 font-semibold mb-4">Community</h3>
               <ul className="space-y-2">
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors inline-flex items-center gap-2"
                   >
                     Report a bug
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors inline-flex items-center gap-2"
                   >
                     Suggest a feature
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors inline-flex items-center gap-2"
                   >
                     <Twitter size={16} />
                     Twitter
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -119,28 +120,28 @@ export default function Footer() {
               <h3 className="text-blue-400 font-semibold mb-4">Legal</h3>
               <ul className="space-y-2">
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="#"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Cookie Policy
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -149,37 +150,42 @@ export default function Footer() {
           {/* Bottom Section */}
           <div className="border-t border-slate-700/50 pt-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="text-slate-400 text-sm">
-                © 2024 WoW Perf. All rights reserved.
+              <div className="text-slate-400 text-sm w-1/2">
+                <p className="mb-2">© 2024 WoW Perf. All rights reserved.</p>
+                <p>
+                  World of Warcraft, Warcraft and Blizzard Entertainment are
+                  trademarks or registered trademarks of Blizzard Entertainment,
+                  Inc. in the U.S. and/or other countries.
+                </p>
               </div>
 
               <div className="flex items-center gap-4">
                 <span className="text-slate-400 text-sm">Powered by</span>
                 <div className="flex items-center gap-2">
-                  <a
+                  <Link
                     href="https://develop.battle.net/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-1 bg-blue-900/30 rounded-full text-blue-400 text-xs hover:bg-blue-900/50 transition-colors"
                   >
                     Blizzard API
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="https://www.warcraftlogs.com/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-1 bg-blue-900/30 rounded-full text-blue-400 text-xs hover:bg-blue-900/50 transition-colors"
                   >
                     Warcraft Logs
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="https://raider.io/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-1 bg-blue-900/30 rounded-full text-blue-400 text-xs hover:bg-blue-900/50 transition-colors"
                   >
                     Raider.io
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
