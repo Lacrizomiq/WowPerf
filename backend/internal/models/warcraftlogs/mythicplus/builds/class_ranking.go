@@ -3,6 +3,7 @@ package warcraftlogsBuilds
 import (
 	"time"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +49,7 @@ type ClassRanking struct {
 
 	// Other
 	Faction int
-	Affixes []int `gorm:"type:integer[]"`
+	Affixes pq.Int64Array `gorm:"type:integer[]"`
 }
 
 // TableName specifies the table name for GORM
