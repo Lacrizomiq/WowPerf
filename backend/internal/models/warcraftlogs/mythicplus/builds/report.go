@@ -3,6 +3,7 @@ package warcraftlogsBuilds
 import (
 	"time"
 
+	"github.com/lib/pq"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -34,10 +35,10 @@ type Report struct {
 	GameVersion int
 
 	// mythic+ data
-	KeystoneLevel   int
-	KeystoneTime    int64
-	Affixes         []int          `gorm:"type:integer[]"`
-	FriendlyPlayers []int          `gorm:"type:integer[]"`
+	KeystoneLevel   int            `gorm:"column:keystonelevel"`
+	KeystoneTime    int64          `gorm:"column:keystonetime"`
+	Affixes         pq.Int64Array  `gorm:"type:integer[]"`
+	FriendlyPlayers pq.Int64Array  `gorm:"type:integer[]"`
 	TalentCodes     datatypes.JSON `gorm:"type:jsonb"`
 
 	// raw data

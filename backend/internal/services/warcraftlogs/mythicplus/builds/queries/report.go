@@ -9,13 +9,73 @@ import (
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 )
 
-// Struct for the player
+// PlayerSpec represents a player's specification details
 type PlayerSpec struct {
-	Name  string   `json:"name"`
-	ID    int      `json:"id"`
-	Type  string   `json:"type"` // class
-	Icon  string   `json:"icon"`
-	Specs []string `json:"spec"`
+	ID     int      `json:"id"`
+	Name   string   `json:"name"`
+	GUID   int64    `json:"guid,omitempty"`
+	Type   string   `json:"type"` // Class
+	Server string   `json:"server,omitempty"`
+	Icon   string   `json:"icon"`
+	Specs  []string `json:"specs"`
+
+	// Additional fields from API
+	MinItemLevel   float64 `json:"minItemLevel,omitempty"`
+	MaxItemLevel   float64 `json:"maxItemLevel,omitempty"`
+	PotionUse      int     `json:"potionUse,omitempty"`
+	HealthstoneUse int     `json:"healthstoneUse,omitempty"`
+
+	// Combat info
+	CombatantInfo struct {
+		Stats struct {
+			Speed       StatRange `json:"Speed"`
+			Intellect   StatRange `json:"Intellect,omitempty"`
+			Mastery     StatRange `json:"Mastery"`
+			Stamina     StatRange `json:"Stamina"`
+			Haste       StatRange `json:"Haste"`
+			Leech       StatRange `json:"Leech"`
+			Crit        StatRange `json:"Crit"`
+			Versatility StatRange `json:"Versatility"`
+			// Add other stats as needed
+		} `json:"stats,omitempty"`
+		Talents    []interface{} `json:"talents"` // Using interface{} as placeholder
+		TalentTree []struct {
+			ID     int `json:"id"`
+			Rank   int `json:"rank"`
+			NodeID int `json:"nodeID"`
+		} `json:"talentTree"`
+		Gear    []GearItem `json:"gear"`
+		SpecIDs []int      `json:"specIDs"`
+	} `json:"combatantInfo,omitempty"`
+}
+
+// StatRange represents a stat's min/max values
+type StatRange struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+}
+
+// GearItem represents a single piece of equipment
+type GearItem struct {
+	ID                   int    `json:"id"`
+	Slot                 int    `json:"slot"`
+	Quality              int    `json:"quality"`
+	Icon                 string `json:"icon"`
+	Name                 string `json:"name"`
+	ItemLevel            int    `json:"itemLevel"`
+	PermanentEnchant     int    `json:"permanentEnchant,omitempty"`
+	PermanentEnchantName string `json:"permanentEnchantName,omitempty"`
+	OnUseEnchant         int    `json:"onUseEnchant,omitempty"`
+	OnUseEnchantName     string `json:"onUseEnchantName,omitempty"`
+	TemporaryEnchant     int    `json:"temporaryEnchant,omitempty"`
+	TemporaryEnchantName string `json:"temporaryEnchantName,omitempty"`
+	BonusIDs             []int  `json:"bonusIDs,omitempty"`
+	Gems                 []struct {
+		ID        int    `json:"id"`
+		ItemLevel int    `json:"itemLevel"`
+		Icon      string `json:"icon"`
+	} `json:"gems,omitempty"`
+	SetID int `json:"setID,omitempty"`
 }
 
 const GetReportTableQuery = `
@@ -134,7 +194,7 @@ func ParseReportDetailsResponse(response []byte, code string, fightID int, encou
 		ItemLevel:     tableData.ItemLevel,
 		KeystoneLevel: fight.KeystoneLevel,
 		KeystoneTime:  fight.KeystoneTime,
-		Affixes:       fight.KeystoneAffixes,
+		Affixes:       intSliceToInt64Array(fight.KeystoneAffixes),
 		LogVersion:    tableData.LogVersion,
 		GameVersion:   tableData.GameVersion,
 	}
@@ -166,7 +226,7 @@ func ParseReportDetailsResponse(response []byte, code string, fightID int, encou
 		return nil, "", fmt.Errorf("failed to marshal player details tanks data: %w", err)
 	}
 
-	report.FriendlyPlayers = fight.FriendlyPlayers
+	report.FriendlyPlayers = intSliceToInt64Array(fight.FriendlyPlayers)
 
 	return report, talentsQuery, nil
 }
