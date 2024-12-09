@@ -74,10 +74,10 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 
 	// Add all field validations
 	// Validate username
-	if len(userCreate.Username) < 3 || len(userCreate.Username) > 50 {
-		log.Printf("Username length validation failed: got %d chars, need between 3 and 50", len(userCreate.Username))
+	if len(userCreate.Username) < 3 || len(userCreate.Username) > 12 {
+		log.Printf("Username length validation failed: got %d chars, need between 3 and 12", len(userCreate.Username))
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Username must be between 3 and 50 characters",
+			"error": "Username must be between 3 and 12 characters",
 			"code":  "invalid_username",
 		})
 		return
@@ -133,7 +133,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 // Login handles user login
 func (h *AuthHandler) Login(c *gin.Context) {
 	var loginInput struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -145,7 +145,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	if err := h.authService.Login(c, loginInput.Username, loginInput.Password); err != nil {
+	if err := h.authService.Login(c, loginInput.Email, loginInput.Password); err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid credentials",
@@ -153,7 +153,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			})
 			return
 		}
-		log.Printf("Login error for user %s: %v", loginInput.Username, err)
+		log.Printf("Login error for user %s: %v", loginInput.Email, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to login",
 			"code":  "login_error",
@@ -161,18 +161,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Sending login response: %+v", gin.H{
-		"message": "Login successful",
-		"code":    "LOGIN_SUCCESS",
-		"user": gin.H{
-			"username": loginInput.Username,
-		},
-	})
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"code":    "LOGIN_SUCCESS",
-		"user":    gin.H{"username": loginInput.Username},
+		"user":    gin.H{"email": loginInput.Email},
 	})
 }
 

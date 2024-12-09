@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserData | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
 }
@@ -121,10 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (email: string, password: string) => {
       try {
         console.log("Starting login process...");
-        const response = await authService.login(username, password);
+        const response = await authService.login(email, password);
         console.log("Login successful:", response);
 
         updateState({
