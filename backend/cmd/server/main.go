@@ -32,6 +32,8 @@ import (
 	userService "wowperf/internal/services/user"
 	warcraftlogs "wowperf/internal/services/warcraftlogs"
 	warcraftLogsLeaderboard "wowperf/internal/services/warcraftlogs/dungeons"
+	warcraftLogsBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	warcraftLogsBuildsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
 
 	// Internal Packages - Database
 	"wowperf/internal/database"
@@ -55,6 +57,7 @@ type AppServices struct {
 	WarcraftLogs    *warcraftlogs.WarcraftLogsClientService
 	LeaderBoard     *warcraftLogsLeaderboard.GlobalLeaderboardService
 	RankingsUpdater *warcraftLogsLeaderboard.RankingsUpdater
+	BuildsCollector *warcraftLogsBuildsService.RankingsService
 }
 
 type AppHandlers struct {
@@ -129,6 +132,9 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		cacheManagers.WarcraftLogs,
 	)
 
+	buildsRepo := warcraftLogsBuildsRepository.NewRankingsRepository(db)
+	buildsService := warcraftLogsBuildsService.NewRankingsService(warcraftLogsService, buildsRepo, db)
+
 	return &AppServices{
 		Auth:            authService,
 		BattleNet:       battleNetService,
@@ -138,6 +144,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		WarcraftLogs:    warcraftLogsService,
 		LeaderBoard:     globalLeaderboardService,
 		RankingsUpdater: rankingsUpdater,
+		BuildsCollector: buildsService,
 	}, nil
 }
 
@@ -368,6 +375,12 @@ func startPeriodicTasks(db *gorm.DB, services *AppServices) {
 		log.Println("Setting up WarcraftLogs rankings update scheduler...")
 		time.Sleep(10 * time.Second) // Wait for DB readiness
 		services.RankingsUpdater.StartPeriodicUpdate(context.Background())
+	}()
+
+	// WarcraftLogs Builds Updates
+	go func() {
+		log.Println("Starting WarcraftLogs builds collector...")
+		services.BuildsCollector.StartPeriodicCollection(context.Background())
 	}()
 }
 
