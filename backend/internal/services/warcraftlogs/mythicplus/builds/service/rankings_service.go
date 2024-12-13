@@ -45,13 +45,35 @@ var dungeonIDs = []uint{
 	12652, // The Stonevault
 }
 
-// StartPeriodicCollection starts the periodic collection of rankings
+// cleanOldRankings deletes the soft deleted rankings older than 15 days
+func (s *RankingsService) cleanOldRankings(ctx context.Context) error {
+	log.Println("Cleaning old rankings data...")
+
+	result := s.db.WithContext(ctx).
+		Unscoped(). // Important in order to make a hard delete on the soft deleted records
+		Where("deleted_at IS NOT NULL AND deleted_at < ?", time.Now().Add(-15*24*time.Hour)).
+		Delete(&warcraftlogsBuilds.ClassRanking{})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to clean old rankings: %w", result.Error)
+	}
+
+	log.Printf("Cleaned %d old rankings records", result.RowsAffected)
+	return nil
+}
+
+// StartPeriodicCollection starts the periodic collection of rankings and clean old rankings
 func (s *RankingsService) StartPeriodicCollection(ctx context.Context) {
 	log.Println("Starting periodic rankings collection...")
 
 	go func() {
 		for {
 			log.Println("Starting builds collection cycle...")
+
+			// Clean old soft deleted rankings
+			if err := s.cleanOldRankings(ctx); err != nil {
+				log.Printf("Failed to clean old rankings: %v", err)
+			}
 
 			var wg sync.WaitGroup
 			errorChan := make(chan error, len(dungeonIDs))

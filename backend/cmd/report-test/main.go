@@ -28,20 +28,22 @@ func main() {
 	repo := reportsRepository.NewReportRepository(db)
 	service := reportsService.NewReportService(warcraftLogsClient, repo, db)
 
-	// Test avec un seul report spécifique
-	testReport := reportsService.ReportInfo{
-		ReportCode:  "g9Lhy8JmkV1xQ3Gj", // Le code que vous avez utilisé précédemment
-		FightID:     26,
-		EncounterID: 12660,
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
+
+	// Get reports from rankings
+	reports, err := service.GetReportsFromRankings(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get reports from rankings: %v", err)
 	}
 
-	log.Printf("Testing with report: %+v", testReport)
+	log.Printf("Found %d reports to process", len(reports))
 
-	ctx := context.Background()
-	if err := service.FetchAndStoreReport(ctx, testReport.ReportCode, testReport.FightID, testReport.EncounterID); err != nil {
-		log.Fatalf("Error processing report: %v", err)
+	// Process all reports
+	if err := service.ProcessReports(ctx, reports); err != nil {
+		log.Fatalf("Error processing reports: %v", err)
 	}
 
-	log.Println("Report processing completed successfully")
-	time.Sleep(2 * time.Second) // Petit délai pour s'assurer que les logs sont affichés
+	log.Println("All reports processed successfully")
 }

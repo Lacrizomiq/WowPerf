@@ -7,6 +7,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 	"wowperf/internal/services/warcraftlogs"
 	reportsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
@@ -15,15 +16,16 @@ import (
 )
 
 type ReportInfo struct {
-	ReportCode  string
-	FightID     int
-	EncounterID uint
+	ReportCode  string `gorm:"column:report_code"`
+	FightID     int    `gorm:"column:report_fight_id"`
+	EncounterID uint   `gorm:"column:encounter_id"`
 }
 
 type ReportService struct {
 	client     *warcraftlogs.WarcraftLogsClientService
 	repository *reportsRepository.ReportRepository
 	db         *gorm.DB
+	workerpool *warcraftlogs.WorkerPool
 }
 
 func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *reportsRepository.ReportRepository, db *gorm.DB) *ReportService {
@@ -31,11 +33,12 @@ func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *repo
 		client:     client,
 		repository: repo,
 		db:         db,
+		workerpool: warcraftlogs.NewWorkerPool(client, 3), // 3 concurrent requests by default
 	}
 }
 
 // getReportsFromRankings retrieves reports from rankings in database
-func (s *ReportService) getReportsFromRankings(ctx context.Context) ([]ReportInfo, error) {
+func (s *ReportService) GetReportsFromRankings(ctx context.Context) ([]ReportInfo, error) {
 	var reports []struct {
 		ReportCode  string `gorm:"column:report_code"`
 		FightID     int    `gorm:"column:report_fight_id"`
@@ -44,8 +47,11 @@ func (s *ReportService) getReportsFromRankings(ctx context.Context) ([]ReportInf
 
 	err := s.db.WithContext(ctx).
 		Table("class_rankings").
-		Select("DISTINCT report_code, report_fight_id as fight_id, encounter_id").
+		Select("DISTINCT report_code, report_fight_id, encounter_id").
+		Where("deleted_at IS NULL AND encounter_id = ?", 12660). // 12660 = Ara-Kara
+		Order("report_code DESC").
 		Scan(&reports).Error
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reports from rankings: %w", err)
 	}
@@ -71,7 +77,7 @@ func (s *ReportService) StartPeriodicReportProcessing(ctx context.Context) {
 		for {
 			log.Println("Starting reports collection cycle...")
 
-			reports, err := s.getReportsFromRankings(ctx)
+			reports, err := s.GetReportsFromRankings(ctx)
 			if err != nil {
 				log.Printf("Error getting reports from rankings: %v", err)
 				continue
@@ -98,41 +104,124 @@ func (s *ReportService) StartPeriodicReportProcessing(ctx context.Context) {
 
 // ProcessReports processes a list of reports
 func (s *ReportService) ProcessReports(ctx context.Context, reports []ReportInfo) error {
+	log.Printf("Processing %d reports with worker pool", len(reports))
+
+	s.workerpool.Start(ctx)
+	defer s.workerpool.Stop()
+
+	// Channels for the results management
+	errorsChan := make(chan error, len(reports))
+	processedReports := make(chan bool, len(reports))
+
+	// Create a WaitGroup to ensure we wait for the result processor goroutine
 	var wg sync.WaitGroup
-	errorChan := make(chan error, len(reports))
+	wg.Add(1)
 
-	for _, report := range reports {
-		wg.Add(1)
-		go func(r ReportInfo) {
-			defer wg.Done()
-
-			if err := s.FetchAndStoreReport(ctx, r.ReportCode, r.FightID, r.EncounterID); err != nil {
-				errorChan <- fmt.Errorf("failed to process report %s: %w", r.ReportCode, err)
-				return
-			}
-			log.Printf("processed report %s", r.ReportCode)
-		}(report)
-
-		// pause to respect WarcraftLogs API rate limit
-		time.Sleep(500 * time.Millisecond)
-	}
-
-	// wait for all goroutines to finish
+	// Goroutine to manage results
 	go func() {
-		wg.Wait()
-		close(errorChan)
+		defer wg.Done()
+		for result := range s.workerpool.Results() {
+			if result.Error != nil {
+				log.Printf("Error processing report: %v", result.Error)
+				errorsChan <- result.Error
+				continue
+			}
+
+			switch result.Job.JobType {
+			case "report":
+				// Extract the job metadata
+				code := result.Job.Metadata["code"].(string)
+				fightID := result.Job.Metadata["fightID"].(int)
+				encounterID := result.Job.Metadata["encounterID"].(uint)
+
+				log.Printf("Processing report result: %s (FightID: %d, EncounterID: %d)", code, fightID, encounterID)
+
+				// Parse the report
+				report, talentsQuery, err := reportsQueries.ParseReportDetailsResponse(result.Data, code, fightID, encounterID)
+				if err != nil {
+					log.Printf("Failed to parse report %s: %v", code, err)
+					errorsChan <- fmt.Errorf("failed to parse report %s: %w", code, err)
+					continue
+				}
+
+				// Submit the talents query
+				log.Printf("Submitting talents query for report: %s", code)
+				s.workerpool.Submit(warcraftlogs.Job{
+					Query:    talentsQuery,
+					JobType:  "talents",
+					Metadata: map[string]interface{}{"report": report},
+				})
+
+			case "talents":
+				report := result.Job.Metadata["report"].(*warcraftlogsBuilds.Report)
+				log.Printf("Processing talents for report: %s", report.Code)
+
+				talentCodes, err := reportsQueries.ParseReportTalentsResponse(result.Data)
+				if err != nil {
+					log.Printf("Failed to parse talents for report %s: %v", report.Code, err)
+					errorsChan <- fmt.Errorf("failed to parse talents for report %s: %w", report.Code, err)
+					continue
+				}
+
+				talentCodesJSON, err := json.Marshal(talentCodes)
+				if err != nil {
+					log.Printf("Failed to marshal talents for report %s: %v", report.Code, err)
+					errorsChan <- fmt.Errorf("failed to marshal talents for report %s: %w", report.Code, err)
+					continue
+				}
+				report.TalentCodes = talentCodesJSON
+
+				if err := s.repository.StoreReport(ctx, report); err != nil {
+					log.Printf("Failed to store report %s: %v", report.Code, err)
+					errorsChan <- fmt.Errorf("failed to store report %s: %w", report.Code, err)
+					continue
+				}
+
+				processedReports <- true
+			}
+		}
 	}()
 
-	// collect errors
-	var errors []error
-	for err := range errorChan {
-		errors = append(errors, err)
+	// Submit reports to the worker pool
+	for _, report := range reports {
+		log.Printf("Submitting report: %s (FightID: %d, EncounterID: %d)", report.ReportCode, report.FightID, report.EncounterID)
+		s.workerpool.Submit(warcraftlogs.Job{
+			Query:   reportsQueries.GetReportTableQuery,
+			JobType: "report",
+			Metadata: map[string]interface{}{
+				"code":        report.ReportCode,
+				"fightID":     report.FightID,
+				"encounterID": report.EncounterID,
+			},
+		})
 	}
+
+	// Wait for all reports to be processed
+	var errors []error
+	completedCount := 0
+	totalReports := len(reports)
+
+	for completedCount < totalReports {
+		select {
+		case err := <-errorsChan:
+			errors = append(errors, err)
+		case <-processedReports:
+			completedCount++
+			log.Printf("Progress: %d/%d reports processed", completedCount, totalReports)
+		case <-ctx.Done():
+			log.Println("Report processing interrupted")
+			return ctx.Err()
+		}
+	}
+
+	// Wait for the results processing goroutine to finish
+	wg.Wait()
 
 	if len(errors) > 0 {
 		return fmt.Errorf("failed to process some reports: %v", errors)
 	}
 
+	log.Println("All reports processed successfully")
 	return nil
 }
 

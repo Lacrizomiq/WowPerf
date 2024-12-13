@@ -3,6 +3,7 @@ package warcraftlogsBuildsRepository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 
@@ -22,6 +23,9 @@ func NewReportRepository(db *gorm.DB) *ReportRepository {
 // StoreReport saves a report to the database
 func (r *ReportRepository) StoreReport(ctx context.Context, report *warcraftlogsBuilds.Report) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+
+		log.Printf("Checking for existing report: %s (FightID: %d)", report.Code, report.FightID)
+
 		// Check if report exists
 		var existingReport warcraftlogsBuilds.Report
 		result := tx.WithContext(ctx).
@@ -33,15 +37,18 @@ func (r *ReportRepository) StoreReport(ctx context.Context, report *warcraftlogs
 		}
 
 		if result.Error == gorm.ErrRecordNotFound {
+			log.Printf("Report not found, creating new report: %s (FightID: %d)", report.Code, report.FightID)
 			// Create new report
 			if err := tx.WithContext(ctx).Create(report).Error; err != nil {
 				return fmt.Errorf("failed to create report: %w", err)
 			}
 		} else {
+			log.Printf("Report found, updating existing report: %s (FightID: %d)", report.Code, report.FightID)
 			// Update existing report
 			if err := tx.WithContext(ctx).Model(&existingReport).Updates(report).Error; err != nil {
 				return fmt.Errorf("failed to update report: %w", err)
 			}
+			log.Printf("Report updated successfully: %s (FightID: %d)", report.Code, report.FightID)
 		}
 
 		return nil
