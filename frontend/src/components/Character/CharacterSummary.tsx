@@ -86,58 +86,67 @@ export default function CharacterSummary({
 
   return (
     <div
-      className={`p-5 flex items-center bg-deep-blue space-x-5 shadow-2xl rounded-2xl ${
+      className={`p-3 sm:p-5 flex flex-col sm:flex-row items-center bg-deep-blue shadow-2xl rounded-2xl gap-4 sm:gap-5 ${
         character?.spec_id
           ? `bg-spec-${character.spec_id}`
           : defaultBackgroundClass
       }`}
       style={backgroundStyle}
     >
-      <div className="relative">
-        {character.avatar_url && (
-          <Image
-            src={character.avatar_url}
-            alt={character.name}
-            width={76}
-            height={76}
-            className={`rounded-full border-2 border-class-color--${character.tree_id}`}
-          />
+      {/* Character Info Section */}
+      <div className="flex items-center gap-4 w-full sm:w-auto">
+        <div className="relative flex-shrink-0">
+          {character.avatar_url && (
+            <Image
+              src={character.avatar_url}
+              alt={character.name}
+              width={76}
+              height={76}
+              className={`rounded-full border-2 border-class-color--${character.tree_id}`}
+            />
+          )}
+        </div>
+        <div className="min-w-0">
+          <h1
+            className={`text-xl sm:text-2xl font-bold class-color--${character.tree_id} truncate`}
+          >
+            {character.name}
+          </h1>
+          <p className="text-gray-400 text-sm sm:text-base">
+            {region.toUpperCase()} - {character.realm}
+          </p>
+          <p className="text-gray-400 text-sm sm:text-base">
+            {character.race} {character.active_spec_name} {character.class}
+          </p>
+        </div>
+      </div>
+
+      {/* Rankings Section */}
+      <div className="flex flex-row gap-4 sm:gap-5 flex-wrap sm:flex-nowrap justify-center sm:justify-start w-full sm:w-auto sm:ml-auto">
+        {shouldShowMythicPlusRanking && allStarsMythicPlusData && (
+          <div className="flex-1 sm:flex-none">
+            <MythicPlusRanking
+              seasonName="TWW M+ S1"
+              rank={allStarsMythicPlusData?.rank}
+              classId={mythicPlusPlayerRankings?.classID || 0}
+              spec={allStarsMythicPlusData?.spec || ""}
+              fallbackImageUrl={fallbackMythicPlusImg}
+              isLoading={isLoadingMythicPlusPlayerRankings}
+            />
+          </div>
+        )}
+        {shouldShowRaidRanking && allStarsRaidData && (
+          <div className="flex-1 sm:flex-none">
+            <RaidRanking
+              raidName="Nerubar Palace"
+              rank={allStarsRaidData?.rank}
+              classId={raidPlayerRankings?.classID || 0}
+              spec={allStarsRaidData?.spec || ""}
+              isLoading={isLoadingRaidPlayerRankings}
+            />
+          </div>
         )}
       </div>
-      <div>
-        <h1 className={`text-2xl font-bold class-color--${character.tree_id}`}>
-          {character.name}
-        </h1>
-        <p className="text-gray-400">
-          {region.toUpperCase()} - {character.realm}
-        </p>
-        <p className="text-gray-400">
-          {character.race} {character.active_spec_name} {character.class}
-        </p>
-      </div>
-      {shouldShowMythicPlusRanking && allStarsMythicPlusData && (
-        <div>
-          <MythicPlusRanking
-            seasonName="TWW M+ S1"
-            rank={allStarsMythicPlusData?.rank}
-            classId={mythicPlusPlayerRankings?.classID || 0}
-            spec={allStarsMythicPlusData?.spec || ""}
-            fallbackImageUrl={fallbackMythicPlusImg}
-            isLoading={isLoadingMythicPlusPlayerRankings}
-          />
-        </div>
-      )}
-      {shouldShowRaidRanking && allStarsRaidData && (
-        <div>
-          <RaidRanking
-            raidName="Nerubar Palace"
-            rank={allStarsRaidData?.rank}
-            classId={raidPlayerRankings?.classID || 0}
-            spec={allStarsRaidData?.spec || ""}
-            isLoading={isLoadingRaidPlayerRankings}
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ const MythicPlusRanking: FC<MythicPlusRankingProps> = ({
   const imageUrl = getSpecIconById(classId, spec) || fallbackImageUrl;
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-4 py-2.5 min-w-[180px]">
+    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 min-w-0 sm:min-w-[180px]">
       <div className="text-sm text-slate-300/90 mb-2 w-full text-center border-b border-slate-700/50 pb-2">
         {seasonName}
       </div>
