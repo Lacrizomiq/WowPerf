@@ -24,16 +24,38 @@ func main() {
 		log.Fatalf("Failed to initialize WarcraftLogs client: %v", err)
 	}
 
-	// Initialize repository and service
-	repo := reportsRepository.NewReportRepository(db)
-	service := reportsService.NewReportService(warcraftLogsClient, repo, db)
-
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 	defer cancel()
 
-	// Get reports from rankings
-	reports, err := service.GetReportsFromRankings(ctx)
+	// Initialize repository
+	repo := reportsRepository.NewReportRepository(db)
+
+	// Test single report first
+	log.Println("Testing with a single report first...")
+	testReport := reportsService.ReportInfo{
+		ReportCode:  "g9Lhy8JmkV1xQ3Gj",
+		FightID:     26,
+		EncounterID: 12660,
+	}
+	testReports := []reportsService.ReportInfo{testReport}
+
+	// Create test service
+	testService := reportsService.NewReportService(warcraftLogsClient, repo, db)
+	if err := testService.ProcessReports(ctx, testReports); err != nil {
+		log.Fatalf("Error processing test report: %v", err)
+	}
+	log.Println("Test report processed successfully")
+
+	// Small delay to ensure clean up
+	time.Sleep(2 * time.Second)
+
+	// Create new service for full processing
+	log.Println("Proceeding with all reports...")
+	mainService := reportsService.NewReportService(warcraftLogsClient, repo, db)
+
+	// Get all reports from rankings
+	reports, err := mainService.GetReportsFromRankings(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get reports from rankings: %v", err)
 	}
@@ -41,7 +63,7 @@ func main() {
 	log.Printf("Found %d reports to process", len(reports))
 
 	// Process all reports
-	if err := service.ProcessReports(ctx, reports); err != nil {
+	if err := mainService.ProcessReports(ctx, reports); err != nil {
 		log.Fatalf("Error processing reports: %v", err)
 	}
 
