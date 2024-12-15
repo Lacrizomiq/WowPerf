@@ -35,7 +35,7 @@ export default function Feature() {
               </h3>
               <p className="text-slate-300">
                 Detailed statistics on class distribution, team compositions,
-                and success rates in high-level content.
+                and specs distribution in high-level content.
               </p>
             </div>
 

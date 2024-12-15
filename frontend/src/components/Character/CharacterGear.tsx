@@ -102,9 +102,6 @@ export default function CharacterGear({
     namespace,
     locale
   );
-  console.log(characterProfile);
-  console.log(characterData);
-  console.log(characterStats);
 
   useEffect(() => {
     if (

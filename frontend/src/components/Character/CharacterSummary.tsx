@@ -1,6 +1,9 @@
 import React from "react";
 import Image from "next/image";
-import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
+import {
+  useGetBlizzardCharacterProfile,
+  useGetBlizzardCharacterEncounterRaid,
+} from "@/hooks/useBlizzardApi";
 import {
   useGetPlayerRaidRankings,
   useGetPlayerMythicPlusRankings,
@@ -40,6 +43,15 @@ export default function CharacterSummary({
     isLoading: isLoadingRaidPlayerRankings,
     error: raidPlayerRankingsError,
   } = useGetPlayerRaidRankings(name, realm, region, 38);
+
+  const { data: raidProgressionData, isLoading: isProgressionLoading } =
+    useGetBlizzardCharacterEncounterRaid(
+      region,
+      realm,
+      name,
+      namespace,
+      locale
+    );
 
   if (isLoading)
     return <div className="text-center p-4">Loading character data...</div>;
@@ -128,6 +140,7 @@ export default function CharacterSummary({
             <MythicPlusRanking
               seasonName="TWW M+ S1"
               rank={allStarsMythicPlusData?.rank}
+              points={allStarsMythicPlusData?.points}
               classId={mythicPlusPlayerRankings?.classID || 0}
               spec={allStarsMythicPlusData?.spec || ""}
               fallbackImageUrl={fallbackMythicPlusImg}
@@ -143,6 +156,7 @@ export default function CharacterSummary({
               classId={raidPlayerRankings?.classID || 0}
               spec={allStarsRaidData?.spec || ""}
               isLoading={isLoadingRaidPlayerRankings}
+              raidProgressionData={raidProgressionData}
             />
           </div>
         )}

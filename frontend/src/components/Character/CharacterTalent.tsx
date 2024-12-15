@@ -3,6 +3,7 @@ import {
   useGetBlizzardCharacterSpecializations,
   useGetBlizzardCharacterProfile,
 } from "@/hooks/useBlizzardApi";
+import { Copy, Check } from "lucide-react";
 import TalentTree from "@/components/TalentTree/TalentTree";
 import HeroTalentTree from "@/components/TalentTree/HeroTalentTree";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
@@ -14,7 +15,7 @@ import {
   TalentLoadout,
   HeroTalent,
 } from "@/types/talents";
-
+import { toast } from "react-hot-toast";
 export default function CharacterTalent({
   region,
   realm,
@@ -41,18 +42,32 @@ export default function CharacterTalent({
   } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
 
   const [displayMode, setDisplayMode] = useState<"list" | "tree">("list");
+  const [isCopied, setIsCopied] = useState(false);
 
   const toggleDisplayMode = () => {
     setDisplayMode((prevMode) => (prevMode === "list" ? "tree" : "list"));
   };
 
-  useWowheadTooltips();
-
-  useEffect(() => {
-    if (specializationsData) {
-      console.log("Specializations Data:", specializationsData);
+  // Copy the talent loadout text to the clipboard
+  const copyLoadoutText = async () => {
+    if (talentLoadout.encoded_loadout_text) {
+      try {
+        await navigator.clipboard.writeText(talentLoadout.encoded_loadout_text);
+        toast.success("Talent loadout copied to clipboard");
+        setIsCopied(true);
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000);
+      } catch (error) {
+        toast.error("Failed to copy talent loadout to clipboard");
+        console.error("Failed to copy talent loadout to clipboard", error);
+      }
+    } else {
+      toast.error("No talent loadout text found");
     }
-  }, [specializationsData]);
+  };
+
+  useWowheadTooltips();
 
   useEffect(() => {
     if (window.$WowheadPower && window.$WowheadPower.refreshLinks) {
@@ -189,12 +204,31 @@ export default function CharacterTalent({
       <div className="flex pb-2 flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
         <h2 className="text-xl sm:text-2xl font-bold">Talent Build Summary</h2>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+          {/* Display Mode Talent Tree or List */}
           <button
             onClick={toggleDisplayMode}
             className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
           >
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
           </button>
+          {/* Copy Loadout Text */}
+          <button
+            onClick={copyLoadoutText}
+            className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
+          >
+            {isCopied ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Talents
+              </>
+            )}
+          </button>
+          {/* Talent Calculator to wowhead */}
           {talentCalculatorUrl && (
             <a
               href={talentCalculatorUrl}
