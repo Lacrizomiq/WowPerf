@@ -11,7 +11,7 @@ export default function Feature() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Leaderboards */}
             <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300">
-              <Link href="/mythic-plus/leaderboards">
+              <Link href="/mythic-plus/leaderboard">
                 <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
                   <Trophy className="text-blue-400" size={24} />
                 </div>

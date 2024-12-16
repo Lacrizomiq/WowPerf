@@ -51,6 +51,15 @@ const RaidRanking: FC<RaidRankingProps> = ({
 
   const highestMode = getHighestDifficulty();
 
+  const modeProgress =
+    highestMode?.difficulty === "Mythic"
+      ? "M"
+      : highestMode?.difficulty === "Heroic"
+      ? "HC"
+      : highestMode?.difficulty === "Normal"
+      ? "NM"
+      : "LFR";
+
   return (
     <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 min-w-0 sm:min-w-[150px]">
       <div className="text-sm text-slate-300/90 mb-2 w-full text-center border-b border-slate-700/50 pb-2">
@@ -75,7 +84,7 @@ const RaidRanking: FC<RaidRankingProps> = ({
           ) : (
             <span className="text-xl font-semibold text-white/90">
               {highestMode
-                ? `${highestMode.progress.completed_count}/${highestMode.progress.total_count}`
+                ? `${highestMode.progress.completed_count}/${highestMode.progress.total_count} ${modeProgress}`
                 : "0/0"}
             </span>
           )}
