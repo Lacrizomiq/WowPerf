@@ -22,10 +22,11 @@ type ReportInfo struct {
 }
 
 type ReportService struct {
-	client     *warcraftlogs.WarcraftLogsClientService
-	repository *reportsRepository.ReportRepository
-	db         *gorm.DB
-	workerpool *warcraftlogs.WorkerPool
+	client              *warcraftlogs.WarcraftLogsClientService
+	repository          *reportsRepository.ReportRepository
+	db                  *gorm.DB
+	workerpool          *warcraftlogs.WorkerPool
+	PlayerBuildsService *PlayerBuildsService
 }
 
 func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *reportsRepository.ReportRepository, db *gorm.DB) *ReportService {
@@ -324,6 +325,10 @@ func (s *ReportService) FetchAndStoreReport(ctx context.Context, code string, fi
 	// Store report in database
 	if err := s.repository.StoreReport(ctx, report); err != nil {
 		return fmt.Errorf("failed to store report: %w", err)
+	}
+
+	if err := s.PlayerBuildsService.ProcessReportBuilds(ctx, report); err != nil {
+		return fmt.Errorf("failed to process player builds: %w", err)
 	}
 
 	return nil
