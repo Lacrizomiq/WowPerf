@@ -29,13 +29,11 @@ type PlayerBuild struct {
 	ActorID    int            `gorm:"index"`
 
 	// Equipment and stats
-	ItemLevel     float64        `gorm:"type:numeric"`
-	Gear          datatypes.JSON `gorm:"type:jsonb"`
-	Stats         datatypes.JSON `gorm:"type:jsonb"`
-	CombatantInfo datatypes.JSON `gorm:"type:jsonb"`
+	ItemLevel float64        `gorm:"type:numeric"`
+	Gear      datatypes.JSON `gorm:"type:jsonb"`
+	Stats     datatypes.JSON `gorm:"type:jsonb"`
 
 	// Dungeon information
-	DungeonID   uint `gorm:"index"`
 	EncounterID uint `gorm:"index"`
 
 	// Mythic+ information

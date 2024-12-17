@@ -10,6 +10,7 @@ import (
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 	"wowperf/internal/services/warcraftlogs"
 	reportsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
+	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 
 	"gorm.io/gorm"
@@ -30,11 +31,15 @@ type ReportService struct {
 }
 
 func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *reportsRepository.ReportRepository, db *gorm.DB) *ReportService {
+	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
+	playerBuildsService := NewPlayerBuildsService(playerBuildsRepo)
+
 	return &ReportService{
-		client:     client,
-		repository: repo,
-		db:         db,
-		workerpool: warcraftlogs.NewWorkerPool(client, 3), // 3 concurrent requests by default
+		client:              client,
+		repository:          repo,
+		db:                  db,
+		workerpool:          warcraftlogs.NewWorkerPool(client, 3), // 3 concurrent requests by default
+		PlayerBuildsService: playerBuildsService,
 	}
 }
 
@@ -46,18 +51,30 @@ func (s *ReportService) GetReportsFromRankings(ctx context.Context) ([]ReportInf
 		EncounterID uint   `gorm:"column:encounter_id"`
 	}
 
-	err := s.db.WithContext(ctx).
-		Table("class_rankings").
-		Select("DISTINCT report_code, report_fight_id, encounter_id").
-		Where("deleted_at IS NULL AND encounter_id = ?", 12660). // 12660 = Ara-Kara
-		Order("report_code DESC").
-		Scan(&reports).Error
+	// Pour les tests, on utilise un intervalle de 1 minute
+	// En production, changer à: time.Now().Add(-7 * 24 * time.Hour)
+	updateInterval := time.Now().Add(-1 * time.Minute)
+
+	query := s.db.WithContext(ctx).
+		Table("class_rankings as cr").
+		Select("DISTINCT cr.report_code, cr.report_fight_id, cr.encounter_id").
+		Joins("LEFT JOIN warcraft_logs_reports as wlr ON cr.report_code = wlr.code").
+		Where("cr.deleted_at IS NULL AND cr.encounter_id = ?", 12660)
+
+	// Ajouter la condition pour les rapports non traités ou anciens
+	query = query.Where("wlr.code IS NULL OR wlr.updated_at < ?", updateInterval)
+
+	// Debug: Afficher la requête SQL
+	log.Printf("[DEBUG] SQL Query: %v", query.Statement.SQL.String())
+
+	err := query.Order("cr.report_code DESC").Scan(&reports).Error
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reports from rankings: %w", err)
 	}
 
-	// Convert to ReportInfo slice
+	log.Printf("[DEBUG] Found %d reports to process", len(reports))
+
 	result := make([]ReportInfo, len(reports))
 	for i, r := range reports {
 		result[i] = ReportInfo{
@@ -65,6 +82,7 @@ func (s *ReportService) GetReportsFromRankings(ctx context.Context) ([]ReportInf
 			FightID:     r.FightID,
 			EncounterID: r.EncounterID,
 		}
+		log.Printf("[DEBUG] Report to process: %s (FightID: %d)", r.ReportCode, r.FightID)
 	}
 
 	return result, nil
@@ -221,6 +239,12 @@ func (s *ReportService) ProcessReports(ctx context.Context, reports []ReportInfo
 						continue
 					}
 
+					// Process player builds
+					log.Printf("[DEBUG] Processing player builds for report %s", code)
+					if err := s.PlayerBuildsService.ProcessReportBuilds(ctx, []*warcraftlogsBuilds.Report{report}); err != nil {
+						log.Printf("[WARN] Failed to process player builds for report %s: %v", code, err)
+					}
+
 					log.Printf("[DEBUG] Successfully completed talents processing for report %s", code)
 					processedReports <- true
 					processedCount++
@@ -327,7 +351,7 @@ func (s *ReportService) FetchAndStoreReport(ctx context.Context, code string, fi
 		return fmt.Errorf("failed to store report: %w", err)
 	}
 
-	if err := s.PlayerBuildsService.ProcessReportBuilds(ctx, report); err != nil {
+	if err := s.PlayerBuildsService.ProcessReportBuilds(ctx, []*warcraftlogsBuilds.Report{report}); err != nil {
 		return fmt.Errorf("failed to process player builds: %w", err)
 	}
 

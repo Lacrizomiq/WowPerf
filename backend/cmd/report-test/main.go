@@ -31,41 +31,52 @@ func main() {
 	// Initialize repository
 	repo := reportsRepository.NewReportRepository(db)
 
-	// Test single report first
-	log.Println("Testing with a single report first...")
-	testReport := reportsService.ReportInfo{
-		ReportCode:  "g9Lhy8JmkV1xQ3Gj",
-		FightID:     26,
-		EncounterID: 12660,
-	}
-	testReports := []reportsService.ReportInfo{testReport}
+	// Create a single service instance that will be used for all operations
+	service := reportsService.NewReportService(warcraftLogsClient, repo, db)
 
-	// Create test service
-	testService := reportsService.NewReportService(warcraftLogsClient, repo, db)
-	if err := testService.ProcessReports(ctx, testReports); err != nil {
-		log.Fatalf("Error processing test report: %v", err)
-	}
-	log.Println("Test report processed successfully")
-
-	// Small delay to ensure clean up
-	time.Sleep(2 * time.Second)
-
-	// Create new service for full processing
-	log.Println("Proceeding with all reports...")
-	mainService := reportsService.NewReportService(warcraftLogsClient, repo, db)
-
-	// Get all reports from rankings
-	reports, err := mainService.GetReportsFromRankings(ctx)
+	// Process all reports first
+	log.Println("Processing all reports...")
+	reports, err := service.GetReportsFromRankings(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get reports from rankings: %v", err)
 	}
 
 	log.Printf("Found %d reports to process", len(reports))
 
-	// Process all reports
-	if err := mainService.ProcessReports(ctx, reports); err != nil {
-		log.Fatalf("Error processing reports: %v", err)
+	if len(reports) > 0 {
+		if err := service.ProcessReports(ctx, reports); err != nil {
+			log.Fatalf("Error processing reports: %v", err)
+		}
+		log.Println("All reports processed successfully")
 	}
 
-	log.Println("All reports processed successfully")
+	// Small delay to ensure clean up
+	time.Sleep(2 * time.Second)
+
+	// Force update a specific report for testing
+	log.Println("Testing force update of a specific report...")
+	testReport := reportsService.ReportInfo{
+		ReportCode:  "g9Lhy8JmkV1xQ3Gj",
+		FightID:     26,
+		EncounterID: 12660,
+	}
+
+	// Force update the test report
+	if err := service.FetchAndStoreReport(ctx, testReport.ReportCode, testReport.FightID, testReport.EncounterID); err != nil {
+		log.Fatalf("Error processing test report: %v", err)
+	}
+	log.Println("Test report processed successfully")
+
+	// Optional: Start periodic processing
+	// Uncomment the following lines if you want to test the periodic processing
+	/*
+		log.Println("Starting periodic processing...")
+		service.StartPeriodicReportProcessing(ctx)
+
+		// Keep the program running
+		select {
+		case <-ctx.Done():
+			log.Println("Context cancelled, shutting down...")
+		}
+	*/
 }

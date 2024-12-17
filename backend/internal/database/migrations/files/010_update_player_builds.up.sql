@@ -17,6 +17,12 @@ ALTER TABLE player_builds
     ADD COLUMN IF NOT EXISTS keystone_level INTEGER,
     ADD COLUMN IF NOT EXISTS affixes INTEGER[];
 
+-- Drop the dungeon_id column
+ALTER TABLE player_builds
+    DROP COLUMN IF EXISTS dungeon_id;
+
+
+
 -- Add additional indexes to improve query performance
 CREATE INDEX IF NOT EXISTS idx_player_builds_item_level ON player_builds(item_level);
 CREATE INDEX IF NOT EXISTS idx_player_builds_keystone_level ON player_builds(keystone_level);
@@ -32,3 +38,6 @@ CREATE INDEX IF NOT EXISTS idx_player_builds_created_at ON player_builds(created
 
 -- Index for frequent searches
 CREATE INDEX IF NOT EXISTS idx_player_builds_class_spec_keystone ON player_builds(class, spec, keystone_level);
+
+-- Drop the dungeon index
+DROP INDEX IF EXISTS idx_player_builds_dungeon;
