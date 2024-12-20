@@ -1,0 +1,149 @@
+rankings:
+  max_rankings_per_spec: 150
+  update_interval: 168h # 7 days
+
+worker:
+  num_workers: 3
+  retry_attempts: 3
+  retry_delay: 5s
+  batch_size: 100
+  request_delay: 500ms
+
+specs:
+  # Death Knight
+  - class_name: "DeathKnight"
+    spec_name: "Blood"
+  - class_name: "DeathKnight"
+    spec_name: "Frost"
+  - class_name: "DeathKnight"
+    spec_name: "Unholy"
+
+  # Druid
+  - class_name: "Druid"
+    spec_name: "Balance"
+  - class_name: "Druid"
+    spec_name: "Feral"
+  - class_name: "Druid"
+    spec_name: "Guardian"
+  - class_name: "Druid"
+    spec_name: "Restoration"
+
+  # Hunter
+  - class_name: "Hunter"
+    spec_name: "BeastMastery"
+  - class_name: "Hunter"
+    spec_name: "Marksmanship"
+  - class_name: "Hunter"
+    spec_name: "Survival"
+
+  # Mage
+  - class_name: "Mage"
+    spec_name: "Arcane"
+  - class_name: "Mage"
+    spec_name: "Fire"
+  - class_name: "Mage"
+    spec_name: "Frost"
+
+  # Monk
+  - class_name: "Monk"
+    spec_name: "Brewmaster"
+  - class_name: "Monk"
+    spec_name: "Mistweaver"
+  - class_name: "Monk"
+    spec_name: "Windwalker"
+
+  # Paladin
+  - class_name: "Paladin"
+    spec_name: "Holy"
+  - class_name: "Paladin"
+    spec_name: "Protection"
+  - class_name: "Paladin"
+    spec_name: "Retribution"
+
+  # Priest
+  - class_name: "Priest"
+    spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"
+
+  # Rogue
+  - class_name: "Rogue"
+    spec_name: "Assassination"
+  - class_name: "Rogue"
+    spec_name: "Subtlety"
+  - class_name: "Rogue"
+    spec_name: "Outlaw"
+
+  # Shaman
+  - class_name: "Shaman"
+    spec_name: "Elemental"
+  - class_name: "Shaman"
+    spec_name: "Enhancement"
+  - class_name: "Shaman"
+    spec_name: "Restoration"
+
+  # Warlock
+  - class_name: "Warlock"
+    spec_name: "Affliction"
+  - class_name: "Warlock"
+    spec_name: "Demonology"
+  - class_name: "Warlock"
+    spec_name: "Destruction"
+
+  # Warrior
+  - class_name: "Warrior"
+    spec_name: "Arms"
+  - class_name: "Warrior"
+    spec_name: "Fury"
+  - class_name: "Warrior"
+    spec_name: "Protection"
+
+  # Demon Hunter
+  - class_name: "DemonHunter"
+    spec_name: "Havoc"
+  - class_name: "DemonHunter"
+    spec_name: "Vengeance"
+
+  # Evoker
+  - class_name: "Evoker"
+    spec_name: "Devastation"
+  - class_name: "Evoker"
+    spec_name: "Preservation"
+  - class_name: "Evoker"
+    spec_name: "Augmentation"
+
+dungeons:
+  - id: 12660
+    encounter_id: 12660
+    name: "Ara-Kara"
+    slug: "arakara-city-of-echoes"
+  - id: 12669
+    encounter_id: 12669
+    name: "City of Threads"
+    slug: "city-of-threads"
+  - id: 60670
+    encounter_id: 60670
+    name: "Grim Batol"
+    slug: "grim-batol"
+  - id: 62290
+    encounter_id: 62290
+    name: "Mists of Tirna Scithe"
+    slug: "mists-of-tirna-scithe"
+  - id: 61822
+    encounter_id: 61822
+    name: "Siege of Boralus"
+    slug: "siege-of-boralus"
+  - id: 12662
+    encounter_id: 12662
+    name: "The Dawnbreaker"
+    slug: "the-dawnbreaker"
+  - id: 62286
+    encounter_id: 62286
+    name: "The Necrotic Wake"
+    slug: "the-necrotic-wake"
+  - id: 12652
+    encounter_id: 12652
+    name: "The Stonevault"
+    slug: "the-stonevault"

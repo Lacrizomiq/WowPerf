@@ -3,15 +3,23 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
+	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
+	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
+	warcraftlogsBuildsSync "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync"
 )
 
 func main() {
+
+	// Load config
+	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.dev.yaml")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	// Initialize database
 	db, err := database.InitDB()
 	if err != nil {
@@ -25,58 +33,63 @@ func main() {
 	}
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Rankings.UpdateInterval)
 	defer cancel()
 
+	// Initialize worker pool
+	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers) // 3 workers
+	workerPool.Start(ctx)                                                               // Start the worker pool
+	defer workerPool.Stop()                                                             // Stop the worker pool when the program exits
+
 	// Initialize repository
-	repo := reportsRepository.NewReportRepository(db)
+	reportsRepo := reportsRepository.NewReportRepository(db)
+	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
 
-	// Create a single service instance that will be used for all operations
-	service := reportsService.NewReportService(warcraftLogsClient, repo, db)
+	// Initialize services
+	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db)
 
-	// Process all reports first
-	log.Println("Processing all reports...")
-	reports, err := service.GetReportsFromRankings(ctx)
+	// Initialize sync service
+	syncConfig := &warcraftlogsBuildsConfig.Config{
+		Rankings: cfg.Rankings,
+		Worker:   cfg.Worker,
+		Specs:    cfg.Specs,
+		Dungeons: cfg.Dungeons,
+	}
+
+	// Initialize and start sync service
+	syncService := warcraftlogsBuildsSync.NewSyncService(
+		workerPool,
+		rankingsRepo,
+		syncConfig,
+	)
+
+	log.Println("Starting rankings synchronization")
+	if err := syncService.StartSync(ctx); err != nil {
+		log.Printf("Rankings sync error: %v", err)
+	}
+
+	// Process reports after rankings sync
+	log.Println("Processing reports from rankings ...")
+	reports, err := reportsService.GetReportsFromRankings(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get reports from rankings: %v", err)
 	}
 
-	log.Printf("Found %d reports to process", len(reports))
-
+	log.Printf("Found %d reports", len(reports))
 	if len(reports) > 0 {
-		if err := service.ProcessReports(ctx, reports); err != nil {
-			log.Fatalf("Error processing reports: %v", err)
+		if err := reportsService.ProcessReports(ctx, reports); err != nil {
+			log.Fatalf("Failed to process reports: %v", err)
 		}
-		log.Println("All reports processed successfully")
 	}
 
-	// Small delay to ensure clean up
-	time.Sleep(2 * time.Second)
+	log.Println("Reports processed successfully")
+}
 
-	// Force update a specific report for testing
-	log.Println("Testing force update of a specific report...")
-	testReport := reportsService.ReportInfo{
-		ReportCode:  "g9Lhy8JmkV1xQ3Gj",
-		FightID:     26,
-		EncounterID: 12660,
+// extractDungeonIDs extracts the dungeon IDs from the given dungeons
+func extractDungeonIDs(dungeons []warcraftlogsBuildsConfig.Dungeon) []uint {
+	ids := make([]uint, len(dungeons))
+	for i, dungeon := range dungeons {
+		ids[i] = uint(dungeon.ID)
 	}
-
-	// Force update the test report
-	if err := service.FetchAndStoreReport(ctx, testReport.ReportCode, testReport.FightID, testReport.EncounterID); err != nil {
-		log.Fatalf("Error processing test report: %v", err)
-	}
-	log.Println("Test report processed successfully")
-
-	// Optional: Start periodic processing
-	// Uncomment the following lines if you want to test the periodic processing
-	/*
-		log.Println("Starting periodic processing...")
-		service.StartPeriodicReportProcessing(ctx)
-
-		// Keep the program running
-		select {
-		case <-ctx.Done():
-			log.Println("Context cancelled, shutting down...")
-		}
-	*/
+	return ids
 }
