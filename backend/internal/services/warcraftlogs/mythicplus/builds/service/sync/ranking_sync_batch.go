@@ -8,6 +8,7 @@ import (
 
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 	"wowperf/internal/services/warcraftlogs"
+	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
 	rankingsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
 )
 
@@ -22,10 +23,9 @@ type RankingBatch struct {
 
 // BatchProcessor manages the processing of ranking batches
 type BatchProcessor struct {
-	workerPool    *warcraftlogs.WorkerPool // worker pool to fetch rankings
-	metrics       *SyncMetrics             // metrics to update
-	retryAttempts int                      // number of retry attempts
-	retryDelay    time.Duration            // delay between retries
+	workerPool *warcraftlogs.WorkerPool // worker pool to fetch rankings
+	metrics    *SyncMetrics             // metrics to update
+	config     *warcraftlogsBuildsConfig.Config
 }
 
 // BatchResult represents the result of processing a batch
@@ -40,14 +40,12 @@ type BatchResult struct {
 func NewBatchProcessor(
 	workerPool *warcraftlogs.WorkerPool,
 	metrics *SyncMetrics,
-	retryAttempts int,
-	retryDelay time.Duration,
+	config *warcraftlogsBuildsConfig.Config,
 ) *BatchProcessor {
 	return &BatchProcessor{
-		workerPool:    workerPool,
-		metrics:       metrics,
-		retryAttempts: retryAttempts,
-		retryDelay:    retryDelay,
+		workerPool: workerPool,
+		metrics:    metrics,
+		config:     config,
 	}
 }
 
@@ -62,18 +60,18 @@ func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (
 
 	var err error
 	// Retry attempts with retry
-	for attempt := 1; attempt <= p.retryAttempts; attempt++ {
+	for attempt := 1; attempt <= p.config.Rankings.Batch.MaxAttempts; attempt++ {
 		result.Rankings, result.HasMore, err = p.fetchRankings(ctx, batch)
 		if err == nil {
 			break
 		}
 
-		if attempt == p.retryAttempts {
-			return result, fmt.Errorf("failed to process batch after %d attempts: %w", p.retryAttempts, err)
+		if attempt == p.config.Rankings.Batch.MaxAttempts {
+			return result, fmt.Errorf("failed to process batch after %d attempts: %w", p.config.Rankings.Batch.MaxAttempts, err)
 		}
 
-		log.Printf("[WARN] Attempt %d failed, retrying in %v...", attempt, p.retryDelay)
-		time.Sleep(p.retryDelay)
+		log.Printf("[WARN] Attempt %d failed, retrying in %v...", attempt, p.config.Rankings.Batch.RetryDelay)
+		time.Sleep(p.config.Rankings.Batch.RetryDelay)
 	}
 
 	// Update metrics
