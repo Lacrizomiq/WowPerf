@@ -11,6 +11,7 @@ import (
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
 	warcraftlogsBuildsSync "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync"
+	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
 )
 
 func main() {
@@ -37,16 +38,17 @@ func main() {
 	defer cancel()
 
 	// Initialize worker pool
-	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers) // 3 workers
-	workerPool.Start(ctx)                                                               // Start the worker pool
-	defer workerPool.Stop()                                                             // Stop the worker pool when the program exits
+	metrics := warcraftlogsBuildsMetrics.NewSyncMetrics()
+	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers, metrics) // 3 workers
+	workerPool.Start(ctx)                                                                        // Start the worker pool
+	defer workerPool.Stop()                                                                      // Stop the worker pool when the program exits
 
 	// Initialize repository
 	reportsRepo := reportsRepository.NewReportRepository(db)
 	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
 
 	// Initialize services
-	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db)
+	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db, metrics)
 
 	// Initialize sync service
 	syncConfig := &warcraftlogsBuildsConfig.Config{

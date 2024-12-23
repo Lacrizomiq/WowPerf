@@ -10,13 +10,14 @@ import (
 	"wowperf/internal/services/warcraftlogs"
 	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
 )
 
 // SyncService handles the complete sync process for WarcraftLogs rankings
 type SyncService struct {
 	batchProcessor *BatchProcessor
 	repository     *rankingsRepository.RankingsRepository
-	metrics        *SyncMetrics
+	metrics        *warcraftlogsBuildsMetrics.SyncMetrics
 	config         *warcraftlogsBuildsConfig.Config
 }
 
@@ -26,7 +27,7 @@ func NewSyncService(
 	repository *rankingsRepository.RankingsRepository,
 	config *warcraftlogsBuildsConfig.Config,
 ) *SyncService {
-	metrics := NewSyncMetrics()
+	metrics := warcraftlogsBuildsMetrics.NewSyncMetrics()
 	return &SyncService{
 		batchProcessor: NewBatchProcessor(
 			workerPool,

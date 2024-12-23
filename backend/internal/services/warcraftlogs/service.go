@@ -7,6 +7,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 )
 
 // RateLimitData represents the rate limit information from the API
@@ -80,11 +82,11 @@ func (s *WarcraftLogsClientService) startPeriodicRateLimitCheck() {
 }
 
 // getRateLimitInfo returns current rate limit information
-func (s *WarcraftLogsClientService) getRateLimitInfo() *RateLimitInfo {
+func (s *WarcraftLogsClientService) getRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return &RateLimitInfo{
+	return &warcraftlogsTypes.RateLimitInfo{
 		RemainingPoints: float64(s.maxPointsHour) - s.currentPoints,
 		PointsPerHour:   s.maxPointsHour,
 		ResetIn:         time.Until(s.resetTime),
@@ -155,7 +157,7 @@ func (s *WarcraftLogsClientService) waitForPoints(ctx context.Context, cost floa
 			}
 
 			if info.RemainingPoints < s.minPointsThreshold {
-				return NewQuotaExceededError(info)
+				return warcraftlogsTypes.NewQuotaExceededError(info)
 			}
 
 			waitTime := calculateWaitTime(info, cost)
@@ -172,7 +174,7 @@ func (s *WarcraftLogsClientService) waitForPoints(ctx context.Context, cost floa
 }
 
 // calculateWaitTime determines how long to wait before the next request
-func calculateWaitTime(info *RateLimitInfo, cost float64) time.Duration {
+func calculateWaitTime(info *warcraftlogsTypes.RateLimitInfo, cost float64) time.Duration {
 	if info.RemainingPoints < cost {
 		return info.ResetIn
 	}
@@ -193,7 +195,7 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 
 	response, err := s.Client.MakeGraphQLRequest(query, variables)
 	if err != nil {
-		if IsRateLimit(err) {
+		if warcraftlogsTypes.IsRateLimit(err) {
 			go s.updateRateLimit(context.Background())
 		}
 		return nil, err

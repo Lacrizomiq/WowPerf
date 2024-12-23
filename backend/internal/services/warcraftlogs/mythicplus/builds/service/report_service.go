@@ -12,6 +12,7 @@ import (
 	reportsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
 
 	"gorm.io/gorm"
 )
@@ -28,9 +29,10 @@ type ReportService struct {
 	db                  *gorm.DB
 	workerpool          *warcraftlogs.WorkerPool
 	PlayerBuildsService *PlayerBuildsService
+	metrics             *warcraftlogsBuildsMetrics.SyncMetrics
 }
 
-func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *reportsRepository.ReportRepository, db *gorm.DB) *ReportService {
+func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *reportsRepository.ReportRepository, db *gorm.DB, metrics *warcraftlogsBuildsMetrics.SyncMetrics) *ReportService {
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
 	playerBuildsService := NewPlayerBuildsService(playerBuildsRepo)
 
@@ -38,7 +40,8 @@ func NewReportService(client *warcraftlogs.WarcraftLogsClientService, repo *repo
 		client:              client,
 		repository:          repo,
 		db:                  db,
-		workerpool:          warcraftlogs.NewWorkerPool(client, 3), // 3 concurrent requests by default
+		metrics:             metrics,
+		workerpool:          warcraftlogs.NewWorkerPool(client, 3, metrics),
 		PlayerBuildsService: playerBuildsService,
 	}
 }

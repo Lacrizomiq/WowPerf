@@ -1,10 +1,10 @@
-package warcraftlogsBuildsSync
+package warcraftlogsBuildsMetrics
 
 import (
 	"sync"
 	"time"
 
-	"wowperf/internal/services/warcraftlogs"
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 )
 
 // SyncMetrics track all synchronization operations  and their metrics
@@ -55,7 +55,7 @@ type SyncMetrics struct {
 	// Error tracking
 	Errors struct {
 		Total      int
-		ByType     map[warcraftlogs.ErrorType]int
+		ByType     map[warcraftlogsTypes.ErrorType]int
 		Message    []ErrorEntry
 		Retries    int
 		MaxRetries int
@@ -67,7 +67,7 @@ type SyncMetrics struct {
 // ErrorEntry represents an error entry with timestamp, type, message, retryable status, and retry count
 type ErrorEntry struct {
 	TimeStamp time.Time
-	Type      warcraftlogs.ErrorType
+	Type      warcraftlogsTypes.ErrorType
 	Message   string
 	Retryable bool
 	Retried   bool
@@ -91,18 +91,18 @@ func NewSyncMetrics() *SyncMetrics {
 		},
 		Errors: struct {
 			Total      int
-			ByType     map[warcraftlogs.ErrorType]int
+			ByType     map[warcraftlogsTypes.ErrorType]int
 			Message    []ErrorEntry
 			Retries    int
 			MaxRetries int
 		}{
-			ByType: make(map[warcraftlogs.ErrorType]int),
+			ByType: make(map[warcraftlogsTypes.ErrorType]int),
 		},
 	}
 }
 
 // RecordRateLimit records rate limit information
-func (m *SyncMetrics) RecordRateLimit(info *warcraftlogs.RateLimitInfo) {
+func (m *SyncMetrics) RecordRateLimit(info *warcraftlogsTypes.RateLimitInfo) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -174,7 +174,7 @@ func (m *SyncMetrics) RecordError(err error) {
 
 	m.Errors.Total++
 
-	if wlErr, ok := err.(*warcraftlogs.WarcraftLogsError); ok {
+	if wlErr, ok := err.(*warcraftlogsTypes.WarcraftLogsError); ok {
 		m.Errors.ByType[wlErr.Type]++
 		m.Errors.Message = append(m.Errors.Message, ErrorEntry{
 			TimeStamp: time.Now(),
@@ -183,10 +183,10 @@ func (m *SyncMetrics) RecordError(err error) {
 			Retryable: wlErr.Retryable,
 		})
 	} else {
-		m.Errors.ByType[warcraftlogs.ErrorTypeAPI]++
+		m.Errors.ByType[warcraftlogsTypes.ErrorTypeAPI]++
 		m.Errors.Message = append(m.Errors.Message, ErrorEntry{
 			TimeStamp: time.Now(),
-			Type:      warcraftlogs.ErrorTypeAPI,
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   err.Error(),
 		})
 	}

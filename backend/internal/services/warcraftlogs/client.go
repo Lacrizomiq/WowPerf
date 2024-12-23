@@ -16,6 +16,8 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 )
 
 const (
@@ -49,8 +51,8 @@ func NewClient() (*Client, error) {
 	clientSecret := os.Getenv("WARCRAFTLOGS_CLIENT_SECRET")
 
 	if clientID == "" || clientSecret == "" {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeValidation,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeValidation,
 			Message:   "missing required environment variables",
 			Retryable: false,
 		}
@@ -84,8 +86,8 @@ func (c *Client) refreshToken(config *clientcredentials.Config) error {
 
 	token, err := config.Token(ctx)
 	if err != nil {
-		return &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   "failed to obtain OAuth token",
 			Cause:     err,
 			Retryable: true,
@@ -124,8 +126,8 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 	// Marshal the request body to JSON
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeValidation,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeValidation,
 			Message:   "failed to marshal request body",
 			Cause:     err,
 			Retryable: false,
@@ -135,8 +137,8 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 	// Create the HTTP request
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   "failed to create request",
 			Cause:     err,
 			Retryable: false,
@@ -149,8 +151,8 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 	// Send the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   "failed to send request",
 			Cause:     err,
 			Retryable: false,
@@ -160,8 +162,8 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   "failed to read response body",
 			Cause:     err,
 			Retryable: false,
@@ -178,25 +180,25 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 					retryAfter = time.Duration(seconds) * time.Second
 				}
 			}
-			return nil, NewRateLimitError(&RateLimitInfo{
+			return nil, warcraftlogsTypes.NewRateLimitError(&warcraftlogsTypes.RateLimitInfo{
 				ResetIn: retryAfter,
 			}, nil)
 		case http.StatusUnauthorized:
-			return nil, &WarcraftLogsError{
-				Type:      ErrorTypeAPI,
+			return nil, &warcraftlogsTypes.WarcraftLogsError{
+				Type:      warcraftlogsTypes.ErrorTypeAPI,
 				Message:   "unauthorized: invalid or expired token",
 				Retryable: true,
 			}
 		default:
-			return nil, NewAPIError(resp.StatusCode, fmt.Errorf("response: %s", body))
+			return nil, warcraftlogsTypes.NewAPIError(resp.StatusCode, fmt.Errorf("response: %s", body))
 		}
 	}
 
 	// Parse the response body into a GraphQLResponse
 	var graphQLResponse GraphQLResponse
 	if err := json.Unmarshal(body, &graphQLResponse); err != nil {
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   "failed to parse GraphQL response",
 			Cause:     err,
 			Retryable: false,
@@ -208,13 +210,13 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 		// Check for specific GraphQL error types
 		for _, gqlErr := range graphQLResponse.Errors {
 			if isRateLimitError(gqlErr) {
-				return nil, NewRateLimitError(nil, fmt.Errorf(gqlErr.Message))
+				return nil, warcraftlogsTypes.NewRateLimitError(nil, fmt.Errorf(gqlErr.Message))
 			}
 		}
 
 		// Generic GraphQL error
-		return nil, &WarcraftLogsError{
-			Type:      ErrorTypeAPI,
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
 			Message:   fmt.Sprintf("GraphQL error: %s", graphQLResponse.Errors[0].Message),
 			Retryable: false,
 		}

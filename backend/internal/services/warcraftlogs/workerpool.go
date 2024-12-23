@@ -2,9 +2,12 @@ package warcraftlogs
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
+	"time"
+
+	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 )
 
 // Job represents a request to the Warcraft Logs API
@@ -12,36 +15,52 @@ type Job struct {
 	Query     string
 	Variables map[string]interface{}
 	JobType   string
-	Metadata  map[string]interface{}
+	Metadata  map[string]interface{} // Metadata pour le debugging et les métriques
+	Priority  int                    // Priorité du job (plus petit = plus prioritaire)
+	CreatedAt time.Time              // Pour tracker les temps de traitement
 }
 
 // JobResult represents the result of a job
 type JobResult struct {
-	Data  []byte
-	Job   Job
-	Error error
+	Data      []byte
+	Job       Job
+	Error     error
+	StartedAt time.Time
+	EndedAt   time.Time
 }
 
-// WorkerPool manages a pool of workers to handle Warcraft Logs API requests
+// WorkerPool manages a pool of workers for WarcraftLogs API requests
 type WorkerPool struct {
 	client      *WarcraftLogsClientService
 	numWorkers  int
 	jobsChan    chan Job
 	resultsChan chan JobResult
-	stopChan    chan struct{} // Channel to signal the stop
+	stopChan    chan struct{}
 	wg          sync.WaitGroup
-	started     bool       // Flag to track if the pool is started
-	mu          sync.Mutex // Mutex to protect the started flag
+	metrics     *warcraftlogsBuildsMetrics.SyncMetrics
+
+	started bool
+	mu      sync.Mutex
+
+	// Nouvelles statistiques internes
+	stats struct {
+		activeWorkers  int
+		completedJobs  int
+		failedJobs     int
+		avgProcessTime time.Duration
+		mu             sync.RWMutex
+	}
 }
 
 // NewWorkerPool creates a new WorkerPool
-func NewWorkerPool(client *WarcraftLogsClientService, numWorkers int) *WorkerPool {
+func NewWorkerPool(client *WarcraftLogsClientService, numWorkers int, metrics *warcraftlogsBuildsMetrics.SyncMetrics) *WorkerPool {
 	return &WorkerPool{
 		client:      client,
 		numWorkers:  numWorkers,
 		jobsChan:    make(chan Job, numWorkers*10),
 		resultsChan: make(chan JobResult, numWorkers*10),
 		stopChan:    make(chan struct{}),
+		metrics:     metrics,
 	}
 }
 
@@ -51,12 +70,11 @@ func (wp *WorkerPool) Start(ctx context.Context) error {
 	defer wp.mu.Unlock()
 
 	if wp.started {
-		return nil // Already started
+		return nil
 	}
 
-	log.Printf("Starting worker pool with %d workers", wp.numWorkers)
+	log.Printf("[DEBUG] Starting worker pool with %d workers", wp.numWorkers)
 
-	// Reset the channels if necessary
 	if wp.jobsChan == nil {
 		wp.jobsChan = make(chan Job, wp.numWorkers*10)
 	}
@@ -67,7 +85,6 @@ func (wp *WorkerPool) Start(ctx context.Context) error {
 		wp.stopChan = make(chan struct{})
 	}
 
-	// Start the workers
 	wp.wg.Add(wp.numWorkers)
 	for i := 0; i < wp.numWorkers; i++ {
 		go wp.worker(ctx, i)
@@ -77,52 +94,61 @@ func (wp *WorkerPool) Start(ctx context.Context) error {
 	return nil
 }
 
-// worker is a single worker in the pool that handles Warcraft Logs API requests
+// worker processes jobs from the pool
 func (wp *WorkerPool) worker(ctx context.Context, id int) {
 	defer wp.wg.Done()
-	log.Printf("Worker %d started", id)
+
+	wp.updateActiveWorkers(1)
+	defer wp.updateActiveWorkers(-1)
+
+	log.Printf("[DEBUG] Worker %d started", id)
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Worker %d stopping: context cancelled", id)
+			log.Printf("[DEBUG] Worker %d stopping: context cancelled", id)
 			return
 		case <-wp.stopChan:
-			log.Printf("Worker %d stopping: stop signal received", id)
+			log.Printf("[DEBUG] Worker %d stopping: stop signal received", id)
 			return
 		case job, ok := <-wp.jobsChan:
 			if !ok {
-				log.Printf("Worker %d stopping: jobs channel closed", id)
+				log.Printf("[DEBUG] Worker %d stopping: jobs channel closed", id)
 				return
 			}
-
-			log.Printf("Worker %d processing job type: %s", id, job.JobType)
 
 			result := JobResult{
-				Job: job,
+				Job:       job,
+				StartedAt: time.Now(),
 			}
 
-			// Process the job with context handling
-			select {
-			case <-ctx.Done():
-				result.Error = ctx.Err()
-			default:
-				data, err := wp.client.MakeRequest(ctx, job.Query, job.Variables)
-				result.Data = data
-				if err != nil {
-					result.Error = fmt.Errorf("worker %d: request error: %w", id, err)
+			log.Printf("[DEBUG] Worker %d processing %s job: %v", id, job.JobType, job.Metadata)
+
+			data, err := wp.client.MakeRequest(ctx, job.Query, job.Variables)
+			result.EndedAt = time.Now()
+
+			if err != nil {
+				result.Error = err
+				wp.recordFailedJob(result)
+				if wlErr, ok := err.(*warcraftlogsTypes.WarcraftLogsError); ok && wlErr.Type == warcraftlogsTypes.ErrorTypeRateLimit {
+					log.Printf("[WARN] Worker %d hit rate limit, backing off", id)
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(wlErr.RetryIn):
+						continue
+					}
 				}
+			} else {
+				result.Data = data
+				wp.recordCompletedJob(result)
 			}
 
-			// Send the result with context handling
 			select {
 			case wp.resultsChan <- result:
-				log.Printf("Worker %d completed job type: %s", id, job.JobType)
 			case <-ctx.Done():
-				log.Printf("Worker %d stopping: context cancelled while sending result", id)
 				return
 			case <-wp.stopChan:
-				log.Printf("Worker %d stopping: stop signal received while sending result", id)
 				return
 			}
 		}
@@ -134,21 +160,23 @@ func (wp *WorkerPool) Submit(job Job) {
 	wp.mu.Lock()
 	defer wp.mu.Unlock()
 
-	if wp.jobsChan == nil || !wp.started {
-		log.Printf("[WARNING] Attempting to submit job but worker pool not ready")
+	if !wp.started {
+		log.Printf("[WARN] Attempting to submit job but worker pool not started")
 		return
 	}
 
+	job.CreatedAt = time.Now()
+
 	select {
 	case wp.jobsChan <- job:
-		log.Printf("[DEBUG] Job submitted: %s", job.JobType)
+		log.Printf("[DEBUG] Job submitted: %s, metadata: %v", job.JobType, job.Metadata)
 	default:
-		log.Printf("[WARNING] Job channel is full, waiting to submit job")
+		log.Printf("[WARN] Job channel is full, waiting to submit job: %s", job.JobType)
 		wp.jobsChan <- job
 	}
 }
 
-// Results returns a channel that receives the results of the jobs
+// Results returns the channel for receiving job results
 func (wp *WorkerPool) Results() <-chan JobResult {
 	return wp.resultsChan
 }
@@ -162,13 +190,11 @@ func (wp *WorkerPool) Stop() {
 		return
 	}
 
-	log.Printf("[DEBUG] Stopping worker pool")
+	log.Printf("[DEBUG] Stopping worker pool...")
 	close(wp.stopChan)
 
-	// Wait for all workers to finish
 	wp.wg.Wait()
 
-	// Close the channels
 	if wp.jobsChan != nil {
 		close(wp.jobsChan)
 		wp.jobsChan = nil
@@ -179,12 +205,57 @@ func (wp *WorkerPool) Stop() {
 	}
 
 	wp.started = false
-	log.Printf("[DEBUG] Worker pool stopped")
+	wp.logFinalStats()
 }
 
-// IsStarted returns true if the worker pool is started
-func (wp *WorkerPool) IsStarted() bool {
-	wp.mu.Lock()
-	defer wp.mu.Unlock()
-	return wp.started
+// Méthodes utilitaires pour les statistiques
+func (wp *WorkerPool) updateActiveWorkers(delta int) {
+	wp.stats.mu.Lock()
+	defer wp.stats.mu.Unlock()
+	wp.stats.activeWorkers += delta
+}
+
+func (wp *WorkerPool) recordCompletedJob(result JobResult) {
+	wp.stats.mu.Lock()
+	defer wp.stats.mu.Unlock()
+
+	wp.stats.completedJobs++
+	processingTime := result.EndedAt.Sub(result.StartedAt)
+
+	// Mise à jour du temps moyen de traitement
+	if wp.stats.completedJobs == 1 {
+		wp.stats.avgProcessTime = processingTime
+	} else {
+		wp.stats.avgProcessTime = (wp.stats.avgProcessTime + processingTime) / 2
+	}
+}
+
+func (wp *WorkerPool) recordFailedJob(result JobResult) {
+	wp.stats.mu.Lock()
+	defer wp.stats.mu.Unlock()
+	wp.stats.failedJobs++
+}
+
+func (wp *WorkerPool) logFinalStats() {
+	wp.stats.mu.RLock()
+	defer wp.stats.mu.RUnlock()
+
+	log.Printf("[INFO] Worker pool final stats: "+
+		"Completed jobs: %d, Failed jobs: %d, Avg processing time: %v",
+		wp.stats.completedJobs,
+		wp.stats.failedJobs,
+		wp.stats.avgProcessTime)
+}
+
+// GetStats returns current worker pool statistics
+func (wp *WorkerPool) GetStats() map[string]interface{} {
+	wp.stats.mu.RLock()
+	defer wp.stats.mu.RUnlock()
+
+	return map[string]interface{}{
+		"active_workers":      wp.stats.activeWorkers,
+		"completed_jobs":      wp.stats.completedJobs,
+		"failed_jobs":         wp.stats.failedJobs,
+		"avg_processing_time": wp.stats.avgProcessTime.String(),
+	}
 }
