@@ -34,6 +34,7 @@ type BatchResult struct {
 	Rankings []*warcraftlogsBuilds.ClassRanking // fetched rankings
 	HasMore  bool                               // true if there are more pages to fetch
 	Error    error                              // error that occurred during processing
+	RetryAt  time.Time                          // time at which the batch should be retried
 }
 
 // NewBatchProcessor creates a new BatchProcessor instance
@@ -52,31 +53,59 @@ func NewBatchProcessor(
 // ProcessBatch processes a batch and returns the fetched rankings
 func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (*BatchResult, error) {
 	result := &BatchResult{
-		Batch: batch, // batch to process
+		Batch: batch,
 	}
 
 	log.Printf("[DEBUG] Processing batch for %s-%s, dungeon: %d, page: %d",
 		batch.ClassName, batch.SpecName, batch.DungeonID, batch.CurrentPage)
 
-	var err error
-	// Retry attempts with retry
+	var lastErr error
 	for attempt := 1; attempt <= p.config.Rankings.Batch.MaxAttempts; attempt++ {
-		result.Rankings, result.HasMore, err = p.fetchRankings(ctx, batch)
-		if err == nil {
+		result.Rankings, result.HasMore, lastErr = p.fetchRankings(ctx, batch)
+		if lastErr == nil {
 			break
 		}
 
-		if attempt == p.config.Rankings.Batch.MaxAttempts {
-			return result, fmt.Errorf("failed to process batch after %d attempts: %w", p.config.Rankings.Batch.MaxAttempts, err)
+		// Gestion spécifique selon le type d'erreur
+		if wlErr, ok := lastErr.(*warcraftlogs.WarcraftLogsError); ok {
+			switch wlErr.Type {
+			case warcraftlogs.ErrorTypeRateLimit, warcraftlogs.ErrorTypeQuotaExceeded:
+				// En cas de rate limit, on stocke quand réessayer
+				if info := warcraftlogs.GetRateLimitInfo(wlErr); info != nil {
+					result.RetryAt = time.Now().Add(info.ResetIn)
+					log.Printf("[INFO] Rate limit reached for %s-%s, retry after: %v",
+						batch.ClassName, batch.SpecName, result.RetryAt)
+					p.metrics.RecordRateLimit(info)
+					return result, wlErr
+				}
+			case warcraftlogs.ErrorTypeAPI:
+				if !wlErr.Retryable {
+					log.Printf("[ERROR] Non-retryable API error for %s-%s: %v",
+						batch.ClassName, batch.SpecName, wlErr)
+					return result, wlErr
+				}
+			}
 		}
 
-		log.Printf("[WARN] Attempt %d failed, retrying in %v...", attempt, p.config.Rankings.Batch.RetryDelay)
-		time.Sleep(p.config.Rankings.Batch.RetryDelay)
+		if attempt == p.config.Rankings.Batch.MaxAttempts {
+			log.Printf("[ERROR] Failed to process batch for %s-%s after %d attempts, last error: %v",
+				batch.ClassName, batch.SpecName, attempt, lastErr)
+			return result, fmt.Errorf("max retry attempts reached: %w", lastErr)
+		}
+
+		retryDelay := warcraftlogs.GetRetryDelay(lastErr, attempt)
+		log.Printf("[WARN] Attempt %d failed for %s-%s, retrying in %v...",
+			attempt, batch.ClassName, batch.SpecName, retryDelay)
+
+		select {
+		case <-ctx.Done():
+			return result, ctx.Err()
+		case <-time.After(retryDelay):
+			continue
+		}
 	}
 
-	// Update metrics
 	p.updateMetrics(batch, len(result.Rankings))
-
 	return result, nil
 }
 
@@ -98,7 +127,11 @@ func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) 
 	select {
 	case result := <-p.workerPool.Results():
 		if result.Error != nil {
-			return nil, false, fmt.Errorf("worker pool error: %w", result.Error)
+			if wlErr, ok := result.Error.(*warcraftlogs.WarcraftLogsError); ok {
+				wlErr.Message = fmt.Sprintf("%s (class: %s, spec: %s, dungeon: %d, page: %d)",
+					wlErr.Message, batch.ClassName, batch.SpecName, batch.DungeonID, batch.CurrentPage)
+			}
+			return nil, false, result.Error
 		}
 		return rankingsQueries.ParseRankingsResponse(result.Data, batch.DungeonID, batch.DungeonID)
 	case <-ctx.Done():
