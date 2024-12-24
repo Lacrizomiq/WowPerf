@@ -17,7 +17,7 @@ import (
 func main() {
 
 	// Load config
-	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.dev.yaml")
+	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml") // Use Priest config only for testing
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}

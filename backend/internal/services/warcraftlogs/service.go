@@ -13,39 +13,42 @@ import (
 
 // RateLimitData represents the rate limit information from the API
 type RateLimitData struct {
-	LimitPerHour        int     `json:"limitPerHour"`
+	LimitPerHour        float64 `json:"limitPerHour"`
 	PointsSpentThisHour float64 `json:"pointsSpentThisHour"`
 	PointsResetIn       int     `json:"pointsResetIn"`
 }
 
-// RateLimitQuery is the GraphQL query to fetch rate limit data
-const RateLimitQuery = `
-query getRateLimitData {
-    rateLimitData {
-        limitPerHour
-        pointsSpentThisHour
-        pointsResetIn
-    }
+const RateLimitQuery = `query {
+	rateLimitData {
+			limitPerHour
+			pointsSpentThisHour
+			pointsResetIn
+	}
 }`
 
 const (
-	requestTimeout         = 10 * time.Second
-	checkRateLimitInterval = 5 * time.Minute
+	defaultRefreshInterval = 5 * time.Minute
+	minWaitTime            = 5 * time.Second
+	maxRetries             = 3
 )
 
-// WarcraftLogsClientService handles API calls with intelligent rate limiting
+// WarcraftLogsClientService is a struct to manage the Warcraft Logs client
 type WarcraftLogsClientService struct {
-	Client             *Client
-	currentPoints      float64
-	maxPointsHour      int
-	resetTime          time.Time
-	lastCheck          time.Time
-	mu                 sync.RWMutex
-	minPointsThreshold float64       // Threshold before slowing down requests
-	refreshInterval    time.Duration // Rate limit refresh interval
+	Client          *Client
+	rateLimiter     *RateLimiter
+	refreshInterval time.Duration
 }
 
-// NewWarcraftLogsClientService creates a new service instance
+// RateLimiter is a struct to manage the rate limit
+type RateLimiter struct {
+	mu            sync.RWMutex
+	maxPoints     float64
+	currentPoints float64
+	resetTime     time.Time
+	lastUpdate    time.Time
+	pointsPerHour float64
+}
+
 func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 	client, err := NewClient()
 	if err != nil {
@@ -53,59 +56,90 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 	}
 
 	service := &WarcraftLogsClientService{
-		Client:             client,
-		minPointsThreshold: 10.0,
-		refreshInterval:    time.Minute * 5,
+		Client:          client,
+		refreshInterval: defaultRefreshInterval,
+		rateLimiter:     &RateLimiter{},
 	}
 
-	// Initial rate limit check
 	if err := service.updateRateLimit(context.Background()); err != nil {
-		return nil, fmt.Errorf("failed to update rate limit: %w", err)
+		return nil, fmt.Errorf("failed to initialize rate limit: %w", err)
 	}
 
-	// Start periodic rate limit check
 	go service.startPeriodicRateLimitCheck()
 
 	return service, nil
 }
 
+// Available checks if points are available
+func (r *RateLimiter) Available() bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	now := time.Now()
+	if now.After(r.resetTime) {
+		return true
+	}
+
+	pointsAvailable := r.maxPoints - r.currentPoints
+	return pointsAvailable >= 1.0
+}
+
+// UpdateState updates the rate limiter state
+func (r *RateLimiter) UpdateState(limitPerHour float64, pointsSpent float64, resetIn int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.maxPoints = limitPerHour
+	r.currentPoints = pointsSpent
+	r.resetTime = time.Now().Add(time.Duration(resetIn) * time.Second)
+	r.lastUpdate = time.Now()
+	r.pointsPerHour = limitPerHour
+
+	log.Printf("[DEBUG] Rate limit updated - Max: %.2f, Current: %.2f, Remaining: %.2f, Reset in: %v",
+		r.maxPoints,
+		r.currentPoints,
+		r.maxPoints-r.currentPoints,
+		time.Until(r.resetTime).Round(time.Second))
+}
+
+// ConsumePoint consumes a point from the rate limiter
+func (r *RateLimiter) ConsumePoint() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.currentPoints++
+}
+
+// GetRateLimitInfo returns the current rate limit information
+func (r *RateLimiter) GetRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	remaining := r.maxPoints - r.currentPoints
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return &warcraftlogsTypes.RateLimitInfo{
+		RemainingPoints: remaining,
+		PointsPerHour:   int(r.pointsPerHour),
+		ResetIn:         time.Until(r.resetTime),
+		NextRefresh:     r.lastUpdate.Add(defaultRefreshInterval),
+	}
+}
+
 // startPeriodicRateLimitCheck starts the periodic rate limit check
 func (s *WarcraftLogsClientService) startPeriodicRateLimitCheck() {
-	ticker := time.NewTicker(checkRateLimitInterval)
+	ticker := time.NewTicker(s.refreshInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		if err := s.updateRateLimit(context.Background()); err != nil {
-			log.Printf("[ERROR] Failed to update rate limit: %v", err)
+			log.Printf("[WARN] Periodic rate limit update failed: %v", err)
 		}
 	}
 }
 
-// getRateLimitInfo returns current rate limit information
-func (s *WarcraftLogsClientService) getRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return &warcraftlogsTypes.RateLimitInfo{
-		RemainingPoints: float64(s.maxPointsHour) - s.currentPoints,
-		PointsPerHour:   s.maxPointsHour,
-		ResetIn:         time.Until(s.resetTime),
-		NextRefresh:     s.lastCheck.Add(s.refreshInterval),
-	}
-}
-
-// shouldUpdateRateLimit determines if rate limit info should be updated
-func (s *WarcraftLogsClientService) shouldUpdateRateLimit() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	timeSinceLastCheck := time.Since(s.lastCheck)
-	remainingPoints := float64(s.maxPointsHour) - s.currentPoints
-
-	return timeSinceLastCheck >= s.refreshInterval || remainingPoints < s.minPointsThreshold
-}
-
-// updateRateLimit updates rate limit information from the API
+// updateRateLimit updates the rate limit information from the API
 func (s *WarcraftLogsClientService) updateRateLimit(ctx context.Context) error {
 	response, err := s.Client.MakeGraphQLRequest(RateLimitQuery, nil)
 	if err != nil {
@@ -122,97 +156,81 @@ func (s *WarcraftLogsClientService) updateRateLimit(ctx context.Context) error {
 		return fmt.Errorf("failed to unmarshal rate limit data: %w", err)
 	}
 
-	s.mu.Lock()
-	s.currentPoints = result.Data.RateLimitData.PointsSpentThisHour
-	s.maxPointsHour = result.Data.RateLimitData.LimitPerHour
-	s.resetTime = time.Now().Add(time.Duration(result.Data.RateLimitData.PointsResetIn) * time.Second)
-	s.lastCheck = time.Now()
-	s.mu.Unlock()
-
-	log.Printf("[DEBUG] Rate limit updated - Max: %d, Current: %.2f, Reset in: %s",
-		s.maxPointsHour,
-		s.currentPoints,
-		time.Until(s.resetTime))
+	s.rateLimiter.UpdateState(
+		result.Data.RateLimitData.LimitPerHour,
+		result.Data.RateLimitData.PointsSpentThisHour,
+		result.Data.RateLimitData.PointsResetIn,
+	)
 
 	return nil
 }
 
-// waitForPoints waits until enough points are available
-func (s *WarcraftLogsClientService) waitForPoints(ctx context.Context, cost float64) error {
-	for {
-		if s.shouldUpdateRateLimit() {
-			if err := s.updateRateLimit(ctx); err != nil {
-				return fmt.Errorf("failed to update rate limit: %w", err)
-			}
-		}
+// waitForAvailablePoints waits for points to be available
+func (s *WarcraftLogsClientService) waitForAvailablePoints(ctx context.Context) error {
+	info := s.rateLimiter.GetRateLimitInfo()
+	log.Printf("[DEBUG] Points status - Remaining: %.2f, Required: 1.00, Reset in: %v",
+		info.RemainingPoints,
+		info.ResetIn.Round(time.Second))
 
-		info := s.getRateLimitInfo()
+	// Si on a assez de points, on y va
+	if info.RemainingPoints >= 1.0 {
+		return nil
+	}
 
+	// Sinon, on force une mise à jour et on vérifie à nouveau
+	if err := s.updateRateLimit(ctx); err != nil {
+		return fmt.Errorf("failed to update rate limit: %w", err)
+	}
+
+	info = s.rateLimiter.GetRateLimitInfo()
+	if info.RemainingPoints >= 1.0 {
+		return nil
+	}
+
+	// Si toujours pas de points, on attend
+	if info.ResetIn > 0 {
+		log.Printf("[DEBUG] Waiting %v for rate limit reset", info.ResetIn.Round(time.Second))
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
-			if info.RemainingPoints >= cost {
-				return nil
-			}
-
-			if info.RemainingPoints < s.minPointsThreshold {
-				return warcraftlogsTypes.NewQuotaExceededError(info)
-			}
-
-			waitTime := calculateWaitTime(info, cost)
-			log.Printf("[DEBUG] Rate limit approaching threshold. Waiting %v before next request", waitTime)
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-time.After(waitTime):
-				continue
-			}
+		case <-time.After(info.ResetIn):
+			return nil
 		}
 	}
+
+	return warcraftlogsTypes.NewQuotaExceededError(info)
 }
 
-// calculateWaitTime determines how long to wait before the next request
-func calculateWaitTime(info *warcraftlogsTypes.RateLimitInfo, cost float64) time.Duration {
-	if info.RemainingPoints < cost {
-		return info.ResetIn
+// MakeRequest makes a request to the API with rate limiting management
+func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query string, variables map[string]interface{}) ([]byte, error) {
+	if query == "" {
+		return nil, fmt.Errorf("query cannot be empty")
 	}
 
-	// Calculate a proportional wait based on remaining points
-	pointRatio := cost / info.RemainingPoints
-	baseWait := time.Second * 5
-	return time.Duration(float64(baseWait) * pointRatio)
-}
+	log.Printf("[DEBUG] Making GraphQL request - Variables: %+v", variables)
 
-// MakeRequest makes a request to the WarcraftLogs API with rate limiting
-func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query string, variables map[string]interface{}) ([]byte, error) {
-	const requestCost = 1.0
-
-	if err := s.waitForPoints(ctx, requestCost); err != nil {
+	if err := s.waitForAvailablePoints(ctx); err != nil {
 		return nil, err
 	}
 
 	response, err := s.Client.MakeGraphQLRequest(query, variables)
 	if err != nil {
 		if warcraftlogsTypes.IsRateLimit(err) {
-			go s.updateRateLimit(context.Background())
+			log.Printf("[WARN] Rate limit hit, forcing update")
+			if updateErr := s.updateRateLimit(ctx); updateErr != nil {
+				log.Printf("[ERROR] Failed to update rate limit after hit: %v", updateErr)
+			}
 		}
 		return nil, err
 	}
 
-	s.mu.Lock()
-	s.currentPoints += requestCost
-	s.mu.Unlock()
+	s.rateLimiter.ConsumePoint()
 
-	// Asynchronous rate limit update if needed
-	if s.shouldUpdateRateLimit() {
+	// Asynchronous update if necessary
+	if time.Since(s.rateLimiter.lastUpdate) > s.refreshInterval {
 		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-			defer cancel()
-
-			if err := s.updateRateLimit(ctx); err != nil {
-				log.Printf("[WARN] Failed to update rate limit: %v", err)
+			if err := s.updateRateLimit(context.Background()); err != nil {
+				log.Printf("[WARN] Async rate limit update failed: %v", err)
 			}
 		}()
 	}

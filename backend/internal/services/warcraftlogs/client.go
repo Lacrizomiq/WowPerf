@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -101,7 +100,6 @@ func (c *Client) refreshToken(config *clientcredentials.Config) error {
 
 // MakeGraphQLRequest makes a GraphQL request to the Warcraft Logs API
 func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface{}) ([]byte, error) {
-	// Check if the token is expired and refresh it if necessary
 	if c.token.Expiry.Before(time.Now()) {
 		if err := c.refreshToken(&clientcredentials.Config{
 			ClientID:     os.Getenv("WARCRAFTLOGS_CLIENT_ID"),
@@ -117,112 +115,40 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 		apiURL = userAPIURL
 	}
 
-	// Prepare the request body
 	reqBody := map[string]interface{}{
 		"query":     query,
 		"variables": variables,
 	}
 
-	// Marshal the request body to JSON
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeValidation,
-			Message:   "failed to marshal request body",
-			Cause:     err,
-			Retryable: false,
-		}
+		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	// Create the HTTP request
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeAPI,
-			Message:   "failed to create request",
-			Cause:     err,
-			Retryable: false,
-		}
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	// Send the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeAPI,
-			Message:   "failed to send request",
-			Cause:     err,
-			Retryable: false,
-		}
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeAPI,
-			Message:   "failed to read response body",
-			Cause:     err,
-			Retryable: false,
-		}
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// Handle non-200 responses
 	if resp.StatusCode != http.StatusOK {
-		switch resp.StatusCode {
-		case http.StatusTooManyRequests:
-			retryAfter := time.Second * 5 // default
-			if s := resp.Header.Get("Retry-After"); s != "" {
-				if seconds, err := strconv.Atoi(s); err == nil {
-					retryAfter = time.Duration(seconds) * time.Second
-				}
-			}
-			return nil, warcraftlogsTypes.NewRateLimitError(&warcraftlogsTypes.RateLimitInfo{
-				ResetIn: retryAfter,
-			}, nil)
-		case http.StatusUnauthorized:
-			return nil, &warcraftlogsTypes.WarcraftLogsError{
-				Type:      warcraftlogsTypes.ErrorTypeAPI,
-				Message:   "unauthorized: invalid or expired token",
-				Retryable: true,
-			}
-		default:
-			return nil, warcraftlogsTypes.NewAPIError(resp.StatusCode, fmt.Errorf("response: %s", body))
-		}
+		return nil, fmt.Errorf("API request failed with status code: %d", resp.StatusCode)
 	}
 
-	// Parse the response body into a GraphQLResponse
-	var graphQLResponse GraphQLResponse
-	if err := json.Unmarshal(body, &graphQLResponse); err != nil {
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeAPI,
-			Message:   "failed to parse GraphQL response",
-			Cause:     err,
-			Retryable: false,
-		}
-	}
-
-	// Handle GraphQL errors
-	if len(graphQLResponse.Errors) > 0 {
-		// Check for specific GraphQL error types
-		for _, gqlErr := range graphQLResponse.Errors {
-			if isRateLimitError(gqlErr) {
-				return nil, warcraftlogsTypes.NewRateLimitError(nil, fmt.Errorf(gqlErr.Message))
-			}
-		}
-
-		// Generic GraphQL error
-		return nil, &warcraftlogsTypes.WarcraftLogsError{
-			Type:      warcraftlogsTypes.ErrorTypeAPI,
-			Message:   fmt.Sprintf("GraphQL error: %s", graphQLResponse.Errors[0].Message),
-			Retryable: false,
-		}
-	}
-
-	return graphQLResponse.Data, nil
+	return body, nil
 }
 
 // isRateLimitError checks if a GraphQL error is a rate limit error

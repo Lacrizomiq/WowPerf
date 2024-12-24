@@ -10,6 +10,14 @@ worker:
   request_delay: 500ms
 
 specs:
+  # Priest
+  - class_name: "Priest"
+    spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"
+
   # Death Knight
   - class_name: "DeathKnight"
     spec_name: "Blood"
@@ -59,14 +67,6 @@ specs:
     spec_name: "Protection"
   - class_name: "Paladin"
     spec_name: "Retribution"
-
-  # Priest
-  - class_name: "Priest"
-    spec_name: "Discipline"
-  - class_name: "Priest"
-    spec_name: "Holy"
-  - class_name: "Priest"
-    spec_name: "Shadow"
 
   # Rogue
   - class_name: "Rogue"
