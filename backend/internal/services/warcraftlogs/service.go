@@ -172,12 +172,12 @@ func (s *WarcraftLogsClientService) waitForAvailablePoints(ctx context.Context) 
 		info.RemainingPoints,
 		info.ResetIn.Round(time.Second))
 
-	// Si on a assez de points, on y va
+	// If we have enough points, we go
 	if info.RemainingPoints >= 1.0 {
 		return nil
 	}
 
-	// Sinon, on force une mise à jour et on vérifie à nouveau
+	// Otherwise, we force an update and check again
 	if err := s.updateRateLimit(ctx); err != nil {
 		return fmt.Errorf("failed to update rate limit: %w", err)
 	}
@@ -187,7 +187,7 @@ func (s *WarcraftLogsClientService) waitForAvailablePoints(ctx context.Context) 
 		return nil
 	}
 
-	// Si toujours pas de points, on attend
+	// If we still don't have points, we wait
 	if info.ResetIn > 0 {
 		log.Printf("[DEBUG] Waiting %v for rate limit reset", info.ResetIn.Round(time.Second))
 		select {

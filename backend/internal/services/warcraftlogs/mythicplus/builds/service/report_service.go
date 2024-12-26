@@ -62,7 +62,7 @@ func (s *ReportService) GetReportsFromRankings(ctx context.Context) ([]ReportInf
 		Table("class_rankings as cr").
 		Select("DISTINCT cr.report_code, cr.report_fight_id, cr.encounter_id").
 		Joins("LEFT JOIN warcraft_logs_reports as wlr ON cr.report_code = wlr.code").
-		Where("cr.deleted_at IS NULL AND cr.encounter_id = ?", 12660)
+		Where("cr.deleted_at IS NULL AND cr.encounter_id = ?")
 
 	// Ajouter la condition pour les rapports non traités ou anciens
 	query = query.Where("wlr.code IS NULL OR wlr.updated_at < ?", updateInterval)
