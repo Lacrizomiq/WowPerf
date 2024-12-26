@@ -101,12 +101,12 @@ export const authService = {
     }
   },
 
-  async login(username: string, password: string): Promise<AuthResponse> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      console.log("Attempting login for username:", username);
+      console.log("Attempting login for email:", email);
 
       const response = await api.post<AuthResponse>("/auth/login", {
-        username,
+        email,
         password,
       });
 
@@ -134,7 +134,7 @@ export const authService = {
         if (err.response?.status === 401) {
           throw new AuthError(
             AuthErrorCode.INVALID_CREDENTIALS,
-            "Invalid username or password"
+            "Invalid email or password"
           );
         }
 

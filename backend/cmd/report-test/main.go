@@ -3,15 +3,24 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
+	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
+	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
+	warcraftlogsBuildsSync "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync"
+	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
 )
 
 func main() {
+
+	// Load config
+	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml") // Use Priest config only for testing
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	// Initialize database
 	db, err := database.InitDB()
 	if err != nil {
@@ -24,24 +33,65 @@ func main() {
 		log.Fatalf("Failed to initialize WarcraftLogs client: %v", err)
 	}
 
-	// Initialize repository and service
-	repo := reportsRepository.NewReportRepository(db)
-	service := reportsService.NewReportService(warcraftLogsClient, repo, db)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Rankings.UpdateInterval)
+	defer cancel()
 
-	// Test avec un seul report spécifique
-	testReport := reportsService.ReportInfo{
-		ReportCode:  "g9Lhy8JmkV1xQ3Gj", // Le code que vous avez utilisé précédemment
-		FightID:     26,
-		EncounterID: 12660,
+	// Initialize worker pool
+	metrics := warcraftlogsBuildsMetrics.NewSyncMetrics()
+	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers, metrics) // 3 workers
+	workerPool.Start(ctx)                                                                        // Start the worker pool
+	defer workerPool.Stop()                                                                      // Stop the worker pool when the program exits
+
+	// Initialize repository
+	reportsRepo := reportsRepository.NewReportRepository(db)
+	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
+
+	// Initialize services
+	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db, metrics)
+
+	// Initialize sync service
+	syncConfig := &warcraftlogsBuildsConfig.Config{
+		Rankings: cfg.Rankings,
+		Worker:   cfg.Worker,
+		Specs:    cfg.Specs,
+		Dungeons: cfg.Dungeons,
 	}
 
-	log.Printf("Testing with report: %+v", testReport)
+	// Initialize and start sync service
+	syncService := warcraftlogsBuildsSync.NewSyncService(
+		workerPool,
+		rankingsRepo,
+		syncConfig,
+	)
 
-	ctx := context.Background()
-	if err := service.FetchAndStoreReport(ctx, testReport.ReportCode, testReport.FightID, testReport.EncounterID); err != nil {
-		log.Fatalf("Error processing report: %v", err)
+	log.Println("Starting rankings synchronization")
+	if err := syncService.StartSync(ctx); err != nil {
+		log.Printf("Rankings sync error: %v", err)
 	}
 
-	log.Println("Report processing completed successfully")
-	time.Sleep(2 * time.Second) // Petit délai pour s'assurer que les logs sont affichés
+	// Process reports after rankings sync
+	log.Println("Processing reports from rankings ...")
+	reports, err := reportsService.GetReportsFromRankings(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get reports from rankings: %v", err)
+	}
+
+	log.Printf("Found %d reports", len(reports))
+	if len(reports) > 0 {
+		if err := reportsService.ProcessReports(ctx, reports); err != nil {
+			log.Fatalf("Failed to process reports: %v", err)
+		}
+	}
+
+	log.Println("Reports processed successfully")
+}
+
+// extractDungeonIDs extracts the dungeon IDs from the given dungeons
+func extractDungeonIDs(dungeons []warcraftlogsBuildsConfig.Dungeon) []uint {
+	ids := make([]uint, len(dungeons))
+	for i, dungeon := range dungeons {
+		ids[i] = uint(dungeon.ID)
+	}
+	return ids
 }

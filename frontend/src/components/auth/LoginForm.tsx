@@ -7,7 +7,7 @@ import { AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
 
 const LoginForm: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,8 +27,8 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
     clearError();
   };
 
@@ -45,7 +45,7 @@ const LoginForm: React.FC = () => {
     }
 
     // Basic validation
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -54,7 +54,7 @@ const LoginForm: React.FC = () => {
     setError("");
 
     try {
-      await login(username, password);
+      await login(email, password);
       // The redirection is handled by the useEffect
     } catch (err) {
       console.error("Login error:", err);
@@ -62,7 +62,7 @@ const LoginForm: React.FC = () => {
       if (err instanceof AuthError) {
         switch (err.code) {
           case AuthErrorCode.INVALID_CREDENTIALS:
-            setError("Invalid username or password");
+            setError("Invalid email or password");
             break;
           case AuthErrorCode.NETWORK_ERROR:
             setError(
@@ -95,22 +95,22 @@ const LoginForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label
-          htmlFor="username"
+          htmlFor="email"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
-          Username
+          Email
         </label>
         <input
-          id="username"
+          id="email"
           type="text"
-          value={username}
-          onChange={handleUsernameChange}
+          value={email}
+          onChange={handleEmailChange}
           required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
             error ? "border-red-500" : "border-gray-600"
           } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          placeholder="Enter your username"
+          placeholder="Enter your email"
         />
       </div>
 

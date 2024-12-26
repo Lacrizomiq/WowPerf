@@ -10,10 +10,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 )
 
 const (
@@ -28,13 +31,30 @@ type Client struct {
 	isPublic   bool
 }
 
+// GraphQLResponse is the response from the Warcraft Logs API
+type GraphQLResponse struct {
+	Data   json.RawMessage `json:"data"`
+	Errors []GraphQLError  `json:"errors,omitempty"`
+}
+
+// GraphQLError is the error from the Warcraft Logs API
+type GraphQLError struct {
+	Message    string          `json:"message"`
+	Path       []string        `json:"path,omitempty"`
+	Extensions json.RawMessage `json:"extensions,omitempty"`
+}
+
 // NewClient creates a new Warcraft Logs API client for public (client credentials) access
 func NewClient() (*Client, error) {
 	clientID := os.Getenv("WARCRAFTLOGS_CLIENT_ID")
 	clientSecret := os.Getenv("WARCRAFTLOGS_CLIENT_SECRET")
 
 	if clientID == "" || clientSecret == "" {
-		return nil, fmt.Errorf("missing required environment variables WARCRAFTLOGS_CLIENT_ID or WARCRAFTLOGS_CLIENT_SECRET")
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeValidation,
+			Message:   "missing required environment variables",
+			Retryable: false,
+		}
 	}
 
 	config := &clientcredentials.Config{
@@ -44,8 +64,10 @@ func NewClient() (*Client, error) {
 	}
 
 	client := &Client{
-		httpClient: &http.Client{},
-		isPublic:   true,
+		httpClient: &http.Client{
+			Timeout: time.Second * 30,
+		},
+		isPublic: true,
 	}
 
 	if err := client.refreshToken(config); err != nil {
@@ -55,19 +77,24 @@ func NewClient() (*Client, error) {
 	return client, nil
 }
 
+// refreshToken obtains or refreshes the OAuth token
 func (c *Client) refreshToken(config *clientcredentials.Config) error {
-	log.Println("Refreshing Warcraft Logs token...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	log.Println("[DEBUG] Refreshing WarcraftLogs token...")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	token, err := config.Token(ctx)
 	if err != nil {
-		log.Printf("Failed to get Warcraft Logs token: %v", err)
-		return fmt.Errorf("failed to get token: %w", err)
+		return &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeAPI,
+			Message:   "failed to obtain OAuth token",
+			Cause:     err,
+			Retryable: true,
+		}
 	}
 
 	c.token = token
-	log.Printf("Warcraft Logs token refreshed successfully. Expires at: %v", token.Expiry)
+	log.Printf("[DEBUG] WarcraftLogs token refreshed successfully. Expires at: %v", token.Expiry)
 	return nil
 }
 
@@ -122,4 +149,26 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 	}
 
 	return body, nil
+}
+
+// isRateLimitError checks if a GraphQL error is a rate limit error
+func isRateLimitError(err GraphQLError) bool {
+	return strings.Contains(err.Message, "Rate limit exceeded")
+}
+
+// containsRateLimitKeywords checks if the error message contains rate limit related keywords
+func containsRateLimitKeywords(message string) bool {
+	rateLimitKeywords := []string{
+		"rate limit",
+		"too many requests",
+		"quota exceeded",
+	}
+
+	messageLower := strings.ToLower(message)
+	for _, keyword := range rateLimitKeywords {
+		if strings.Contains(messageLower, keyword) {
+			return true
+		}
+	}
+	return false
 }

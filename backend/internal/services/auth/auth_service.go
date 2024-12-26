@@ -122,9 +122,9 @@ func (s *AuthService) SignUp(user *models.User) error {
 }
 
 // Login authenticates a user and generates tokens
-func (s *AuthService) Login(c *gin.Context, username, password string) error {
+func (s *AuthService) Login(c *gin.Context, email, password string) error {
 	var user models.User
-	if err := s.DB.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
 		return ErrInvalidCredentials
 	}
 

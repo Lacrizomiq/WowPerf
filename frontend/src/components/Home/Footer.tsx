@@ -35,18 +35,10 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/mythic-plus/leaderboards"
+                    href="/mythic-plus/leaderboard"
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
-                    Mythic+ Leaderboards
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/raids"
-                    className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
-                  >
-                    Raid Progress
+                    Mythic+ Leaderboard
                   </Link>
                 </li>
                 <li>
@@ -55,6 +47,14 @@ export default function Footer() {
                     className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
                   >
                     Mythic+ Statistics
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/raids"
+                    className="text-slate-300 hover:text-blue-400 text-sm transition-colors"
+                  >
+                    Raid Progress
                   </Link>
                 </li>
               </ul>

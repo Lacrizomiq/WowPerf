@@ -26,27 +26,31 @@ type PlayerSpec struct {
 	HealthstoneUse int     `json:"healthstoneUse,omitempty"`
 
 	// Combat info
-	CombatantInfo struct {
-		Stats struct {
-			Speed       StatRange `json:"Speed"`
-			Intellect   StatRange `json:"Intellect,omitempty"`
-			Mastery     StatRange `json:"Mastery"`
-			Stamina     StatRange `json:"Stamina"`
-			Haste       StatRange `json:"Haste"`
-			Leech       StatRange `json:"Leech"`
-			Crit        StatRange `json:"Crit"`
-			Versatility StatRange `json:"Versatility"`
-			// Add other stats as needed
-		} `json:"stats,omitempty"`
-		Talents    []interface{} `json:"talents"` // Using interface{} as placeholder
-		TalentTree []struct {
-			ID     int `json:"id"`
-			Rank   int `json:"rank"`
-			NodeID int `json:"nodeID"`
-		} `json:"talentTree"`
-		Gear    []GearItem `json:"gear"`
-		SpecIDs []int      `json:"specIDs"`
-	} `json:"combatantInfo,omitempty"`
+	CombatantInfo json.RawMessage `json:"combatantInfo,omitempty"`
+}
+
+// CombatantInfoDetails represents the combatant info details
+type CombatantInfoDetails struct {
+	Stats struct {
+		Speed       StatRange `json:"Speed"`
+		Intellect   StatRange `json:"Intellect,omitempty"`
+		Strength    StatRange `json:"Strength,omitempty"`
+		Agility     StatRange `json:"Agility,omitempty"`
+		Mastery     StatRange `json:"Mastery"`
+		Stamina     StatRange `json:"Stamina"`
+		Haste       StatRange `json:"Haste"`
+		Leech       StatRange `json:"Leech"`
+		Crit        StatRange `json:"Crit"`
+		Versatility StatRange `json:"Versatility"`
+	} `json:"stats,omitempty"`
+	Talents    []interface{} `json:"talents"`
+	TalentTree []struct {
+		ID     int `json:"id"`
+		Rank   int `json:"rank"`
+		NodeID int `json:"nodeID"`
+	} `json:"talentTree"`
+	Gear    []GearItem `json:"gear"`
+	SpecIDs []int      `json:"specIDs"`
 }
 
 // StatRange represents a stat's min/max values

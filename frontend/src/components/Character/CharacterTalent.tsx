@@ -3,17 +3,21 @@ import {
   useGetBlizzardCharacterSpecializations,
   useGetBlizzardCharacterProfile,
 } from "@/hooks/useBlizzardApi";
+import { Copy, Check, SquareArrowOutUpRight, LayoutGrid } from "lucide-react";
 import TalentTree from "@/components/TalentTree/TalentTree";
 import HeroTalentTree from "@/components/TalentTree/HeroTalentTree";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
-import { SquareArrowOutUpRight } from "lucide-react";
 import Image from "next/image";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   TalentNode,
   CharacterTalentProps,
   TalentLoadout,
   HeroTalent,
 } from "@/types/talents";
+import { toast } from "react-hot-toast";
+import RaidbotsTreeDisplay from "@/components/TalentTree/RaidbotTalentTree";
 
 export default function CharacterTalent({
   region,
@@ -41,18 +45,34 @@ export default function CharacterTalent({
   } = useGetBlizzardCharacterProfile(region, realm, name, namespace, locale);
 
   const [displayMode, setDisplayMode] = useState<"list" | "tree">("list");
+  const [isCopied, setIsCopied] = useState(false);
 
   const toggleDisplayMode = () => {
     setDisplayMode((prevMode) => (prevMode === "list" ? "tree" : "list"));
   };
 
-  useWowheadTooltips();
-
-  useEffect(() => {
-    if (specializationsData) {
-      console.log("Specializations Data:", specializationsData);
+  // Copy the talent loadout text to the clipboard
+  const copyLoadoutText = async () => {
+    if (talentLoadout.encoded_loadout_text) {
+      try {
+        await navigator.clipboard.writeText(
+          encodeURIComponent(talentLoadout.encoded_loadout_text)
+        );
+        toast.success("Talent loadout copied to clipboard");
+        setIsCopied(true);
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000);
+      } catch (error) {
+        toast.error("Failed to copy talent loadout to clipboard");
+        console.error("Failed to copy talent loadout to clipboard", error);
+      }
+    } else {
+      toast.error("No talent loadout text found");
     }
-  }, [specializationsData]);
+  };
+
+  useWowheadTooltips();
 
   useEffect(() => {
     if (window.$WowheadPower && window.$WowheadPower.refreshLinks) {
@@ -102,25 +122,28 @@ export default function CharacterTalent({
     }
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg glow-effect">
-        <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
-          <Image
-            src={icon}
-            alt={title}
-            width={32}
-            height={32}
-            className="mr-2"
-            unoptimized
-          />
-          <span>{title}</span>
-        </h3>
-
-        <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2 p-4">
-          {selectedTalents.map((talent) => (
-            <TalentIcon key={talent.id} talent={talent} />
-          ))}
-        </div>
-      </div>
+      <Card className="bg-gray-900/50 border-gray-800 shadow-xl">
+        <CardHeader className="pb-2 border-b border-gray-800">
+          <CardTitle className="flex items-center gap-3 text-xl text-white justify-center">
+            <Image
+              src={icon}
+              alt={title}
+              width={32}
+              height={32}
+              className="rounded"
+              unoptimized
+            />
+            <span>{title}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
+            {selectedTalents.map((talent) => (
+              <TalentIcon key={talent.id} talent={talent} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -134,25 +157,28 @@ export default function CharacterTalent({
       : "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 
     return (
-      <div className="mb-6 shadow-2xl border-2 border-[#001830] rounded-lg md:w-1/2 glow-effect">
-        <h3 className="text-lg font-semibold text-white bg-deep-blue p-4 items-center flex justify-center">
-          <Image
-            src={iconUrl}
-            alt="Hero Talents"
-            width={40}
-            height={40}
-            className="mr-2"
-            unoptimized
-          />
-          <span>{subTreeName} Hero Talents</span>
-        </h3>
-
-        <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2 p-4">
-          {heroTalents.map((talent) => (
-            <HeroTalentIcon key={talent.id} talent={talent} />
-          ))}
-        </div>
-      </div>
+      <Card className="bg-gray-900/50 border-gray-800 shadow-xl">
+        <CardHeader className="pb-2 border-b border-gray-800 flex justify-center">
+          <CardTitle className="flex items-center gap-3 text-xl text-white justify-center">
+            <Image
+              src={iconUrl}
+              alt="Hero Talents"
+              width={40}
+              height={40}
+              className="rounded"
+              unoptimized
+            />
+            <span>{subTreeName} Hero Talents</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
+            {heroTalents.map((talent) => (
+              <HeroTalentIcon key={talent.id} talent={talent} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -177,7 +203,7 @@ export default function CharacterTalent({
   const talentCalculatorUrl = getTalentCalculatorUrl();
 
   return (
-    <div className="p-4 sm:p-6 shadow-lg m-2 sm:m-4">
+    <div className="p-6 bg-gray-950">
       <style jsx global>{`
         .wowhead-tooltip {
           scale: 1.2;
@@ -186,30 +212,61 @@ export default function CharacterTalent({
           font-size: 14px;
         }
       `}</style>
-      <div className="flex pb-2 flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0">
-        <h2 className="text-xl sm:text-2xl font-bold">Talent Build Summary</h2>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-          <button
+
+      {/* Header with Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h2 className="text-2xl font-bold text-white">Talent Build Summary</h2>
+        <div className="flex flex-wrap gap-4">
+          <Button
+            variant="secondary"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
             onClick={toggleDisplayMode}
-            className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl"
           >
+            <LayoutGrid className="w-4 h-4 mr-2" />
             {displayMode === "list" ? "Show Full Tree" : "Show Talent List"}
-          </button>
+          </Button>
+
+          <Button
+            variant="secondary"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            onClick={copyLoadoutText}
+          >
+            {isCopied ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Talents
+              </>
+            )}
+          </Button>
+
           {talentCalculatorUrl && (
-            <a
-              href={talentCalculatorUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gradient-blue hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto flex items-center justify-center shadow-2xl "
+            <Button
+              variant="secondary"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+              asChild
             >
-              Talent Calculator <SquareArrowOutUpRight className="ml-2" />
-            </a>
+              <a
+                href={talentCalculatorUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Talent Calculator
+                <SquareArrowOutUpRight className="w-4 h-4 ml-2" />
+              </a>
+            </Button>
           )}
         </div>
       </div>
+
       {displayMode === "list" ? (
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Class Talents */}
             <div>
               {renderTalentGroup(
                 talentLoadout.class_talents,
@@ -217,6 +274,8 @@ export default function CharacterTalent({
                 talentLoadout.class_icon
               )}
             </div>
+
+            {/* Spec Talents */}
             <div>
               {renderTalentGroup(
                 talentLoadout.spec_talents,
@@ -225,40 +284,24 @@ export default function CharacterTalent({
               )}
             </div>
           </div>
+
+          {/* Hero Talents */}
           {talentLoadout.hero_talents.length > 0 && (
-            <div className="">
+            <div className="md:w-1/2">
               {renderHeroTalentsGroup(talentLoadout.hero_talents)}
             </div>
           )}
         </div>
       ) : (
-        <>
-          <TalentTree
-            talentTreeId={talentLoadout.tree_id}
-            specId={profileData.spec_id}
-            region={region}
-            namespace={namespace}
+        <div className="space-y-6 p-4">
+          <RaidbotsTreeDisplay
+            encodedString={talentLoadout.encoded_loadout_text}
+            width={1000}
             locale={locale}
-            className={characterClass}
-            specName={activeSpecName}
-            selectedTalents={[
-              ...talentLoadout.class_talents,
-              ...talentLoadout.spec_talents,
-            ].filter((t) => t.rank > 0)}
+            hideHeader={false}
+            hideExport={false}
           />
-          <HeroTalentTree
-            talentTreeId={talentLoadout.tree_id}
-            specId={profileData.spec_id}
-            region={region}
-            namespace={namespace}
-            locale={locale}
-            className={characterClass}
-            specName={activeSpecName}
-            selectedHeroTalentTree={[...talentLoadout.hero_talents].filter(
-              (t) => t.rank > 0
-            )}
-          />
-        </>
+        </div>
       )}
     </div>
   );
