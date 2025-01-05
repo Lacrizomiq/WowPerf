@@ -111,6 +111,9 @@ func (s *AuthService) SignUp(user *models.User) error {
 	}
 
 	user.Password = string(hashedPassword)
+	// Set Battle.net fields to nil
+	user.BattleNetID = ""
+	user.BattleTag = ""
 
 	if err := s.DB.Create(user).Error; err != nil {
 		log.Printf("Failed to create user in database: %v", err)
