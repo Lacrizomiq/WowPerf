@@ -195,6 +195,7 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	}
 	log.Printf("Got user info: battleTag=%s, id=%d", userInfo.BattleTag, userInfo.ID)
 
+	// Convert userInfo.ID to string
 	battleNetID := fmt.Sprintf("%d", userInfo.ID)
 
 	var user models.User
@@ -204,20 +205,20 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Chiffrer et sauvegarder uniquement l'access token
+	// Encrypt and save only the access token
 	if err := user.SetBattleNetTokens(token.AccessToken, ""); err != nil {
-		log.Printf("Failed to set Battle.net token: %v", err)
+		log.Printf("Failed to set Battle.net token")
 		tx.Rollback()
-		return fmt.Errorf("failed to encrypt token: %w", err)
+		return fmt.Errorf("failed to encrypt token")
 	}
 
-	// Mise à jour des champs
+	// Update fields
 	user.BattleNetID = &battleNetID
 	user.BattleTag = &userInfo.BattleTag
 	user.BattleNetExpiresAt = token.Expiry
 	user.BattleNetTokenType = token.TokenType
 
-	// Sauvegarder l'utilisateur
+	// Save user
 	if err := tx.Save(&user).Error; err != nil {
 		log.Printf("Failed to save user: %v", err)
 		tx.Rollback()
@@ -246,7 +247,7 @@ func (s *BattleNetAuthService) UnlinkUserAccount(ctx context.Context, userID uin
 		"battle_tag":              nil,
 		"encrypted_access_token":  nil,
 		"encrypted_refresh_token": nil,
-		"battle_net_token_type":   nil,
+		"battle_net_token_type":   "",
 		"battle_net_expires_at":   nil,
 		"battle_net_scopes":       nil,
 	}
@@ -373,8 +374,14 @@ func (s *BattleNetAuthService) GetUserBattleNetStatus(ctx context.Context, userI
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
-	return &BattleNetStatus{
-		Linked:    user.IsBattleNetLinked(),
-		BattleTag: *user.BattleTag,
-	}, nil
+	status := &BattleNetStatus{
+		Linked: user.IsBattleNetLinked(),
+	}
+
+	// Check if BattleTag is not nil before accessing it
+	if user.BattleTag != nil {
+		status.BattleTag = *user.BattleTag
+	}
+
+	return status, nil
 }
