@@ -20,10 +20,10 @@ type User struct {
 	LastUsernameChangeAt time.Time `json:"last_username_change_at"`
 
 	// Battle.net specific fields
-	BattleNetID           string    `gorm:"uniqueIndex" json:"battle_net_id"` // Changed to string as per Blizzard docs
+	BattleNetID           string    `gorm:"uniqueIndex" json:"battle_net_id"`
 	BattleTag             string    `gorm:"uniqueIndex" json:"battle_tag"`
-	EncryptedAccessToken  []byte    `gorm:"type:bytea" json:"-"` // Encrypted access token
-	EncryptedRefreshToken []byte    `gorm:"type:bytea" json:"-"` // Now also encrypted
+	EncryptedAccessToken  []byte    `gorm:"type:bytea" json:"-"`
+	EncryptedRefreshToken []byte    `gorm:"type:bytea" json:"-"`
 	BattleNetTokenType    string    `gorm:"type:varchar(50)" json:"-"`
 	BattleNetExpiresAt    time.Time `json:"-"`
 	BattleNetScopes       []string  `gorm:"type:text[]" json:"-"`

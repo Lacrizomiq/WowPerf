@@ -367,7 +367,6 @@ func (s *BattleNetAuthService) UpdateUserToken(userID uint, token *oauth2.Token)
 }
 
 // GetUserBattleNetStatus returns the current Battle.net link status for a user
-// GetUserBattleNetStatus returns the current Battle.net link status for a user
 func (s *BattleNetAuthService) GetUserBattleNetStatus(ctx context.Context, userID uint) (*BattleNetStatus, error) {
 	var user models.User
 	if err := s.db.First(&user, userID).Error; err != nil {
@@ -376,6 +375,6 @@ func (s *BattleNetAuthService) GetUserBattleNetStatus(ctx context.Context, userI
 
 	return &BattleNetStatus{
 		Linked:    user.IsBattleNetLinked(),
-		BattleTag: user.BattleTag, // Plus besoin de gérer un pointeur
+		BattleTag: user.BattleTag,
 	}, nil
 }
