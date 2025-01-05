@@ -212,8 +212,8 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	}
 
 	// Mise à jour des champs
-	user.BattleNetID = battleNetID
-	user.BattleTag = userInfo.BattleTag
+	user.BattleNetID = &battleNetID
+	user.BattleTag = &userInfo.BattleTag
 	user.BattleNetExpiresAt = token.Expiry
 	user.BattleNetTokenType = token.TokenType
 
@@ -375,6 +375,6 @@ func (s *BattleNetAuthService) GetUserBattleNetStatus(ctx context.Context, userI
 
 	return &BattleNetStatus{
 		Linked:    user.IsBattleNetLinked(),
-		BattleTag: user.BattleTag,
+		BattleTag: *user.BattleTag,
 	}, nil
 }

@@ -19,9 +19,9 @@ type User struct {
 	Password             string    `gorm:"not null" json:"-" validate:"required,min=8"`
 	LastUsernameChangeAt time.Time `json:"last_username_change_at"`
 
-	// Battle.net specific fields
-	BattleNetID           string    `gorm:"uniqueIndex" json:"battle_net_id"`
-	BattleTag             string    `gorm:"uniqueIndex" json:"battle_tag"`
+	// Battle.net specific fields - now with pointers
+	BattleNetID           *string   `gorm:"uniqueIndex" json:"battle_net_id"`
+	BattleTag             *string   `gorm:"uniqueIndex" json:"battle_tag"`
 	EncryptedAccessToken  []byte    `gorm:"type:bytea" json:"-"`
 	EncryptedRefreshToken []byte    `gorm:"type:bytea" json:"-"`
 	BattleNetTokenType    string    `gorm:"type:varchar(50)" json:"-"`
@@ -98,7 +98,7 @@ func (u *User) GetBattleNetRefreshToken() (string, error) {
 
 // Battle.net account status
 func (u *User) IsBattleNetLinked() bool {
-	return u.BattleNetID != "" && u.BattleTag != ""
+	return u.BattleNetID != nil && u.BattleTag != nil
 }
 
 func (u *User) IsTokenExpired() bool {
