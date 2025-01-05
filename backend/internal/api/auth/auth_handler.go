@@ -112,7 +112,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 
 	// Auto-login the user after signup
-	if err := h.authService.Login(c, user.Username, userCreate.Password); err != nil {
+	if err := h.authService.Login(c, user.Email, userCreate.Password); err != nil {
 		log.Printf("Failed to auto-login user after signup: %v", err)
 		c.JSON(http.StatusOK, gin.H{
 			"message": "User created successfully, but login failed",
