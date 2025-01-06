@@ -27,6 +27,7 @@ import (
 	auth "wowperf/internal/services/auth"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	bnetAuth "wowperf/internal/services/blizzard/auth"
+	email "wowperf/internal/services/email"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
 	userService "wowperf/internal/services/user"
@@ -96,11 +97,14 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		return nil, fmt.Errorf("failed to initialize battle.net auth service: %w", err)
 	}
 
+	emailService := email.NewEmailService(os.Getenv("ENVIRONMENT"))
+
 	// Main authentication service
 	authService := auth.NewAuthService(
 		db,
 		os.Getenv("JWT_SECRET"),
 		redisClient,
+		emailService,
 	)
 
 	// Other services...

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"wowperf/internal/models"
+	"wowperf/internal/services/email"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,14 @@ var (
 	ErrRefreshTokenNotFound = errors.New("refresh token not found")
 )
 
+// ResendEmailData represents the structure for Resend API
+type ResendEmail struct {
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+	Html    string   `json:"html"`
+}
+
 // CookieConfig contains cookie configuration parameters
 type CookieConfig struct {
 	Domain   string
@@ -49,6 +58,7 @@ type AuthService struct {
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
+	EmailService    email.EmailService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -56,6 +66,7 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
+	emailService email.EmailService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -68,6 +79,7 @@ func NewAuthService(
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
+		EmailService:    emailService,
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
@@ -313,4 +325,85 @@ func (s *AuthService) isTokenNearExpiry(token string) (bool, error) {
 	}
 
 	return false, errors.New("invalid token claims")
+}
+
+// Reset password method for AuthService
+func (s *AuthService) InitiatePasswordReset(email string) error {
+	var user models.User
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		// Return generic message to prevent email enumeration
+		return nil
+	}
+
+	// Generate reset token
+	token, err := user.GeneratePasswordResetToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate reset token: %w", err)
+	}
+
+	// Save the token to the database
+	if err := s.DB.Save(&user).Error; err != nil {
+		return fmt.Errorf("failed to save reset token : %w", err)
+	}
+
+	// Sent reset email
+	if err := s.sendPasswordResetEmail(user.Email, token); err != nil {
+		return fmt.Errorf("failed to send password reset email: %w", err)
+	}
+
+	return nil
+}
+
+// sendPasswordResetEmail sends a password reset email to the user
+func (s *AuthService) sendPasswordResetEmail(emailTo, token string) error {
+	resetURL := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("FRONTEND_URL"), token)
+
+	emailData, err := email.RenderTemplate(email.TemplateResetPassword, map[string]string{
+		"ResetURL": resetURL,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to render email template: %w", err)
+	}
+
+	emailData.To = emailTo
+	return s.EmailService.SendEmail(emailData)
+}
+
+// ValidateResetToken validates a reset token and returns the user
+func (s *AuthService) ValidateResetToken(token string) (*models.User, error) {
+	var user models.User
+	if err := s.DB.Where("reset_password_token = ?", token).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	if !user.ValidatePasswordResetToken(token) {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	return &user, nil
+}
+
+// ResetPassword resets a user's password
+func (s *AuthService) ResetPassword(token, newPassword string) error {
+	user, err := s.ValidateResetToken(token)
+	if err != nil {
+		return err
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password and clear reset token
+	user.Password = string(hashedPassword)
+	user.ClearPasswordResetToken()
+
+	// Save changes
+	if err := s.DB.Save(user).Error; err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
 }
