@@ -35,14 +35,6 @@ var (
 	ErrRefreshTokenNotFound = errors.New("refresh token not found")
 )
 
-// ResendEmailData represents the structure for Resend API
-type ResendEmail struct {
-	From    string   `json:"from"`
-	To      []string `json:"to"`
-	Subject string   `json:"subject"`
-	Html    string   `json:"html"`
-}
-
 // CookieConfig contains cookie configuration parameters
 type CookieConfig struct {
 	Domain   string
@@ -58,7 +50,7 @@ type AuthService struct {
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
-	EmailService    email.EmailService
+	EmailService    *email.EmailService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -66,7 +58,7 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
-	emailService email.EmailService,
+	emailService *email.EmailService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -331,8 +323,7 @@ func (s *AuthService) isTokenNearExpiry(token string) (bool, error) {
 func (s *AuthService) InitiatePasswordReset(email string) error {
 	var user models.User
 	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
-		// Return generic message to prevent email enumeration
-		return nil
+		return nil // Return silently to avoid email enumeration
 	}
 
 	// Generate reset token
@@ -341,32 +332,17 @@ func (s *AuthService) InitiatePasswordReset(email string) error {
 		return fmt.Errorf("failed to generate reset token: %w", err)
 	}
 
-	// Save the token to the database
+	// Save user with the new token
 	if err := s.DB.Save(&user).Error; err != nil {
-		return fmt.Errorf("failed to save reset token : %w", err)
+		return fmt.Errorf("failed to save reset token: %w", err)
 	}
 
-	// Sent reset email
-	if err := s.sendPasswordResetEmail(user.Email, token); err != nil {
-		return fmt.Errorf("failed to send password reset email: %w", err)
+	// Send reset email directly using the email service
+	if err := s.EmailService.SendPasswordResetEmail(&user, token); err != nil {
+		return fmt.Errorf("failed to send reset email: %w", err)
 	}
 
 	return nil
-}
-
-// sendPasswordResetEmail sends a password reset email to the user
-func (s *AuthService) sendPasswordResetEmail(emailTo, token string) error {
-	resetURL := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("FRONTEND_URL"), token)
-
-	emailData, err := email.RenderTemplate(email.TemplateResetPassword, map[string]string{
-		"ResetURL": resetURL,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to render email template: %w", err)
-	}
-
-	emailData.To = emailTo
-	return s.EmailService.SendEmail(emailData)
 }
 
 // ValidateResetToken validates a reset token and returns the user
@@ -405,5 +381,15 @@ func (s *AuthService) ResetPassword(token, newPassword string) error {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 
+	return nil
+}
+
+// Close cleans up resources used by the auth service
+func (s *AuthService) Close() error {
+	if s.EmailService != nil {
+		if err := s.EmailService.Close(); err != nil {
+			return fmt.Errorf("failed to close email service: %w", err)
+		}
+	}
 	return nil
 }

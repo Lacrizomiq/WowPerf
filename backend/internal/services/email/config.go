@@ -3,6 +3,7 @@ package email
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ type Config struct {
 	Resend   ResendConfig
 	Mailtrap MailtrapConfig
 	Dev      DevConfig
+	SMTP     SMTPConfig
 }
 
 // ResendConfig holds Resend-specific configuration
@@ -38,6 +40,15 @@ type MailtrapConfig struct {
 	Password string
 	Host     string
 	Port     int
+}
+
+// SMTPConfig holds SMTP-specific configuration
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
 }
 
 // DevConfig holds development-specific configuration
@@ -67,6 +78,13 @@ func NewConfig() (*Config, error) {
 		Domain:      domain,
 		FrontendURL: frontendURL,
 		BackendURL:  os.Getenv("BACKEND_URL"),
+		SMTP: SMTPConfig{
+			Host:     os.Getenv("SMTP_HOST"),
+			Port:     getEnvAsInt("SMTP_PORT", 1025),
+			Username: os.Getenv("SMTP_USER"),
+			Password: os.Getenv("SMTP_PASSWORD"),
+			From:     os.Getenv("SMTP_FROM"),
+		},
 	}
 
 	// Load provider-specific configs based on environment
@@ -143,4 +161,12 @@ func (c *Config) IsTest() bool {
 
 func (c *Config) IsLocal() bool {
 	return c.Environment == EnvLocal
+}
+
+func getEnvAsInt(name string, defaultVal int) int {
+	valueStr := os.Getenv(name)
+	if value, err := strconv.Atoi(valueStr); err == nil {
+		return value
+	}
+	return defaultVal
 }

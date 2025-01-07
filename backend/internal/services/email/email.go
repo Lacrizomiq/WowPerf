@@ -57,8 +57,14 @@ func (s *EmailService) initializeProvider() (providers.Provider, error) {
 			s.config.Mailtrap.Host,
 			s.config.Mailtrap.Port,
 		)
-	default:
-		provider = providers.NewDevProvider(s.config.Dev.LogPath)
+	default: // environnement local
+		provider = providers.NewSMTPProvider(
+			s.config.SMTP.Host,
+			s.config.SMTP.Port,
+			s.config.SMTP.Username,
+			s.config.SMTP.Password,
+			s.config.SMTP.From,
+		)
 	}
 
 	if err := provider.Initialize(); err != nil {

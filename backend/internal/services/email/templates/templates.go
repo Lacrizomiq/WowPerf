@@ -37,7 +37,7 @@ var emailTemplates = map[string]Template{
 	PasswordReset: {
 		Name:    PasswordReset,
 		Subject: "Reset Your Password - WowPerf",
-		Path:    "templates/password_reset.html",
+		Path:    "internal/services/email/templates/password_reset.html",
 	},
 }
 

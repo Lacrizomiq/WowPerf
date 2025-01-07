@@ -1,12 +1,10 @@
 -- 010_update_player_builds.up.sql
 
--- Delete of the talent_tree_id column
+-- Delete of the talent_tree_id column (déjà fait apparemment)
 ALTER TABLE player_builds 
     DROP COLUMN IF EXISTS talent_tree_id;
 
--- Rename of the talent_import column to talent_code
-ALTER TABLE player_builds 
-    RENAME COLUMN talent_import TO talent_code;
+-- La colonne talent_code existe déjà, pas besoin de renommage
 
 -- Add the item_level column
 ALTER TABLE player_builds 
@@ -21,8 +19,6 @@ ALTER TABLE player_builds
 ALTER TABLE player_builds
     DROP COLUMN IF EXISTS dungeon_id;
 
-
-
 -- Add additional indexes to improve query performance
 CREATE INDEX IF NOT EXISTS idx_player_builds_item_level ON player_builds(item_level);
 CREATE INDEX IF NOT EXISTS idx_player_builds_keystone_level ON player_builds(keystone_level);
@@ -31,7 +27,6 @@ CREATE INDEX IF NOT EXISTS idx_player_builds_affixes ON player_builds USING gin(
 -- Index for JSON data
 CREATE INDEX IF NOT EXISTS idx_player_builds_gear ON player_builds USING gin(gear jsonb_path_ops);
 CREATE INDEX IF NOT EXISTS idx_player_builds_stats ON player_builds USING gin(stats jsonb_path_ops);
-CREATE INDEX IF NOT EXISTS idx_player_builds_combatant_info ON player_builds USING gin(combatant_info jsonb_path_ops);
 
 -- Index for temporal data
 CREATE INDEX IF NOT EXISTS idx_player_builds_created_at ON player_builds(created_at);

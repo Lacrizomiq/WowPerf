@@ -208,17 +208,29 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	// Initiate password reset
-	if err := h.authService.InitiatePasswordReset(req.Email); err != nil {
-		log.Printf("Failed to initiate password reset: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to process password reset",
-			"code":  "reset_initiation_failed",
+	// Validate email format
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(req.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid email format",
+			"code":  "invalid_email_format",
 		})
 		return
 	}
 
-	// Always return success to prevent email enumeration
+	if err := h.authService.InitiatePasswordReset(req.Email); err != nil {
+		// Log the error but do not return it to the user to avoid email enumeration
+		log.Printf("Failed to initiate password reset: %v", err)
+
+		// Always return the same success message
+		c.JSON(http.StatusOK, gin.H{
+			"message": "If the email exists, a password reset link has been sent",
+			"code":    "reset_email_sent",
+		})
+		return
+	}
+
+	// Return success to prevent email enumeration
 	c.JSON(http.StatusOK, gin.H{
 		"message": "If the email exists, a password reset link has been sent",
 		"code":    "reset_email_sent",
@@ -227,7 +239,6 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 
 // ValidateResetToken checks if a reset token is valid
 func (h *AuthHandler) ValidateResetToken(c *gin.Context) {
-	// Get the token from the query string
 	token := c.Query("token")
 	if token == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -238,8 +249,9 @@ func (h *AuthHandler) ValidateResetToken(c *gin.Context) {
 	}
 
 	// Validate the token
-	_, err := h.authService.ValidateResetToken(token)
-	if err != nil {
+	log.Printf("Validating reset token")
+	if _, err := h.authService.ValidateResetToken(token); err != nil {
+		log.Printf("Invalid reset token: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid or expired token",
 			"code":  "invalid_token",
@@ -248,6 +260,7 @@ func (h *AuthHandler) ValidateResetToken(c *gin.Context) {
 	}
 
 	// Return success to prevent token enumeration
+	log.Printf("Reset token validated successfully")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token is valid",
 		"code":    "valid_token",
@@ -265,11 +278,20 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// Validate password length
-	if len(req.NewPassword) < 8 {
+	// Validation more complete of the password
+	if len(req.NewPassword) < 8 || len(req.NewPassword) > 32 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Password must be at least 8 characters long",
+			"error": "Password must be between 8 and 32 characters",
 			"code":  "invalid_password_length",
+		})
+		return
+	}
+
+	// Validate the token before attempting the reset
+	if _, err := h.authService.ValidateResetToken(req.Token); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid or expired token",
+			"code":  "invalid_token",
 		})
 		return
 	}
