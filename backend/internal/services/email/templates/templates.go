@@ -2,10 +2,14 @@ package templates
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"html/template"
 	"sync"
 )
+
+//go:embed password_reset.html
+var templateFS embed.FS
 
 // Template names constants
 const (
@@ -17,6 +21,7 @@ type Template struct {
 	Name    string
 	Subject string
 	Path    string
+	DevPath string // Chemin pour le développement local
 }
 
 // TemplateData contains the base data available to all templates
@@ -37,7 +42,8 @@ var emailTemplates = map[string]Template{
 	PasswordReset: {
 		Name:    PasswordReset,
 		Subject: "Reset Your Password - WowPerf",
-		Path:    "internal/services/email/templates/password_reset.html",
+		Path:    "password_reset.html",                                   // Pour l'embedded FS
+		DevPath: "internal/services/email/templates/password_reset.html", // Pour le développement local
 	},
 }
 
@@ -61,9 +67,21 @@ func (tm *TemplateManager) loadTemplates() error {
 	defer tm.mu.Unlock()
 
 	for name, tmpl := range emailTemplates {
-		t, err := template.ParseFiles(tmpl.Path)
+		// Essayer d'abord l'embedded FS
+		content, err := templateFS.ReadFile(tmpl.Path)
+		if err == nil {
+			t, err := template.New(name).Parse(string(content))
+			if err != nil {
+				return fmt.Errorf("failed to parse embedded template %s: %w", name, err)
+			}
+			tm.templates[name] = t
+			continue
+		}
+
+		// Si l'embedded FS échoue, essayer le chemin de développement
+		t, err := template.ParseFiles(tmpl.DevPath)
 		if err != nil {
-			return fmt.Errorf("failed to parse template %s: %w", name, err)
+			return fmt.Errorf("failed to parse template %s from either embedded or development path: %w", name, err)
 		}
 		tm.templates[name] = t
 	}
