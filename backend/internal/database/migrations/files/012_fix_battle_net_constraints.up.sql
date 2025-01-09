@@ -1,8 +1,12 @@
 -- 012_fix_battle_net_constraints.up.sql
 
--- 1. Supprimer les anciennes contraintes
+-- 1. Supprimer les indexes et contraintes existants
+DROP INDEX IF EXISTS users_battle_tag_unique;
+DROP INDEX IF EXISTS users_battle_net_id_unique;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_battle_tag_key;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_battle_net_id_key;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_battle_tag_not_empty;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_battle_net_id_not_empty;
 
 -- 2. Allow NULL for Battle.net fields
 ALTER TABLE users 

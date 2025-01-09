@@ -74,6 +74,8 @@ services:
       - WARCRAFTLOGS_CLIENT_ID=${WARCRAFTLOGS_CLIENT_ID}
       - WARCRAFTLOGS_CLIENT_SECRET=${WARCRAFTLOGS_CLIENT_SECRET}
       - ENVIRONMENT=test
+      - MAILTRAP_USER=${MAILTRAP_USER}
+      - MAILTRAP_PASS=${MAILTRAP_PASS}
     networks:
       - traefik
       - internal

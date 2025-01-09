@@ -70,6 +70,9 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - ENVIRONMENT=development
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_FROM=noreply@localhost
     networks:
       - traefik
       - internal
@@ -79,7 +82,7 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
-      # Ajoutez ces lignes pour strip le préfixe /api
+      # Add these lines to strip the /api prefix
       - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
       - "traefik.http.routers.backend.middlewares=strip-api@docker"
     depends_on:
@@ -87,6 +90,23 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Mailhog is used to test emails in development
+  mailhog:
+    image: mailhog/mailhog
+    networks:
+      - traefik
+      - internal
+    labels:
+      - "traefik.enable=true"
+      # Configuration de la route principale
+      - "traefik.http.routers.mailhog.rule=Host(`localhost`) && PathPrefix(`/mailhog`)"
+      - "traefik.http.routers.mailhog.entrypoints=websecure"
+      - "traefik.http.routers.mailhog.tls=true"
+      - "traefik.http.services.mailhog.loadbalancer.server.port=8025"
+    environment:
+      - MH_UI_WEB_PATH=mailhog
     restart: unless-stopped
 
   adminer:

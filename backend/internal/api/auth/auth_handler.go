@@ -16,6 +16,17 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// ForgotPasswordRequest represents the request structure for forgot password
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ResetPasswordRequest represents the request structure for reset password
+type ResetPasswordRequest struct {
+	Token       string `json:"token" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
 // AuthHandler handles user authentication endpoints
 type AuthHandler struct {
 	authService *auth.AuthService
@@ -186,6 +197,121 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Refresh token successful", "code": "refresh_token_success"})
 }
 
+// ForgotPassword initiates a password reset for a user
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid email format",
+			"code":  "invalid_email_format",
+		})
+		return
+	}
+
+	// Validate email format
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if !emailRegex.MatchString(req.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid email format",
+			"code":  "invalid_email_format",
+		})
+		return
+	}
+
+	if err := h.authService.InitiatePasswordReset(req.Email); err != nil {
+		// Log the error but do not return it to the user to avoid email enumeration
+		log.Printf("Failed to initiate password reset: %v", err)
+
+		// Always return the same success message
+		c.JSON(http.StatusOK, gin.H{
+			"message": "If the email exists, a password reset link has been sent",
+			"code":    "reset_email_sent",
+		})
+		return
+	}
+
+	// Return success to prevent email enumeration
+	c.JSON(http.StatusOK, gin.H{
+		"message": "If the email exists, a password reset link has been sent",
+		"code":    "reset_email_sent",
+	})
+}
+
+// ValidateResetToken checks if a reset token is valid
+func (h *AuthHandler) ValidateResetToken(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Token is required",
+			"code":  "token_required",
+		})
+		return
+	}
+
+	// Validate the token
+	log.Printf("Validating reset token")
+	if _, err := h.authService.ValidateResetToken(token); err != nil {
+		log.Printf("Invalid reset token: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid or expired token",
+			"code":  "invalid_token",
+		})
+		return
+	}
+
+	// Return success to prevent token enumeration
+	log.Printf("Reset token validated successfully")
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Token is valid",
+		"code":    "valid_token",
+	})
+}
+
+// ResetPassword handles the password reset request
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format",
+			"code":  "invalid_request",
+		})
+		return
+	}
+
+	// Validation more complete of the password
+	if len(req.NewPassword) < 8 || len(req.NewPassword) > 32 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Password must be between 8 and 32 characters",
+			"code":  "invalid_password_length",
+		})
+		return
+	}
+
+	// Validate the token before attempting the reset
+	if _, err := h.authService.ValidateResetToken(req.Token); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid or expired token",
+			"code":  "invalid_token",
+		})
+		return
+	}
+
+	// Reset the password
+	if err := h.authService.ResetPassword(req.Token, req.NewPassword); err != nil {
+		log.Printf("Failed to reset password: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to reset password",
+			"code":  "reset_password_failed",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password has been reset successfully",
+		"code":    "password_reset_success",
+	})
+}
+
 // RegisterRoutes registers the authentication routes
 func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/auth")
@@ -193,6 +319,9 @@ func (h *AuthHandler) RegisterRoutes(router *gin.Engine) {
 		// Public routes - no CSRF or JWT
 		auth.POST("/signup", h.SignUp)
 		auth.POST("/login", h.Login)
+		auth.POST("/forgot-password", h.ForgotPassword)
+		auth.GET("/validate-reset-token", h.ValidateResetToken)
+		auth.POST("/reset-password", h.ResetPassword)
 
 		// Routes protected by JWT only
 		jwtProtected := auth.Group("")

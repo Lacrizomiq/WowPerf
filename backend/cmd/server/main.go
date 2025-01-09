@@ -27,6 +27,7 @@ import (
 	auth "wowperf/internal/services/auth"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	bnetAuth "wowperf/internal/services/blizzard/auth"
+	email "wowperf/internal/services/email"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
 	userService "wowperf/internal/services/user"
@@ -96,11 +97,22 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		return nil, fmt.Errorf("failed to initialize battle.net auth service: %w", err)
 	}
 
+	emailConfig, err := email.NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize email config: %w", err)
+	}
+
+	emailService, err := email.NewEmailService(emailConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize email service: %w", err)
+	}
+
 	// Main authentication service
 	authService := auth.NewAuthService(
 		db,
 		os.Getenv("JWT_SECRET"),
 		redisClient,
+		emailService,
 	)
 
 	// Other services...
@@ -288,6 +300,9 @@ func loadConfig() (*AppConfig, error) {
 		"BLIZZARD_CLIENT_ID",
 		"BLIZZARD_CLIENT_SECRET",
 		"BLIZZARD_REDIRECT_URL",
+		"DOMAIN",
+		"FRONTEND_URL",
+		"BACKEND_URL",
 	}
 
 	// Check required variables with more logs
@@ -297,6 +312,19 @@ func loadConfig() (*AppConfig, error) {
 		if val == "" {
 			missingVars = append(missingVars, envVar)
 		}
+	}
+
+	// Add RESEND_API_KEY to requiredEnvVars if in production
+	if os.Getenv("ENVIRONMENT") == "production" {
+		requiredEnvVars = append(requiredEnvVars, "RESEND_API_KEY")
+	}
+
+	// Add MAILTRAP_USER and MAILTRAP_PASS to requiredEnvVars if in test
+	if os.Getenv("ENVIRONMENT") == "test" {
+		requiredEnvVars = append(requiredEnvVars, []string{
+			"MAILTRAP_USER",
+			"MAILTRAP_PASS",
+		}...)
 	}
 
 	// If some variables are missing, log the details and return an error
@@ -402,6 +430,12 @@ func main() {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 	log.Println("Services initialized successfully")
+
+	defer func() {
+		if err := services.Auth.Close(); err != nil {
+			log.Printf("Failed to close auth service: %v", err)
+		}
+	}()
 
 	// Initialize handlers
 	handlers := initializeHandlers(services, db, cacheService, cacheManagers)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"wowperf/internal/models"
+	"wowperf/internal/services/email"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,7 @@ type AuthService struct {
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
+	EmailService    *email.EmailService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -56,6 +58,7 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
+	emailService *email.EmailService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -68,6 +71,7 @@ func NewAuthService(
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
+		EmailService:    emailService,
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
@@ -313,4 +317,79 @@ func (s *AuthService) isTokenNearExpiry(token string) (bool, error) {
 	}
 
 	return false, errors.New("invalid token claims")
+}
+
+// Reset password method for AuthService
+func (s *AuthService) InitiatePasswordReset(email string) error {
+	var user models.User
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil // Return silently to avoid email enumeration
+	}
+
+	// Generate reset token
+	token, err := user.GeneratePasswordResetToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate reset token: %w", err)
+	}
+
+	// Save user with the new token
+	if err := s.DB.Save(&user).Error; err != nil {
+		return fmt.Errorf("failed to save reset token: %w", err)
+	}
+
+	// Send reset email directly using the email service
+	if err := s.EmailService.SendPasswordResetEmail(&user, token); err != nil {
+		return fmt.Errorf("failed to send reset email: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateResetToken validates a reset token and returns the user
+func (s *AuthService) ValidateResetToken(token string) (*models.User, error) {
+	var user models.User
+	if err := s.DB.Where("reset_password_token = ?", token).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	if !user.ValidatePasswordResetToken(token) {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	return &user, nil
+}
+
+// ResetPassword resets a user's password
+func (s *AuthService) ResetPassword(token, newPassword string) error {
+	user, err := s.ValidateResetToken(token)
+	if err != nil {
+		return err
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password and clear reset token
+	user.Password = string(hashedPassword)
+	user.ClearPasswordResetToken()
+
+	// Save changes
+	if err := s.DB.Save(user).Error; err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
+}
+
+// Close cleans up resources used by the auth service
+func (s *AuthService) Close() error {
+	if s.EmailService != nil {
+		if err := s.EmailService.Close(); err != nil {
+			return fmt.Errorf("failed to close email service: %w", err)
+		}
+	}
+	return nil
 }

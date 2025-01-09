@@ -1,6 +1,8 @@
 package models
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -18,6 +20,10 @@ type User struct {
 	Email                string    `gorm:"uniqueIndex;not null" json:"email" validate:"required,email"`
 	Password             string    `gorm:"not null" json:"-" validate:"required,min=8"`
 	LastUsernameChangeAt time.Time `json:"last_username_change_at"`
+
+	// Reset password fields
+	ResetPasswordToken   *string    `gorm:"uniqueIndex" json:"-"`
+	ResetPasswordExpires *time.Time `json:"-"`
 
 	// Battle.net specific fields - now with pointers
 	BattleNetID           *string   `gorm:"uniqueIndex" json:"battle_net_id"`
@@ -118,4 +124,56 @@ func (u *User) HasRequiredScopes(requiredScopes []string) bool {
 		}
 	}
 	return true
+}
+
+// GeneratePasswordResetToken generates a new reset token and sets its expiration
+func (u *User) GeneratePasswordResetToken() (string, error) {
+	// Generate a random 32-byte token
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return "", err
+	}
+
+	// convert to hex string
+	token := hex.EncodeToString(tokenBytes)
+
+	// set expiration to 1 hour from now
+	expires := time.Now().Add(1 * time.Hour)
+
+	u.ResetPasswordToken = &token
+	u.ResetPasswordExpires = &expires
+
+	return token, nil
+}
+
+// ClearPasswordResetToken clears the reset token and expiration
+func (u *User) ClearPasswordResetToken() {
+	u.ResetPasswordToken = nil
+	u.ResetPasswordExpires = nil
+}
+
+// IsPasswordResetTokenValid checks if the reset token is valid and not expired
+func (u *User) IsPasswordResetTokenValid() bool {
+	if u.ResetPasswordToken == nil || u.ResetPasswordExpires == nil {
+		return false
+	}
+	return time.Now().Before(*u.ResetPasswordExpires)
+}
+
+// IsPasswordResetTokenExpired checks if the reset token has expired
+func (u *User) IsPasswordResetTokenExpired() bool {
+	if u.ResetPasswordExpires == nil {
+		return true
+	}
+
+	return time.Now().After(*u.ResetPasswordExpires)
+}
+
+// ValidatePasswordResetToken checks if the provided token matches and is valid
+func (u *User) ValidatePasswordResetToken(token string) bool {
+	if u.ResetPasswordToken == nil || *u.ResetPasswordToken != token {
+		return false
+	}
+
+	return u.IsPasswordResetTokenValid()
 }
