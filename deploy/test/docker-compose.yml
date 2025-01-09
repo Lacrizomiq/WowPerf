@@ -76,6 +76,8 @@ services:
       - ENVIRONMENT=test
       - MAILTRAP_USER=${MAILTRAP_USER}
       - MAILTRAP_PASS=${MAILTRAP_PASS}
+      - DOMAIN=${DOMAIN}
+      - BACKEND_URL=${BACKEND_URL}
     networks:
       - traefik
       - internal
