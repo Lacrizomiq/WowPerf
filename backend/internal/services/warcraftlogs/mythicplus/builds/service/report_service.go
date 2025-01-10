@@ -54,29 +54,24 @@ func (s *ReportService) GetReportsFromRankings(ctx context.Context) ([]ReportInf
 		EncounterID uint   `gorm:"column:encounter_id"`
 	}
 
-	// Pour les tests, on utilise un intervalle de 1 minute
-	// En production, changer à: time.Now().Add(-7 * 24 * time.Hour)
-	updateInterval := time.Now().Add(-1 * time.Minute)
-
+	// Get all untreated reports, without time condition
 	query := s.db.WithContext(ctx).
 		Table("class_rankings as cr").
 		Select("DISTINCT cr.report_code, cr.report_fight_id, cr.encounter_id").
 		Joins("LEFT JOIN warcraft_logs_reports as wlr ON cr.report_code = wlr.code").
-		Where("cr.deleted_at IS NULL AND cr.encounter_id = ?")
-
-	// Ajouter la condition pour les rapports non traités ou anciens
-	query = query.Where("wlr.code IS NULL OR wlr.updated_at < ?", updateInterval)
-
-	// Debug: Afficher la requête SQL
-	log.Printf("[DEBUG] SQL Query: %v", query.Statement.SQL.String())
+		Where("cr.deleted_at IS NULL").
+		Where("wlr.code IS NULL") // Only untreated reports
 
 	err := query.Order("cr.report_code DESC").Scan(&reports).Error
+
+	log.Printf("[DEBUG] SQL Query: %v", query.Statement.SQL.String())
+	log.Printf("[INFO] Found %d reports needing processing", len(reports))
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reports from rankings: %w", err)
 	}
 
-	log.Printf("[DEBUG] Found %d reports to process", len(reports))
+	log.Printf("[DEBUG] Found %d untreated reports", len(reports))
 
 	result := make([]ReportInfo, len(reports))
 	for i, r := range reports {
@@ -126,6 +121,8 @@ func (s *ReportService) StartPeriodicReportProcessing(ctx context.Context) {
 
 // ProcessReports processes a list of reports with detailed logging and error handling
 func (s *ReportService) ProcessReports(ctx context.Context, reports []ReportInfo) error {
+	log.Printf("[INFO] Starting processing of %d reports...", len(reports))
+
 	if len(reports) == 0 {
 		log.Println("[DEBUG] No reports to process")
 		return nil

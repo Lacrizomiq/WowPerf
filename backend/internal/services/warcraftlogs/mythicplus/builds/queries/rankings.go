@@ -25,7 +25,7 @@ query getClassRankings($encounterId: Int!, $className: String!, $specName: Strin
     }
 }`
 
-func ParseRankingsResponse(response []byte, encounterId uint, dungeonId uint) ([]*warcraftlogsBuilds.ClassRanking, bool, error) {
+func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBuilds.ClassRanking, bool, error) {
 	log.Printf("Parsing response data")
 
 	var result struct {
@@ -97,7 +97,6 @@ func ParseRankingsResponse(response []byte, encounterId uint, dungeonId uint) ([
 			Class:         rankingResponse.Class,
 			Spec:          rankingResponse.Spec,
 			EncounterID:   encounterId,
-			DungeonID:     dungeonId,
 			Amount:        rankingResponse.Amount,
 			HardModeLevel: rankingResponse.HardModeLevel,
 			Duration:      rankingResponse.Duration,
