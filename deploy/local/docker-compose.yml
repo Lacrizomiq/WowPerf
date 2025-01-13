@@ -192,17 +192,20 @@ services:
   temporal:
     image: temporalio/auto-setup:1.21.5
     environment:
+      - POSTGRES_SEEDS=${DB_HOST}
       - DB=postgresql
       - DB_PORT=5432
       - DB_HOST=${DB_HOST}
-      - DB_USER=${DB_USER}
+      - DB_USER=${DB_USER} # Utiliser le même utilisateur que votre app
       - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER} # Ajouter cette ligne
+      - POSTGRES_PASSWORD=${DB_PASSWORD} # Ajouter cette ligne
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_SCHEMAS=temporal
       - TEMPORAL_PERSISTENCE_SCHEMA=temporal
       # Configuration Temporal
       - TEMPORAL_BROADCAST_ADDRESS=temporal
-      - TEMPORAL_DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+      - TEMPORAL_DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development.yaml
     networks:
       - internal
     volumes:
