@@ -1,4 +1,4 @@
-package warcraftlogsBuildsTemporal
+package warcraftlogsBuildsTemporalWorkflows
 
 import (
 	"time"
@@ -74,7 +74,7 @@ func (w *SyncWorkflow) Execute(ctx workflow.Context, params WorkflowParams) (*Wo
 
 	// Retrieve processed reports
 	var reports []*warcraftlogsBuilds.Report
-	err = workflow.ExecuteActivity(ctx, "get-processed-reports", rankingsResult).Get(ctx, &reports)
+	err = workflow.ExecuteActivity(ctx, GetProcessedReportsActivityName, rankingsResult).Get(ctx, &reports)
 	if err != nil {
 		logger.Error("Failed to retrieve processed reports", "error", err)
 		result.CompletedAt = workflow.Now(ctx)

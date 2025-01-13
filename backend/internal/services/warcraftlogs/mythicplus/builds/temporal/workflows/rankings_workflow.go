@@ -1,7 +1,11 @@
-package warcraftlogsBuildsTemporal
+package warcraftlogsBuildsTemporalWorkflows
 
 import (
+	"context"
 	"time"
+
+	"go.temporal.io/sdk/workflow"
+
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 )
 
@@ -79,25 +83,27 @@ type WorkflowResult struct {
 
 // Activity names
 const (
-	FetchRankingsActivityName   = "fetch-rankings"
-	ProcessReportsActivityName  = "process-reports"
-	ProcessPlayerBuildsActivity = "process-player-builds"
+	FetchRankingsActivityName       = "fetch-rankings"
+	ProcessReportsActivityName      = "process-reports"
+	ProcessPlayerBuildsActivity     = "process-player-builds"
+	GetProcessedReportsActivityName = "get-processed-reports"
 )
 
 // RankingsSyncWorkflow is the workflow for synchronizing rankings
 type RankingsSyncWorkflow interface {
-	Execute(params WorkflowParams) (WorkflowResult, error)
+	Execute(ctx workflow.Context, params WorkflowParams) (*WorkflowResult, error)
 }
 
 // Interface of the activities
 type RankingsActivity interface {
-	FetchAndStore(spec ClassSpec, dungeon Dungeon, batchConfig BatchConfig) (*BatchResult, error)
+	FetchAndStore(ctx context.Context, spec ClassSpec, dungeon Dungeon, batchConfig BatchConfig) (*BatchResult, error)
 }
 
 type ReportsActivity interface {
-	ProcessReports(rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
+	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
+	GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error)
 }
 
 type PlayerBuildsActivity interface {
-	ProcessBuilds(reportCodes []string) (*BuildsProcessingResult, error)
+	ProcessBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*BuildsProcessingResult, error)
 }

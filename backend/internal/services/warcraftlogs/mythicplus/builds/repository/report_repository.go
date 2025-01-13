@@ -82,3 +82,17 @@ func (r *ReportRepository) GetReportsForEncounter(ctx context.Context, encounter
 
 	return reports, nil
 }
+
+func (r *ReportRepository) GetReportsByCode(ctx context.Context, codes []string) ([]*warcraftlogsBuilds.Report, error) {
+	var reports []*warcraftlogsBuilds.Report
+
+	result := r.db.WithContext(ctx).
+		Where("code IN (?)", codes).
+		Find(&reports)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get reports by codes: %w", result.Error)
+	}
+
+	return reports, nil
+}

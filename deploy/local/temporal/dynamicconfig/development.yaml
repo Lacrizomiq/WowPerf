@@ -1,0 +1,43 @@
+frontend.enableClientVersionCheck:
+  - value: true
+    constraints: {}
+
+system.enableVisibilityToKafka:
+  - value: false
+    constraints: {}
+
+limit.maxIDLength:
+  - value: 255
+    constraints: {}
+
+history.EnableConsistentQueryByDomain:
+  - value: true
+    constraints: {}
+
+system.advancedVisibilityWritingMode:
+  - value: "off"
+    constraints: {}
+
+frontend.workerVersioningDataAPIs:
+  - value: true
+    constraints: {}
+
+worker.buildIdScavengerEnabled:
+  - value: true
+    constraints: {}
+
+frontend.enableUpdateWorkflowExecution:
+  - value: true
+    constraints: {}
+
+frontend.enableUpdateWorkflowExecutionAsyncAccepted:
+  - value: true
+    constraints: {}
+
+limit.maxBatchSize:
+  - value: 100
+    constraints: {}
+
+workflow.loadSearchAttributesAtOpen:
+  - value: true
+    constraints: {}

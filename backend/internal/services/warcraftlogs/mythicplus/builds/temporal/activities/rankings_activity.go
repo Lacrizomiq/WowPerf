@@ -1,4 +1,4 @@
-package warcraftlogsBuildsTemporal
+package warcraftlogsBuildsTemporalActivities
 
 import (
 	"context"

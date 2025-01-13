@@ -1,4 +1,4 @@
-package warcraftlogsBuildsTemporal
+package warcraftlogsBuildsTemporalActivities
 
 import (
 	"context"
@@ -145,4 +145,61 @@ func (a *ReportsActivity) processReport(ctx context.Context, ranking *warcraftlo
 
 	return nil
 
+}
+
+func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error) {
+	logger := activity.GetLogger(ctx)
+
+	if len(rankings) == 0 {
+		logger.Info("No rankings provided to fetch reports")
+		return nil, nil
+	}
+
+	// Get all reports for the given rankings
+	reportCodes := make(map[string]bool)
+	for _, ranking := range rankings {
+		reportCodes[ranking.ReportCode] = true
+	}
+
+	var allReports []*warcraftlogsBuilds.Report
+
+	// Get all reports by batch
+	const batchSize = 50
+	processedReports := 0
+
+	// convert the map to a slice to process in batches
+	uniqueCodes := make([]string, 0, len(reportCodes))
+	for code := range reportCodes {
+		uniqueCodes = append(uniqueCodes, code)
+	}
+
+	for i := 0; i < len(uniqueCodes); i += batchSize {
+		end := i + batchSize
+		if end > len(uniqueCodes) {
+			end = len(uniqueCodes)
+		}
+
+		// record heartbeat for monitoring
+		activity.RecordHeartbeat(ctx, fmt.Sprintf("Fetching reports %d-%d of %d", i+1, end, len(uniqueCodes)))
+
+		// Get the batch of reports
+		batchCodes := uniqueCodes[i:end]
+		reports, err := a.repository.GetReportsByCode(ctx, batchCodes)
+		if err != nil {
+			logger.Error("Failed to fetch reports",
+				"startIndex", i,
+				"endIndex", end,
+				"error", err)
+			continue
+		}
+
+		allReports = append(allReports, reports...)
+		processedReports += len(reports)
+	}
+
+	logger.Info("Finished fetching reports",
+		"totalReports", len(allReports),
+		"uniqueCodes", len(reportCodes))
+
+	return allReports, nil
 }

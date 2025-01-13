@@ -176,14 +176,67 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_SSL_MODE=${DB_SSL_MODE}
       - REDIS_URL=${REDIS_URL}
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_NAMESPACE=default
     networks:
       - internal
     depends_on:
+      temporal:
+        condition: service_healthy
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     command: go run cmd/report-test/main.go
+
+  temporal:
+    image: temporalio/auto-setup:1.21.5
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_SCHEMAS=temporal
+      - TEMPORAL_PERSISTENCE_SCHEMA=temporal
+      # Configuration Temporal
+      - TEMPORAL_BROADCAST_ADDRESS=temporal
+      - TEMPORAL_DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+    networks:
+      - internal
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  temporal-ui:
+    image: temporalio/ui:2.21.3
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost
+    networks:
+      - traefik
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.temporal-ui.rule=Host(`localhost`) && PathPrefix(`/temporal`)"
+      - "traefik.http.routers.temporal-ui.entrypoints=websecure"
+      - "traefik.http.routers.temporal-ui.tls=true"
+      - "traefik.http.services.temporal-ui.loadbalancer.server.port=8080"
+      # Add middleware to handle path prefix
+      - "traefik.http.middlewares.temporal-strip.stripprefix.prefixes=/temporal"
+      - "traefik.http.routers.temporal-ui.middlewares=temporal-strip@docker"
+    depends_on:
+      - temporal
+    restart: unless-stopped
 
 networks:
   traefik:
