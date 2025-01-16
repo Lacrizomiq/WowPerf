@@ -83,10 +83,12 @@ type WorkflowResult struct {
 
 // Activity names
 const (
-	FetchRankingsActivityName       = "fetch-rankings"
-	ProcessReportsActivityName      = "process-reports"
-	ProcessPlayerBuildsActivity     = "process-player-builds"
-	GetProcessedReportsActivityName = "get-processed-reports"
+	FetchRankingsActivityName       = "FetchAndStore"
+	ProcessReportsActivityName      = "ProcessReports"
+	ProcessPlayerBuildsActivity     = "ProcessBuilds"
+	GetProcessedReportsActivityName = "GetProcessedReports"
+	CountPlayerBuildsActivityName   = "CountPlayerBuilds"
+	GetReportsForEncounterName      = "GetReportsForEncounter"
 )
 
 // RankingsSyncWorkflow is the workflow for synchronizing rankings
@@ -102,8 +104,10 @@ type RankingsActivity interface {
 type ReportsActivity interface {
 	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
 	GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error)
+	GetReportsForEncounter(ctx context.Context, encounterID uint) ([]warcraftlogsBuilds.Report, error)
 }
 
 type PlayerBuildsActivity interface {
 	ProcessBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*BuildsProcessingResult, error)
+	CountPlayerBuilds(ctx context.Context) (int64, error)
 }

@@ -9,6 +9,7 @@ import (
 	"wowperf/internal/services/warcraftlogs"
 	rankingsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
@@ -34,7 +35,9 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 	logger.Info("Starting rankings fetch activity",
 		"class", spec.ClassName,
 		"spec", spec.SpecName,
-		"dungeon", dungeon.Name)
+		"dungeon", dungeon.Name,
+		"encounterId", dungeon.EncounterID,
+	)
 
 	result := &workflows.BatchResult{
 		ClassName:   spec.ClassName,
@@ -50,7 +53,6 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 	}
 
 	if lastRanking != nil {
-		// if last ranking is not too old, we can skip the fetch
 		if time.Since(lastRanking.UpdatedAt) < 7*24*time.Hour {
 			logger.Info("Rankings recently updated, skipping",
 				"lastUpdate", lastRanking.UpdatedAt)
@@ -58,22 +60,13 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 		}
 	}
 
-	// Configuration of the variables for the request
-	variables := map[string]interface{}{
-		"encounterId": dungeon.EncounterID,
-		"className":   spec.ClassName,
-		"specName":    spec.SpecName,
-		"page":        1,
-	}
-
-	// Retrieve the rankings from WarcraftLogs with Temporal retry policy
-	var rankings []*warcraftlogsBuilds.ClassRanking
-	err = a.fetchRankings(ctx, variables, &rankings)
+	// Fetch rankings with retry handling
+	rankings, err := a.fetchRankingsWithRetry(ctx, spec, dungeon, batchConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store the rankings in the database
+	// Store rankings if we got any
 	if len(rankings) > 0 {
 		logger.Info("Storing rankings", "count", len(rankings))
 		if err := a.repository.StoreRankings(ctx, dungeon.EncounterID, rankings); err != nil {
@@ -83,39 +76,68 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 	}
 
 	activity.RecordHeartbeat(ctx, fmt.Sprintf("Processed %d rankings", len(rankings)))
-
 	return result, nil
 }
 
-func (a *RankingsActivity) fetchRankings(ctx context.Context, variables map[string]interface{}, rankings *[]*warcraftlogsBuilds.ClassRanking) error {
+func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec workflows.ClassSpec, dungeon workflows.Dungeon, batchConfig workflows.BatchConfig) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	logger := activity.GetLogger(ctx)
+	var rankings []*warcraftlogsBuilds.ClassRanking
+
+	variables := map[string]interface{}{
+		"encounterId": int(dungeon.EncounterID),
+		"className":   spec.ClassName,
+		"specName":    spec.SpecName,
+		"page":        1,
+	}
+
+	logger.Debug("Making GraphQL request", "variables", variables)
+
 	response, err := a.client.MakeRequest(ctx, rankingsQueries.ClassRankingsQuery, variables)
 	if err != nil {
-		return temporal.NewApplicationError(
-			fmt.Sprintf("API request failed: %v", err),
-			"API_ERROR",
+		if wlErr, ok := err.(*warcraftlogsTypes.WarcraftLogsError); ok {
+			switch wlErr.Type {
+			case warcraftlogsTypes.ErrorTypeRateLimit, warcraftlogsTypes.ErrorTypeQuotaExceeded:
+				logger.Info("Rate limit reached, will retry",
+					"resetIn", wlErr.RetryIn)
+				return nil, temporal.NewApplicationError(
+					fmt.Sprintf("Rate limit reached: %v", wlErr),
+					"RATE_LIMIT_ERROR",
+				)
+			case warcraftlogsTypes.ErrorTypeAPI:
+				if !wlErr.Retryable {
+					return nil, temporal.NewNonRetryableApplicationError(
+						fmt.Sprintf("Non-retryable API error: %v", wlErr),
+						"API_ERROR",
+						wlErr,
+					)
+				}
+			}
+		}
+		return nil, temporal.NewApplicationError(
+			fmt.Sprintf("Failed to fetch rankings: %v", err),
+			"FETCH_ERROR",
 		)
 	}
 
 	fetchedRankings, hasMore, err := rankingsQueries.ParseRankingsResponse(
 		response,
-		uint(variables["encounterId"].(int)),
+		dungeon.EncounterID,
 	)
-
 	if err != nil {
-		return temporal.NewNonRetryableApplicationError(
+		return nil, temporal.NewNonRetryableApplicationError(
 			"Failed to parse rankings",
 			"PARSE_ERROR",
 			err,
 		)
 	}
 
-	*rankings = append(*rankings, fetchedRankings...)
+	rankings = append(rankings, fetchedRankings...)
 
 	// Log progress
-	activity.GetLogger(ctx).Info("Fetched rankings batch",
+	logger.Info("Fetched rankings",
 		"count", len(fetchedRankings),
 		"hasMore", hasMore,
-		"total", len(*rankings))
+		"total", len(rankings))
 
-	return nil
+	return rankings, nil
 }

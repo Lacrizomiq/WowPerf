@@ -4,91 +4,43 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
-	"wowperf/internal/database"
-	"wowperf/internal/services/warcraftlogs"
 	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
-	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	worker "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/worker"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
 )
 
 const (
-	temporalNamespace = "default"
-	temporalTaskQueue = "warcraft-logs-sync"
+	defaultNamespace = "default"
+	defaultTaskQueue = "warcraft-logs-sync"
 )
 
 func main() {
-	startTime := time.Now()
-	log.Printf("[INFO] Starting WoW Performance sync process at %v", startTime.Format(time.RFC3339))
+	log.Printf("[INFO] Starting sync workflow")
 
-	// Load config
-	// Load configuration
-	log.Printf("[INFO] Loading configuration...")
-	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml")
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to load config: %v", err)
+	// Initialize Temporal client
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
 	}
 
-	// Initialize database
-	db, err := database.InitDB()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize database: %v", err)
-	}
-
-	// Initialize WarcraftLogs client
-	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize WarcraftLogs client: %v", err)
-	}
-
-	// Initialize repositories
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
-	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
-
-	// Initialize temporal worker
-	workerConfig := worker.WorkerConfig{
-		TemporalAddress: os.Getenv("TEMPORAL_ADDRESS"),
-		Namespace:       temporalNamespace,
-		TaskQueue:       temporalTaskQueue,
-	}
-
-	temporalWorker, err := worker.NewWorker(
-		workerConfig,
-		warcraftLogsClient,
-		rankingsRepo,
-		reportsRepo,
-		playerBuildsRepo,
-	)
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to create Temporal worker: %v", err)
-	}
-
-	// Start the worker in a goroutine
-	go func() {
-		if err := temporalWorker.Start(); err != nil {
-			log.Fatalf("[FATAL] Failed to start worker: %v", err)
-		}
-	}()
-
-	// Create temporal client for workflow execution
-	temporalClient, err := client.NewClient(client.Options{
-		HostPort:  os.Getenv("TEMPORAL_ADDRESS"),
-		Namespace: temporalNamespace,
+	temporalClient, err := client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: defaultNamespace,
 	})
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
 	}
 	defer temporalClient.Close()
 
-	// Convert config to workflow params
+	// Load configuration
+	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml")
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to load config: %v", err)
+	}
+
+	// Prepare workflow parameters
 	workflowParams := workflows.WorkflowParams{
 		Specs:    make([]workflows.ClassSpec, len(cfg.Specs)),
 		Dungeons: make([]workflows.Dungeon, len(cfg.Dungeons)),
@@ -107,15 +59,13 @@ func main() {
 		},
 	}
 
-	// Convertir les Specs
+	// Convert specs and dungeons
 	for i, spec := range cfg.Specs {
 		workflowParams.Specs[i] = workflows.ClassSpec{
 			ClassName: spec.ClassName,
 			SpecName:  spec.SpecName,
 		}
 	}
-
-	// Convertir les Dungeons
 	for i, dungeon := range cfg.Dungeons {
 		workflowParams.Dungeons[i] = workflows.Dungeon{
 			ID:          dungeon.ID,
@@ -127,44 +77,31 @@ func main() {
 
 	// Start workflow
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "warcraft-logs-sync-workflow",
-		TaskQueue: temporalTaskQueue,
+		ID:                       "warcraft-logs-sync-" + time.Now().Format("20060102-150405"),
+		TaskQueue:                defaultTaskQueue,
+		WorkflowExecutionTimeout: 24 * time.Hour,
 	}
 
-	syncWorkflow := workflows.NewSyncWorkflow()
-	we, err := temporalClient.ExecuteWorkflow(
+	execution, err := temporalClient.ExecuteWorkflow(
 		context.Background(),
 		workflowOptions,
-		syncWorkflow.Execute,
+		workflows.SyncWorkflow,
 		workflowParams,
 	)
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to start workflow: %v", err)
 	}
 
-	log.Printf("[INFO] Started workflow: ID=%s, RunID=%s", we.GetID(), we.GetRunID())
+	log.Printf("[INFO] Started workflow: ID=%s, RunID=%s", execution.GetID(), execution.GetRunID())
 
-	// Wait for signals
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	// Wait for interruption or workflow completion
-	select {
-	case <-sigChan:
-		log.Println("[INFO] Received shutdown signal")
-	default:
-		var result workflows.WorkflowResult
-		if err := we.Get(context.Background(), &result); err != nil {
-			log.Printf("[ERROR] Workflow failed: %v", err)
-		} else {
-			log.Printf("[INFO] Workflow completed successfully: Rankings=%d, Reports=%d, Builds=%d",
-				result.RankingsProcessed,
-				result.ReportsProcessed,
-				result.BuildsProcessed)
-		}
+	// Wait for workflow completion
+	var result workflows.WorkflowResult
+	if err := execution.Get(context.Background(), &result); err != nil {
+		log.Fatalf("[FATAL] Workflow failed: %v", err)
 	}
 
-	// Graceful shutdown
-	temporalWorker.Stop()
-	log.Printf("[INFO] Sync process completed in %v", time.Since(startTime))
+	log.Printf("[INFO] Workflow completed successfully: Rankings=%d, Reports=%d, Builds=%d",
+		result.RankingsProcessed,
+		result.ReportsProcessed,
+		result.BuildsProcessed)
 }

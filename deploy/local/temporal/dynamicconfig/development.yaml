@@ -41,3 +41,27 @@ limit.maxBatchSize:
 workflow.loadSearchAttributesAtOpen:
   - value: true
     constraints: {}
+
+system.enableReadVisibilityFromES:
+  - value: false
+    constraints: {}
+
+history.enableReadFromClosedExecutionV2:
+  - value: true
+    constraints: {}
+
+frontend.persistenceMaxQPS:
+  - value: 100
+    constraints: {}
+
+frontend.historyMgrNumConns:
+  - value: 10
+    constraints: {}
+
+system.enableArchival:
+  - value: false
+    constraints: {}
+
+limit.numTaskQueuePartitions:
+  - value: 4
+    constraints: {}

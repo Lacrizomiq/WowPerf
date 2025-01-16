@@ -49,7 +49,7 @@ func (a *PlayerBuildsActivity) ProcessBuilds(ctx context.Context, reports []*war
 	logger.Info("Starting player builds processing", "reportsCount", len(reports))
 
 	// Batch processing for a better performance
-	const batchSize = 10
+	const batchSize = 50
 	totalReports := len(reports)
 	processedReports := 0
 
@@ -212,4 +212,18 @@ func (a *PlayerBuildsActivity) extractGearAndStats(playerBuild *warcraftlogsBuil
 	}
 
 	return nil
+}
+
+// CountPlayerBuilds returns the total count of player builds
+func (a *PlayerBuildsActivity) CountPlayerBuilds(ctx context.Context) (int64, error) {
+	logger := activity.GetLogger(ctx)
+
+	count, err := a.repository.CountPlayerBuilds(ctx)
+	if err != nil {
+		logger.Error("Failed to count player builds", "error", err)
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+
+	logger.Info("Counted player builds", "count", count)
+	return count, nil
 }

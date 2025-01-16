@@ -17,7 +17,7 @@ const SignupForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signup } = useAuth();
 
-  // Validation functions
+  // Validation functions for the password
   const validatePassword = (pass: string): boolean => {
     const hasMinLength = pass.length >= 8;
     if (!hasMinLength) {
@@ -28,6 +28,7 @@ const SignupForm: React.FC = () => {
     return true;
   };
 
+  // Validation function for the email
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValid = emailRegex.test(email);
@@ -35,6 +36,7 @@ const SignupForm: React.FC = () => {
     return isValid;
   };
 
+  // Validation function for the username
   const validateUsername = (username: string): boolean => {
     if (username.length < 3) {
       setUsernameError("Username must be at least 3 characters long");
@@ -48,29 +50,7 @@ const SignupForm: React.FC = () => {
     return true;
   };
 
-  // Handle input changes
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUsername(value);
-    validateUsername(value);
-    setError("");
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    validateEmail(value);
-    setError("");
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    validatePassword(value);
-    setError("");
-  };
-
-  // Form submission
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -156,7 +136,6 @@ const SignupForm: React.FC = () => {
           id="username"
           type="text"
           value={username}
-          onChange={handleUsernameChange}
           required
           minLength={3}
           maxLength={50}
@@ -186,7 +165,6 @@ const SignupForm: React.FC = () => {
           id="email"
           type="email"
           value={email}
-          onChange={handleEmailChange}
           required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -211,7 +189,6 @@ const SignupForm: React.FC = () => {
           id="password"
           type="password"
           value={password}
-          onChange={handlePasswordChange}
           required
           minLength={8}
           disabled={isSubmitting}

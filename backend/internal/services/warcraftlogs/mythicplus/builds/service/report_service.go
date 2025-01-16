@@ -232,7 +232,7 @@ func (s *ReportService) ProcessReports(ctx context.Context, reports []ReportInfo
 					report.TalentCodes = talentCodesJSON
 
 					log.Printf("[DEBUG] Storing report %s in database", code)
-					if err := s.repository.StoreReport(ctx, report); err != nil {
+					if err := s.repository.StoreReports(ctx, []*warcraftlogsBuilds.Report{report}); err != nil {
 						log.Printf("[ERROR] Failed to store report %s: %v", code, err)
 						errorsChan <- fmt.Errorf("failed to store report %s: %w", code, err)
 						processedCount++
@@ -347,7 +347,7 @@ func (s *ReportService) FetchAndStoreReport(ctx context.Context, code string, fi
 	report.TalentCodes = talentCodesJSON
 
 	// Store report in database
-	if err := s.repository.StoreReport(ctx, report); err != nil {
+	if err := s.repository.StoreReports(ctx, []*warcraftlogsBuilds.Report{report}); err != nil {
 		return fmt.Errorf("failed to store report: %w", err)
 	}
 

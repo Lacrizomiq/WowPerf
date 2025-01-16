@@ -1,7 +1,11 @@
 package warcraftlogsBuildsTemporalWorker
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -12,83 +16,101 @@ import (
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 )
 
-type WorkerConfig struct {
-	TemporalAddress string
-	Namespace       string
-	TaskQueue       string
-}
+const defaultTaskQueue = "warcraft-logs-sync"
 
 type Worker struct {
-	config     WorkerConfig
-	client     client.Client
-	worker     worker.Worker
-	activities *activities.Activities
-	workflows  *workflows.SyncWorkflow
+	client client.Client
+	worker worker.Worker
 }
 
 func NewWorker(
-	config WorkerConfig,
 	warcraftlogsClient *warcraftlogs.WarcraftLogsClientService,
 	rankingsRepository *warcraftlogsBuildsRepository.RankingsRepository,
 	reportsRepository *warcraftlogsBuildsRepository.ReportRepository,
 	playerBuildsRepository *warcraftlogsBuildsRepository.PlayerBuildsRepository,
 ) (*Worker, error) {
-	// Create Temporal client
-	c, err := client.NewClient(client.Options{
-		HostPort:  config.TemporalAddress,
-		Namespace: config.Namespace,
+	// Get Temporal configuration from environment
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
+	}
+
+	temporalNamespace := os.Getenv("TEMPORAL_NAMESPACE")
+	if temporalNamespace == "" {
+		temporalNamespace = "default"
+	}
+
+	taskQueue := os.Getenv("TEMPORAL_TASKQUEUE")
+	if taskQueue == "" {
+		taskQueue = defaultTaskQueue
+	}
+
+	// Create the Temporal client
+	temporalClient, err := client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: temporalNamespace,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialize activities
-	activities := &activities.Activities{
-		Rankings:     activities.NewRankingsActivity(warcraftlogsClient, rankingsRepository),
-		Reports:      activities.NewReportsActivity(warcraftlogsClient, reportsRepository),
-		PlayerBuilds: activities.NewPlayerBuildsActivity(playerBuildsRepository),
-	}
+	// Create worker
+	w := worker.New(temporalClient, taskQueue, worker.Options{})
 
-	// Initialize workflows
-	workflow := workflows.NewSyncWorkflow()
+	// Initialize activities
+	rankingsActivity := activities.NewRankingsActivity(warcraftlogsClient, rankingsRepository)
+	reportsActivity := activities.NewReportsActivity(warcraftlogsClient, reportsRepository)
+	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepository)
+
+	activitiesService := activities.NewActivities(
+		rankingsActivity,
+		reportsActivity,
+		playerBuildsActivity,
+	)
+
+	// Register workflow
+	w.RegisterWorkflow(workflows.SyncWorkflow)
+
+	// Register activities
+	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
+	w.RegisterActivity(activitiesService.Reports.ProcessReports)
+	w.RegisterActivity(activitiesService.Reports.GetProcessedReports)
+	w.RegisterActivity(activitiesService.Reports.GetReportsForEncounter)
+	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
 
 	return &Worker{
-		config:     config,
-		client:     c,
-		activities: activities,
-		workflows:  workflow,
+		client: temporalClient,
+		worker: w,
 	}, nil
 }
 
-func (w *Worker) Start() error {
-	log.Printf("Starting Temporal worker with namespace: %s, task queue: %s",
-		w.config.Namespace, w.config.TaskQueue)
-
-	// Create worker instance
-	wrk := worker.New(w.client, w.config.TaskQueue, worker.Options{})
-
-	// Register workflow
-	wrk.RegisterWorkflow(w.workflows.Execute)
-
-	// Register activities
-	wrk.RegisterActivity(w.activities.Rankings.FetchAndStore)
-	wrk.RegisterActivity(w.activities.Reports.ProcessReports)
-	wrk.RegisterActivity(w.activities.Reports.GetProcessedReports)
-	wrk.RegisterActivity(w.activities.PlayerBuilds.ProcessBuilds)
-
-	// Start listening for the Task Queue
-	err := wrk.Run(worker.InterruptCh())
-	if err != nil {
+func (w *Worker) Start(ctx context.Context) error {
+	// Start worker
+	log.Printf("[INFO] Starting Temporal worker...")
+	if err := w.worker.Start(); err != nil {
 		return err
 	}
 
-	log.Printf("Worker started successfully")
+	// Setup graceful shutdown
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Wait for shutdown signal or context cancellation
+	select {
+	case <-signalChan:
+		log.Println("[INFO] Shutdown signal received")
+	case <-ctx.Done():
+		log.Println("[INFO] Context cancelled")
+	}
+
+	w.Stop()
 	return nil
 }
 
 func (w *Worker) Stop() {
-	if w.client != nil {
-		w.client.Close()
-	}
-	log.Printf("Worker stopped")
+	log.Println("[INFO] Stopping worker...")
+	w.worker.Stop()
+	w.client.Close()
+	log.Println("[INFO] Worker stopped")
 }

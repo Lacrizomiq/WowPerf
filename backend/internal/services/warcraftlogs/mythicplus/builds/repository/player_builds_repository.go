@@ -9,6 +9,7 @@ import (
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // PlayerBuildsRepository handles database operations for player builds
@@ -35,17 +36,21 @@ func (r *PlayerBuildsRepository) StorePlayerBuilds(ctx context.Context, playerBu
 	return nil
 }
 
-// StoreManyPlayerBuilds persists a list of player builds to the database in batches
-// Uses the transaction to ensure data consistency
-func (r *PlayerBuildsRepository) StoreManyPlayerBuilds(ctx context.Context, playerBuilds []*warcraftlogsBuilds.PlayerBuild) error {
-	if len(playerBuilds) == 0 {
+// StoreManyPlayerBuilds persists a list of player builds to the database
+func (r *PlayerBuildsRepository) StoreManyPlayerBuilds(ctx context.Context, newBuilds []*warcraftlogsBuilds.PlayerBuild) error {
+	if len(newBuilds) == 0 {
 		log.Printf("[DEBUG] No player builds to store")
-		return nil // Return silently if no player builds to store instead of error for empty slice
+		return nil
 	}
 
-	reportCode := playerBuilds[0].ReportCode
+	encounterID := newBuilds[0].EncounterID
+	reportCode := newBuilds[0].ReportCode
 
-	// Check if the report has already been processed
+	if reportCode == "" {
+		return fmt.Errorf("invalid report code: empty")
+	}
+
+	// Check if the report has already been processed recently
 	if lastProcessed, exists := r.processedReports[reportCode]; exists {
 		if time.Since(lastProcessed) < 7*24*time.Hour {
 			log.Printf("[DEBUG] Skipping report %s as it was processed recently", reportCode)
@@ -53,66 +58,80 @@ func (r *PlayerBuildsRepository) StoreManyPlayerBuilds(ctx context.Context, play
 		}
 	}
 
-	tx := r.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return fmt.Errorf("failed to start transaction: %w", tx.Error)
-	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		log.Printf("[DEBUG] Starting transaction for encounter %d with %d builds", encounterID, len(newBuilds))
 
-	// defer to rollback the transaction if it fails
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-			log.Printf("[ERROR] Recovered from panic in StoreManyPlayerBuilds: %v", r)
+		// Récupérer les builds existants
+		var existingBuilds []*warcraftlogsBuilds.PlayerBuild
+		if err := tx.WithContext(ctx).
+			Where("encounter_id = ?", encounterID).
+			Find(&existingBuilds).Error; err != nil {
+			return fmt.Errorf("failed to fetch existing builds: %w", err)
 		}
-	}()
 
-	// Check if builds already exist for this report
-	var count int64
-	if err := tx.WithContext(ctx).
-		Model(&warcraftlogsBuilds.PlayerBuild{}).
-		Where("report_code = ?", reportCode).
-		Count(&count).Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to count existing builds: %w", err)
-	}
-
-	if count > 0 {
-		// Update existing builds
-		log.Printf("[DEBUG] Updating %d existing builds for report %s", count, reportCode)
-		for _, build := range playerBuilds {
-			if err := tx.WithContext(ctx).
-				Model(&warcraftlogsBuilds.PlayerBuild{}).
-				Where("report_code = ? AND actor_id = ?", build.ReportCode, build.ActorID).
-				Updates(map[string]interface{}{
-					"talent_tree": build.TalentTree,
-					"gear":        build.Gear,
-					"stats":       build.Stats,
-				}).Error; err != nil {
-				tx.Rollback()
-				return fmt.Errorf("failed to update player build: %w", err)
+		// On ne procède à la mise à jour que si on a de nouveaux builds
+		if len(newBuilds) > 0 {
+			// Créer une map des builds existants
+			existingMap := make(map[string]*warcraftlogsBuilds.PlayerBuild)
+			for _, build := range existingBuilds {
+				key := fmt.Sprintf("%s_%d_%d", build.ReportCode, build.FightID, build.ActorID)
+				existingMap[key] = build
 			}
-		}
-	} else {
-		// Create new builds
-		log.Printf("[DEBUG] Creating %d new builds for report %s", len(playerBuilds), reportCode)
-		if err := tx.WithContext(ctx).Create(playerBuilds).Error; err != nil {
-			tx.Rollback()
-			return fmt.Errorf("failed to create player builds: %w", err)
-		}
-	}
 
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to commit updates: %w", err)
-	}
+			// Traiter les nouveaux builds
+			for _, newBuild := range newBuilds {
+				if newBuild.ReportCode == "" {
+					log.Printf("[WARN] Skipping build with empty report_code for player %s (%s-%s)",
+						newBuild.PlayerName, newBuild.Class, newBuild.Spec)
+					continue
+				}
 
-	action := "updated"
-	if count == 0 {
-		action = "created"
-	}
-	log.Printf("[DEBUG] Successfully %s %d builds for report %s", action, len(playerBuilds), reportCode)
-	r.processedReports[reportCode] = time.Now()
-	return nil
+				key := fmt.Sprintf("%s_%d_%d", newBuild.ReportCode, newBuild.FightID, newBuild.ActorID)
+				delete(existingMap, key)
+
+				// Update or create the build
+				result := tx.Clauses(clause.OnConflict{
+					Columns: []clause.Column{
+						{Name: "report_code"},
+						{Name: "fight_id"},
+						{Name: "actor_id"},
+					},
+					DoUpdates: clause.AssignmentColumns([]string{
+						"talent_tree",
+						"gear",
+						"stats",
+						"updated_at",
+					}),
+				}).Create(newBuild)
+
+				if result.Error != nil {
+					return fmt.Errorf("failed to store player build: %w", result.Error)
+				}
+
+				log.Printf("[DEBUG] Stored build for player %s in report %s", newBuild.PlayerName, newBuild.ReportCode)
+			}
+
+			// Supprimer uniquement les builds qui ne sont plus dans la nouvelle liste
+			// et qui correspondent au même encounter_id
+			for _, oldBuild := range existingMap {
+				if err := tx.Delete(oldBuild).Error; err != nil {
+					return fmt.Errorf("failed to delete old build: %w", err)
+				}
+				log.Printf("[DEBUG] Deleted obsolete build for player %s in report %s",
+					oldBuild.PlayerName, oldBuild.ReportCode)
+			}
+
+			// Mark the report as processed
+			r.processedReports[reportCode] = time.Now()
+
+			log.Printf("[INFO] Successfully processed builds for encounter %d: stored %d, deleted %d",
+				encounterID, len(newBuilds), len(existingMap))
+		} else {
+			log.Printf("[DEBUG] No new builds to process, keeping existing builds for encounter %d", encounterID)
+		}
+
+		return nil
+	})
 }
 
 // GetByReportsAndActor retrieves a player build by its report code and actor ID
@@ -144,4 +163,13 @@ func (r *PlayerBuildsRepository) GetExistingBuilds(ctx context.Context, reportCo
 	}
 
 	return playerBuilds, nil
+}
+
+// CountPlayerBuilds returns the total count of player builds
+func (r *PlayerBuildsRepository) CountPlayerBuilds(ctx context.Context) (int64, error) {
+	var count int64
+	if err := r.db.Model(&warcraftlogsBuilds.PlayerBuild{}).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+	return count, nil
 }
