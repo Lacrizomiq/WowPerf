@@ -1,6 +1,4 @@
 -- +migrate Up
--- Rename dungeon_id to encounter_id
-ALTER TABLE player_builds RENAME COLUMN dungeon_id TO encounter_id;
 
 -- Add NOT NULL constraints
 ALTER TABLE player_builds 

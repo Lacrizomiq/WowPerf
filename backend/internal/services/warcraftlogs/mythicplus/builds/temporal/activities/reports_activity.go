@@ -15,19 +15,83 @@ import (
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 )
 
+// ReportsActivity handles all report-related operations
 type ReportsActivity struct {
 	client     *warcraftlogs.WarcraftLogsClientService
 	repository *reportsRepository.ReportRepository
 }
 
-func NewReportsActivity(client *warcraftlogs.WarcraftLogsClientService, repository *reportsRepository.ReportRepository) *ReportsActivity {
+// NewReportsActivity creates a new instance of ReportsActivity
+func NewReportsActivity(
+	client *warcraftlogs.WarcraftLogsClientService,
+	repository *reportsRepository.ReportRepository,
+) *ReportsActivity {
 	return &ReportsActivity{
 		client:     client,
 		repository: repository,
 	}
 }
 
-func (a *ReportsActivity) ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*workflows.ReportProcessingResult, error) {
+// GetReportsForEncounterBatch retrieves a batch of reports for an encounter
+// Used by the rebuild process to fetch reports in manageable chunks
+func (a *ReportsActivity) GetReportsForEncounterBatch(
+	ctx context.Context,
+	encounterID uint,
+	limit int,
+	offset int,
+) ([]warcraftlogsBuilds.Report, error) {
+	logger := activity.GetLogger(ctx)
+
+	// Record heartbeat to prevent timeout
+	activity.RecordHeartbeat(ctx, fmt.Sprintf("Fetching reports %d-%d for encounter %d",
+		offset, offset+limit, encounterID))
+
+	reports, err := a.repository.GetReportsForEncounter(ctx, encounterID, limit, offset)
+	if err != nil {
+		logger.Error("Failed to fetch reports batch",
+			"encounterID", encounterID,
+			"offset", offset,
+			"limit", limit,
+			"error", err)
+		return nil, fmt.Errorf("failed to fetch reports batch: %w", err)
+	}
+
+	logger.Info("Successfully fetched reports batch",
+		"encounterID", encounterID,
+		"batchSize", len(reports),
+		"offset", offset)
+
+	return reports, nil
+}
+
+// CountReportsForEncounter counts the total number of reports for an encounter
+// Used to determine the total number of batches needed for processing
+func (a *ReportsActivity) CountReportsForEncounter(
+	ctx context.Context,
+	encounterID uint,
+) (int64, error) {
+	logger := activity.GetLogger(ctx)
+
+	count, err := a.repository.CountReportsForEncounter(ctx, encounterID)
+	if err != nil {
+		logger.Error("Failed to count reports for encounter",
+			"encounterID", encounterID,
+			"error", err)
+		return 0, fmt.Errorf("failed to count reports: %w", err)
+	}
+
+	logger.Info("Counted reports for encounter",
+		"encounterID", encounterID,
+		"count", count)
+
+	return count, nil
+}
+
+// ProcessReports processes a list of rankings and creates or updates the corresponding reports
+func (a *ReportsActivity) ProcessReports(
+	ctx context.Context,
+	rankings []*warcraftlogsBuilds.ClassRanking,
+) (*workflows.ReportProcessingResult, error) {
 	logger := activity.GetLogger(ctx)
 	result := &workflows.ReportProcessingResult{
 		ProcessedAt: time.Now(),
@@ -38,173 +102,100 @@ func (a *ReportsActivity) ProcessReports(ctx context.Context, rankings []*warcra
 		return result, nil
 	}
 
-	logger.Info("Starting report processing", "rankingsCount", len(rankings))
-
-	const batchSize = 10
-	processedReports := 0
-
-	// Group rankings by encounterID for batch processing
+	// Group rankings by encounterID for efficient batch processing
 	rankingsByEncounter := make(map[uint][]*warcraftlogsBuilds.ClassRanking)
 	for _, ranking := range rankings {
-		rankingsByEncounter[ranking.EncounterID] = append(rankingsByEncounter[ranking.EncounterID], ranking)
+		rankingsByEncounter[ranking.EncounterID] = append(
+			rankingsByEncounter[ranking.EncounterID],
+			ranking,
+		)
 	}
 
+	// Process rankings in batches by encounter
+	const batchSize = 10
 	for encounterID, encounterRankings := range rankingsByEncounter {
 		logger.Info("Processing encounter",
 			"encounterID", encounterID,
 			"rankingsCount", len(encounterRankings))
 
-		// Process each encounter in batches
 		for i := 0; i < len(encounterRankings); i += batchSize {
-			end := i + batchSize
-			if end > len(encounterRankings) {
-				end = len(encounterRankings)
-			}
+			end := min(i+batchSize, len(encounterRankings))
 			batch := encounterRankings[i:end]
 
-			activity.RecordHeartbeat(ctx, fmt.Sprintf("Processing reports %d-%d for encounter %d", i+1, end, encounterID))
+			// Record heartbeat for long-running operations
+			activity.RecordHeartbeat(ctx, fmt.Sprintf(
+				"Processing reports %d-%d for encounter %d",
+				i+1, end, encounterID))
 
-			// Fetch all reports from the batch at once
-			var reports []*warcraftlogsBuilds.Report
-			for _, ranking := range batch {
-				// Check if the report already exists
-				existingReport, err := a.repository.GetReportByCodeAndFightID(ctx, ranking.ReportCode, ranking.ReportFightID)
-				if err != nil {
-					logger.Error("Failed to check existing report",
-						"error", err,
-						"reportCode", ranking.ReportCode,
-						"fightID", ranking.ReportFightID)
-					result.FailureCount++
-					continue
-				}
-
-				if existingReport != nil {
-					logger.Debug("Report already exists, will be updated",
-						"reportCode", ranking.ReportCode,
-						"fightID", ranking.ReportFightID)
-				}
-
-				// Fetch the report details
-				response, err := a.client.MakeRequest(ctx, reportsQueries.GetReportTableQuery, map[string]interface{}{
-					"code":        ranking.ReportCode,
-					"fightID":     ranking.ReportFightID,
-					"encounterID": ranking.EncounterID,
-				})
-				if err != nil {
-					logger.Error("Failed to get report details",
-						"error", err,
-						"reportCode", ranking.ReportCode,
-						"fightID", ranking.ReportFightID)
-					result.FailureCount++
-					continue
-				}
-
-				report, talentsQuery, err := reportsQueries.ParseReportDetailsResponse(
-					response,
-					ranking.ReportCode,
-					ranking.ReportFightID,
-					ranking.EncounterID,
-				)
-				if err != nil {
-					logger.Error("Failed to parse report details",
-						"error", err,
-						"reportCode", ranking.ReportCode)
-					result.FailureCount++
-					continue
-				}
-
-				// Fetch the talents
-				talentsResponse, err := a.client.MakeRequest(ctx, talentsQuery, nil)
-				if err != nil {
-					logger.Error("Failed to fetch talents",
-						"error", err,
-						"reportCode", ranking.ReportCode)
-					result.FailureCount++
-					continue
-				}
-
-				talentsCode, err := reportsQueries.ParseReportTalentsResponse(talentsResponse)
-				if err != nil {
-					logger.Error("Failed to parse talents",
-						"error", err,
-						"reportCode", ranking.ReportCode)
-					result.FailureCount++
-					continue
-				}
-
-				talentCodeJSON, err := json.Marshal(talentsCode)
-				if err != nil {
-					logger.Error("Failed to marshal talents",
-						"error", err,
-						"reportCode", ranking.ReportCode)
-					result.FailureCount++
-					continue
-				}
-				report.TalentCodes = talentCodeJSON
-
-				reports = append(reports, report)
-				result.SuccessCount++
+			reports, err := a.processRankingsBatch(ctx, batch)
+			if err != nil {
+				logger.Error("Failed to process rankings batch",
+					"encounterID", encounterID,
+					"startIndex", i,
+					"endIndex", end,
+					"error", err)
+				result.FailureCount++
+				continue
 			}
 
-			// Store the batch of reports
-			if len(reports) > 0 {
-				logger.Info("Storing batch of reports",
+			if err := a.repository.StoreReports(ctx, reports); err != nil {
+				logger.Error("Failed to store reports batch",
+					"encounterID", encounterID,
 					"batchSize", len(reports),
-					"encounterID", encounterID)
-
-				if err := a.repository.StoreReports(ctx, reports); err != nil {
-					logger.Error("Failed to store reports batch",
-						"error", err,
-						"encounterID", encounterID,
-						"batchSize", len(reports))
-					return nil, fmt.Errorf("failed to store reports batch: %w", err)
-				}
-
-				processedReports += len(reports)
-				logger.Info("Successfully stored batch of reports",
-					"batchSize", len(reports),
-					"totalProcessed", processedReports,
-					"encounterID", encounterID)
+					"error", err)
+				result.FailureCount++
+				continue
 			}
+
+			result.SuccessCount++
+			result.ProcessedReports += len(reports)
+
+			logger.Info("Successfully processed reports batch",
+				"encounterID", encounterID,
+				"batchProcessed", len(reports),
+				"totalProcessed", result.ProcessedReports)
+
+			// Add small delay between batches
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
 
-	logger.Info("Completed report processing",
-		"totalProcessed", processedReports,
-		"successCount", result.SuccessCount,
-		"failureCount", result.FailureCount)
-
-	result.ProcessedReports = processedReports
 	return result, nil
 }
 
-func (a *ReportsActivity) processReport(ctx context.Context, ranking *warcraftlogsBuilds.ClassRanking) error {
-	logger := activity.GetLogger(ctx)
+// processRankingsBatch processes a batch of rankings and fetches their report details
+func (a *ReportsActivity) processRankingsBatch(
+	ctx context.Context,
+	rankings []*warcraftlogsBuilds.ClassRanking,
+) ([]*warcraftlogsBuilds.Report, error) {
+	var reports []*warcraftlogsBuilds.Report
 
-	// Check if report already exists
-	existingReport, err := a.repository.GetReportByCodeAndFightID(ctx, ranking.ReportCode, ranking.ReportFightID)
-	if err != nil {
-		return fmt.Errorf("failed to check if report exists: %w", err)
+	for _, ranking := range rankings {
+		report, err := a.getReportDetails(ctx, ranking)
+		if err != nil {
+			return nil, fmt.Errorf("failed to process report %s: %w",
+				ranking.ReportCode, err)
+		}
+		reports = append(reports, report)
 	}
 
-	if existingReport != nil {
-		logger.Info("Report already exists, skipping",
-			"reportCode", ranking.ReportCode,
-			"fightID", ranking.ReportFightID)
-		return nil
-	}
+	return reports, nil
+}
 
-	// Get the reports details
+// getReportDetails fetches and processes report details from WarcraftLogs API
+func (a *ReportsActivity) getReportDetails(
+	ctx context.Context,
+	ranking *warcraftlogsBuilds.ClassRanking,
+) (*warcraftlogsBuilds.Report, error) {
 	response, err := a.client.MakeRequest(ctx, reportsQueries.GetReportTableQuery, map[string]interface{}{
 		"code":        ranking.ReportCode,
 		"fightID":     ranking.ReportFightID,
 		"encounterID": ranking.EncounterID,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get report details: %w", err)
+		return nil, fmt.Errorf("failed to fetch report details: %w", err)
 	}
 
-	// Parse the response
 	report, talentsQuery, err := reportsQueries.ParseReportDetailsResponse(
 		response,
 		ranking.ReportCode,
@@ -212,40 +203,38 @@ func (a *ReportsActivity) processReport(ctx context.Context, ranking *warcraftlo
 		ranking.EncounterID,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to parse report details: %w", err)
+		return nil, fmt.Errorf("failed to parse report details: %w", err)
 	}
 
-	// Retrieve the talents
+	// Fetch and process talents with separate query
 	talentsResponse, err := a.client.MakeRequest(ctx, talentsQuery, nil)
 	if err != nil {
-		return fmt.Errorf("failed to fetch talents: %w", err)
+		return nil, fmt.Errorf("failed to fetch talents: %w", err)
 	}
 
-	talentsCode, err := reportsQueries.ParseReportTalentsResponse(talentsResponse)
+	talentCodes, err := reportsQueries.ParseReportTalentsResponse(talentsResponse)
 	if err != nil {
-		return fmt.Errorf("failed to parse talents: %w", err)
+		return nil, fmt.Errorf("failed to parse talents: %w", err)
 	}
 
-	// Convert and store talents
-	talentCodeJSON, err := json.Marshal(talentsCode)
+	// Convert map to JSON
+	talentCodesJSON, err := json.Marshal(talentCodes)
 	if err != nil {
-		return fmt.Errorf("failed to marshal talents: %w", err)
+		return nil, fmt.Errorf("failed to marshal talent codes: %w", err)
 	}
-	report.TalentCodes = talentCodeJSON
+	report.TalentCodes = talentCodesJSON
 
-	// store the report
-	if err := a.repository.StoreReports(ctx, []*warcraftlogsBuilds.Report{report}); err != nil {
-		return fmt.Errorf("failed to store report: %w", err)
-	}
-
-	logger.Info("Report processed successfully",
-		"reportCode", ranking.ReportCode,
-		"fightID", ranking.ReportFightID)
-
-	return nil
-
+	return report, nil
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// GetProcessedReports retrieves reports based on a list of rankings
 func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error) {
 	logger := activity.GetLogger(ctx)
 
@@ -254,19 +243,17 @@ func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*w
 		return nil, nil
 	}
 
-	// Get all reports for the given rankings
+	// Extract unique report codes
 	reportCodes := make(map[string]bool)
 	for _, ranking := range rankings {
 		reportCodes[ranking.ReportCode] = true
 	}
 
 	var allReports []*warcraftlogsBuilds.Report
-
-	// Get all reports by batch
-	const batchSize = 50
 	processedReports := 0
 
-	// convert the map to a slice to process in batches
+	// Process reports in batches
+	const batchSize = 50
 	uniqueCodes := make([]string, 0, len(reportCodes))
 	for code := range reportCodes {
 		uniqueCodes = append(uniqueCodes, code)
@@ -278,14 +265,12 @@ func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*w
 			end = len(uniqueCodes)
 		}
 
-		// record heartbeat for monitoring
 		activity.RecordHeartbeat(ctx, fmt.Sprintf("Fetching reports %d-%d of %d", i+1, end, len(uniqueCodes)))
 
-		// Get the batch of reports
 		batchCodes := uniqueCodes[i:end]
 		reports, err := a.repository.GetReportsByCode(ctx, batchCodes)
 		if err != nil {
-			logger.Error("Failed to fetch reports",
+			logger.Error("Failed to fetch reports batch",
 				"startIndex", i,
 				"endIndex", end,
 				"error", err)
@@ -294,6 +279,9 @@ func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*w
 
 		allReports = append(allReports, reports...)
 		processedReports += len(reports)
+
+		// Add small delay between batches
+		time.Sleep(time.Millisecond * 100)
 	}
 
 	logger.Info("Finished fetching reports",
@@ -303,37 +291,47 @@ func (a *ReportsActivity) GetProcessedReports(ctx context.Context, rankings []*w
 	return allReports, nil
 }
 
+// GetReportsForEncounter retrieves all reports for an encounter
 func (a *ReportsActivity) GetReportsForEncounter(ctx context.Context, encounterID uint) ([]warcraftlogsBuilds.Report, error) {
 	logger := activity.GetLogger(ctx)
 
-	const batchSize = 10
-	offset := 0
+	// Get total count first
+	count, err := a.CountReportsForEncounter(ctx, encounterID)
+	if err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		logger.Info("No reports found for encounter", "encounterID", encounterID)
+		return nil, nil
+	}
+
+	const batchSize = 5
 	var allReports []warcraftlogsBuilds.Report
 
-	for {
-		reports, err := a.repository.GetReportsForEncounter(ctx, encounterID, batchSize, offset)
+	for offset := 0; offset < int(count); offset += batchSize {
+		activity.RecordHeartbeat(ctx, fmt.Sprintf("Processing reports %d-%d of %d for encounter %d",
+			offset, min(offset+batchSize, int(count)), count, encounterID))
+
+		reports, err := a.GetReportsForEncounterBatch(ctx, encounterID, batchSize, offset)
 		if err != nil {
 			logger.Error("Failed to get reports batch",
 				"encounterID", encounterID,
 				"offset", offset,
 				"error", err)
-			return nil, err
-		}
-
-		if len(reports) == 0 {
-			break
+			continue
 		}
 
 		allReports = append(allReports, reports...)
-		offset += batchSize
+		logger.Info("Processed reports batch",
+			"encounterID", encounterID,
+			"batchSize", len(reports),
+			"totalProcessed", len(allReports),
+			"totalExpected", count)
 
-		// Record heartbeat
-		activity.RecordHeartbeat(ctx, fmt.Sprintf("Retrieved %d reports for encounter %d", len(allReports), encounterID))
+		// Add small delay between batches
+		time.Sleep(time.Millisecond * 100)
 	}
-
-	logger.Info("Retrieved reports for encounter",
-		"encounterID", encounterID,
-		"count", len(allReports))
 
 	return allReports, nil
 }

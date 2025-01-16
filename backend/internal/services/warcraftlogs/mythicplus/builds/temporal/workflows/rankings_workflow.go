@@ -89,11 +89,18 @@ const (
 	GetProcessedReportsActivityName = "GetProcessedReports"
 	CountPlayerBuildsActivityName   = "CountPlayerBuilds"
 	GetReportsForEncounterName      = "GetReportsForEncounter"
+	CountReportsForEncounterName    = "CountReportsForEncounter"
+	GetReportsForEncounterBatchName = "GetReportsForEncounterBatch"
 )
 
 // RankingsSyncWorkflow is the workflow for synchronizing rankings
 type RankingsSyncWorkflow interface {
 	Execute(ctx workflow.Context, params WorkflowParams) (*WorkflowResult, error)
+}
+
+// ProcessBuildBatch is the workflow for processing a batch of builds
+type ProcessBuildBatchWorkflow interface {
+	Execute(ctx workflow.Context, params BuildBatchParams) (*BuildBatchResult, error)
 }
 
 // Interface of the activities
@@ -105,6 +112,8 @@ type ReportsActivity interface {
 	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
 	GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error)
 	GetReportsForEncounter(ctx context.Context, encounterID uint) ([]warcraftlogsBuilds.Report, error)
+	CountReportsForEncounter(ctx context.Context, encounterID uint) (int64, error)
+	GetReportsForEncounterBatch(ctx context.Context, encounterID uint, limit int, offset int) ([]warcraftlogsBuilds.Report, error)
 }
 
 type PlayerBuildsActivity interface {

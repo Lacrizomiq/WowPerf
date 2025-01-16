@@ -1,4 +1,5 @@
 -- +migrate Down
+
 -- Remove foreign keys
 ALTER TABLE player_builds DROP CONSTRAINT IF EXISTS fk_player_builds_report;
 ALTER TABLE player_builds DROP CONSTRAINT IF EXISTS fk_player_builds_dungeon;
@@ -16,6 +17,3 @@ ALTER TABLE player_builds
     ALTER COLUMN class DROP NOT NULL,
     ALTER COLUMN spec DROP NOT NULL,
     ALTER COLUMN fight_id DROP NOT NULL;
-
--- Rename encounter_id to dungeon_id
-ALTER TABLE player_builds RENAME COLUMN encounter_id TO dungeon_id;
