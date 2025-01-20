@@ -1,4 +1,4 @@
-tmp/
+**/tmp/
 .git/
 .env.local
 .env.*.local

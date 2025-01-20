@@ -3,122 +3,105 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
-
-	"wowperf/internal/database"
-	"wowperf/internal/services/warcraftlogs"
 	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
-	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
-	warcraftlogsBuildsSync "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync"
-	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
+	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+
+	"go.temporal.io/sdk/client"
+)
+
+const (
+	defaultNamespace = "default"
+	defaultTaskQueue = "warcraft-logs-sync"
 )
 
 func main() {
-	startTime := time.Now()
-	log.Printf("[INFO] Starting full sync process for WoW Performance at %v", startTime.Format(time.RFC3339))
+	log.Printf("[INFO] Starting sync workflow")
 
-	// Load config
-	log.Printf("[INFO] Loading configuration...")
+	// Initialize Temporal client
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
+	}
+
+	temporalClient, err := client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: defaultNamespace,
+	})
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
+	}
+	defer temporalClient.Close()
+
+	// Load configuration
 	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load config: %v", err)
 	}
-	log.Printf("[INFO] Configuration loaded successfully for %d specs and %d dungeons",
-		len(cfg.Specs), len(cfg.Dungeons))
 
-	// Initialize database
-	db, err := database.InitDB()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize database: %v", err)
+	// Prepare workflow parameters
+	workflowParams := workflows.WorkflowParams{
+		Specs:    make([]workflows.ClassSpec, len(cfg.Specs)),
+		Dungeons: make([]workflows.Dungeon, len(cfg.Dungeons)),
+		BatchConfig: workflows.BatchConfig{
+			Size:        cfg.Rankings.Batch.Size,
+			MaxPages:    cfg.Rankings.Batch.MaxPages,
+			RetryDelay:  cfg.Rankings.Batch.RetryDelay,
+			MaxAttempts: cfg.Rankings.Batch.MaxAttempts,
+		},
+		Rankings: struct {
+			MaxRankingsPerSpec int           `json:"max_rankings_per_spec"`
+			UpdateInterval     time.Duration `json:"update_interval"`
+		}{
+			MaxRankingsPerSpec: cfg.Rankings.MaxRankingsPerSpec,
+			UpdateInterval:     cfg.Rankings.UpdateInterval,
+		},
 	}
 
-	// Initialize WarcraftLogs client
-	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize WarcraftLogs client: %v", err)
-	}
-
-	// Create context
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Rankings.UpdateInterval)
-	defer cancel()
-
-	// Initialize metrics
-	metrics := warcraftlogsBuildsMetrics.NewSyncMetrics()
-
-	// Initialize worker pool
-	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers, metrics)
-	if err := workerPool.Start(ctx); err != nil {
-		log.Fatalf("[FATAL] Failed to start worker pool: %v", err)
-	}
-	defer workerPool.Stop()
-
-	// Initialize repositories
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
-
-	// Initialize services
-	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db, metrics)
-
-	// Initialize sync service
-	syncConfig := &warcraftlogsBuildsConfig.Config{
-		Rankings: cfg.Rankings,
-		Worker:   cfg.Worker,
-		Specs:    cfg.Specs,
-		Dungeons: cfg.Dungeons,
-	}
-
-	syncService := warcraftlogsBuildsSync.NewSyncService(
-		workerPool,
-		rankingsRepo,
-		syncConfig,
-	)
-
-	// Phase 1: Rankings Synchronization
-	log.Printf("[INFO] Starting rankings sync phase")
-	rankingsStart := time.Now()
-	if err := syncService.StartSync(ctx); err != nil {
-		log.Fatalf("[FATAL] Rankings sync failed: %v", err)
-	}
-	log.Printf("[INFO] Rankings sync phase completed in %v", time.Since(rankingsStart))
-
-	// Phase 2: Reports Processing
-	log.Printf("[INFO] Starting reports fetch phase")
-	reportsStart := time.Now()
-	reports, err := reportsService.GetReportsFromRankings(ctx)
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to get reports from rankings: %v", err)
-	}
-	log.Printf("[INFO] Found %d reports to process", len(reports))
-
-	if len(reports) > 0 {
-		log.Printf("[INFO] Starting reports processing phase")
-		if err := reportsService.ProcessReports(ctx, reports); err != nil {
-			log.Fatalf("[FATAL] Failed to process reports: %v", err)
+	// Convert specs and dungeons
+	for i, spec := range cfg.Specs {
+		workflowParams.Specs[i] = workflows.ClassSpec{
+			ClassName: spec.ClassName,
+			SpecName:  spec.SpecName,
 		}
-		log.Printf("[INFO] Reports processing completed in %v", time.Since(reportsStart))
-	} else {
-		log.Printf("[INFO] No new reports to process")
+	}
+	for i, dungeon := range cfg.Dungeons {
+		workflowParams.Dungeons[i] = workflows.Dungeon{
+			ID:          dungeon.ID,
+			EncounterID: dungeon.EncounterID,
+			Name:        dungeon.Name,
+			Slug:        dungeon.Slug,
+		}
 	}
 
-	// Final Summary
-	totalDuration := time.Since(startTime)
-	log.Printf("[INFO] Full sync process completed in %v", totalDuration)
-
-	// Log final metrics
-	summary := metrics.GetSummary()
-	log.Printf("[INFO] Final metrics:")
-	log.Printf("- Total Rankings: %d", summary["rankings"].(map[string]int)["total"])
-	log.Printf("- Total Reports: %d", summary["reports"].(map[string]int)["total"])
-	log.Printf("- Rate Limits Hit: %d", summary["rate_limits"].(map[string]interface{})["total_hits"])
-}
-
-// extractDungeonIDs extracts the dungeon IDs from the given dungeons
-func extractDungeonIDs(dungeons []warcraftlogsBuildsConfig.Dungeon) []uint {
-	ids := make([]uint, len(dungeons))
-	for i, dungeon := range dungeons {
-		ids[i] = uint(dungeon.ID)
+	// Start workflow
+	workflowOptions := client.StartWorkflowOptions{
+		ID:                       "warcraft-logs-sync-" + time.Now().Format("20060102-150405"),
+		TaskQueue:                defaultTaskQueue,
+		WorkflowExecutionTimeout: 24 * time.Hour,
 	}
-	return ids
+
+	execution, err := temporalClient.ExecuteWorkflow(
+		context.Background(),
+		workflowOptions,
+		workflows.SyncWorkflow,
+		workflowParams,
+	)
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to start workflow: %v", err)
+	}
+
+	log.Printf("[INFO] Started workflow: ID=%s, RunID=%s", execution.GetID(), execution.GetRunID())
+
+	// Wait for workflow completion
+	var result workflows.WorkflowResult
+	if err := execution.Get(context.Background(), &result); err != nil {
+		log.Fatalf("[FATAL] Workflow failed: %v", err)
+	}
+
+	log.Printf("[INFO] Workflow completed successfully: Rankings=%d, Reports=%d, Builds=%d",
+		result.RankingsProcessed,
+		result.ReportsProcessed,
+		result.BuildsProcessed)
 }

@@ -16,6 +16,7 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
   selectedDungeon,
 }) => {
   return (
+    // Display the dungeon list with a grid layout of 4 columns and with responsive columns
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
       {dungeons.map((dungeon) => {
         const run = mythicPlusRuns.find((r) => r.Dungeon.ID === dungeon.ID);

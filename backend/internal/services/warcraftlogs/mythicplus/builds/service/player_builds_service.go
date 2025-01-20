@@ -161,7 +161,7 @@ func (s *PlayerBuildsService) extractPlayerDetails(report *warcraftlogsBuilds.Re
 	}
 
 	// Extract talent code
-	playerBuild.TalentCode = s.getTalentCode(report, player)
+	playerBuild.TalentImport = s.getTalentCode(report, player)
 
 	// Extract gear and stats from CombatantInfo
 	if err := s.extractGearAndStats(playerBuild, player.CombatantInfo); err != nil {

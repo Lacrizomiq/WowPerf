@@ -6,7 +6,7 @@ worker:
   num_workers: 3
   retry_attempts: 3
   retry_delay: 5s
-  batch_size: 100
+  batch_size: 5
   request_delay: 500ms
 
 specs:

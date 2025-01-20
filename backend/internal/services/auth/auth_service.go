@@ -63,7 +63,7 @@ func NewAuthService(
 
 	domain := os.Getenv("DOMAIN")
 
-	// Configuration pour le développement
+	// Development configuration
 	secure := true
 
 	return &AuthService{
@@ -75,7 +75,7 @@ func NewAuthService(
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
-			Secure:   secure, // true pour HTTPS
+			Secure:   secure, // true for HTTPS
 			SameSite: http.SameSiteLaxMode,
 		},
 	}

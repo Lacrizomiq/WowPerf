@@ -9,8 +9,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/config.yml:/etc/traefik/config.yml:ro
-      - ./traefik/dynamic:/etc/traefik/dynamic:ro # Dynamic configuration
-      - ./certs:/certs:ro # Certificates
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./certs:/certs:ro
     networks:
       - traefik
       - internal
@@ -41,7 +41,7 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/temporal`) && !PathPrefix(`/adminer`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
@@ -65,6 +65,8 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_SSL_MODE=${DB_SSL_MODE}
       - REDIS_URL=${REDIS_URL}
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_NAMESPACE=default
       - JWT_SECRET=${JWT_SECRET}
       - CSRF_SECRET=${CSRF_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
@@ -82,7 +84,6 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
-      # Add these lines to strip the /api prefix
       - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
       - "traefik.http.routers.backend.middlewares=strip-api@docker"
     depends_on:
@@ -90,9 +91,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      temporal:
+        condition: service_healthy
     restart: unless-stopped
 
-  # Mailhog is used to test emails in development
   mailhog:
     image: mailhog/mailhog
     networks:
@@ -100,7 +102,6 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      # Configuration de la route principale
       - "traefik.http.routers.mailhog.rule=Host(`localhost`) && PathPrefix(`/mailhog`)"
       - "traefik.http.routers.mailhog.entrypoints=websecure"
       - "traefik.http.routers.mailhog.tls=true"
@@ -146,6 +147,23 @@ services:
       retries: 5
     restart: unless-stopped
 
+  temporal-db:
+    image: postgres:${POSTGRESQL_VERSION}
+    environment:
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
+      POSTGRES_DB: temporal
+    networks:
+      - internal
+    volumes:
+      - temporal_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal -d temporal"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   redis:
     image: redis:alpine
     command: redis-server --appendonly yes
@@ -160,6 +178,65 @@ services:
       retries: 5
     restart: unless-stopped
 
+  temporal:
+    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=temporal-db
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+    labels:
+      - "traefik.enable=true"
+      # Configuration gRPC
+      - "traefik.http.routers.temporal-grpc.rule=Host(`localhost`) && PathPrefix(`/temporal-grpc`)"
+      - "traefik.http.routers.temporal-grpc.entrypoints=websecure"
+      - "traefik.http.routers.temporal-grpc.tls=true"
+      - "traefik.http.services.temporal-grpc.loadbalancer.server.port=7233"
+      - "traefik.http.services.temporal-grpc.loadbalancer.server.scheme=h2c"
+    networks:
+      - internal
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    ports:
+      - 7233:7233
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  temporal-ui:
+    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_UI_PORT=8080
+      - TEMPORAL_UI_ENABLED=true
+      - TEMPORAL_UI_PUBLIC_PATH=/temporal # Ajout important pour le sous-chemin
+    networks:
+      - traefik
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.temporal-ui.rule=Host(`localhost`) && PathPrefix(`/temporal`)"
+      - "traefik.http.routers.temporal-ui.entrypoints=websecure"
+      - "traefik.http.routers.temporal-ui.tls=true"
+      - "traefik.http.services.temporal-ui.loadbalancer.server.port=8080"
+      # Le middleware pour le strip prefix n'est peut-être plus nécessaire avec TEMPORAL_UI_PUBLIC_PATH
+      - "traefik.http.middlewares.temporal-ui-headers.headers.customRequestHeaders.X-Forwarded-For=${remote_addr}"
+      - "traefik.http.middlewares.temporal-ui-headers.headers.customRequestHeaders.X-Real-IP=${remote_addr}"
+      - "traefik.http.routers.temporal-ui.middlewares=temporal-ui-headers@docker"
+    depends_on:
+      temporal:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Report test for rankings and reports and player builds
   report-test:
     build:
       context: ../../backend
@@ -176,6 +253,10 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_SSL_MODE=${DB_SSL_MODE}
       - REDIS_URL=${REDIS_URL}
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_TASKQUEUE=warcraft-logs-sync
+      - ENVIRONMENT=development
     networks:
       - internal
     depends_on:
@@ -183,7 +264,42 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      temporal:
+        condition: service_healthy
     command: go run cmd/report-test/main.go
+
+  # Temporal worker for rankings and reports and player builds
+  temporal-worker:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+      target: development
+    command: ["go", "run", "cmd/worker/main.go"]
+    volumes:
+      - ../../backend:/app:cached
+      - backend_go:/go:delegated
+    environment:
+      - TZ=Europe/Paris
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSL_MODE=${DB_SSL_MODE}
+      - REDIS_URL=${REDIS_URL}
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_TASKQUEUE=warcraft-logs-sync
+      - ENVIRONMENT=development
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    restart: unless-stopped
 
 networks:
   traefik:
@@ -193,6 +309,7 @@ networks:
 
 volumes:
   postgres_data:
+  temporal_postgres_data:
   redis_data:
   frontend_node_modules:
   frontend_next:
