@@ -56,6 +56,16 @@ func (sm *ScheduleManager) CreateClassSchedule(
 	configCopy.Specs = classSpecs
 
 	workflowParams := workflows.WorkflowParams{
+		Specs:       classSpecs,
+		Dungeons:    configCopy.Dungeons,
+		BatchConfig: configCopy.Rankings.Batch,
+		Rankings: struct {
+			MaxRankingsPerSpec int           `json:"max_rankings_per_spec"`
+			UpdateInterval     time.Duration `json:"update_interval"`
+		}{
+			MaxRankingsPerSpec: configCopy.Rankings.MaxRankingsPerSpec,
+			UpdateInterval:     configCopy.Rankings.UpdateInterval,
+		},
 		Config: configCopy,
 	}
 
