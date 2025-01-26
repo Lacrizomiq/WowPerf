@@ -43,8 +43,8 @@ func main() {
 
 	// Configure schedule
 	opts := scheduler.DefaultScheduleOptions()
-	if err := scheduleManager.CreateClassSchedule(context.Background(), targetClass, cfg, opts); err != nil {
-		log.Fatalf("[FATAL] Failed to create schedule: %v", err)
+	if err := scheduleManager.CreateOrGetClassSchedule(context.Background(), targetClass, cfg, opts); err != nil {
+		log.Fatalf("[FATAL] Failed to manage schedule: %v", err)
 	}
 
 	logger.Printf("Successfully created schedule for class: %s", targetClass)

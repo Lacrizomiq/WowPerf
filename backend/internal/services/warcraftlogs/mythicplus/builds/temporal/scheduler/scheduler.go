@@ -208,3 +208,33 @@ func (sm *ScheduleManager) GetScheduleDescription(ctx context.Context, className
 
 	return handle.Describe(ctx)
 }
+
+// CreateOrGetClassSchedule creates a new schedule if it doesn't exist, or returns existing one
+func (sm *ScheduleManager) CreateOrGetClassSchedule(ctx context.Context, className string, cfg *workflows.Config, opts *ScheduleOptions) error {
+	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
+
+	// Check if schedule already exists using Temporal's List method
+	listView, err := sm.client.ScheduleClient().List(ctx, client.ScheduleListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list schedules: %w", err)
+	}
+
+	for listView.HasNext() {
+		schedule, err := listView.Next()
+		if err != nil {
+			sm.logger.Printf("Error listing schedule: %v", err)
+			continue
+		}
+
+		if schedule.ID == scheduleID {
+			sm.logger.Printf("Schedule already exists for class %s", className)
+			// Get the handle for the existing schedule
+			handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
+			sm.schedules[className] = handle
+			return nil
+		}
+	}
+
+	// If we get here, schedule doesn't exist, create it
+	return sm.CreateClassSchedule(ctx, className, cfg, opts)
+}
