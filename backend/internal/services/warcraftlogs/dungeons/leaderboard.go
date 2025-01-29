@@ -59,75 +59,101 @@ type LeaderboardParams struct {
 func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, params LeaderboardParams) (*playerLeaderboardModels.DungeonLogs, error) {
 	log.Printf("Getting dungeon leaderboard for encounter %d, page %d", params.EncounterID, params.Page)
 
-	variables := map[string]interface{}{
-		"encounterId": params.EncounterID,
-		"page":        params.Page,
+	var allRankings []playerLeaderboardModels.Ranking
+	hasMorePages := false
+	totalCount := 0
+
+	// List of specializations to fetch
+	var specsToFetch []Specialization
+
+	// If a class and a spec are provided, only fetch that one
+	if params.ClassName != "" && params.SpecName != "" {
+		specsToFetch = append(specsToFetch, Specialization{params.ClassName, params.SpecName})
+	} else {
+		// Otherwise, fetch all specializations
+		specsToFetch = Specializations
 	}
 
-	// add optional parameters if they are provided
-	if params.ServerRegion != "" {
-		variables["serverRegion"] = params.ServerRegion
-	}
-	if params.ServerSlug != "" {
-		variables["serverSlug"] = params.ServerSlug
-	}
-	if params.ClassName != "" {
-		variables["className"] = params.ClassName
-	}
-	if params.SpecName != "" {
-		variables["specName"] = params.SpecName
+	// Loop over each specialization to fetch the data
+	for _, spec := range specsToFetch {
+		variables := map[string]interface{}{
+			"encounterId": params.EncounterID,
+			"page":        params.Page,
+			"className":   spec.ClassName,
+			"specName":    spec.SpecName,
+		}
+
+		// Add optional parameters if provided
+		if params.ServerRegion != "" {
+			variables["serverRegion"] = params.ServerRegion
+		}
+		if params.ServerSlug != "" {
+			variables["serverSlug"] = params.ServerSlug
+		}
+
+		// Execute the request
+		response, err := s.MakeRequest(context.Background(), DungeonLeaderboardPlayerQuery, variables)
+		if err != nil {
+			log.Printf("Error fetching leaderboard for class %s, spec %s: %v", spec.ClassName, spec.SpecName, err)
+			continue
+		}
+
+		// Check for GraphQL errors
+		var errorResponse struct {
+			Errors []struct {
+				Message string `json:"message"`
+			} `json:"errors"`
+		}
+		if err := json.Unmarshal(response, &errorResponse); err == nil && len(errorResponse.Errors) > 0 {
+			log.Printf("GraphQL error for class %s, spec %s: %s", spec.ClassName, spec.SpecName, errorResponse.Errors[0].Message)
+			continue
+		}
+
+		// Define the response structure
+		var result struct {
+			Data struct {
+				WorldData struct {
+					Encounter struct {
+						Name              string          `json:"name"`
+						CharacterRankings json.RawMessage `json:"characterRankings"`
+					} `json:"encounter"`
+				} `json:"worldData"`
+			} `json:"data"`
+		}
+
+		// Unmarshal the response
+		if err := json.Unmarshal(response, &result); err != nil {
+			log.Printf("Failed to unmarshal response for class %s, spec %s: %v", spec.ClassName, spec.SpecName, err)
+			continue
+		}
+
+		// Check for empty results
+		if len(result.Data.WorldData.Encounter.CharacterRankings) == 0 {
+			continue
+		}
+
+		// Unmarshal the rankings
+		var leaderboard playerLeaderboardModels.DungeonLogs
+		if err := json.Unmarshal(result.Data.WorldData.Encounter.CharacterRankings, &leaderboard); err != nil {
+			log.Printf("Failed to unmarshal character rankings for class %s, spec %s: %v", spec.ClassName, spec.SpecName, err)
+			continue
+		}
+
+		// Add the results to the general array
+		allRankings = append(allRankings, leaderboard.Rankings...)
+		totalCount += leaderboard.Count
+		if leaderboard.HasMorePages {
+			hasMorePages = true
+		}
 	}
 
-	// make the request
-	response, err := s.MakeRequest(context.Background(), DungeonLeaderboardPlayerQuery, variables)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get dungeon leaderboard: %w", err)
-	}
-
-	// Check for GraphQL errors
-	var errorResponse struct {
-		Errors []struct {
-			Message string `json:"message"`
-		} `json:"errors"`
-	}
-	if err := json.Unmarshal(response, &errorResponse); err == nil && len(errorResponse.Errors) > 0 {
-		return nil, fmt.Errorf("GraphQL error: %s", errorResponse.Errors[0].Message)
-	}
-
-	// Define the response struct
-	var result struct {
-		Data struct {
-			WorldData struct {
-				Encounter struct {
-					Name              string          `json:"name"`
-					CharacterRankings json.RawMessage `json:"characterRankings"`
-				} `json:"encounter"`
-			} `json:"worldData"`
-		} `json:"data"`
-	}
-
-	// Unmarshal the response into the struct
-	if err := json.Unmarshal(response, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	// Verify if CharacterRankings is null or empty
-	if len(result.Data.WorldData.Encounter.CharacterRankings) == 0 {
-		return &playerLeaderboardModels.DungeonLogs{
-			Page:         params.Page,
-			HasMorePages: false,
-			Count:        0,
-			Rankings:     make([]playerLeaderboardModels.Ranking, 0),
-		}, nil
-	}
-
-	// Now unmarshal the CharacterRankings JSON into our DungeonLeaderboard struct
-	var leaderboard playerLeaderboardModels.DungeonLogs
-	if err := json.Unmarshal(result.Data.WorldData.Encounter.CharacterRankings, &leaderboard); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal character rankings: %w", err)
-	}
-
-	return &leaderboard, nil
+	// Return the leaderboard
+	return &playerLeaderboardModels.DungeonLogs{
+		Page:         params.Page,
+		HasMorePages: hasMorePages,
+		Count:        totalCount,
+		Rankings:     allRankings,
+	}, nil
 }
 
 // GetDungeonLeaderboardByTeam returns the dungeon leaderboard for a given encounter and page

@@ -24,6 +24,80 @@ const (
 	DungeonStonevault    = 12652
 )
 
+// Specialization is a struct that represents a class specialization
+type Specialization struct {
+	ClassName string
+	SpecName  string
+}
+
+// List of all specializations mapped to their classes
+var Specializations = []Specialization{
+	// Priest
+	{"Priest", "Discipline"},
+	{"Priest", "Holy"},
+	{"Priest", "Shadow"},
+
+	// Death Knight
+	{"DeathKnight", "Blood"},
+	{"DeathKnight", "Frost"},
+	{"DeathKnight", "Unholy"},
+
+	// Druid
+	{"Druid", "Balance"},
+	{"Druid", "Feral"},
+	{"Druid", "Guardian"},
+	{"Druid", "Restoration"},
+
+	// Hunter
+	{"Hunter", "BeastMastery"},
+	{"Hunter", "Marksmanship"},
+	{"Hunter", "Survival"},
+
+	// Mage
+	{"Mage", "Arcane"},
+	{"Mage", "Fire"},
+	{"Mage", "Frost"},
+
+	// Monk
+	{"Monk", "Brewmaster"},
+	{"Monk", "Mistweaver"},
+	{"Monk", "Windwalker"},
+
+	// Paladin
+	{"Paladin", "Holy"},
+	{"Paladin", "Protection"},
+	{"Paladin", "Retribution"},
+
+	// Rogue
+	{"Rogue", "Assassination"},
+	{"Rogue", "Subtlety"},
+	{"Rogue", "Outlaw"},
+
+	// Shaman
+	{"Shaman", "Elemental"},
+	{"Shaman", "Enhancement"},
+	{"Shaman", "Restoration"},
+
+	// Warlock
+	{"Warlock", "Affliction"},
+	{"Warlock", "Demonology"},
+	{"Warlock", "Destruction"},
+
+	// Warrior
+	{"Warrior", "Arms"},
+	{"Warrior", "Fury"},
+	{"Warrior", "Protection"},
+
+	// Demon Hunter
+	{"DemonHunter", "Havoc"},
+	{"DemonHunter", "Vengeance"},
+
+	// Evoker
+	{"Evoker", "Devastation"},
+	{"Evoker", "Preservation"},
+	{"Evoker", "Augmentation"},
+}
+
 // Structures for API data
 type Report struct {
 	Code      string `json:"code"`
