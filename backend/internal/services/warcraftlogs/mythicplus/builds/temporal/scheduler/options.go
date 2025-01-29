@@ -45,16 +45,16 @@ func DefaultScheduleOptions() *ScheduleOptions {
 			OverlapPolicy:  enums.SCHEDULE_OVERLAP_POLICY_SKIP,
 		},
 		Retry: RetryPolicy{
-			InitialInterval:    30 * time.Second,
+			InitialInterval:    15 * time.Second,
 			BackoffCoefficient: 2.0,
-			MaximumInterval:    10 * time.Minute,
+			MaximumInterval:    5 * time.Minute,
 			MaximumAttempts:    3,
 		},
 		Backfill: BackfillPolicy{
 			Enabled:        true,
-			BackfillWindow: 7 * 24 * time.Hour, // 1 week
+			BackfillWindow: 24 * time.Hour, // 1 day
 		},
-		Timeout: 24 * time.Hour,
+		Timeout: 45 * time.Minute,
 		Paused:  false,
 	}
 }

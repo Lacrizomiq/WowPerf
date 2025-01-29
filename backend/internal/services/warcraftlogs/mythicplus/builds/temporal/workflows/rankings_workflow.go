@@ -29,7 +29,6 @@ type Dungeon struct {
 // BatchConfig defines parameters for batch processing
 type BatchConfig struct {
 	Size        uint          `json:"size" yaml:"size"`
-	MaxPages    uint          `json:"max_pages" yaml:"max_pages"`
 	RetryDelay  time.Duration `json:"retry_delay" yaml:"retry_delay"`
 	MaxAttempts int           `json:"max_attempts" yaml:"max_attempts"`
 }
@@ -55,17 +54,14 @@ type Config struct {
 	Dungeons []Dungeon      `json:"dungeons" yaml:"dungeons"`
 }
 
-// WorkflowParams contains all parameters needed for workflow execution
+// WorkflowParams contains parameters needed for workflow execution
 type WorkflowParams struct {
-	// Legacy fields kept for compatibility
-	Specs       []ClassSpec `json:"specs"`
-	Dungeons    []Dungeon   `json:"dungeons"`
-	BatchConfig BatchConfig `json:"batch"`
-	Rankings    struct {
-		MaxRankingsPerSpec int           `json:"max_rankings_per_spec"`
-		UpdateInterval     time.Duration `json:"update_interval"`
-	} `json:"rankings"`
-	Config *Config `json:"config,omitempty"`
+	// Config contains the complete configuration
+	Config *Config `json:"config"`
+	// Progress contains the progress of the workflow
+	Progress *WorkflowProgress
+	// WorkflowID is the ID of the workflow
+	WorkflowID string `json:"workflow_id"`
 }
 
 // BatchResult represents the outcome of a rankings batch processing
@@ -74,7 +70,6 @@ type BatchResult struct {
 	SpecName    string
 	EncounterID uint
 	Rankings    []*warcraftlogsBuilds.ClassRanking
-	HasMore     bool
 	ProcessedAt time.Time
 }
 
@@ -103,16 +98,30 @@ type WorkflowResult struct {
 	CompletedAt       time.Time
 }
 
+// WorkflowProgress tracks the progress of spec and dungeon processing
+type WorkflowProgress struct {
+	CompletedSpecs      map[string]bool // Map of completed specs
+	CompletedDungeons   map[string]bool // Map of completed dungeons
+	CurrentSpecIndex    int             // Index of the current spec being processed
+	CurrentDungeonIndex int             // Index of the current dungeon being processed
+	PartialResults      *WorkflowResult // Accumulated results
+}
+
+// QuotaExceededError is an error type for quota exceeded errors
+type QuotaExceededError struct {
+	Message string
+	ResetIn time.Duration
+}
+
 // LoadConfig loads configuration from file or returns default values
 func LoadConfig(configPath string) (*Config, error) {
-	// Initialize default configuration
+	// Default configuration values
 	defaultConfig := &Config{
 		Rankings: RankingsConfig{
 			MaxRankingsPerSpec: 150,
 			UpdateInterval:     7 * 24 * time.Hour,
 			Batch: BatchConfig{
-				Size:        100,
-				MaxPages:    2,
+				Size:        5,
 				RetryDelay:  5 * time.Second,
 				MaxAttempts: 3,
 			},
@@ -152,8 +161,8 @@ func validateConfig(config *Config) error {
 	if config.Rankings.Batch.MaxAttempts < 0 {
 		return fmt.Errorf("retry attempts cannot be negative")
 	}
-	if config.Rankings.MaxRankingsPerSpec < 100 {
-		return fmt.Errorf("max rankings per spec must be at least 100")
+	if config.Rankings.MaxRankingsPerSpec != 20 {
+		return fmt.Errorf("max rankings per spec must be exactly 20")
 	}
 	if len(config.Specs) == 0 {
 		return fmt.Errorf("at least one spec must be configured")
@@ -174,6 +183,9 @@ const (
 	GetReportsForEncounterName      = "GetReportsForEncounter"
 	CountReportsForEncounterName    = "CountReportsForEncounter"
 	GetReportsForEncounterBatchName = "GetReportsForEncounterBatch"
+	ReserveRateLimitPointsActivity  = "ReservePoints"
+	ReleaseRateLimitPointsActivity  = "ReleasePoints"
+	CheckRemainingPointsActivity    = "CheckRemainingPoints"
 )
 
 // RankingsSyncWorkflow defines the interface for rankings synchronization workflow

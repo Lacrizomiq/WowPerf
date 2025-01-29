@@ -2,6 +2,7 @@ package warcraftlogsBuildsRepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -21,17 +22,19 @@ func NewRankingsRepository(db *gorm.DB) *RankingsRepository {
 }
 
 // GetLastRankingsForEncounter retrieves the last rankings for a given encounter
-func (r *RankingsRepository) GetLastRankingForEncounter(ctx context.Context, encounterID uint) (*warcraftlogsBuilds.ClassRanking, error) {
+func (r *RankingsRepository) GetLastRankingForEncounter(ctx context.Context, encounterID uint, className string, specName string) (*warcraftlogsBuilds.ClassRanking, error) {
 	var ranking warcraftlogsBuilds.ClassRanking
-	result := r.db.WithContext(ctx).
-		Where("encounter_id = ?", encounterID).
-		Order("created_at DESC").
-		First(&ranking)
 
-	if result.Error == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
+	result := r.db.Where("encounter_id = ? AND class = ? AND spec = ?",
+		encounterID,
+		className,
+		specName,
+	).Order("updated_at DESC").First(&ranking)
+
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to get last ranking: %w", result.Error)
 	}
 

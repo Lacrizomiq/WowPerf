@@ -81,11 +81,12 @@ func main() {
 	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
 	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
 	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
-
+	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
 	activitiesService := activities.NewActivities(
 		rankingsActivity,
 		reportsActivity,
 		playerBuildsActivity,
+		rateLimitActivity,
 	)
 
 	// Register workflow and activities with proper activity names

@@ -19,17 +19,23 @@ type RateLimitData struct {
 }
 
 const RateLimitQuery = `query {
-	rateLimitData {
-			limitPerHour
-			pointsSpentThisHour
-			pointsResetIn
-	}
+    rateLimitData {
+        limitPerHour
+        pointsSpentThisHour
+        pointsResetIn
+    }
 }`
 
 const (
 	defaultRefreshInterval = 5 * time.Minute
 	minWaitTime            = 5 * time.Second
 	maxRetries             = 3
+
+	// Rate limiting constants
+	maxPointsPerHour    = 18000
+	workflowQuotaPoints = 14000
+	bufferPoints        = 2000
+	safetyPoints        = 2000
 )
 
 // WarcraftLogsClientService is a struct to manage the Warcraft Logs client
@@ -39,7 +45,7 @@ type WarcraftLogsClientService struct {
 	refreshInterval time.Duration
 }
 
-// RateLimiter is a struct to manage the rate limit
+// RateLimiter handles API rate limiting with optimized point tracking
 type RateLimiter struct {
 	mu            sync.RWMutex
 	maxPoints     float64
@@ -47,6 +53,22 @@ type RateLimiter struct {
 	resetTime     time.Time
 	lastUpdate    time.Time
 	pointsPerHour float64
+
+	// Workflow specific tracking
+	workflowQuota   float64  // 14000 points
+	workflowPoints  sync.Map // map[string]float64
+	activeWorkflows int32
+
+	// API client reference
+	client *Client
+}
+
+// RateLimitInfo provides current rate limit status
+type RateLimitInfo struct {
+	RemainingPoints float64
+	PointsPerHour   int
+	ResetIn         time.Duration
+	NextRefresh     time.Time
 }
 
 func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
@@ -55,10 +77,16 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 		return nil, err
 	}
 
+	rateLimiter := &RateLimiter{
+		workflowQuota: workflowQuotaPoints,
+		maxPoints:     maxPointsPerHour,
+		client:        client,
+	}
+
 	service := &WarcraftLogsClientService{
 		Client:          client,
 		refreshInterval: defaultRefreshInterval,
-		rateLimiter:     &RateLimiter{},
+		rateLimiter:     rateLimiter,
 	}
 
 	if err := service.updateRateLimit(context.Background()); err != nil {
@@ -68,20 +96,6 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 	go service.startPeriodicRateLimitCheck()
 
 	return service, nil
-}
-
-// Available checks if points are available
-func (r *RateLimiter) Available() bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	now := time.Now()
-	if now.After(r.resetTime) {
-		return true
-	}
-
-	pointsAvailable := r.maxPoints - r.currentPoints
-	return pointsAvailable >= 1.0
 }
 
 // UpdateState updates the rate limiter state
@@ -102,13 +116,6 @@ func (r *RateLimiter) UpdateState(limitPerHour float64, pointsSpent float64, res
 		time.Until(r.resetTime).Round(time.Second))
 }
 
-// ConsumePoint consumes a point from the rate limiter
-func (r *RateLimiter) ConsumePoint() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.currentPoints++
-}
-
 // GetRateLimitInfo returns the current rate limit information
 func (r *RateLimiter) GetRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
 	r.mu.RLock()
@@ -125,6 +132,29 @@ func (r *RateLimiter) GetRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
 		ResetIn:         time.Until(r.resetTime),
 		NextRefresh:     r.lastUpdate.Add(defaultRefreshInterval),
 	}
+}
+
+// ConsumePoint consumes a point from the rate limiter
+func (r *RateLimiter) ConsumePoint() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.currentPoints++
+}
+
+// ReserveWorkflowPoints attempts to reserve points for a workflow
+func (r *RateLimiter) ReserveWorkflowPoints(workflowID string, points float64) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.currentPoints+points > r.workflowQuota {
+		return fmt.Errorf("workflow quota exceeded")
+	}
+
+	if existingPoints, ok := r.workflowPoints.Load(workflowID); ok {
+		points += existingPoints.(float64)
+	}
+	r.workflowPoints.Store(workflowID, points)
+	return nil
 }
 
 // startPeriodicRateLimitCheck starts the periodic rate limit check
@@ -165,37 +195,41 @@ func (s *WarcraftLogsClientService) updateRateLimit(ctx context.Context) error {
 	return nil
 }
 
-// waitForAvailablePoints waits for points to be available
+// waitForAvailablePoints waits for points to be available with exponential backoff
 func (s *WarcraftLogsClientService) waitForAvailablePoints(ctx context.Context) error {
 	info := s.rateLimiter.GetRateLimitInfo()
+	remaining := info.RemainingPoints
+
 	log.Printf("[DEBUG] Points status - Remaining: %.2f, Required: 1.00, Reset in: %v",
-		info.RemainingPoints,
+		remaining,
 		info.ResetIn.Round(time.Second))
 
-	// If we have enough points, we go
-	if info.RemainingPoints >= 1.0 {
+	if remaining >= 1.0 {
 		return nil
 	}
 
-	// Otherwise, we force an update and check again
-	if err := s.updateRateLimit(ctx); err != nil {
-		return fmt.Errorf("failed to update rate limit: %w", err)
-	}
-
-	info = s.rateLimiter.GetRateLimitInfo()
-	if info.RemainingPoints >= 1.0 {
-		return nil
-	}
-
-	// If we still don't have points, we wait
-	if info.ResetIn > 0 {
-		log.Printf("[DEBUG] Waiting %v for rate limit reset", info.ResetIn.Round(time.Second))
+	// Implement exponential backoff for retries
+	backoff := minWaitTime
+	for retries := 0; retries < maxRetries; retries++ {
+		// Wait using backoff
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(info.ResetIn):
+		case <-time.After(backoff):
+		}
+
+		// Update and check again
+		if err := s.updateRateLimit(ctx); err != nil {
+			return fmt.Errorf("failed to update rate limit: %w", err)
+		}
+
+		info = s.rateLimiter.GetRateLimitInfo()
+		if info.RemainingPoints >= 1.0 {
 			return nil
 		}
+
+		// Double the backoff for next iteration
+		backoff *= 2
 	}
 
 	return warcraftlogsTypes.NewQuotaExceededError(info)
@@ -226,7 +260,7 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 
 	s.rateLimiter.ConsumePoint()
 
-	// Asynchronous update if necessary
+	// Only trigger async update if needed
 	if time.Since(s.rateLimiter.lastUpdate) > s.refreshInterval {
 		go func() {
 			if err := s.updateRateLimit(context.Background()); err != nil {
@@ -236,4 +270,25 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 	}
 
 	return response, nil
+}
+
+// GetWorkflowQuotaRemaining returns remaining points available for workflows
+func (r *RateLimiter) GetWorkflowQuotaRemaining() float64 {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.workflowQuota - r.currentPoints
+}
+
+// ReleaseWorkflowPoints releases points reserved for a workflow
+func (r *RateLimiter) ReleaseWorkflowPoints(workflowID string) {
+	if points, ok := r.workflowPoints.Load(workflowID); ok {
+		r.mu.Lock()
+		r.currentPoints -= points.(float64)
+		r.mu.Unlock()
+		r.workflowPoints.Delete(workflowID)
+	}
+}
+
+func (s *WarcraftLogsClientService) GetRateLimiter() *RateLimiter {
+	return s.rateLimiter
 }

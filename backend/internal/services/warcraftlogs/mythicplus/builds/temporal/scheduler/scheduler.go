@@ -10,6 +10,7 @@ import (
 
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/temporal"
 )
 
 // ScheduleManager handles Temporal schedules for different classes
@@ -35,69 +36,56 @@ func (sm *ScheduleManager) CreateClassSchedule(
 	cfg *workflows.Config,
 	opts *ScheduleOptions,
 ) error {
+
+	sm.logger.Printf("Creating schedule for class: %s", className)
+
 	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
 	workflowID := fmt.Sprintf("warcraft-logs-%s-workflow", className)
 
-	// Filter specs for this class
-	var classSpecs []workflows.ClassSpec
-	for _, spec := range cfg.Specs {
-		if spec.ClassName == className {
-			classSpecs = append(classSpecs, spec)
-		}
-	}
-
-	if len(classSpecs) == 0 {
-		return fmt.Errorf("no specs found for class %s", className)
-	}
-
-	// Prepare workflow parameters for this class
-	configCopy := new(workflows.Config)
-	*configCopy = *cfg
-	configCopy.Specs = classSpecs
-
+	// Prepare simplified workflow parameters
 	workflowParams := workflows.WorkflowParams{
-		Specs:       classSpecs,
-		Dungeons:    configCopy.Dungeons,
-		BatchConfig: configCopy.Rankings.Batch,
-		Rankings: struct {
-			MaxRankingsPerSpec int           `json:"max_rankings_per_spec"`
-			UpdateInterval     time.Duration `json:"update_interval"`
-		}{
-			MaxRankingsPerSpec: configCopy.Rankings.MaxRankingsPerSpec,
-			UpdateInterval:     configCopy.Rankings.UpdateInterval,
-		},
-		Config: configCopy,
+		Config:     cfg,
+		WorkflowID: workflowID,
 	}
 
-	// Create schedule options according to the documentation
+	sm.logger.Printf("Creating schedule with params - ConfigSpecs: %d",
+		len(workflowParams.Config.Specs))
+
+	// Create schedule options
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
-
-		// Schedule Spec - Define when to run (Tuesday 7am)
 		Spec: client.ScheduleSpec{
 			CronExpressions: []string{opts.Policy.CronExpression},
+			// Add jitter pour éviter les démarrages simultanés
+			Jitter: time.Minute,
 		},
-
-		// Workflow action to execute
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
 			Workflow:  workflows.SyncWorkflow,
 			TaskQueue: "warcraft-logs-sync",
 			Args:      []interface{}{workflowParams},
-			// The timeouts must be defined here
+			// Timeouts adaptés par classe
 			WorkflowRunTimeout:  opts.Timeout,
-			WorkflowTaskTimeout: 10 * time.Second, // Default recommended value
+			WorkflowTaskTimeout: time.Minute,
+			RetryPolicy: &temporal.RetryPolicy{
+				InitialInterval:    opts.Retry.InitialInterval,
+				BackoffCoefficient: opts.Retry.BackoffCoefficient,
+				MaximumInterval:    opts.Retry.MaximumInterval,
+				MaximumAttempts:    int32(opts.Retry.MaximumAttempts),
+			},
 		},
 	}
 
 	// Create the schedule
 	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
 	if err != nil {
-		return fmt.Errorf("failed to create schedule: %w", err)
+		return fmt.Errorf("failed to create schedule for %s: %w", className, err)
 	}
 
 	sm.schedules[className] = handle
 	sm.logger.Printf("Created schedule for class %s with ID %s", className, scheduleID)
+
+	sm.monitorSchedule(ctx, handle, className)
 	return nil
 }
 
@@ -211,6 +199,7 @@ func (sm *ScheduleManager) GetScheduleDescription(ctx context.Context, className
 
 // CreateOrGetClassSchedule creates a new schedule if it doesn't exist, or returns existing one
 func (sm *ScheduleManager) CreateOrGetClassSchedule(ctx context.Context, className string, cfg *workflows.Config, opts *ScheduleOptions) error {
+	sm.logger.Printf("CreateOrGetClassSchedule called with className: %s", className)
 	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
 
 	// Check if schedule already exists using Temporal's List method
@@ -237,4 +226,36 @@ func (sm *ScheduleManager) CreateOrGetClassSchedule(ctx context.Context, classNa
 
 	// If we get here, schedule doesn't exist, create it
 	return sm.CreateClassSchedule(ctx, className, cfg, opts)
+}
+
+// monitorSchedule monitors the schedule and logs basic information
+func (sm *ScheduleManager) monitorSchedule(ctx context.Context,
+	handle client.ScheduleHandle,
+	className string) {
+
+	go func() {
+		ticker := time.NewTicker(time.Minute * 5)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				desc, err := handle.Describe(ctx)
+				if err != nil {
+					sm.logger.Printf("Error monitoring schedule for %s: %v",
+						className, err)
+					continue
+				}
+
+				// Log schedule info using available information
+				sm.logger.Printf("Schedule monitoring for class %s: Schedule ID: %s, State: %v, Last checked: %v",
+					className,
+					handle.GetID(),
+					desc.Schedule.State,
+					time.Now().Format(time.RFC3339))
+			}
+		}
+	}()
 }
