@@ -106,6 +106,7 @@ func main() {
 	// Player builds activities
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
+	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
 
 	// Rate limit activity
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)

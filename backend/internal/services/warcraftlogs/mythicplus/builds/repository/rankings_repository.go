@@ -144,3 +144,19 @@ func (r *RankingsRepository) GetRankingsForAnalysis(ctx context.Context, encount
 
 	return rankings, nil
 }
+
+// GetRankingsForSpec retrieves rankings from the database for a specific class/spec/encounter
+func (r *RankingsRepository) GetRankingsForSpec(ctx context.Context, className, specName string, encounterID uint) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	var rankings []*warcraftlogsBuilds.ClassRanking
+
+	result := r.db.WithContext(ctx).
+		Where("class = ? AND spec = ? AND encounter_id = ?",
+			className, specName, encounterID).
+		Find(&rankings)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get rankings: %w", result.Error)
+	}
+
+	return rankings, nil
+}

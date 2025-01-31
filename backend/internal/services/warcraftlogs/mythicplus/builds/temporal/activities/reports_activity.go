@@ -102,6 +102,8 @@ func (a *ReportsActivity) ProcessReports(
 		return result, nil
 	}
 
+	var allProcessedReports []*warcraftlogsBuilds.Report
+
 	// Group rankings by encounterID for efficient batch processing
 	rankingsByEncounter := make(map[uint][]*warcraftlogsBuilds.ClassRanking)
 	for _, ranking := range rankings {
@@ -122,7 +124,6 @@ func (a *ReportsActivity) ProcessReports(
 			end := min(i+batchSize, len(encounterRankings))
 			batch := encounterRankings[i:end]
 
-			// Record heartbeat for long-running operations
 			activity.RecordHeartbeat(ctx, fmt.Sprintf(
 				"Processing reports %d-%d for encounter %d",
 				i+1, end, encounterID))
@@ -147,18 +148,21 @@ func (a *ReportsActivity) ProcessReports(
 				continue
 			}
 
+			allProcessedReports = append(allProcessedReports, reports...)
 			result.SuccessCount++
-			result.ProcessedReports += len(reports)
+			result.ProcessedCount += len(reports)
 
 			logger.Info("Successfully processed reports batch",
 				"encounterID", encounterID,
 				"batchProcessed", len(reports),
-				"totalProcessed", result.ProcessedReports)
+				"totalProcessed", result.ProcessedCount)
 
-			// Add small delay between batches
 			time.Sleep(time.Millisecond * 100)
 		}
 	}
+
+	// Assign the processed reports to the result
+	result.ProcessedReports = allProcessedReports
 
 	return result, nil
 }

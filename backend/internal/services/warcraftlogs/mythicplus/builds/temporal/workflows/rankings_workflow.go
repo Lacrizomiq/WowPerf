@@ -75,7 +75,8 @@ type BatchResult struct {
 
 // ReportProcessingResult contains statistics about report processing
 type ReportProcessingResult struct {
-	ProcessedReports int
+	ProcessedReports []*warcraftlogsBuilds.Report
+	ProcessedCount   int
 	SuccessCount     int
 	FailureCount     int
 	ProcessedAt      time.Time
@@ -180,6 +181,7 @@ const (
 	ProcessPlayerBuildsActivity     = "ProcessBuilds"
 	GetProcessedReportsActivityName = "GetProcessedReports"
 	CountPlayerBuildsActivityName   = "CountPlayerBuilds"
+	GetStoredRankingsActivityName   = "GetStoredRankings"
 	GetReportsForEncounterName      = "GetReportsForEncounter"
 	CountReportsForEncounterName    = "CountReportsForEncounter"
 	GetReportsForEncounterBatchName = "GetReportsForEncounterBatch"
@@ -201,6 +203,7 @@ type ProcessBuildBatchWorkflow interface {
 // RankingsActivity defines the interface for rankings-related activities
 type RankingsActivity interface {
 	FetchAndStore(ctx context.Context, spec ClassSpec, dungeon Dungeon, batchConfig BatchConfig) (*BatchResult, error)
+	GetStoredRankings(ctx context.Context, className, specName string, encounterID uint) ([]*warcraftlogsBuilds.ClassRanking, error)
 }
 
 // ReportsActivity defines the interface for report-related activities

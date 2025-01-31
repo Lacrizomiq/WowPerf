@@ -35,9 +35,9 @@ func TestLiveReportQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test variables
-	reportCode := "HZMACFrw7P198yLb" // Un code de rapport réel
-	fightID := 95                    // ID du combat
-	encounterID := uint(12660)       // ID de la rencontre
+	reportCode := "HZMACFrw7P198yLb" // A real report code
+	fightID := 95                    // A real fight ID
+	encounterID := uint(12660)       // A real encounter ID
 
 	variables := map[string]interface{}{
 		"code":        reportCode,
@@ -48,9 +48,6 @@ func TestLiveReportQuery(t *testing.T) {
 	// Make the request
 	response, err := client.MakeGraphQLRequest(GetReportTableQuery, variables)
 	require.NoError(t, err)
-
-	// Log the raw response for inspection
-	t.Logf("Raw API Response: %s", string(response))
 
 	// Print the variables being used
 	t.Logf("Variables used: %+v", variables)
@@ -67,22 +64,17 @@ func TestLiveReportQuery(t *testing.T) {
 	t.Logf("- Total Time: %d", report.TotalTime)
 	t.Logf("- Keystone Level: %d", report.KeystoneLevel)
 	t.Logf("- Keystone Time: %d", report.KeystoneTime)
-	t.Logf("- Generated Talents Query: %s", talentsQuery)
 
 	// If we got talents query, test it as well
 	if talentsQuery != "" {
 		talentsResponse, err := client.MakeGraphQLRequest(talentsQuery, nil)
 		require.NoError(t, err)
 
-		t.Logf("Raw Talents Response: %s", string(talentsResponse))
-
 		talentCodes, err := ParseReportTalentsResponse(talentsResponse)
 		require.NoError(t, err)
 
 		t.Logf("Found %d talent codes", len(talentCodes))
-		for spec, code := range talentCodes {
-			t.Logf("- %s: %s", spec, code)
-		}
+
 	}
 
 	// Verify essential fields are present

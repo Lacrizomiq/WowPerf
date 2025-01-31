@@ -143,3 +143,21 @@ func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec work
 
 	return rankings, nil
 }
+
+// GetStoredRankings retrieves rankings from the database
+func (a *RankingsActivity) GetStoredRankings(ctx context.Context, className, specName string, encounterID uint) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Getting stored rankings",
+		"class", className,
+		"spec", specName,
+		"encounterID", encounterID)
+
+	rankings, err := a.repository.GetRankingsForSpec(ctx, className, specName, encounterID)
+	if err != nil {
+		logger.Error("Failed to get stored rankings", "error", err)
+		return nil, err
+	}
+
+	logger.Info("Retrieved stored rankings", "count", len(rankings))
+	return rankings, nil
+}
