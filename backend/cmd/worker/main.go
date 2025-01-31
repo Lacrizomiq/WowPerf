@@ -107,6 +107,11 @@ func main() {
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
 
+	// Rate limit activity
+	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
+	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
+	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+
 	// Setup signal handling for graceful shutdown
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)

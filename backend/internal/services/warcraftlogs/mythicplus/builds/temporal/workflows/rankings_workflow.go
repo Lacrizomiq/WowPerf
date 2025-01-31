@@ -161,8 +161,8 @@ func validateConfig(config *Config) error {
 	if config.Rankings.Batch.MaxAttempts < 0 {
 		return fmt.Errorf("retry attempts cannot be negative")
 	}
-	if config.Rankings.MaxRankingsPerSpec != 20 {
-		return fmt.Errorf("max rankings per spec must be exactly 20")
+	if config.Rankings.MaxRankingsPerSpec <= 0 {
+		return fmt.Errorf("max rankings per spec must be greater than 0")
 	}
 	if len(config.Specs) == 0 {
 		return fmt.Errorf("at least one spec must be configured")

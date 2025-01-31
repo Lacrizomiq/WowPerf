@@ -33,17 +33,19 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 	log.Printf("Parsing response data for encounter %d", encounterId)
 
 	// Define the response structure
+	// Define the response structure
 	var result struct {
-		Data struct {
-			WorldData struct {
-				Encounter struct {
-					Name              string
-					CharacterRankings struct {
-						Rankings []json.RawMessage `json:"rankings"`
-					} `json:"characterRankings"`
-				} `json:"encounter"`
-			} `json:"worldData"`
-		} `json:"data"`
+		WorldData struct {
+			Encounter struct {
+				Name              string
+				CharacterRankings struct {
+					Page         int               `json:"page"`
+					HasMorePages bool              `json:"hasMorePages"`
+					Count        int               `json:"count"`
+					Rankings     []json.RawMessage `json:"rankings"`
+				} `json:"characterRankings"`
+			} `json:"encounter"`
+		} `json:"worldData"`
 		Errors []struct {
 			Message string `json:"message"`
 		} `json:"errors"`
@@ -54,13 +56,16 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 		return nil, fmt.Errorf("failed to unmarshal rankings response: %w", err)
 	}
 
+	log.Printf("Encounter name: %s", result.WorldData.Encounter.Name)
+	log.Printf("Count: %d", result.WorldData.Encounter.CharacterRankings.Count)
+
 	// Check for API errors
 	if len(result.Errors) > 0 {
 		return nil, fmt.Errorf("GraphQL error: %s", result.Errors[0].Message)
 	}
 
 	// Get all rankings first
-	rankings := result.Data.WorldData.Encounter.CharacterRankings.Rankings
+	rankings := result.WorldData.Encounter.CharacterRankings.Rankings
 	log.Printf("Found %d rankings in response", len(rankings))
 
 	// Determine how many rankings to process (minimum of 20 or available rankings)
@@ -69,7 +74,7 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 		rankingsToProcess = len(rankings)
 	}
 
-	// Process only the top 20 rankings
+	// Process only the top rankings
 	processedRankings := make([]*warcraftlogsBuilds.ClassRanking, 0, rankingsToProcess)
 
 	for i := 0; i < rankingsToProcess; i++ {
@@ -96,11 +101,10 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 				Name    string `json:"name"`
 				Faction int    `json:"faction"`
 			} `json:"guild"`
-			BracketData int     `json:"bracketData"`
-			Faction     int     `json:"faction"`
-			Affixes     []int   `json:"affixes"`
-			Medal       string  `json:"medal"`
-			Score       float64 `json:"score"`
+			Faction int     `json:"faction"`
+			Affixes []int   `json:"affixes"`
+			Medal   string  `json:"medal"`
+			Score   float64 `json:"score"`
 		}
 
 		if err := json.Unmarshal(rankings[i], &rankingResponse); err != nil {
@@ -135,6 +139,7 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 	}
 
 	log.Printf("Successfully processed top %d rankings for encounter %d", len(processedRankings), encounterId)
+
 	return processedRankings, nil
 }
 

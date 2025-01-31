@@ -2,13 +2,15 @@ package warcraftlogsBuildsTemporalActivities
 
 import (
 	"context"
+	"time"
 	warcraftlogs "wowperf/internal/services/warcraftlogs"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 
 	"go.temporal.io/sdk/activity"
 )
 
-// RateLimitActivity is an activity that handles rate limiting for WarcraftLogs API requests
+// RateLimitActivity handles rate limiting for WarcraftLogs API requests
 type RateLimitActivity struct {
 	client *warcraftlogs.WarcraftLogsClientService
 }
@@ -20,55 +22,76 @@ func NewRateLimitActivity(client *warcraftlogs.WarcraftLogsClientService) *RateL
 	}
 }
 
-// ReservePoints attempt to reserve points for a workflow execution
+// CheckRemainingPoints returns the remaining points based on local tracking
+func (a *RateLimitActivity) CheckRemainingPoints(ctx context.Context, _ workflows.WorkflowParams) (float64, error) {
+	logger := activity.GetLogger(ctx)
+	info := a.client.GetRateLimiter().GetRateLimitInfo()
+
+	logger.Info("Checking remaining points",
+		"remainingPoints", info.RemainingPoints,
+		"resetIn", info.ResetIn)
+
+	return info.RemainingPoints, nil
+}
+
+// ReservePoints checks if we have enough points
 func (a *RateLimitActivity) ReservePoints(ctx context.Context, params workflows.WorkflowParams) error {
 	logger := activity.GetLogger(ctx)
+	info := a.client.GetRateLimiter().GetRateLimitInfo()
 
-	// Calculate required points based on specs and dungeons
-	requiredPoints := calculateRequiredPoints(params)
+	required := estimateRequiredPoints(&params)
 
-	// Try to reserve points
-	if err := a.client.GetRateLimiter().ReserveWorkflowPoints(params.WorkflowID, requiredPoints); err != nil {
-		logger.Error("Failed to reserve points",
-			"workflowID", params.WorkflowID,
-			"requiredPoints", requiredPoints,
-			"error", err,
-		)
-		return err
+	// Simple check
+	if info.RemainingPoints < required {
+		logger.Warn("Insufficient points for workflow",
+			"available", info.RemainingPoints,
+			"required", required,
+			"resetIn", info.ResetIn)
+
+		// If the reset is close, wait
+		if info.ResetIn < time.Minute*15 {
+			return nil // Let the workflow continue
+		}
+
+		return warcraftlogsTypes.NewQuotaExceededError(info)
 	}
-	logger.Info("Reserved points for workflow",
-		"workflowID", params.WorkflowID,
-		"points", requiredPoints)
 
 	return nil
 }
 
-// ReleasePoints releases points reserved for a workflow
+// ReleasePoints is now a monitoring operation
 func (a *RateLimitActivity) ReleasePoints(ctx context.Context, params workflows.WorkflowParams) error {
 	logger := activity.GetLogger(ctx)
+	info := a.client.GetRateLimiter().GetRateLimitInfo()
 
-	a.client.GetRateLimiter().ReleaseWorkflowPoints(params.WorkflowID)
-
-	logger.Info("Releasing points for workflow",
-		"workflowID", params.WorkflowID,
-	)
+	logger.Info("Workflow completion status",
+		"remainingPoints", info.RemainingPoints,
+		"resetIn", info.ResetIn,
+		"workflowID", params.WorkflowID)
 
 	return nil
 }
 
-// calculateRequiredPoints estimates points needed for the workflow
-func calculateRequiredPoints(params workflows.WorkflowParams) float64 {
-	specsCount := len(params.Config.Specs)
-	dungeonsCount := len(params.Config.Dungeons)
+// estimateRequiredPoints provides a rough estimate of points needed for a workflow
+func estimateRequiredPoints(params *workflows.WorkflowParams) float64 {
+	if params == nil || params.Config == nil {
+		return 1.0
+	}
 
-	// Base calculation:
-	// 1 point per ranking request
-	// 2 points per report (details + talents)
-	pointsPerCombo := 3.0 // 1 + 2
+	// Base cost for workflow
+	totalPoints := 1.0
 
-	// Total combinations
-	totalCombos := float64(specsCount * dungeonsCount)
+	// Calculate points needed for each spec/dungeon combination
+	numSpecs := len(params.Config.Specs)
+	numDungeons := len(params.Config.Dungeons)
 
-	// Add 10% buffer for retries and overhead
-	return pointsPerCombo * totalCombos * 1.1
+	// Points per combination:
+	// - 1 point for rankings query
+	// - ~2 points for processing reports (average)
+	pointsPerCombo := 3.0
+
+	totalPoints += float64(numSpecs*numDungeons) * pointsPerCombo
+
+	// Add 20% buffer for unexpected operations
+	return totalPoints * 1.2
 }

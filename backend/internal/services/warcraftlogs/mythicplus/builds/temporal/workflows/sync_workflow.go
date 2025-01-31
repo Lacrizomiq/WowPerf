@@ -11,6 +11,16 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// ProcessState tracks the detailed progress of spec and dungeon processing
+type ProcessState struct {
+	CurrentSpec     ClassSpec
+	CurrentDungeon  Dungeon
+	RemainingPoints float64
+	LastCheckTime   time.Time
+	RetryCount      int
+	ProcessedCount  int
+}
+
 // RebuildResult represents the result of rebuilding player builds from existing reports
 type RebuildResult struct {
 	TotalBuildsProcessed int
@@ -56,7 +66,7 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 		StartToCloseTimeout: time.Minute * 30,
 		HeartbeatTimeout:    time.Minute * 5,
 		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval:    time.Second,
+			InitialInterval:    time.Second * 5,
 			BackoffCoefficient: 2.0,
 			MaximumInterval:    time.Minute * 5,
 			MaximumAttempts:    3,
@@ -64,21 +74,31 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Try to reserve points for this workflow execution
+	// Initialize state tracking
+	state := &ProcessState{
+		LastCheckTime: workflow.Now(ctx),
+	}
+
+	// Initial points check
+	if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
+		logger.Error("Failed to check points", "error", err)
+		return nil, err
+	}
+
+	// Reserve points for workflow execution
 	if err := workflow.ExecuteActivity(ctx, ReserveRateLimitPointsActivity, params).Get(ctx, nil); err != nil {
-		logger.Error("Failed to reserve rate limit points", "error", err)
+		logger.Error("Failed to reserve points", "error", err)
 		if isQuotaExceeded(err) {
-			// Continue the workflow in 1 hour with the same progress
+			workflow.Sleep(ctx, time.Minute*15)
 			params.Progress = progress
 			return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
 		}
 		return nil, err
 	}
 
-	// Ensure points are released at the end
 	defer func() {
 		if err := workflow.ExecuteActivity(ctx, ReleaseRateLimitPointsActivity, params).Get(ctx, nil); err != nil {
-			logger.Error("Failed to release rate limit points", "error", err)
+			logger.Error("Failed to release points", "error", err)
 		}
 	}()
 
@@ -109,33 +129,35 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	// Process specs and dungeons
 	for i := progress.CurrentSpecIndex; i < len(params.Config.Specs); i++ {
 		spec := params.Config.Specs[i]
+		state.CurrentSpec = spec
 
-		// Skip if spec already completed
 		if progress.CompletedSpecs[spec.ClassName+spec.SpecName] {
 			continue
 		}
 
 		for j := progress.CurrentDungeonIndex; j < len(params.Config.Dungeons); j++ {
 			dungeon := params.Config.Dungeons[j]
+			state.CurrentDungeon = dungeon
 
 			dungeonKey := fmt.Sprintf("%d", dungeon.ID)
 			if progress.CompletedDungeons[dungeonKey] {
 				continue
 			}
 
-			// Check remaining points before processing each dungeon
-			var remainingPoints float64
-			if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &remainingPoints); err != nil {
-				logger.Error("Failed to check remaining points", "error", err)
-				params.Progress = progress
-				return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
+			// Check points if needed
+			if time.Since(state.LastCheckTime) > time.Minute*5 || state.RemainingPoints < 5.0 {
+				if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
+					logger.Error("Failed to check remaining points", "error", err)
+					params.Progress = progress
+					return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
+				}
+				state.LastCheckTime = workflow.Now(ctx)
 			}
 
-			// Calculate required points for this combination
 			requiredPoints := estimateRequiredPoints(spec, dungeon)
-			if remainingPoints < requiredPoints {
+			if state.RemainingPoints < requiredPoints {
 				logger.Info("Insufficient points remaining, continuing as new workflow",
-					"remaining", remainingPoints,
+					"remaining", state.RemainingPoints,
 					"required", requiredPoints)
 				progress.CurrentSpecIndex = i
 				progress.CurrentDungeonIndex = j
@@ -143,7 +165,6 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 				return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
 			}
 
-			// Process current combination
 			if err := processSpecAndDungeon(ctx, spec, dungeon, params, progress); err != nil {
 				logger.Error("Failed to process spec and dungeon",
 					"spec", spec.SpecName,
@@ -159,10 +180,14 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 			}
 
 			progress.CompletedDungeons[dungeonKey] = true
+			state.ProcessedCount++
+
+			// Update remaining points estimate after processing
+			state.RemainingPoints -= requiredPoints
 		}
 
 		progress.CompletedSpecs[spec.ClassName+spec.SpecName] = true
-		progress.CurrentDungeonIndex = 0 // Reset dungeon index for next spec
+		progress.CurrentDungeonIndex = 0
 	}
 
 	progress.PartialResults.CompletedAt = workflow.Now(ctx)
@@ -331,12 +356,13 @@ func processSpecAndDungeon(ctx workflow.Context,
 	progress *WorkflowProgress) error {
 
 	logger := workflow.GetLogger(ctx)
+	startTime := workflow.Now(ctx)
+
 	logger.Info("Processing ranking combination",
 		"spec", spec.SpecName,
 		"dungeon", dungeon.Name,
-		"startTime", workflow.Now(ctx))
+		"startTime", startTime)
 
-	// Add delay between specs (exept the first)
 	if progress.CurrentSpecIndex > 0 {
 		workflow.Sleep(ctx, time.Second*2)
 	}
@@ -353,18 +379,9 @@ func processSpecAndDungeon(ctx workflow.Context,
 		return err
 	}
 
-	// Log progress
-	logger.Info("Rankings fetched successfully",
-		"spec", spec.SpecName,
-		"dungeon", dungeon.Name,
-		"rankingsCount", len(batchResult.Rankings))
-
-	// Update progress
 	progress.PartialResults.RankingsProcessed += len(batchResult.Rankings)
 
-	// Process reports if we have rankings
 	if len(batchResult.Rankings) > 0 {
-		startTime := workflow.Now(ctx)
 		var reportsResult *ReportProcessingResult
 		if err := workflow.ExecuteActivity(ctx, ProcessReportsActivityName,
 			batchResult.Rankings).Get(ctx, &reportsResult); err != nil {
@@ -375,13 +392,6 @@ func processSpecAndDungeon(ctx workflow.Context,
 			return err
 		}
 
-		duration := workflow.Now(ctx).Sub(startTime)
-		logger.Info("Reports processed successfully",
-			"spec", spec.SpecName,
-			"dungeon", dungeon.Name,
-			"reportsProcessed", reportsResult.ProcessedReports,
-			"duration", duration)
-
 		progress.PartialResults.ReportsProcessed += reportsResult.ProcessedReports
 	}
 
@@ -390,20 +400,18 @@ func processSpecAndDungeon(ctx workflow.Context,
 
 // estimateRequiredPoints estimates the number of points needed for a spec and dungeon
 func estimateRequiredPoints(spec ClassSpec, dungeon Dungeon) float64 {
-	// Base points for rankings request
 	basePoints := 1.0
-
-	// Points for report details and talents (2 points per report)
 	reportsPoints := 2.0
-
-	// Estimate number of reports (assuming 20 rankings per request)
 	estimatedReports := 20.0
-
-	// Total points needed
 	totalPoints := basePoints + (reportsPoints * estimatedReports)
 
-	// Add 10% buffer
-	return totalPoints * 1.1
+	// Buffer increased to 20% for more safety
+	return totalPoints * 1.2
+}
+
+// Error implements the error interface
+func (e *QuotaExceededError) Error() string {
+	return e.Message
 }
 
 func isQuotaExceeded(err error) bool {
@@ -413,4 +421,39 @@ func isQuotaExceeded(err error) bool {
 
 	var quotaErr *QuotaExceededError
 	return errors.As(err, &quotaErr) || strings.Contains(err.Error(), "quota exceeded")
+}
+
+func countPointsUsed(rankings []*warcraftlogsBuilds.ClassRanking) int {
+	if len(rankings) == 0 {
+		return 1 // Base cost for rankings request
+	}
+	// Base cost + (2 points per ranking for report processing)
+	return 1 + (len(rankings) * 2)
+}
+
+// checkPointsAndWait checks if we have enough points and waits if not
+func checkPointsAndWait(ctx workflow.Context,
+	state *ProcessState,
+	params WorkflowParams) error {
+
+	logger := workflow.GetLogger(ctx)
+
+	if time.Since(state.LastCheckTime) > time.Minute*5 || state.RemainingPoints < 5.0 {
+		if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
+			return err
+		}
+		state.LastCheckTime = workflow.Now(ctx)
+
+		if state.RemainingPoints < 1.0 {
+			return &QuotaExceededError{
+				Message: "Insufficient points available",
+				ResetIn: time.Minute * 15,
+			}
+		}
+	}
+
+	logger.Info("Points available for requests",
+		"remainingPoints", state.RemainingPoints)
+
+	return nil
 }

@@ -1,5 +1,5 @@
 rankings:
-  max_rankings_per_spec: 150
+  max_rankings_per_spec: 120
   update_interval: 168h
 
 worker:

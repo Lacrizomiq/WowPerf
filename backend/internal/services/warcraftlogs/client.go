@@ -65,7 +65,7 @@ func NewClient() (*Client, error) {
 
 	client := &Client{
 		httpClient: &http.Client{
-			Timeout: time.Second * 30,
+			Timeout: time.Second * 60, // Increased to 60 seconds
 		},
 		isPublic: true,
 	}
@@ -135,7 +135,12 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, &warcraftlogsTypes.WarcraftLogsError{
+			Type:      warcraftlogsTypes.ErrorTypeNetwork,
+			Message:   fmt.Sprintf("failed to send request: %v", err),
+			Cause:     err,
+			Retryable: true,
+		}
 	}
 	defer resp.Body.Close()
 
@@ -144,11 +149,33 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status code: %d", resp.StatusCode)
+	if resp.StatusCode >= 500 {
+		return nil, warcraftlogsTypes.NewAPIError(resp.StatusCode, nil)
 	}
 
-	return body, nil
+	if resp.StatusCode != http.StatusOK {
+		return nil, warcraftlogsTypes.NewAPIError(resp.StatusCode, nil)
+	}
+
+	var graphQLResp GraphQLResponse
+	if err := json.Unmarshal(body, &graphQLResp); err != nil {
+		return nil, fmt.Errorf("failed to parse GraphQL response: %w", err)
+	}
+
+	if len(graphQLResp.Errors) > 0 {
+		for _, gqlErr := range graphQLResp.Errors {
+			if isRateLimitError(gqlErr) {
+				return nil, &warcraftlogsTypes.WarcraftLogsError{
+					Type:      warcraftlogsTypes.ErrorTypeRateLimit,
+					Message:   gqlErr.Message,
+					Retryable: true,
+				}
+			}
+		}
+		return nil, warcraftlogsTypes.NewAPIError(resp.StatusCode, fmt.Errorf(graphQLResp.Errors[0].Message))
+	}
+
+	return graphQLResp.Data, nil
 }
 
 // isRateLimitError checks if a GraphQL error is a rate limit error

@@ -3,10 +3,14 @@ package warcraftlogsBuildsQueries
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"wowperf/internal/services/warcraftlogs"
 )
 
 func TestParseRankingsResponse(t *testing.T) {
@@ -111,4 +115,53 @@ func createMockResponse(numRankings int) []byte {
 
 	data, _ := json.Marshal(response)
 	return data
+}
+
+func TestLiveRankingsQuery(t *testing.T) {
+	// Skip in CI/automated tests
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	// Try to load .env from multiple possible locations
+	err := godotenv.Load()
+	if err != nil {
+		// Try loading from backend directory
+		err = godotenv.Load("../../../../../../.env")
+		require.NoError(t, err, "Failed to load .env file")
+	}
+
+	// Check for required environment variables
+	if os.Getenv("WARCRAFTLOGS_CLIENT_ID") == "" || os.Getenv("WARCRAFTLOGS_CLIENT_SECRET") == "" {
+		t.Skip("Skipping test: WARCRAFTLOGS_CLIENT_ID and WARCRAFTLOGS_CLIENT_SECRET environment variables are required")
+	}
+
+	// Create the client
+	client, err := warcraftlogs.NewClient()
+	require.NoError(t, err)
+
+	// Test variables
+	variables := map[string]interface{}{
+		"encounterId": 12660, // a valid encounter ID
+		"className":   "Priest",
+		"specName":    "Discipline",
+		"page":        1,
+	}
+
+	// Make the request
+	response, err := client.MakeGraphQLRequest(ClassRankingsQuery, variables)
+	require.NoError(t, err)
+
+	// Log the raw response for inspection
+	t.Logf("Raw API Response: %s", string(response))
+
+	// Print the variables being used
+	t.Logf("Variables used: %+v", variables)
+
+	// Try to parse
+	rankings, err := ParseRankingsResponse(response, 12660)
+	require.NoError(t, err)
+
+	// Log the details
+	t.Logf("Found %d rankings", len(rankings))
 }

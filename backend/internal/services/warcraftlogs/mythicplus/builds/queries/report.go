@@ -131,37 +131,35 @@ func ParseReportDetailsResponse(response []byte, code string, fightID int, encou
 	log.Printf("Parsing report details data for report %s, fight %d, encounter %d", code, fightID, encounterID)
 
 	var result struct {
-		Data struct {
-			ReportData struct {
-				Report struct {
-					Table struct {
-						Data struct {
-							TotalTime     int64             `json:"totalTime"`
-							ItemLevel     float64           `json:"itemLevel"`
-							Composition   []json.RawMessage `json:"composition"`
-							DamageDone    []json.RawMessage `json:"damageDone"`
-							HealingDone   []json.RawMessage `json:"healingDone"`
-							DamageTaken   []json.RawMessage `json:"damageTaken"`
-							DeathEvents   []json.RawMessage `json:"deathEvents"`
-							PlayerDetails struct {
-								Dps     []PlayerSpec `json:"dps"`
-								Healers []PlayerSpec `json:"healers"`
-								Tanks   []PlayerSpec `json:"tanks"`
-							} `json:"playerDetails"`
-							LogVersion  int `json:"logVersion"`
-							GameVersion int `json:"gameVersion"`
-						} `json:"data"`
-					} `json:"table"`
-					Fights []struct {
-						ID              int   `json:"id"`
-						KeystoneTime    int64 `json:"keystoneTime"`
-						KeystoneLevel   int   `json:"keystoneLevel"`
-						KeystoneAffixes []int `json:"keystoneAffixes"`
-						FriendlyPlayers []int `json:"friendlyPlayers"`
-					} `json:"fights"`
-				} `json:"report"`
-			} `json:"reportData"`
-		} `json:"data"`
+		ReportData struct {
+			Report struct {
+				Table struct {
+					Data struct {
+						TotalTime     int64             `json:"totalTime"`
+						ItemLevel     float64           `json:"itemLevel"`
+						Composition   []json.RawMessage `json:"composition"`
+						DamageDone    []json.RawMessage `json:"damageDone"`
+						HealingDone   []json.RawMessage `json:"healingDone"`
+						DamageTaken   []json.RawMessage `json:"damageTaken"`
+						DeathEvents   []json.RawMessage `json:"deathEvents"`
+						PlayerDetails struct {
+							Dps     []PlayerSpec `json:"dps"`
+							Healers []PlayerSpec `json:"healers"`
+							Tanks   []PlayerSpec `json:"tanks"`
+						} `json:"playerDetails"`
+						LogVersion  int `json:"logVersion"`
+						GameVersion int `json:"gameVersion"`
+					} `json:"data"`
+				} `json:"table"`
+				Fights []struct {
+					ID              int   `json:"id"`
+					KeystoneTime    int64 `json:"keystoneTime"`
+					KeystoneLevel   int   `json:"keystoneLevel"`
+					KeystoneAffixes []int `json:"keystoneAffixes"`
+					FriendlyPlayers []int `json:"friendlyPlayers"`
+				} `json:"fights"`
+			} `json:"report"`
+		} `json:"reportData"`
 		Errors []struct {
 			Message string `json:"message"`
 		} `json:"errors"`
@@ -177,7 +175,7 @@ func ParseReportDetailsResponse(response []byte, code string, fightID int, encou
 
 	// Collect all players
 	var allPlayers []PlayerSpec
-	reportData := result.Data.ReportData.Report
+	reportData := result.ReportData.Report
 	tableData := reportData.Table.Data
 	allPlayers = append(allPlayers, tableData.PlayerDetails.Dps...)
 	allPlayers = append(allPlayers, tableData.PlayerDetails.Healers...)
@@ -240,13 +238,11 @@ func ParseReportTalentsResponse(response []byte) (map[string]string, error) {
 	log.Printf("Parsing report talents data")
 
 	var result struct {
-		Data struct {
-			ReportData struct {
-				Report struct {
-					Fights []map[string]interface{} `json:"fights"`
-				} `json:"report"`
-			} `json:"reportData"`
-		} `json:"data"`
+		ReportData struct {
+			Report struct {
+				Fights []map[string]interface{} `json:"fights"`
+			} `json:"report"`
+		} `json:"reportData"`
 		Errors []struct {
 			Message string `json:"message"`
 		} `json:"errors"`
@@ -260,12 +256,12 @@ func ParseReportTalentsResponse(response []byte) (map[string]string, error) {
 		return nil, fmt.Errorf("GraphQL error: %s", result.Errors[0].Message)
 	}
 
-	if len(result.Data.ReportData.Report.Fights) == 0 {
+	if len(result.ReportData.Report.Fights) == 0 {
 		return nil, fmt.Errorf("no fights found in the report")
 	}
 
 	// Extract talents for the first fight
-	fightData := result.Data.ReportData.Report.Fights[0]
+	fightData := result.ReportData.Report.Fights[0]
 	talentCodes := make(map[string]string)
 
 	for key, value := range fightData {
