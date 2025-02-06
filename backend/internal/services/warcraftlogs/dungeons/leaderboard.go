@@ -111,38 +111,35 @@ func GetDungeonLeaderboardByPlayer(s *service.WarcraftLogsClientService, params 
 
 		// Define the response structure
 		var result struct {
-			Data struct {
-				WorldData struct {
-					Encounter struct {
-						Name              string          `json:"name"`
-						CharacterRankings json.RawMessage `json:"characterRankings"`
-					} `json:"encounter"`
-				} `json:"worldData"`
-			} `json:"data"`
+			WorldData struct {
+				Encounter struct {
+					Name              string `json:"name"`
+					CharacterRankings struct {
+						Rankings     []playerLeaderboardModels.Ranking `json:"rankings"`
+						Count        int                               `json:"count"`
+						Page         int                               `json:"page"`
+						HasMorePages bool                              `json:"hasMorePages"`
+					} `json:"characterRankings"`
+				} `json:"encounter"`
+			} `json:"worldData"`
 		}
 
 		// Unmarshal the response
 		if err := json.Unmarshal(response, &result); err != nil {
-			log.Printf("Failed to unmarshal response for class %s, spec %s: %v", spec.ClassName, spec.SpecName, err)
-			continue
+			return nil, fmt.Errorf("failed to unmarshal response for class %s, spec %s: %w", spec.ClassName, spec.SpecName, err)
 		}
 
-		// Check for empty results
-		if len(result.Data.WorldData.Encounter.CharacterRankings) == 0 {
-			continue
-		}
-
-		// Unmarshal the rankings
-		var leaderboard playerLeaderboardModels.DungeonLogs
-		if err := json.Unmarshal(result.Data.WorldData.Encounter.CharacterRankings, &leaderboard); err != nil {
-			log.Printf("Failed to unmarshal character rankings for class %s, spec %s: %v", spec.ClassName, spec.SpecName, err)
+		// Verify rankings
+		characterRankings := result.WorldData.Encounter.CharacterRankings
+		if characterRankings.Rankings == nil {
+			log.Printf("No rankings found for class %s, spec %s", spec.ClassName, spec.SpecName)
 			continue
 		}
 
 		// Add the results to the general array
-		allRankings = append(allRankings, leaderboard.Rankings...)
-		totalCount += leaderboard.Count
-		if leaderboard.HasMorePages {
+		allRankings = append(allRankings, characterRankings.Rankings...)
+		totalCount += characterRankings.Count
+		if characterRankings.HasMorePages {
 			hasMorePages = true
 		}
 	}

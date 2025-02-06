@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -152,96 +153,59 @@ func (a *ReportsActivity) GetProcessedReports(
 	return reports, nil
 }
 
-// processRankingsBatch processes a batch of rankings and fetches their report details
 func (a *ReportsActivity) processRankingsBatch(
 	ctx context.Context,
 	rankings []*warcraftlogsBuilds.ClassRanking,
 ) ([]*warcraftlogsBuilds.Report, error) {
 	logger := activity.GetLogger(ctx)
 
-	// Create channels for parallel processing
-	reportChan := make(chan *warcraftlogsBuilds.Report)
-	errorChan := make(chan error)
-	doneChan := make(chan struct{})
-
-	// Track processed reports to avoid duplicates
-	var reports []*warcraftlogsBuilds.Report
-
-	// First, try to get existing reports in a single query
-	existingReports := make(map[string]*warcraftlogsBuilds.Report)
-	existingBatch, err := a.repository.GetReportsByRankings(ctx, rankings)
-	if err == nil {
-		for _, report := range existingBatch {
-			key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
-			existingReports[key] = report
-		}
+	// Get existing reports first
+	existingReports, err := a.repository.GetReportsByRankings(ctx, rankings)
+	if err != nil {
+		logger.Error("Failed to fetch existing reports", "error", err)
 	}
 
-	// Process rankings in parallel
-	const maxConcurrent = 3 // Limit concurrent API requests
-	sem := make(chan struct{}, maxConcurrent)
+	// Create map of existing reports
+	existingMap := make(map[string]*warcraftlogsBuilds.Report)
+	for _, report := range existingReports {
+		key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
+		existingMap[key] = report
+	}
 
-	// Start collector goroutine
-	go func() {
-		for i := 0; i < len(rankings); i++ {
-			select {
-			case report := <-reportChan:
-				if report != nil {
-					reports = append(reports, report)
-				}
-			case err := <-errorChan:
-				logger.Error("Error processing ranking",
-					"error", err,
-					"processedCount", len(reports))
-			case <-ctx.Done():
-				return
-			}
-		}
-		close(doneChan)
-	}()
+	var reports []*warcraftlogsBuilds.Report
+	var processingErrors []string
 
 	// Process each ranking
 	for _, ranking := range rankings {
 		key := fmt.Sprintf("%s-%d", ranking.ReportCode, ranking.ReportFightID)
 
-		// Check if report already exists
-		if existingReport, exists := existingReports[key]; exists {
-			logger.Debug("Using existing report",
-				"reportCode", ranking.ReportCode,
-				"fightID", ranking.ReportFightID)
-			reportChan <- existingReport
+		// Use existing report if available
+		if report, exists := existingMap[key]; exists {
+			reports = append(reports, report)
 			continue
 		}
 
-		// Process new ranking
-		go func(r *warcraftlogsBuilds.ClassRanking) {
-			sem <- struct{}{}        // Acquire semaphore
-			defer func() { <-sem }() // Release semaphore
+		// Process new report
+		report, err := a.getReportDetails(ctx, ranking)
+		if err != nil {
+			logger.Error("Failed to process report",
+				"reportCode", ranking.ReportCode,
+				"error", err)
+			processingErrors = append(processingErrors,
+				fmt.Sprintf("report %s: %v", ranking.ReportCode, err))
+			continue
+		}
 
-			report, err := a.getReportDetails(ctx, r)
-			if err != nil {
-				errorChan <- fmt.Errorf("failed to process report %s: %w",
-					r.ReportCode, err)
-				reportChan <- nil
-				return
-			}
-
-			activity.RecordHeartbeat(ctx, fmt.Sprintf("Processed report %s", r.ReportCode))
-			reportChan <- report
-
-		}(ranking)
+		reports = append(reports, report)
 	}
 
-	// Wait for all reports to be processed
-	<-doneChan
-
-	if len(reports) == 0 {
-		return nil, fmt.Errorf("no reports processed successfully from batch of %d rankings", len(rankings))
+	// Log processing results
+	if len(processingErrors) > 0 {
+		logger.Error("Some reports failed to process",
+			"successCount", len(reports),
+			"failureCount", len(processingErrors),
+			"errors", strings.Join(processingErrors, "; "))
 	}
-
-	logger.Info("Batch processing completed",
-		"totalRankings", len(rankings),
-		"successfulReports", len(reports))
 
 	return reports, nil
 }
@@ -251,14 +215,16 @@ func (a *ReportsActivity) getReportDetails(
 	ctx context.Context,
 	ranking *warcraftlogsBuilds.ClassRanking,
 ) (*warcraftlogsBuilds.Report, error) {
+
 	// Fetch report details from API
 	response, err := a.client.MakeRequest(ctx, reportsQueries.GetReportTableQuery, map[string]interface{}{
 		"code":        ranking.ReportCode,
 		"fightID":     ranking.ReportFightID,
 		"encounterID": ranking.EncounterID,
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch report details: %w", err)
+		return nil, fmt.Errorf("failed to fetch report %s: %w", ranking.ReportCode, err)
 	}
 
 	report, talentsQuery, err := reportsQueries.ParseReportDetailsResponse(
@@ -274,20 +240,19 @@ func (a *ReportsActivity) getReportDetails(
 	// Fetch and process talents with separate query
 	talentsResponse, err := a.client.MakeRequest(ctx, talentsQuery, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch talents: %w", err)
+		return nil, fmt.Errorf("failed to fetch talents for report %s: %w", err)
 	}
 
 	talentCodes, err := reportsQueries.ParseReportTalentsResponse(talentsResponse)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse talents: %w", err)
+		return nil, fmt.Errorf("failed to parse talents for report %s: %w", err)
 	}
 
-	// Convert talent codes map to JSON
-	talentCodesJSON, err := json.Marshal(talentCodes)
+	// Convert talent codes to JSON
+	report.TalentCodes, err = json.Marshal(talentCodes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal talent codes: %w", err)
+		return nil, fmt.Errorf("failed to marshal talents for report %s: %w", ranking.ReportCode, err)
 	}
-	report.TalentCodes = talentCodesJSON
 
 	return report, nil
 }

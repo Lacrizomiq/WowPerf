@@ -130,6 +130,10 @@ func buildTalentsQuery(code string, fightID int, players []PlayerSpec) string {
 func ParseReportDetailsResponse(response []byte, code string, fightID int, encounterID uint) (*warcraftlogsBuilds.Report, string, error) {
 	log.Printf("Parsing report details data for report %s, fight %d, encounter %d", code, fightID, encounterID)
 
+	if len(response) == 0 {
+		return nil, "", fmt.Errorf("empty response for report %s", code)
+	}
+
 	var result struct {
 		ReportData struct {
 			Report struct {
@@ -171,6 +175,17 @@ func ParseReportDetailsResponse(response []byte, code string, fightID int, encou
 
 	if len(result.Errors) > 0 {
 		return nil, "", fmt.Errorf("GraphQL error: %s", result.Errors[0].Message)
+	}
+
+	// Validate fight code data
+	if len(result.ReportData.Report.Fights) == 0 {
+		return nil, "", fmt.Errorf("no fights found in report %s", code)
+	}
+
+	if result.ReportData.Report.Table.Data.PlayerDetails.Dps == nil &&
+		result.ReportData.Report.Table.Data.PlayerDetails.Healers == nil &&
+		result.ReportData.Report.Table.Data.PlayerDetails.Tanks == nil {
+		return nil, "", fmt.Errorf("no player details found in report %s", code)
 	}
 
 	// Collect all players

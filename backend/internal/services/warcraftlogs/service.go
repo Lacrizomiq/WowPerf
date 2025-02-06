@@ -70,53 +70,49 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 
 // Initialize rate limiter with API data
 func (s *WarcraftLogsClientService) initializeRateLimiter() error {
-	// Default values in case API fails
-	defaultLimit := float64(18000)
-	defaultResetIn := 3600 // 1 hour in seconds
+	maxRetries := 3
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		response, err := s.Client.MakeGraphQLRequest(RateLimitQuery, nil)
+		if err != nil {
+			log.Printf("[WARN] Attempt %d: Failed to get rate limit data: %v", attempt+1, err)
+			time.Sleep(time.Second * time.Duration(attempt+1))
+			continue
+		}
 
-	response, err := s.Client.MakeGraphQLRequest(RateLimitQuery, nil)
-	if err != nil {
-		log.Printf("[WARN] Failed to get rate limit data from API: %v. Using default values.", err)
-		// Initialize with default values
-		s.rateLimiter.initialize(defaultLimit, 0, defaultResetIn)
-
-		// Try to get real values in background
-		go s.backgroundRateLimitSync()
-		return nil
-	}
-
-	var result struct {
-		Data struct {
+		var result struct {
 			RateLimitData RateLimitData `json:"rateLimitData"`
-		} `json:"data"`
-	}
+		}
 
-	if err := json.Unmarshal(response, &result); err != nil {
-		log.Printf("[WARN] Failed to parse rate limit data: %v. Using default values.", err)
-		s.rateLimiter.initialize(defaultLimit, 0, defaultResetIn)
-		go s.backgroundRateLimitSync()
+		if err := json.Unmarshal(response, &result); err != nil {
+			log.Printf("[WARN] Attempt %d: Failed to parse rate limit data: %v", attempt+1, err)
+			continue
+		}
+
+		data := result.RateLimitData
+		if data.LimitPerHour <= 0 {
+			if attempt == maxRetries-1 {
+				log.Printf("[WARN] Invalid rate limit received from API: %f. Using default values.", data.LimitPerHour)
+				s.rateLimiter.initialize(18000, 0, 3600)
+				return nil
+			}
+			continue
+		}
+
+		// Valid data received
+		s.rateLimiter.initialize(
+			data.LimitPerHour,
+			data.PointsSpentThisHour,
+			data.PointsResetIn,
+		)
+		log.Printf("[INFO] Rate limiter initialized with API values: limit=%.2f, used=%.2f, reset=%ds",
+			data.LimitPerHour,
+			data.PointsSpentThisHour,
+			data.PointsResetIn)
 		return nil
 	}
 
-	data := result.Data.RateLimitData
-	if data.LimitPerHour <= 0 {
-		log.Printf("[WARN] Invalid rate limit received from API: %f. Using default values.", data.LimitPerHour)
-		s.rateLimiter.initialize(defaultLimit, 0, defaultResetIn)
-		go s.backgroundRateLimitSync()
-		return nil
-	}
-
-	s.rateLimiter.initialize(
-		data.LimitPerHour,
-		data.PointsSpentThisHour,
-		data.PointsResetIn,
-	)
-
-	log.Printf("[INFO] Rate limiter successfully initialized with %.2f points, used: %.2f, reset in %d seconds",
-		data.LimitPerHour,
-		data.PointsSpentThisHour,
-		data.PointsResetIn)
-
+	log.Printf("[WARN] Failed to get valid rate limit after %d attempts. Using default values.", maxRetries)
+	s.rateLimiter.initialize(18000, 0, 3600)
 	return nil
 }
 
