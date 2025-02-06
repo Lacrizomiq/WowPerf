@@ -40,7 +40,8 @@ func (sm *ScheduleManager) CreateClassSchedule(
 	sm.logger.Printf("Creating schedule for class: %s", className)
 
 	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
-	workflowID := fmt.Sprintf("warcraft-logs-%s-workflow", className)
+	workflowID := fmt.Sprintf("warcraft-logs-%s-workflow-%s",
+		className, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 
 	// Prepare simplified workflow parameters
 	workflowParams := workflows.WorkflowParams{

@@ -82,6 +82,7 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 	return result, nil
 }
 
+// fetchRankingsWithRetry fetches rankings with retry handling
 func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec workflows.ClassSpec, dungeon workflows.Dungeon, batchConfig workflows.BatchConfig) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	logger := activity.GetLogger(ctx)
 	var rankings []*warcraftlogsBuilds.ClassRanking

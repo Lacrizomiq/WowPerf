@@ -41,7 +41,7 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/temporal`) && !PathPrefix(`/adminer`)"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/temporal`) && !PathPrefix(`/adminer`) && !PathPrefix(`/traefik`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
@@ -217,7 +217,7 @@ services:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_UI_PORT=8080
       - TEMPORAL_UI_ENABLED=true
-      - TEMPORAL_UI_PUBLIC_PATH=/temporal # Ajout important pour le sous-chemin
+      - TEMPORAL_UI_PUBLIC_PATH=/temporal
     networks:
       - traefik
       - internal
@@ -227,7 +227,6 @@ services:
       - "traefik.http.routers.temporal-ui.entrypoints=websecure"
       - "traefik.http.routers.temporal-ui.tls=true"
       - "traefik.http.services.temporal-ui.loadbalancer.server.port=8080"
-      # Le middleware pour le strip prefix n'est peut-être plus nécessaire avec TEMPORAL_UI_PUBLIC_PATH
       - "traefik.http.middlewares.temporal-ui-headers.headers.customRequestHeaders.X-Forwarded-For=${remote_addr}"
       - "traefik.http.middlewares.temporal-ui-headers.headers.customRequestHeaders.X-Real-IP=${remote_addr}"
       - "traefik.http.routers.temporal-ui.middlewares=temporal-ui-headers@docker"

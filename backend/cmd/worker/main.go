@@ -89,35 +89,36 @@ func main() {
 		rateLimitActivity,
 	)
 
-	// Register workflow and activities with proper activity names
+	// Register workflows
 	w.RegisterWorkflow(workflows.SyncWorkflow)
 	w.RegisterWorkflow(workflows.ProcessBuildBatch)
 
+	// Register activities using our harmonized activity names
+
 	// Rankings activities
-	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
+	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)     // FetchRankingsActivity
+	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings) // GetStoredRankingsActivity
 
 	// Reports activities
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)
-	w.RegisterActivity(activitiesService.Reports.GetProcessedReports)
-	w.RegisterActivity(activitiesService.Reports.GetReportsForEncounter)
-	w.RegisterActivity(activitiesService.Reports.CountReportsForEncounter)
-	w.RegisterActivity(activitiesService.Reports.GetReportsForEncounterBatch)
+	w.RegisterActivity(activitiesService.Reports.ProcessReports)      // ProcessReportsActivity
+	w.RegisterActivity(activitiesService.Reports.GetProcessedReports) // GetProcessedReportsActivity
+	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)     // GetReportsBatchActivity
+	w.RegisterActivity(activitiesService.Reports.CountAllReports)     // CountAllReportsActivity
 
 	// Player builds activities
-	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessBuilds)
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
-	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
+	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)  // ProcessBuildsActivity
+	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds) // CountPlayerBuildsActivity
 
-	// Rate limit activity
-	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
-	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
-	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+	// Rate limit activities
+	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)        // ReserveRateLimitPointsActivity
+	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)        // ReleaseRateLimitPointsActivity
+	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints) // CheckRemainingPointsActivity
+
+	log.Printf("[INFO] Starting worker, waiting for workflows...")
 
 	// Setup signal handling for graceful shutdown
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
-
-	log.Printf("[INFO] Starting worker, waiting for workflows...")
 
 	// Start worker in a goroutine with enhanced error handling
 	workerErrorChan := make(chan error, 1)

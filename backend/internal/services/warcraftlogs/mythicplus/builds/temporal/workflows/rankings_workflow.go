@@ -174,20 +174,30 @@ func validateConfig(config *Config) error {
 	return nil
 }
 
-// Activity name constants
+// Activity name constants - matching exactly with the activity methods
 const (
-	FetchRankingsActivityName       = "FetchAndStore"
-	ProcessReportsActivityName      = "ProcessReports"
-	ProcessPlayerBuildsActivity     = "ProcessBuilds"
-	GetProcessedReportsActivityName = "GetProcessedReports"
-	CountPlayerBuildsActivityName   = "CountPlayerBuilds"
-	GetStoredRankingsActivityName   = "GetStoredRankings"
-	GetReportsForEncounterName      = "GetReportsForEncounter"
-	CountReportsForEncounterName    = "CountReportsForEncounter"
-	GetReportsForEncounterBatchName = "GetReportsForEncounterBatch"
-	ReserveRateLimitPointsActivity  = "ReservePoints"
-	ReleaseRateLimitPointsActivity  = "ReleasePoints"
-	CheckRemainingPointsActivity    = "CheckRemainingPoints"
+	// Rankings activities
+	FetchRankingsActivity     = "FetchAndStore"
+	GetStoredRankingsActivity = "GetStoredRankings"
+
+	// Reports activities
+	ProcessReportsActivity      = "ProcessReports"
+	GetProcessedReportsActivity = "GetProcessedReports"
+	GetReportsBatchActivity     = "GetReportsBatch"
+	CountAllReportsActivity     = "CountAllReports"
+
+	// Player builds activities
+	ProcessBuildsActivity     = "ProcessAllBuilds"
+	CountPlayerBuildsActivity = "CountPlayerBuilds"
+
+	// Rate limit activities
+	ReserveRateLimitPointsActivity = "ReservePoints"
+	ReleaseRateLimitPointsActivity = "ReleasePoints"
+	CheckRemainingPointsActivity   = "CheckRemainingPoints"
+
+	// Sub-workflow names
+	ProcessBuildBatchWorkflowName = "ProcessBuildBatch"
+	SyncWorkflowName              = "SyncWorkflow"
 )
 
 // RankingsSyncWorkflow defines the interface for rankings synchronization workflow
@@ -210,13 +220,19 @@ type RankingsActivity interface {
 type ReportsActivity interface {
 	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
 	GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error)
-	GetReportsForEncounter(ctx context.Context, encounterID uint) ([]warcraftlogsBuilds.Report, error)
-	CountReportsForEncounter(ctx context.Context, encounterID uint) (int64, error)
-	GetReportsForEncounterBatch(ctx context.Context, encounterID uint, limit int, offset int) ([]warcraftlogsBuilds.Report, error)
+	GetReportsBatch(ctx context.Context, batchSize int, offset int) ([]*warcraftlogsBuilds.Report, error)
+	CountAllReports(ctx context.Context) (int64, error)
 }
 
 // PlayerBuildsActivity defines the interface for player build-related activities
 type PlayerBuildsActivity interface {
-	ProcessBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*BuildsProcessingResult, error)
+	ProcessAllBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*BuildsProcessingResult, error)
 	CountPlayerBuilds(ctx context.Context) (int64, error)
+}
+
+// RateLimitActivity defines the interface for rate limiting operations
+type RateLimitActivity interface {
+	ReservePoints(ctx context.Context, params WorkflowParams) error
+	ReleasePoints(ctx context.Context, params WorkflowParams) error
+	CheckRemainingPoints(ctx context.Context, params WorkflowParams) (float64, error)
 }

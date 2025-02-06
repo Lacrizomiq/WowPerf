@@ -31,7 +31,6 @@ type RebuildResult struct {
 
 // BuildBatchParams contains parameters for processing a batch of builds
 type BuildBatchParams struct {
-	DungeonID  uint
 	BatchSize  int
 	Offset     int
 	TotalCount int
@@ -44,12 +43,11 @@ type BuildBatchResult struct {
 	CompletedAt     time.Time
 }
 
-// SyncWorkflow is the main workflow for syncing builds
-// It handles both initial data population and regular updates
 func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult, error) {
 	logger := workflow.GetLogger(ctx)
+	logger.Info("Starting sync workflow", "workflowID", params.WorkflowID)
 
-	// Initialize or recover progress from previous execution
+	// Initialize or recover progress
 	progress := params.Progress
 	if progress == nil {
 		progress = &WorkflowProgress{
@@ -59,29 +57,34 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 				StartedAt: workflow.Now(ctx),
 			},
 		}
+		logger.Info("Initialized new workflow progress")
+	} else {
+		logger.Info("Resuming workflow progress",
+			"completedSpecs", len(progress.CompletedSpecs),
+			"completedDungeons", len(progress.CompletedDungeons))
 	}
 
-	// Configure activity options with timeouts and retry policy
+	// Configure activity options
 	activityOpts := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Minute * 30,
-		HeartbeatTimeout:    time.Minute * 5,
+		StartToCloseTimeout: time.Hour * 2,
+		HeartbeatTimeout:    time.Minute * 15,
 		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval:    time.Second * 5,
+			InitialInterval:    time.Second * 10,
 			BackoffCoefficient: 2.0,
-			MaximumInterval:    time.Minute * 5,
-			MaximumAttempts:    3,
+			MaximumInterval:    time.Minute * 10,
+			MaximumAttempts:    5,
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Initialize state tracking for rate limiting
+	// Initialize rate limiting state
 	state := &ProcessState{
 		LastCheckTime: workflow.Now(ctx),
 	}
 
-	// Initial points check for rate limiting
+	// Initial points check
 	if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
-		logger.Error("Failed to check points", "error", err)
+		logger.Error("Failed to perform initial points check", "error", err)
 		return nil, err
 	}
 
@@ -91,7 +94,7 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 		if isQuotaExceeded(err) {
 			workflow.Sleep(ctx, time.Minute*15)
 			params.Progress = progress
-			return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
+			return nil, workflow.NewContinueAsNewError(ctx, SyncWorkflowName, params)
 		}
 		return nil, err
 	}
@@ -103,12 +106,16 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 		}
 	}()
 
-	// Process specs and dungeons
+	// Phase 1 & 2: Sequential API Processing for Rankings and Reports
+	logger.Info("Starting sequential API processing phase")
 	for i := progress.CurrentSpecIndex; i < len(params.Config.Specs); i++ {
 		spec := params.Config.Specs[i]
 		state.CurrentSpec = spec
 
 		if progress.CompletedSpecs[spec.ClassName+spec.SpecName] {
+			logger.Info("Skipping completed spec",
+				"className", spec.ClassName,
+				"specName", spec.SpecName)
 			continue
 		}
 
@@ -118,57 +125,81 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 
 			dungeonKey := fmt.Sprintf("%d", dungeon.ID)
 			if progress.CompletedDungeons[dungeonKey] {
+				logger.Info("Skipping completed dungeon",
+					"dungeonName", dungeon.Name)
 				continue
 			}
 
 			// Check rate limit points before processing
 			requiredPoints := estimateRequiredPoints(spec, dungeon)
 			if state.RemainingPoints < requiredPoints {
-				logger.Info("Insufficient points remaining, continuing as new workflow",
+				logger.Info("Insufficient points for next combination",
 					"remaining", state.RemainingPoints,
 					"required", requiredPoints)
 				progress.CurrentSpecIndex = i
 				progress.CurrentDungeonIndex = j
 				params.Progress = progress
-				return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
+				return nil, workflow.NewContinueAsNewError(ctx, SyncWorkflowName, params)
 			}
 
-			// Main processing sequence: Rankings -> Reports -> Builds
+			// Process spec and dungeon combination
 			if err := processSpecAndDungeon(ctx, spec, dungeon, params, progress); err != nil {
-				logger.Error("Failed to process spec and dungeon",
-					"spec", spec.SpecName,
-					"dungeon", dungeon.Name,
-					"error", err)
 				if isQuotaExceeded(err) {
 					progress.CurrentSpecIndex = i
 					progress.CurrentDungeonIndex = j
 					params.Progress = progress
-					return nil, workflow.NewContinueAsNewError(ctx, "SyncWorkflow", params)
+					return nil, workflow.NewContinueAsNewError(ctx, SyncWorkflowName, params)
 				}
+				logger.Error("Failed to process spec and dungeon",
+					"spec", spec.SpecName,
+					"dungeon", dungeon.Name,
+					"error", err)
 				continue
 			}
 
 			progress.CompletedDungeons[dungeonKey] = true
 			state.ProcessedCount++
 			state.RemainingPoints -= requiredPoints
+
+			// Add small delay between combinations to respect API rate limits
+			workflow.Sleep(ctx, time.Second*2)
 		}
 
 		progress.CompletedSpecs[spec.ClassName+spec.SpecName] = true
 		progress.CurrentDungeonIndex = 0
 	}
 
+	// Phase 3: Parallel Processing of Builds from Reports
+	logger.Info("Starting parallel builds processing phase")
+	rebuildResult, err := rebuildFromExistingReports(ctx, params.Config)
+	if err != nil {
+		logger.Error("Failed to process builds", "error", err)
+		return nil, err
+	}
+
+	// Update final results
+	progress.PartialResults.BuildsProcessed += rebuildResult.TotalBuildsProcessed
 	progress.PartialResults.CompletedAt = workflow.Now(ctx)
+
+	logger.Info("Workflow completed successfully",
+		"duration", progress.PartialResults.CompletedAt.Sub(progress.PartialResults.StartedAt),
+		"processedSpecs", len(progress.CompletedSpecs),
+		"processedDungeons", len(progress.CompletedDungeons),
+		"totalBuildsProcessed", rebuildResult.TotalBuildsProcessed)
+
 	return progress.PartialResults, nil
 }
 
-// rebuildFromExistingReports handles the reconstruction of player builds from existing reports
+// rebuildFromExistingReports handles the parallel reconstruction of player builds from all reports
 func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResult, error) {
 	logger := workflow.GetLogger(ctx)
 	result := &RebuildResult{
 		StartedAt: workflow.Now(ctx),
 	}
 
-	// Configure activity options specifically for rebuild process
+	logger.Info("Starting parallel rebuild from reports")
+
+	// Configure activity options optimized for database operations
 	rebuildActivityOpts := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Hour * 1,
 		HeartbeatTimeout:    time.Minute * 5,
@@ -181,71 +212,72 @@ func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResu
 	}
 	rebuildCtx := workflow.WithActivityOptions(ctx, rebuildActivityOpts)
 
-	// Process each dungeon sequentially
-	for _, dungeon := range cfg.Dungeons {
-		logger.Info("Processing dungeon for builds reconstruction",
-			"dungeonName", dungeon.Name,
-			"encounterID", dungeon.EncounterID)
+	// Get total report count
+	var reportsCount int64
+	if err := workflow.ExecuteActivity(rebuildCtx,
+		CountPlayerBuildsActivity).Get(rebuildCtx, &reportsCount); err != nil {
+		logger.Error("Failed to count reports", "error", err)
+		return nil, fmt.Errorf("failed to count reports: %w", err)
+	}
 
-		// Get total report count
-		var reportsCount int64
-		if err := workflow.ExecuteActivity(rebuildCtx,
-			CountReportsForEncounterName,
-			dungeon.EncounterID).Get(rebuildCtx, &reportsCount); err != nil {
-			logger.Error("Failed to count reports for dungeon",
-				"dungeonID", dungeon.EncounterID,
+	if reportsCount == 0 {
+		logger.Info("No reports found to process")
+		return result, nil
+	}
+
+	// Process reports in optimized batches
+	const batchSize = 50 // Increased batch size for better performance
+	totalProcessed := 0
+	successfulBatches := 0
+	failedBatches := 0
+
+	for offset := 0; offset < int(reportsCount); offset += batchSize {
+		// Create batch parameters
+		batchParams := BuildBatchParams{
+			BatchSize:  batchSize,
+			Offset:     offset,
+			TotalCount: int(reportsCount),
+		}
+
+		// Execute batch processing as child workflow
+		var batchResult BuildBatchResult
+		err := workflow.ExecuteChildWorkflow(ctx,
+			ProcessBuildBatchWorkflowName,
+			batchParams).Get(ctx, &batchResult)
+
+		if err != nil {
+			logger.Error("Failed to process batch",
+				"offset", offset,
 				"error", err)
+			failedBatches++
 			continue
 		}
 
-		if reportsCount == 0 {
-			logger.Info("No reports found for dungeon",
-				"dungeonName", dungeon.Name)
-			continue
-		}
+		totalProcessed += batchResult.ProcessedBuilds
+		successfulBatches++
 
-		// Process reports in batches
-		const batchSize = 5
-		totalProcessed := 0
+		// Record progress
+		logger.Info("Batch processing progress",
+			"batchProcessed", batchResult.ProcessedBuilds,
+			"totalProcessed", totalProcessed,
+			"progress", fmt.Sprintf("%d/%d", offset+batchSize, reportsCount),
+			"successfulBatches", successfulBatches,
+			"failedBatches", failedBatches)
 
-		for offset := 0; offset < int(reportsCount); offset += batchSize {
-			// Process batch in child workflow
-			batchParams := BuildBatchParams{
-				DungeonID:  dungeon.EncounterID,
-				BatchSize:  batchSize,
-				Offset:     offset,
-				TotalCount: int(reportsCount),
-			}
-
-			var batchResult BuildBatchResult
-			err := workflow.ExecuteChildWorkflow(ctx,
-				ProcessBuildBatch,
-				batchParams).Get(ctx, &batchResult)
-
-			if err != nil {
-				logger.Error("Failed to process batch",
-					"dungeonName", dungeon.Name,
-					"offset", offset,
-					"error", err)
-				continue
-			}
-
-			totalProcessed += batchResult.ProcessedBuilds
-			result.TotalBuildsProcessed += batchResult.ProcessedBuilds
-			result.SuccessfulBatches++
-
-			logger.Info("Processed batch of builds",
-				"dungeonName", dungeon.Name,
-				"batchProcessed", batchResult.ProcessedBuilds,
-				"totalProcessed", totalProcessed,
-				"progress", fmt.Sprintf("%d/%d", offset+batchSize, reportsCount))
-
-			// Add delay between batches
-			workflow.Sleep(ctx, time.Second*2)
-		}
+		// Small delay between batches to prevent database overload
+		workflow.Sleep(ctx, time.Millisecond*500)
 	}
 
 	result.CompletedAt = workflow.Now(ctx)
+	result.TotalBuildsProcessed = totalProcessed
+	result.SuccessfulBatches = successfulBatches
+
+	logger.Info("Completed rebuild",
+		"totalBuildsProcessed", totalProcessed,
+		"successfulBatches", successfulBatches,
+		"failedBatches", failedBatches,
+		"duration", result.CompletedAt.Sub(result.StartedAt))
+
 	return result, nil
 }
 
@@ -256,10 +288,15 @@ func ProcessBuildBatch(ctx workflow.Context, params BuildBatchParams) (*BuildBat
 		StartedAt: workflow.Now(ctx),
 	}
 
-	// Activity options for batch processing
+	logger.Info("Starting build batch processing",
+		"batchSize", params.BatchSize,
+		"offset", params.Offset,
+		"totalCount", params.TotalCount)
+
+	// Configure activity options for batch processing
 	activityOpts := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Minute * 10,
-		HeartbeatTimeout:    time.Minute * 2,
+		StartToCloseTimeout: time.Minute * 20,
+		HeartbeatTimeout:    time.Minute * 5,
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second,
 			BackoffCoefficient: 2.0,
@@ -269,36 +306,47 @@ func ProcessBuildBatch(ctx workflow.Context, params BuildBatchParams) (*BuildBat
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Fetch reports batch
-	var reportsBatch []warcraftlogsBuilds.Report
+	// Fetch report batch using new method
+	var reportsBatch []*warcraftlogsBuilds.Report
 	err := workflow.ExecuteActivity(activityCtx,
-		GetReportsForEncounterBatchName,
-		params.DungeonID,
+		GetReportsBatchActivity,
 		params.BatchSize,
 		params.Offset).Get(ctx, &reportsBatch)
 
 	if err != nil {
+		logger.Error("Failed to fetch reports batch",
+			"error", err,
+			"offset", params.Offset,
+			"batchSize", params.BatchSize)
 		return nil, fmt.Errorf("failed to fetch reports batch: %w", err)
 	}
 
-	// Convert reports to pointers
-	reportPtrs := make([]*warcraftlogsBuilds.Report, len(reportsBatch))
-	for i := range reportsBatch {
-		reportPtrs[i] = &reportsBatch[i]
+	if len(reportsBatch) == 0 {
+		logger.Info("No reports in batch to process",
+			"offset", params.Offset,
+			"batchSize", params.BatchSize)
+		return result, nil
 	}
 
-	// Process builds
+	// Process builds from reports
 	var buildsResult *BuildsProcessingResult
 	if err := workflow.ExecuteActivity(activityCtx,
-		ProcessPlayerBuildsActivity,
-		reportPtrs).Get(ctx, &buildsResult); err != nil {
+		ProcessBuildsActivity,
+		reportsBatch).Get(ctx, &buildsResult); err != nil {
+		logger.Error("Failed to process builds",
+			"error", err,
+			"reportsCount", len(reportsBatch))
 		return nil, fmt.Errorf("failed to process builds: %w", err)
 	}
 
-	logger.Info("Processed builds", "processedBuilds", buildsResult.ProcessedBuilds)
-
 	result.ProcessedBuilds = buildsResult.ProcessedBuilds
 	result.CompletedAt = workflow.Now(ctx)
+
+	logger.Info("Completed build batch processing",
+		"processedBuilds", buildsResult.ProcessedBuilds,
+		"batchProgress", fmt.Sprintf("%d/%d", params.Offset+params.BatchSize, params.TotalCount),
+		"duration", result.CompletedAt.Sub(result.StartedAt))
+
 	return result, nil
 }
 
@@ -316,7 +364,7 @@ func newWorkflowProgress(startTime time.Time) WorkflowProgress {
 }
 
 // processSpecAndDungeon processes a single spec and dungeon combination
-// Including rankings, reports, and builds processing
+// It handles only the API operations: Rankings -> Reports
 func processSpecAndDungeon(ctx workflow.Context,
 	spec ClassSpec,
 	dungeon Dungeon,
@@ -326,22 +374,17 @@ func processSpecAndDungeon(ctx workflow.Context,
 	logger := workflow.GetLogger(ctx)
 	startTime := workflow.Now(ctx)
 
-	logger.Info("Processing ranking combination",
+	logger.Info("Processing spec and dungeon",
 		"spec", spec.SpecName,
 		"dungeon", dungeon.Name,
 		"startTime", startTime)
 
-	// Add delay between specs to prevent rate limiting
-	if progress.CurrentSpecIndex > 0 {
-		workflow.Sleep(ctx, time.Second*2)
-	}
-
-	// Step 1: Get rankings (new or stored)
+	// Step 1: Get rankings (attempt to fetch new ones first, fall back to stored ones)
 	var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
 
-	// Try to get new rankings first
+	// Try to fetch new rankings
 	var batchResult BatchResult
-	err := workflow.ExecuteActivity(ctx, FetchRankingsActivityName,
+	err := workflow.ExecuteActivity(ctx, FetchRankingsActivity,
 		spec, dungeon, params.Config.Rankings.Batch).Get(ctx, &batchResult)
 
 	if err != nil {
@@ -356,25 +399,29 @@ func processSpecAndDungeon(ctx workflow.Context,
 	if len(batchResult.Rankings) > 0 {
 		rankingsToProcess = batchResult.Rankings
 		progress.PartialResults.RankingsProcessed += len(batchResult.Rankings)
+		logger.Info("Using newly fetched rankings",
+			"count", len(batchResult.Rankings))
 	} else {
-		// Get existing rankings from database
-		if err := workflow.ExecuteActivity(ctx, GetStoredRankingsActivityName,
+		// Fetch existing rankings from database
+		if err := workflow.ExecuteActivity(ctx, GetStoredRankingsActivity,
 			spec.ClassName, spec.SpecName, dungeon.EncounterID).Get(ctx, &rankingsToProcess); err != nil {
 			logger.Error("Failed to get stored rankings", "error", err)
 			return err
 		}
+		logger.Info("Using stored rankings",
+			"count", len(rankingsToProcess))
 	}
 
-	// Step 2: Process rankings if we have any
+	// Step 2: Process reports if we have rankings
 	if len(rankingsToProcess) > 0 {
-		logger.Info("Processing rankings",
+		logger.Info("Starting reports processing",
 			"spec", spec.SpecName,
 			"dungeon", dungeon.Name,
-			"count", len(rankingsToProcess))
+			"rankingsCount", len(rankingsToProcess))
 
-		// Process reports - This now returns the actual reports along with stats
+		// Process reports and get processing stats
 		var reportsResult *ReportProcessingResult
-		if err := workflow.ExecuteActivity(ctx, ProcessReportsActivityName,
+		if err := workflow.ExecuteActivity(ctx, ProcessReportsActivity,
 			rankingsToProcess).Get(ctx, &reportsResult); err != nil {
 			logger.Error("Failed to process reports",
 				"spec", spec.SpecName,
@@ -386,37 +433,12 @@ func processSpecAndDungeon(ctx workflow.Context,
 		// Update progress with processed reports count
 		progress.PartialResults.ReportsProcessed += reportsResult.ProcessedCount
 
-		// Step 3: Process builds directly from processed reports
-		if len(reportsResult.ProcessedReports) > 0 {
-			logger.Info("Processing builds from reports",
-				"spec", spec.SpecName,
-				"dungeon", dungeon.Name,
-				"reportsCount", len(reportsResult.ProcessedReports))
-
-			var buildsResult *BuildsProcessingResult
-			if err := workflow.ExecuteActivity(ctx, ProcessPlayerBuildsActivity,
-				reportsResult.ProcessedReports).Get(ctx, &buildsResult); err != nil {
-				logger.Error("Failed to process builds",
-					"spec", spec.SpecName,
-					"dungeon", dungeon.Name,
-					"error", err)
-				return err
-			}
-
-			// Update progress with processed builds
-			progress.PartialResults.BuildsProcessed += buildsResult.ProcessedBuilds
-
-			logger.Info("Successfully processed builds",
-				"spec", spec.SpecName,
-				"dungeon", dungeon.Name,
-				"buildsProcessed", buildsResult.ProcessedBuilds,
-				"successCount", buildsResult.SuccessCount,
-				"failureCount", buildsResult.FailureCount)
-		} else {
-			logger.Info("No reports available for builds processing",
-				"spec", spec.SpecName,
-				"dungeon", dungeon.Name)
-		}
+		logger.Info("Completed API processing phase",
+			"spec", spec.SpecName,
+			"dungeon", dungeon.Name,
+			"rankingsProcessed", len(rankingsToProcess),
+			"reportsProcessed", reportsResult.ProcessedCount,
+			"duration", time.Since(startTime))
 	} else {
 		logger.Info("No rankings to process",
 			"spec", spec.SpecName,
@@ -459,29 +481,32 @@ func countPointsUsed(rankings []*warcraftlogsBuilds.ClassRanking) int {
 	return 1 + (len(rankings) * 2)
 }
 
-// checkPointsAndWait checks if we have enough points and waits if not
-func checkPointsAndWait(ctx workflow.Context,
-	state *ProcessState,
-	params WorkflowParams) error {
-
+// checkPointsAndWait checks if sufficient points are available and waits if needed
+func checkPointsAndWait(ctx workflow.Context, state *ProcessState, params WorkflowParams) error {
 	logger := workflow.GetLogger(ctx)
 
+	// Check points if enough time has passed or we're running low
 	if time.Since(state.LastCheckTime) > time.Minute*5 || state.RemainingPoints < 5.0 {
 		if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
+			logger.Error("Failed to check remaining points", "error", err)
 			return err
 		}
 		state.LastCheckTime = workflow.Now(ctx)
 
 		if state.RemainingPoints < 1.0 {
+			logger.Info("Insufficient points available",
+				"remainingPoints", state.RemainingPoints,
+				"resetIn", time.Minute*15)
 			return &QuotaExceededError{
 				Message: "Insufficient points available",
 				ResetIn: time.Minute * 15,
 			}
 		}
-	}
 
-	logger.Info("Points available for requests",
-		"remainingPoints", state.RemainingPoints)
+		logger.Info("Points check completed",
+			"remainingPoints", state.RemainingPoints,
+			"lastCheckTime", state.LastCheckTime)
+	}
 
 	return nil
 }

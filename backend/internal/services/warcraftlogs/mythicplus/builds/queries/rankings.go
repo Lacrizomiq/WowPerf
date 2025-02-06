@@ -33,7 +33,6 @@ func ParseRankingsResponse(response []byte, encounterId uint) ([]*warcraftlogsBu
 	log.Printf("Parsing response data for encounter %d", encounterId)
 
 	// Define the response structure
-	// Define the response structure
 	var result struct {
 		WorldData struct {
 			Encounter struct {
