@@ -190,43 +190,32 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	return progress.PartialResults, nil
 }
 
-// rebuildFromExistingReports handles the parallel reconstruction of player builds from all reports
+// rebuildFromExistingReports handles rebuilding player builds from stored reports
 func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResult, error) {
 	logger := workflow.GetLogger(ctx)
 	result := &RebuildResult{
 		StartedAt: workflow.Now(ctx),
 	}
 
-	logger.Info("Starting parallel rebuild from reports")
-
-	// Configure activity options optimized for database operations
-	rebuildActivityOpts := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Hour * 1,
-		HeartbeatTimeout:    time.Minute * 5,
-		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval:    time.Second * 5,
-			BackoffCoefficient: 2.0,
-			MaximumInterval:    time.Minute * 5,
-			MaximumAttempts:    3,
-		},
-	}
-	rebuildCtx := workflow.WithActivityOptions(ctx, rebuildActivityOpts)
-
-	// Get total report count
+	// Get total count of reports to process
 	var reportsCount int64
-	if err := workflow.ExecuteActivity(rebuildCtx,
-		CountPlayerBuildsActivity).Get(rebuildCtx, &reportsCount); err != nil {
-		logger.Error("Failed to count reports", "error", err)
+	if err := workflow.ExecuteActivity(ctx,
+		CountAllReportsActivity).Get(ctx, &reportsCount); err != nil {
 		return nil, fmt.Errorf("failed to count reports: %w", err)
 	}
 
+	// Early return if no reports to process
 	if reportsCount == 0 {
-		logger.Info("No reports found to process")
+		logger.Info("No reports found for rebuild")
+		result.CompletedAt = workflow.Now(ctx)
 		return result, nil
 	}
 
+	logger.Info("Starting parallel rebuild from reports",
+		"totalReports", reportsCount)
+
 	// Process reports in optimized batches
-	const batchSize = 50 // Increased batch size for better performance
+	const batchSize = 50
 	totalProcessed := 0
 	successfulBatches := 0
 	failedBatches := 0
@@ -239,7 +228,7 @@ func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResu
 			TotalCount: int(reportsCount),
 		}
 
-		// Execute batch processing as child workflow
+		// Process batch with child workflow
 		var batchResult BuildBatchResult
 		err := workflow.ExecuteChildWorkflow(ctx,
 			ProcessBuildBatchWorkflowName,
@@ -253,16 +242,27 @@ func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResu
 			continue
 		}
 
-		totalProcessed += batchResult.ProcessedBuilds
-		successfulBatches++
+		// Update progress only if builds were processed
+		if batchResult.ProcessedBuilds > 0 {
+			totalProcessed += batchResult.ProcessedBuilds
+			successfulBatches++
 
-		// Record progress
-		logger.Info("Batch processing progress",
-			"batchProcessed", batchResult.ProcessedBuilds,
-			"totalProcessed", totalProcessed,
-			"progress", fmt.Sprintf("%d/%d", offset+batchSize, reportsCount),
-			"successfulBatches", successfulBatches,
-			"failedBatches", failedBatches)
+			// Record progress
+			logger.Info("Batch processing progress",
+				"batchProcessed", batchResult.ProcessedBuilds,
+				"totalProcessed", totalProcessed,
+				"progress", fmt.Sprintf("%d/%d", offset+batchSize, reportsCount),
+				"successfulBatches", successfulBatches,
+				"failedBatches", failedBatches)
+		} else {
+			// If no builds processed and not at the start, we might be done
+			if offset > 0 {
+				logger.Info("No more builds to process, ending rebuild",
+					"totalProcessed", totalProcessed,
+					"successfulBatches", successfulBatches)
+				break
+			}
+		}
 
 		// Small delay between batches to prevent database overload
 		workflow.Sleep(ctx, time.Millisecond*500)
@@ -281,17 +281,12 @@ func rebuildFromExistingReports(ctx workflow.Context, cfg *Config) (*RebuildResu
 	return result, nil
 }
 
-// ProcessBuildBatch is a child workflow that processes a single batch of builds
+// ProcessBuildBatch processes a batch of reports and creates player builds from them
 func ProcessBuildBatch(ctx workflow.Context, params BuildBatchParams) (*BuildBatchResult, error) {
 	logger := workflow.GetLogger(ctx)
 	result := &BuildBatchResult{
 		StartedAt: workflow.Now(ctx),
 	}
-
-	logger.Info("Starting build batch processing",
-		"batchSize", params.BatchSize,
-		"offset", params.Offset,
-		"totalCount", params.TotalCount)
 
 	// Configure activity options for batch processing
 	activityOpts := workflow.ActivityOptions{
@@ -306,7 +301,7 @@ func ProcessBuildBatch(ctx workflow.Context, params BuildBatchParams) (*BuildBat
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Fetch report batch using new method
+	// Fetch reports batch with improved error handling
 	var reportsBatch []*warcraftlogsBuilds.Report
 	err := workflow.ExecuteActivity(activityCtx,
 		GetReportsBatchActivity,
@@ -321,14 +316,18 @@ func ProcessBuildBatch(ctx workflow.Context, params BuildBatchParams) (*BuildBat
 		return nil, fmt.Errorf("failed to fetch reports batch: %w", err)
 	}
 
+	// Early return if no reports found
 	if len(reportsBatch) == 0 {
-		logger.Info("No reports in batch to process",
-			"offset", params.Offset,
-			"batchSize", params.BatchSize)
+		if params.Offset > 0 { // Only log if not the first batch
+			logger.Info("No more reports to process - ending batch processing",
+				"processedSoFar", params.Offset,
+				"totalExpected", params.TotalCount)
+		}
+		result.CompletedAt = workflow.Now(ctx)
 		return result, nil
 	}
 
-	// Process builds from reports
+	// Process the batch of reports
 	var buildsResult *BuildsProcessingResult
 	if err := workflow.ExecuteActivity(activityCtx,
 		ProcessBuildsActivity,
@@ -379,10 +378,7 @@ func processSpecAndDungeon(ctx workflow.Context,
 		"dungeon", dungeon.Name,
 		"startTime", startTime)
 
-	// Step 1: Get rankings (attempt to fetch new ones first, fall back to stored ones)
-	var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
-
-	// Try to fetch new rankings
+	// Step 1: Get rankings
 	var batchResult BatchResult
 	err := workflow.ExecuteActivity(ctx, FetchRankingsActivity,
 		spec, dungeon, params.Config.Rankings.Batch).Get(ctx, &batchResult)
@@ -395,31 +391,28 @@ func processSpecAndDungeon(ctx workflow.Context,
 		return err
 	}
 
-	// Use new rankings if available, otherwise get stored ones
+	var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
+
 	if len(batchResult.Rankings) > 0 {
 		rankingsToProcess = batchResult.Rankings
 		progress.PartialResults.RankingsProcessed += len(batchResult.Rankings)
-		logger.Info("Using newly fetched rankings",
-			"count", len(batchResult.Rankings))
+		logger.Info("Using newly fetched rankings", "count", len(batchResult.Rankings))
 	} else {
-		// Fetch existing rankings from database
 		if err := workflow.ExecuteActivity(ctx, GetStoredRankingsActivity,
 			spec.ClassName, spec.SpecName, dungeon.EncounterID).Get(ctx, &rankingsToProcess); err != nil {
 			logger.Error("Failed to get stored rankings", "error", err)
 			return err
 		}
-		logger.Info("Using stored rankings",
-			"count", len(rankingsToProcess))
+		logger.Info("Using stored rankings", "count", len(rankingsToProcess))
 	}
 
-	// Step 2: Process reports if we have rankings
+	// Step 2: Process and sync reports if we have rankings
 	if len(rankingsToProcess) > 0 {
 		logger.Info("Starting reports processing",
 			"spec", spec.SpecName,
 			"dungeon", dungeon.Name,
 			"rankingsCount", len(rankingsToProcess))
 
-		// Process reports and get processing stats
 		var reportsResult *ReportProcessingResult
 		if err := workflow.ExecuteActivity(ctx, ProcessReportsActivity,
 			rankingsToProcess).Get(ctx, &reportsResult); err != nil {
@@ -430,7 +423,6 @@ func processSpecAndDungeon(ctx workflow.Context,
 			return err
 		}
 
-		// Update progress with processed reports count
 		progress.PartialResults.ReportsProcessed += reportsResult.ProcessedCount
 
 		logger.Info("Completed API processing phase",

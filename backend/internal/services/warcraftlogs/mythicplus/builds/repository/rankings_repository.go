@@ -129,7 +129,7 @@ func buildRankingKey(r *warcraftlogsBuilds.ClassRanking) string {
 func (r *RankingsRepository) GetRankingsForAnalysis(ctx context.Context, encounterID uint, limit int) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	var rankings []*warcraftlogsBuilds.ClassRanking
 	err := r.db.WithContext(ctx).
-		Where("encounter_id = ? AND deleted_at IS NULL", encounterID).
+		Where("encounter_id = ?", encounterID).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&rankings).Error

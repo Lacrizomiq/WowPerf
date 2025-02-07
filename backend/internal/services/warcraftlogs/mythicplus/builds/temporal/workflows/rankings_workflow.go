@@ -219,7 +219,6 @@ type RankingsActivity interface {
 // ReportsActivity defines the interface for report-related activities
 type ReportsActivity interface {
 	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*ReportProcessingResult, error)
-	GetProcessedReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error)
 	GetReportsBatch(ctx context.Context, batchSize int, offset int) ([]*warcraftlogsBuilds.Report, error)
 	CountAllReports(ctx context.Context) (int64, error)
 }

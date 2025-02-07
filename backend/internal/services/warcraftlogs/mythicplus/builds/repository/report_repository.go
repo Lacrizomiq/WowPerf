@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
@@ -13,10 +12,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// ReportIdentifier represents the unique identifier for a report
+type ReportIdentifier struct {
+	Code    string
+	FightID int
+}
+
 // ReportRepository handles all database operations for reports
 type ReportRepository struct {
-	db    *gorm.DB
-	cache sync.Map
+	db *gorm.DB
 }
 
 // NewReportRepository creates a new instance of ReportRepository
@@ -91,16 +95,70 @@ func (r *ReportRepository) processBatch(ctx context.Context, batch []*warcraftlo
 				return fmt.Errorf("failed to store report %s (FightID: %d): %w",
 					report.Code, report.FightID, result.Error)
 			}
-
-			log.Printf("[TRACE] Stored report %s (FightID: %d)",
-				report.Code, report.FightID)
 		}
 		return nil
 	})
 }
 
+// SyncReportsWithRankings synchronizes reports with the provided rankings
+// It deletes reports that no longer have associated rankings
+func (r *ReportRepository) SyncReportsWithRankings(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) error {
+	if len(rankings) == 0 {
+		return nil
+	}
+
+	// Create a map of active report identifiers from rankings
+	activeReports := make(map[string]bool)
+	for _, ranking := range rankings {
+		key := fmt.Sprintf("%s-%d", ranking.ReportCode, ranking.ReportFightID)
+		activeReports[key] = true
+	}
+
+	// Delete reports that are no longer referenced by any ranking
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var reportsToDelete []ReportIdentifier
+
+		// Find all reports for these rankings
+		rows, err := tx.Model(&warcraftlogsBuilds.Report{}).
+			Select("code, fight_id").
+			Where("encounter_id = ?", rankings[0].EncounterID).
+			Rows()
+
+		if err != nil {
+			return fmt.Errorf("failed to fetch reports: %w", err)
+		}
+		defer rows.Close()
+
+		// Check each report against active rankings
+		for rows.Next() {
+			var report ReportIdentifier
+			if err := rows.Scan(&report.Code, &report.FightID); err != nil {
+				return fmt.Errorf("failed to scan report: %w", err)
+			}
+
+			key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
+			if !activeReports[key] {
+				reportsToDelete = append(reportsToDelete, report)
+			}
+		}
+
+		// Delete obsolete reports
+		if len(reportsToDelete) > 0 {
+			for _, report := range reportsToDelete {
+				if err := tx.Unscoped().Where("code = ? AND fight_id = ?",
+					report.Code, report.FightID).Delete(&warcraftlogsBuilds.Report{}).Error; err != nil {
+					return fmt.Errorf("failed to delete report %s-%d: %w",
+						report.Code, report.FightID, err)
+				}
+			}
+			log.Printf("[INFO] Deleted %d obsolete reports", len(reportsToDelete))
+		}
+
+		return nil
+	})
+}
+
 // GetReportsByRankings retrieves reports corresponding to the provided rankings
-// This method is used by the workflow to get existing reports
 func (r *ReportRepository) GetReportsByRankings(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) ([]*warcraftlogsBuilds.Report, error) {
 	if len(rankings) == 0 {
 		return nil, nil
@@ -139,45 +197,21 @@ func (r *ReportRepository) GetReportsByRankings(ctx context.Context, rankings []
 	return reports, nil
 }
 
-// CountReportsForEncounter counts the total number of reports for an encounter
-func (r *ReportRepository) CountReportsForEncounter(ctx context.Context, encounterID uint) (int64, error) {
-	var count int64
-
-	if err := r.db.Model(&warcraftlogsBuilds.Report{}).
-		Where("encounter_id = ? AND deleted_at IS NULL", encounterID).
-		Count(&count).Error; err != nil {
-		return 0, fmt.Errorf("failed to count reports for encounter: %w", err)
-	}
-
-	return count, nil
-}
-
-// GetReportByCodeAndFightID retrieves a single report by its code and fight ID
-func (r *ReportRepository) GetReportByCodeAndFightID(ctx context.Context, code string, fightID int) (*warcraftlogsBuilds.Report, error) {
-	// Check cache first
-	key := fmt.Sprintf("%s-%d", code, fightID)
-	if report, ok := r.cache.Load(key); ok {
-		return report.(*warcraftlogsBuilds.Report), nil
-	}
-
-	// Query database if not in cache
-	var report warcraftlogsBuilds.Report
-	result := r.db.WithContext(ctx).
-		Where("code = ? AND fight_id = ?", code, fightID).
-		First(&report)
-
-	if result.Error == nil {
-		// Store in cache
-		r.cache.Store(key, &report)
-	}
-
-	return &report, nil
-}
-
 // GetReportsBatch retrieves a batch of reports with pagination
+// Returns an empty slice if offset exceeds total count
 func (r *ReportRepository) GetReportsBatch(ctx context.Context, limit int, offset int) ([]*warcraftlogsBuilds.Report, error) {
-	var reports []*warcraftlogsBuilds.Report
+	// First check total count to avoid unnecessary queries
+	var count int64
+	if err := r.db.Model(&warcraftlogsBuilds.Report{}).Count(&count).Error; err != nil {
+		return nil, fmt.Errorf("failed to count reports: %w", err)
+	}
 
+	// Return empty slice if offset is beyond available data
+	if int64(offset) >= count {
+		return []*warcraftlogsBuilds.Report{}, nil
+	}
+
+	var reports []*warcraftlogsBuilds.Report
 	result := r.db.WithContext(ctx).
 		Select(
 			"code",
@@ -190,7 +224,6 @@ func (r *ReportRepository) GetReportsBatch(ctx context.Context, limit int, offse
 			"keystonelevel",
 			"affixes",
 		).
-		Where("deleted_at IS NULL").
 		Order("code ASC, fight_id ASC").
 		Limit(limit).
 		Offset(offset).
@@ -208,7 +241,6 @@ func (r *ReportRepository) CountAllReports(ctx context.Context) (int64, error) {
 	var count int64
 	result := r.db.WithContext(ctx).
 		Model(&warcraftlogsBuilds.Report{}).
-		Where("deleted_at IS NULL").
 		Count(&count)
 
 	if result.Error != nil {
