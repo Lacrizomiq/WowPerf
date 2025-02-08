@@ -45,21 +45,6 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 		ProcessedAt: time.Now(),
 	}
 
-	// Check if an update is necessary for this specific spec
-	lastRanking, err := a.repository.GetLastRankingForEncounter(ctx, dungeon.EncounterID, spec.ClassName, spec.SpecName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check last ranking: %w", err)
-	}
-
-	if lastRanking != nil {
-		if time.Since(lastRanking.UpdatedAt) < 7*24*time.Hour {
-			logger.Info("Rankings recently updated, skipping",
-				"lastUpdate", lastRanking.UpdatedAt,
-				"spec", spec.SpecName)
-			return result, nil
-		}
-	}
-
 	// Fetch rankings with retry handling
 	rankings, err := a.fetchRankingsWithRetry(ctx, spec, dungeon, batchConfig)
 	if err != nil {

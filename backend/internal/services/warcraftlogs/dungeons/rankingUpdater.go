@@ -126,7 +126,6 @@ func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
 			return fmt.Errorf("failed to update rankings: %w", err)
 		}
 
-		// Utilise la nouvelle méthode pour mettre à jour le timestamp
 		if err := r.updateLastUpdateTime(ctx); err != nil {
 			return fmt.Errorf("failed to update timestamp: %w", err)
 		}

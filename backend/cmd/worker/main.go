@@ -100,10 +100,9 @@ func main() {
 	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings) // GetStoredRankingsActivity
 
 	// Reports activities
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)      // ProcessReportsActivity
-	w.RegisterActivity(activitiesService.Reports.GetProcessedReports) // GetProcessedReportsActivity
-	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)     // GetReportsBatchActivity
-	w.RegisterActivity(activitiesService.Reports.CountAllReports)     // CountAllReportsActivity
+	w.RegisterActivity(activitiesService.Reports.ProcessReports)  // ProcessReportsActivity
+	w.RegisterActivity(activitiesService.Reports.GetReportsBatch) // GetReportsBatchActivity
+	w.RegisterActivity(activitiesService.Reports.CountAllReports) // CountAllReportsActivity
 
 	// Player builds activities
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)  // ProcessBuildsActivity

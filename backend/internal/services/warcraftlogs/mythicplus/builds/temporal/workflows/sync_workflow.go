@@ -56,12 +56,21 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 			PartialResults: &WorkflowResult{
 				StartedAt: workflow.Now(ctx),
 			},
+			Stats: &ProgressStats{
+				TotalSpecs:    len(params.Config.Specs),
+				TotalDungeons: len(params.Config.Dungeons),
+				StartedAt:     workflow.Now(ctx),
+			},
 		}
-		logger.Info("Initialized new workflow progress")
+		logger.Info("Initialized new workflow progress",
+			"totalSpecs", progress.Stats.TotalSpecs,
+			"totalDungeons", progress.Stats.TotalDungeons)
 	} else {
 		logger.Info("Resuming workflow progress",
 			"completedSpecs", len(progress.CompletedSpecs),
-			"completedDungeons", len(progress.CompletedDungeons))
+			"completedDungeons", len(progress.CompletedDungeons),
+			"processedSpecs", progress.Stats.ProcessedSpecs,
+			"processedDungeons", progress.Stats.ProcessedDungeons)
 	}
 
 	// Configure activity options
@@ -77,40 +86,19 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Initialize rate limiting state
-	state := &ProcessState{
-		LastCheckTime: workflow.Now(ctx),
-	}
-
-	// Initial points check
-	if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
-		logger.Error("Failed to perform initial points check", "error", err)
-		return nil, err
-	}
-
-	// Reserve points for workflow execution
-	if err := workflow.ExecuteActivity(ctx, ReserveRateLimitPointsActivity, params).Get(ctx, nil); err != nil {
-		logger.Error("Failed to reserve points", "error", err)
-		if isQuotaExceeded(err) {
-			workflow.Sleep(ctx, time.Minute*15)
-			params.Progress = progress
-			return nil, workflow.NewContinueAsNewError(ctx, SyncWorkflowName, params)
-		}
-		return nil, err
-	}
-
-	// Ensure points are released after workflow completion
-	defer func() {
-		if err := workflow.ExecuteActivity(ctx, ReleaseRateLimitPointsActivity, params).Get(ctx, nil); err != nil {
-			logger.Error("Failed to release points", "error", err)
-		}
-	}()
-
 	// Phase 1 & 2: Sequential API Processing for Rankings and Reports
 	logger.Info("Starting sequential API processing phase")
 	for i := progress.CurrentSpecIndex; i < len(params.Config.Specs); i++ {
 		spec := params.Config.Specs[i]
-		state.CurrentSpec = spec
+		progress.Stats.CurrentSpec = &spec
+		progress.Stats.LastSpecUpdate = workflow.Now(ctx)
+
+		logger.Info("Processing spec",
+			"specIndex", i,
+			"totalSpecs", progress.Stats.TotalSpecs,
+			"className", spec.ClassName,
+			"specName", spec.SpecName,
+			"processedSpecs", progress.Stats.ProcessedSpecs)
 
 		if progress.CompletedSpecs[spec.ClassName+spec.SpecName] {
 			logger.Info("Skipping completed spec",
@@ -121,28 +109,22 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 
 		for j := progress.CurrentDungeonIndex; j < len(params.Config.Dungeons); j++ {
 			dungeon := params.Config.Dungeons[j]
-			state.CurrentDungeon = dungeon
+			progress.Stats.CurrentDungeon = &dungeon
+			progress.Stats.LastDungeonUpdate = workflow.Now(ctx)
 
-			dungeonKey := fmt.Sprintf("%d", dungeon.ID)
+			logger.Info("Processing dungeon",
+				"dungeonIndex", j,
+				"totalDungeons", progress.Stats.TotalDungeons,
+				"dungeonName", dungeon.Name,
+				"processedDungeons", progress.Stats.ProcessedDungeons)
+
+			dungeonKey := generateDungeonKey(spec, dungeon)
 			if progress.CompletedDungeons[dungeonKey] {
 				logger.Info("Skipping completed dungeon",
 					"dungeonName", dungeon.Name)
 				continue
 			}
 
-			// Check rate limit points before processing
-			requiredPoints := estimateRequiredPoints(spec, dungeon)
-			if state.RemainingPoints < requiredPoints {
-				logger.Info("Insufficient points for next combination",
-					"remaining", state.RemainingPoints,
-					"required", requiredPoints)
-				progress.CurrentSpecIndex = i
-				progress.CurrentDungeonIndex = j
-				params.Progress = progress
-				return nil, workflow.NewContinueAsNewError(ctx, SyncWorkflowName, params)
-			}
-
-			// Process spec and dungeon combination
 			if err := processSpecAndDungeon(ctx, spec, dungeon, params, progress); err != nil {
 				if isQuotaExceeded(err) {
 					progress.CurrentSpecIndex = i
@@ -158,18 +140,29 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 			}
 
 			progress.CompletedDungeons[dungeonKey] = true
-			state.ProcessedCount++
-			state.RemainingPoints -= requiredPoints
+			progress.Stats.ProcessedDungeons++
 
-			// Add small delay between combinations to respect API rate limits
+			logger.Info("Completed dungeon processing",
+				"dungeonName", dungeon.Name,
+				"processedDungeons", progress.Stats.ProcessedDungeons,
+				"remainingDungeons", progress.Stats.TotalDungeons-progress.Stats.ProcessedDungeons)
+
+			// Add small delay between combinations
 			workflow.Sleep(ctx, time.Second*2)
 		}
 
 		progress.CompletedSpecs[spec.ClassName+spec.SpecName] = true
+		progress.Stats.ProcessedSpecs++
 		progress.CurrentDungeonIndex = 0
+
+		logger.Info("Completed spec processing",
+			"className", spec.ClassName,
+			"specName", spec.SpecName,
+			"processedSpecs", progress.Stats.ProcessedSpecs,
+			"remainingSpecs", progress.Stats.TotalSpecs-progress.Stats.ProcessedSpecs)
 	}
 
-	// Phase 3: Parallel Processing of Builds from Reports
+	// Phase 3: Parallel Processing of Builds
 	logger.Info("Starting parallel builds processing phase")
 	rebuildResult, err := rebuildFromExistingReports(ctx, params.Config)
 	if err != nil {
@@ -183,8 +176,8 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 
 	logger.Info("Workflow completed successfully",
 		"duration", progress.PartialResults.CompletedAt.Sub(progress.PartialResults.StartedAt),
-		"processedSpecs", len(progress.CompletedSpecs),
-		"processedDungeons", len(progress.CompletedDungeons),
+		"processedSpecs", progress.Stats.ProcessedSpecs,
+		"processedDungeons", progress.Stats.ProcessedDungeons,
 		"totalBuildsProcessed", rebuildResult.TotalBuildsProcessed)
 
 	return progress.PartialResults, nil
@@ -501,4 +494,9 @@ func checkPointsAndWait(ctx workflow.Context, state *ProcessState, params Workfl
 	}
 
 	return nil
+}
+
+// generateDungeonKey generate a key for the completed dungeon so all spec can be processed
+func generateDungeonKey(spec ClassSpec, dungeon Dungeon) string {
+	return fmt.Sprintf("%s_%s_%d", spec.ClassName, spec.SpecName, dungeon.ID)
 }
