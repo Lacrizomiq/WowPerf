@@ -127,7 +127,7 @@ func (s *SyncService) processSingleBatch(ctx context.Context, batch RankingBatch
 		Batch: batch,
 	}
 
-	lastRanking, err := s.repository.GetLastRankingForEncounter(ctx, batch.EncounterID)
+	lastRanking, err := s.repository.GetLastRankingForEncounter(ctx, batch.EncounterID, batch.ClassName, batch.SpecName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last ranking: %w", err)
 	}

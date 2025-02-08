@@ -64,7 +64,7 @@ func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (
 
 	var lastErr error
 	for attempt := 1; attempt <= p.config.Rankings.Batch.MaxAttempts; attempt++ {
-		result.Rankings, result.HasMore, lastErr = p.fetchRankings(ctx, batch)
+		result.Rankings, lastErr = p.fetchRankings(ctx, batch)
 		if lastErr == nil {
 			break
 		}
@@ -113,7 +113,7 @@ func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (
 }
 
 // fetchRankings fetches rankings from the API and returns the rankings, if there are more pages, and an error if it occurs
-func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) ([]*warcraftlogsBuilds.ClassRanking, bool, error) {
+func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	job := warcraftlogs.Job{
 		Query: rankingsQueries.ClassRankingsQuery,
 		Variables: map[string]interface{}{
@@ -134,11 +134,11 @@ func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) 
 				wlErr.Message = fmt.Sprintf("%s (class: %s, spec: %s, encounter: %d, page: %d)",
 					wlErr.Message, batch.ClassName, batch.SpecName, batch.EncounterID, batch.CurrentPage)
 			}
-			return nil, false, result.Error
+			return nil, result.Error
 		}
 		return rankingsQueries.ParseRankingsResponse(result.Data, batch.EncounterID)
 	case <-ctx.Done():
-		return nil, false, ctx.Err()
+		return nil, ctx.Err()
 	}
 }
 

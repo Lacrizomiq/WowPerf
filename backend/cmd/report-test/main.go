@@ -4,8 +4,10 @@ import (
 	"context"
 	"log"
 	"os"
-	"time"
-	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
+	"os/signal"
+	"syscall"
+
+	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
@@ -14,94 +16,75 @@ import (
 const (
 	defaultNamespace = "default"
 	defaultTaskQueue = "warcraft-logs-sync"
+	targetClass      = "Priest" // Starting with Priest only
 )
 
 func main() {
-	log.Printf("[INFO] Starting sync workflow")
+	log.Printf("[INFO] Starting scheduler service")
 
 	// Initialize Temporal client
-	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
-	if temporalAddress == "" {
-		temporalAddress = "localhost:7233"
-	}
-
-	temporalClient, err := client.Dial(client.Options{
-		HostPort:  temporalAddress,
-		Namespace: defaultNamespace,
-	})
+	temporalClient, err := initTemporalClient()
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
 	}
 	defer temporalClient.Close()
 
-	// Load configuration
-	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml")
+	// Create logger
+	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
+
+	// Initialize schedule manager
+	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
+
+	// Load configuration using the new unified config
+	cfg, err := workflows.LoadConfig("configs/config_s1_tww.priest.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load config: %v", err)
 	}
 
-	// Prepare workflow parameters
-	workflowParams := workflows.WorkflowParams{
-		Specs:    make([]workflows.ClassSpec, len(cfg.Specs)),
-		Dungeons: make([]workflows.Dungeon, len(cfg.Dungeons)),
-		BatchConfig: workflows.BatchConfig{
-			Size:        cfg.Rankings.Batch.Size,
-			MaxPages:    cfg.Rankings.Batch.MaxPages,
-			RetryDelay:  cfg.Rankings.Batch.RetryDelay,
-			MaxAttempts: cfg.Rankings.Batch.MaxAttempts,
-		},
-		Rankings: struct {
-			MaxRankingsPerSpec int           `json:"max_rankings_per_spec"`
-			UpdateInterval     time.Duration `json:"update_interval"`
-		}{
-			MaxRankingsPerSpec: cfg.Rankings.MaxRankingsPerSpec,
-			UpdateInterval:     cfg.Rankings.UpdateInterval,
-		},
+	// Configure schedule
+	opts := scheduler.DefaultScheduleOptions()
+	if err := scheduleManager.CreateOrGetClassSchedule(context.Background(), targetClass, cfg, opts); err != nil {
+		log.Fatalf("[FATAL] Failed to manage schedule: %v", err)
 	}
 
-	// Convert specs and dungeons
-	for i, spec := range cfg.Specs {
-		workflowParams.Specs[i] = workflows.ClassSpec{
-			ClassName: spec.ClassName,
-			SpecName:  spec.SpecName,
-		}
-	}
-	for i, dungeon := range cfg.Dungeons {
-		workflowParams.Dungeons[i] = workflows.Dungeon{
-			ID:          dungeon.ID,
-			EncounterID: dungeon.EncounterID,
-			Name:        dungeon.Name,
-			Slug:        dungeon.Slug,
-		}
+	logger.Printf("Successfully created schedule for class: %s", targetClass)
+
+	// Test immediate execution
+	logger.Printf("Triggering immediate execution for testing...")
+	if err := scheduleManager.TriggerSchedule(context.Background(), targetClass); err != nil {
+		logger.Printf("[ERROR] Failed to trigger schedule: %v", err)
+	} else {
+		logger.Printf("Successfully triggered schedule execution")
 	}
 
-	// Start workflow
-	workflowOptions := client.StartWorkflowOptions{
-		ID:                       "warcraft-logs-sync-" + time.Now().Format("20060102-150405"),
-		TaskQueue:                defaultTaskQueue,
-		WorkflowExecutionTimeout: 24 * time.Hour,
+	// Handle graceful shutdown
+	handleGracefulShutdown(scheduleManager, logger)
+}
+
+func initTemporalClient() (client.Client, error) {
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
 	}
 
-	execution, err := temporalClient.ExecuteWorkflow(
-		context.Background(),
-		workflowOptions,
-		workflows.SyncWorkflow,
-		workflowParams,
-	)
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to start workflow: %v", err)
+	return client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: defaultNamespace,
+	})
+}
+
+func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	sig := <-sigCh
+	logger.Printf("Received signal %v, initiating shutdown", sig)
+
+	// Cleanup before shutdown
+	ctx := context.Background()
+	if err := scheduleManager.DeleteSchedule(ctx, targetClass); err != nil {
+		logger.Printf("Error deleting schedule for class %s: %v", targetClass, err)
 	}
 
-	log.Printf("[INFO] Started workflow: ID=%s, RunID=%s", execution.GetID(), execution.GetRunID())
-
-	// Wait for workflow completion
-	var result workflows.WorkflowResult
-	if err := execution.Get(context.Background(), &result); err != nil {
-		log.Fatalf("[FATAL] Workflow failed: %v", err)
-	}
-
-	log.Printf("[INFO] Workflow completed successfully: Rankings=%d, Reports=%d, Builds=%d",
-		result.RankingsProcessed,
-		result.ReportsProcessed,
-		result.BuildsProcessed)
+	logger.Printf("Scheduler service shutdown complete")
 }

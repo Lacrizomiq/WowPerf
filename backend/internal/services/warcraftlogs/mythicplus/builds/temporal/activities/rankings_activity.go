@@ -29,7 +29,6 @@ func NewRankingsActivity(client *warcraftlogs.WarcraftLogsClientService, reposit
 	}
 }
 
-// FetchAndStore fetches and stores rankings for a given class spec and dungeon
 func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.ClassSpec, dungeon workflows.Dungeon, batchConfig workflows.BatchConfig) (*workflows.BatchResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting rankings fetch activity",
@@ -46,20 +45,6 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 		ProcessedAt: time.Now(),
 	}
 
-	// Check if an update is necessary
-	lastRanking, err := a.repository.GetLastRankingForEncounter(ctx, dungeon.EncounterID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check last ranking: %w", err)
-	}
-
-	if lastRanking != nil {
-		if time.Since(lastRanking.UpdatedAt) < 7*24*time.Hour {
-			logger.Info("Rankings recently updated, skipping",
-				"lastUpdate", lastRanking.UpdatedAt)
-			return result, nil
-		}
-	}
-
 	// Fetch rankings with retry handling
 	rankings, err := a.fetchRankingsWithRetry(ctx, spec, dungeon, batchConfig)
 	if err != nil {
@@ -68,17 +53,21 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 
 	// Store rankings if we got any
 	if len(rankings) > 0 {
-		logger.Info("Storing rankings", "count", len(rankings))
+		logger.Info("Storing rankings",
+			"count", len(rankings),
+			"spec", spec.SpecName)
 		if err := a.repository.StoreRankings(ctx, dungeon.EncounterID, rankings); err != nil {
 			return nil, fmt.Errorf("failed to store rankings: %w", err)
 		}
 		result.Rankings = rankings
 	}
 
-	activity.RecordHeartbeat(ctx, fmt.Sprintf("Processed %d rankings", len(rankings)))
+	activity.RecordHeartbeat(ctx, fmt.Sprintf("Processed %d rankings for %s %s",
+		len(rankings), spec.ClassName, spec.SpecName))
 	return result, nil
 }
 
+// fetchRankingsWithRetry fetches rankings with retry handling
 func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec workflows.ClassSpec, dungeon workflows.Dungeon, batchConfig workflows.BatchConfig) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	logger := activity.GetLogger(ctx)
 	var rankings []*warcraftlogsBuilds.ClassRanking
@@ -119,7 +108,7 @@ func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec work
 		)
 	}
 
-	fetchedRankings, hasMore, err := rankingsQueries.ParseRankingsResponse(
+	fetchedRankings, err := rankingsQueries.ParseRankingsResponse(
 		response,
 		dungeon.EncounterID,
 	)
@@ -136,8 +125,25 @@ func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec work
 	// Log progress
 	logger.Info("Fetched rankings",
 		"count", len(fetchedRankings),
-		"hasMore", hasMore,
 		"total", len(rankings))
 
+	return rankings, nil
+}
+
+// GetStoredRankings retrieves rankings from the database
+func (a *RankingsActivity) GetStoredRankings(ctx context.Context, className, specName string, encounterID uint) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Getting stored rankings",
+		"class", className,
+		"spec", specName,
+		"encounterID", encounterID)
+
+	rankings, err := a.repository.GetRankingsForSpec(ctx, className, specName, encounterID)
+	if err != nil {
+		logger.Error("Failed to get stored rankings", "error", err)
+		return nil, err
+	}
+
+	logger.Info("Retrieved stored rankings", "count", len(rankings))
 	return rankings, nil
 }
