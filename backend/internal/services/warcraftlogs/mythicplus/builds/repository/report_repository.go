@@ -30,16 +30,17 @@ func NewReportRepository(db *gorm.DB) *ReportRepository {
 	}
 }
 
-// StoreReports saves multiple reports to the database in batches
-// It uses UPSERT to handle conflicts when a report already exists
+// StoreReports optimizes batch processing of reports
 func (r *ReportRepository) StoreReports(ctx context.Context, reports []*warcraftlogsBuilds.Report) error {
 	if len(reports) == 0 {
 		log.Printf("[DEBUG] No reports to store")
 		return nil
 	}
 
-	// Process reports in batches to avoid memory issues
-	const batchSize = 5
+	// Increased batch size for better performance
+	const batchSize = 20
+
+	// Process reports in larger batches
 	for i := 0; i < len(reports); i += batchSize {
 		end := i + batchSize
 		if end > len(reports) {
@@ -47,55 +48,56 @@ func (r *ReportRepository) StoreReports(ctx context.Context, reports []*warcraft
 		}
 
 		batch := reports[i:end]
-		if err := r.processBatch(ctx, batch); err != nil {
+		if err := r.processBatchBulk(ctx, batch); err != nil {
 			return fmt.Errorf("failed to process batch %d-%d: %w", i, end, err)
 		}
 
 		log.Printf("[DEBUG] Processed reports batch %d-%d of %d", i, end, len(reports))
 
-		// Small delay between batches to prevent database overload
-		time.Sleep(time.Millisecond * 100)
+		// Reduced delay between batches
+		time.Sleep(time.Millisecond * 50)
 	}
 
 	log.Printf("[INFO] Successfully processed all %d reports", len(reports))
 	return nil
 }
 
-// processBatch handles a single batch of reports within a transaction
-func (r *ReportRepository) processBatch(ctx context.Context, batch []*warcraftlogsBuilds.Report) error {
+// processBatchBulk handles bulk insertion of reports
+func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcraftlogsBuilds.Report) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		now := time.Now()
+
+		// Set timestamps for all reports in batch
 		for _, report := range batch {
-			// Set timestamps
-			now := time.Now()
 			report.CreatedAt = now
 			report.UpdatedAt = now
-
-			// Create or update the report using UPSERT
-			result := tx.Clauses(clause.OnConflict{
-				Columns: []clause.Column{
-					{Name: "code"},
-					{Name: "fight_id"},
-				},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"encounter_id",
-					"total_time",
-					"item_level",
-					"composition",
-					"player_details_dps",
-					"player_details_healers",
-					"player_details_tanks",
-					"talent_codes",
-					"keystonelevel",
-					"affixes",
-					"updated_at",
-				}),
-			}).Create(report)
-
-			if result.Error != nil {
-				return fmt.Errorf("failed to store report %s (FightID: %d): %w",
-					report.Code, report.FightID, result.Error)
-			}
 		}
+
+		// Bulk insert/update using a single query
+		result := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{
+				{Name: "code"},
+				{Name: "fight_id"},
+			},
+			DoUpdates: clause.AssignmentColumns([]string{
+				"encounter_id",
+				"total_time",
+				"item_level",
+				"composition",
+				"player_details_dps",
+				"player_details_healers",
+				"player_details_tanks",
+				"talent_codes",
+				"keystonelevel",
+				"affixes",
+				"updated_at",
+			}),
+		}).Create(&batch)
+
+		if result.Error != nil {
+			return fmt.Errorf("failed to bulk store reports: %w", result.Error)
+		}
+
 		return nil
 	})
 }
