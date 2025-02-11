@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -14,6 +15,19 @@ import (
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 )
+
+// reportWorkItem represents a single unit of work to be processed by workers
+type reportWorkItem struct {
+	ranking *warcraftlogsBuilds.ClassRanking
+	index   int // Preserve ordering for final results
+}
+
+// reportWorkResult represents the result of processing a single report
+type reportWorkResult struct {
+	report *warcraftlogsBuilds.Report
+	index  int // Original position in the rankings slice
+	err    error
+}
 
 // ReportsActivity handles all report-related operations
 type ReportsActivity struct {
@@ -85,31 +99,136 @@ func (a *ReportsActivity) ProcessReports(
 	return result, nil
 }
 
-// fetchReportsFromAPI fetches reports data from WarcraftLogs API
+// fetchReportsFromAPI fetches reports from the WarcraftLogs API in parallel
+// It processes multiple rankings simultaneously while maintaining order and handling rate limits
 func (a *ReportsActivity) fetchReportsFromAPI(
 	ctx context.Context,
 	rankings []*warcraftlogsBuilds.ClassRanking,
 ) ([]*warcraftlogsBuilds.Report, error) {
-	var reports []*warcraftlogsBuilds.Report
 	logger := activity.GetLogger(ctx)
 
-	for i, ranking := range rankings {
-		activity.RecordHeartbeat(ctx, fmt.Sprintf("Fetching report %d/%d", i+1, len(rankings)))
+	// Configuration constants for parallel processing
+	const (
+		maxWorkers = 2  // Maximum number of concurrent workers
+		batchSize  = 10 // Size of processing batches
+	)
 
-		report, err := a.getReportDetails(ctx, ranking)
-		if err != nil {
-			logger.Error("Failed to fetch report details",
-				"reportCode", ranking.ReportCode,
-				"error", err)
+	// Pre-allocate slice to maintain order of reports
+	// This allows us to preserve the relationship between rankings and reports
+	reports := make([]*warcraftlogsBuilds.Report, len(rankings))
+
+	// Channel setup for work distribution and result collection
+	// Buffered channels are used to optimize throughput
+	workChan := make(chan reportWorkItem, batchSize)     // Channel for distributing work
+	resultChan := make(chan reportWorkResult, batchSize) // Channel for collecting results
+	doneChan := make(chan struct{})                      // Channel to signal completion
+
+	// Start worker pool
+	// Each worker processes items from workChan independently
+	var wg sync.WaitGroup
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for work := range workChan {
+				// Check for context cancellation
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					// Record worker activity for monitoring
+					activity.RecordHeartbeat(ctx, map[string]interface{}{
+						"workerID":   workerID,
+						"reportCode": work.ranking.ReportCode,
+						"index":      work.index,
+						"status":     "processing",
+					})
+
+					// Process the report through the API
+					report, err := a.getReportDetails(ctx, work.ranking)
+
+					// Little delay to prevent 429 error
+					time.Sleep(time.Millisecond * 500)
+
+					// Send result back through result channel
+					resultChan <- reportWorkResult{
+						report: report,
+						index:  work.index,
+						err:    err,
+					}
+				}
+			}
+		}(i)
+	}
+
+	// Goroutine to close result channel when all workers are done
+	go func() {
+		wg.Wait()
+		close(resultChan)
+		close(doneChan)
+	}()
+
+	// Goroutine to distribute work to workers
+	// This runs independently of result collection to maintain steady worker utilization
+	go func() {
+		defer close(workChan)
+
+		for i, ranking := range rankings {
+			select {
+			case <-ctx.Done():
+				return
+			case workChan <- reportWorkItem{ranking: ranking, index: i}:
+				// Work successfully queued
+			}
+		}
+	}()
+
+	// Collect and process results as they come in
+	processedCount := 0
+	failureCount := 0
+
+	// Process results as they arrive from workers
+	for result := range resultChan {
+		if result.err != nil {
+			logger.Error("Failed to fetch report",
+				"index", result.index,
+				"error", result.err)
+			failureCount++
 			continue
 		}
 
+		if result.report != nil {
+			reports[result.index] = result.report
+			processedCount++
+		}
+
+		// Record progress for monitoring
+		activity.RecordHeartbeat(ctx, map[string]interface{}{
+			"processedCount": processedCount,
+			"failureCount":   failureCount,
+			"totalCount":     len(rankings),
+			"progress":       fmt.Sprintf("%d/%d", processedCount+failureCount, len(rankings)),
+		})
+	}
+
+	// Wait for all processing to complete
+	<-doneChan
+
+	// Clean up the results by removing any nil entries from failed processes
+	cleanReports := make([]*warcraftlogsBuilds.Report, 0, processedCount)
+	for _, report := range reports {
 		if report != nil {
-			reports = append(reports, report)
+			cleanReports = append(cleanReports, report)
 		}
 	}
 
-	return reports, nil
+	// Log final processing statistics
+	logger.Info("Completed fetching reports",
+		"processedCount", processedCount,
+		"failureCount", failureCount,
+		"totalRequested", len(rankings))
+
+	return cleanReports, nil
 }
 
 // getReportDetails fetches and processes report details from WarcraftLogs API

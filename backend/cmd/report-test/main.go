@@ -16,7 +16,6 @@ import (
 const (
 	defaultNamespace = "default"
 	defaultTaskQueue = "warcraft-logs-sync"
-	targetClass      = "Priest" // Starting with Priest only
 )
 
 func main() {
@@ -36,29 +35,35 @@ func main() {
 	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
 
 	// Load configuration using the new unified config
-	cfg, err := workflows.LoadConfig("configs/config_s1_tww.priest.yaml")
+	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load config: %v", err)
 	}
 
 	// Configure schedule
 	opts := scheduler.DefaultScheduleOptions()
-	if err := scheduleManager.CreateOrGetClassSchedule(context.Background(), targetClass, cfg, opts); err != nil {
-		log.Fatalf("[FATAL] Failed to manage schedule: %v", err)
-	}
 
-	logger.Printf("Successfully created schedule for class: %s", targetClass)
+	// Create a map to track unique classes
+	classMap := make(map[string]bool)
+	for _, spec := range cfg.Specs {
+		if !classMap[spec.ClassName] {
+			classMap[spec.ClassName] = true
+			// Create a schedule for each class
+			if err := scheduleManager.CreateOrGetClassSchedule(context.Background(), spec.ClassName, cfg, opts); err != nil {
+				log.Printf("[ERROR] Failed to manage schedule for class %s: %v", spec.ClassName, err)
+				continue
+			}
+			logger.Printf("Successfully created schedule for class: %s", spec.ClassName)
 
-	// Test immediate execution
-	logger.Printf("Triggering immediate execution for testing...")
-	if err := scheduleManager.TriggerSchedule(context.Background(), targetClass); err != nil {
-		logger.Printf("[ERROR] Failed to trigger schedule: %v", err)
-	} else {
-		logger.Printf("Successfully triggered schedule execution")
+			// Trigger immediate execution
+			if err := scheduleManager.TriggerSchedule(context.Background(), spec.ClassName); err != nil {
+				logger.Printf("[ERROR] Failed to trigger schedule for class %s: %v", spec.ClassName, err)
+			}
+		}
 	}
 
 	// Handle graceful shutdown
-	handleGracefulShutdown(scheduleManager, logger)
+	handleGracefulShutdown(scheduleManager, logger, classMap)
 }
 
 func initTemporalClient() (client.Client, error) {
@@ -73,7 +78,7 @@ func initTemporalClient() (client.Client, error) {
 	})
 }
 
-func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger) {
+func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger, classMap map[string]bool) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
@@ -82,8 +87,10 @@ func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *
 
 	// Cleanup before shutdown
 	ctx := context.Background()
-	if err := scheduleManager.DeleteSchedule(ctx, targetClass); err != nil {
-		logger.Printf("Error deleting schedule for class %s: %v", targetClass, err)
+	for className := range classMap {
+		if err := scheduleManager.DeleteSchedule(ctx, className); err != nil {
+			logger.Printf("Error deleting schedule for class %s: %v", className, err)
+		}
 	}
 
 	logger.Printf("Scheduler service shutdown complete")

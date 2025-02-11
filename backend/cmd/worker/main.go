@@ -63,7 +63,7 @@ func main() {
 	// Configure worker with optimized options
 	w := worker.New(temporalClient, defaultTaskQueue, worker.Options{
 		// Limit concurrent executions to match batch sizes
-		MaxConcurrentActivityExecutionSize:     5,
+		MaxConcurrentActivityExecutionSize:     3,
 		MaxConcurrentWorkflowTaskExecutionSize: 2,
 
 		// Rate limiting for better resource management
