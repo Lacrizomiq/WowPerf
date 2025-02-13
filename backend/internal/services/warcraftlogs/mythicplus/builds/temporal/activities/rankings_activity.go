@@ -9,12 +9,11 @@ import (
 	"wowperf/internal/services/warcraftlogs"
 	rankingsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 	warcraftlogsTypes "wowperf/internal/services/warcraftlogs/types"
 
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/temporal"
-
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 )
 
 type RankingsActivity struct {
@@ -31,6 +30,12 @@ func NewRankingsActivity(client *warcraftlogs.WarcraftLogsClientService, reposit
 
 func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.ClassSpec, dungeon workflows.Dungeon, batchConfig workflows.BatchConfig) (*workflows.BatchResult, error) {
 	logger := activity.GetLogger(ctx)
+
+	// Add validation for spec and dungeon
+	if spec.ClassName == "" || spec.SpecName == "" {
+		return nil, fmt.Errorf("invalid spec configuration: class=%s, spec=%s", spec.ClassName, spec.SpecName)
+	}
+
 	logger.Info("Starting rankings fetch activity",
 		"class", spec.ClassName,
 		"spec", spec.SpecName,
@@ -55,7 +60,9 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 	if len(rankings) > 0 {
 		logger.Info("Storing rankings",
 			"count", len(rankings),
+			"class", spec.ClassName,
 			"spec", spec.SpecName)
+
 		if err := a.repository.StoreRankings(ctx, dungeon.EncounterID, rankings); err != nil {
 			return nil, fmt.Errorf("failed to store rankings: %w", err)
 		}
@@ -64,6 +71,7 @@ func (a *RankingsActivity) FetchAndStore(ctx context.Context, spec workflows.Cla
 
 	activity.RecordHeartbeat(ctx, fmt.Sprintf("Processed %d rankings for %s %s",
 		len(rankings), spec.ClassName, spec.SpecName))
+
 	return result, nil
 }
 
@@ -79,14 +87,17 @@ func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec work
 		"page":        1,
 	}
 
-	logger.Debug("Making GraphQL request", "variables", variables)
+	logger.Debug("Making GraphQL request",
+		"class", spec.ClassName,
+		"spec", spec.SpecName,
+		"variables", variables)
 
 	response, err := a.client.MakeRequest(ctx, rankingsQueries.ClassRankingsQuery, variables)
 	if err != nil {
 		if wlErr, ok := err.(*warcraftlogsTypes.WarcraftLogsError); ok {
 			switch wlErr.Type {
 			case warcraftlogsTypes.ErrorTypeRateLimit, warcraftlogsTypes.ErrorTypeQuotaExceeded:
-				logger.Info("Rate limit reached, will retry",
+				logger.Info("Rate limit reached",
 					"resetIn", wlErr.RetryIn)
 				return nil, temporal.NewApplicationError(
 					fmt.Sprintf("Rate limit reached: %v", wlErr),
@@ -122,8 +133,10 @@ func (a *RankingsActivity) fetchRankingsWithRetry(ctx context.Context, spec work
 
 	rankings = append(rankings, fetchedRankings...)
 
-	// Log progress
+	// Log progress with class/spec info
 	logger.Info("Fetched rankings",
+		"class", spec.ClassName,
+		"spec", spec.SpecName,
 		"count", len(fetchedRankings),
 		"total", len(rankings))
 
@@ -138,12 +151,23 @@ func (a *RankingsActivity) GetStoredRankings(ctx context.Context, className, spe
 		"spec", specName,
 		"encounterID", encounterID)
 
+	if className == "" || specName == "" {
+		return nil, fmt.Errorf("invalid class/spec parameters: class=%s, spec=%s", className, specName)
+	}
+
 	rankings, err := a.repository.GetRankingsForSpec(ctx, className, specName, encounterID)
 	if err != nil {
-		logger.Error("Failed to get stored rankings", "error", err)
+		logger.Error("Failed to get stored rankings",
+			"class", className,
+			"spec", specName,
+			"error", err)
 		return nil, err
 	}
 
-	logger.Info("Retrieved stored rankings", "count", len(rankings))
+	logger.Info("Retrieved stored rankings",
+		"class", className,
+		"spec", specName,
+		"count", len(rankings))
+
 	return rankings, nil
 }

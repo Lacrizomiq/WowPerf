@@ -55,9 +55,16 @@ func main() {
 			}
 			logger.Printf("Successfully created schedule for class: %s", spec.ClassName)
 
-			// Trigger immediate execution
-			if err := scheduleManager.TriggerSchedule(context.Background(), spec.ClassName); err != nil {
-				logger.Printf("[ERROR] Failed to trigger schedule for class %s: %v", spec.ClassName, err)
+			// Only trigger the Tuesday 2 AM classes
+			tuesday2AMClasses := []string{"DeathKnight", "DemonHunter", "Druid", "Evoker"}
+			for _, c := range tuesday2AMClasses {
+				if spec.ClassName == c {
+					if err := scheduleManager.TriggerSchedule(context.Background(), spec.ClassName); err != nil {
+						logger.Printf("[ERROR] Failed to trigger schedule for class %s: %v", spec.ClassName, err)
+					} else {
+						logger.Printf("Triggered Tuesday 2 AM schedule for class: %s", spec.ClassName)
+					}
+				}
 			}
 		}
 	}

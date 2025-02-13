@@ -6,6 +6,19 @@ import (
 	"go.temporal.io/api/enums/v1"
 )
 
+// Class scheduling configuration
+// Hours are cumulative:
+// - Tuesday: 2 AM (2) and 7 AM (7)
+// - Wednesday: 2 AM (26) because it's 24 + 2
+var classScheduleTimes = map[int][]string{
+	// Tuesday (day 2)
+	2: {"DeathKnight", "DemonHunter", "Druid", "Evoker"},
+	7: {"Hunter", "Mage", "Monk", "Paladin"},
+
+	// Wednesday (day 3)
+	26: {"Priest", "Rogue", "Shaman", "Warrior", "Warlock"},
+}
+
 // SchedulePolicy defines the core scheduling behavior
 type SchedulePolicy struct {
 	CronExpression string // Cron expression for the schedule
@@ -40,7 +53,8 @@ type ScheduleOptions struct {
 func DefaultScheduleOptions() *ScheduleOptions {
 	return &ScheduleOptions{
 		Policy: SchedulePolicy{
-			CronExpression: "0 7 * * 2", // Tuesday 7am
+			// %d will be replaced with specific hour for each class
+			CronExpression: "0 %d * * 2,3", // Runs on Tuesday and Wednesday
 			TimeZone:       "Europe/Paris",
 			OverlapPolicy:  enums.SCHEDULE_OVERLAP_POLICY_SKIP,
 		},
@@ -52,9 +66,10 @@ func DefaultScheduleOptions() *ScheduleOptions {
 		},
 		Backfill: BackfillPolicy{
 			Enabled:        true,
-			BackfillWindow: 24 * time.Hour, // 1 day
+			BackfillWindow: 24 * time.Hour, // 1 day backfill window
 		},
-		Timeout: 45 * time.Minute,
+		// Increased timeout to allow for larger processing windows
+		Timeout: 3 * time.Hour,
 		Paused:  false,
 	}
 }

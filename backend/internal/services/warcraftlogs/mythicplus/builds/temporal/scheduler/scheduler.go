@@ -36,36 +36,42 @@ func (sm *ScheduleManager) CreateClassSchedule(
 	cfg *workflows.Config,
 	opts *ScheduleOptions,
 ) error {
-
 	sm.logger.Printf("Creating schedule for class: %s", className)
+
+	// Verify class is in valid time slot
+	if !isClassInValidTimeSlot(className) {
+		return fmt.Errorf("class %s not configured for any time slot", className)
+	}
+
+	scheduledHour := getScheduledHour(className)
+	scheduledDay := getScheduledDay(className)
 
 	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
 	workflowID := fmt.Sprintf("warcraft-logs-%s-workflow-%s",
 		className, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
 
-	// Prepare simplified workflow parameters
+	// Filter config for just this class
+	classConfig := filterConfigForClass(cfg, className)
+
 	workflowParams := workflows.WorkflowParams{
-		Config:     cfg,
+		Config:     classConfig,
 		WorkflowID: workflowID,
 	}
 
-	sm.logger.Printf("Creating schedule with params - ConfigSpecs: %d",
-		len(workflowParams.Config.Specs))
+	sm.logger.Printf("Creating schedule with params - ConfigSpecs: %d, Hour: %d, Day: %d",
+		len(workflowParams.Config.Specs), scheduledHour, scheduledDay)
 
-	// Create schedule options
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
 		Spec: client.ScheduleSpec{
-			CronExpressions: []string{opts.Policy.CronExpression},
-			// Add jitter pour éviter les démarrages simultanés
-			Jitter: time.Minute,
+			CronExpressions: []string{fmt.Sprintf("0 %d * * %d", scheduledHour, scheduledDay)},
+			Jitter:          time.Minute,
 		},
 		Action: &client.ScheduleWorkflowAction{
-			ID:        workflowID,
-			Workflow:  workflows.SyncWorkflow,
-			TaskQueue: "warcraft-logs-sync",
-			Args:      []interface{}{workflowParams},
-			// Timeouts adaptés par classe
+			ID:                  workflowID,
+			Workflow:            workflows.SyncWorkflow,
+			TaskQueue:           "warcraft-logs-sync",
+			Args:                []interface{}{workflowParams},
 			WorkflowRunTimeout:  opts.Timeout,
 			WorkflowTaskTimeout: time.Minute,
 			RetryPolicy: &temporal.RetryPolicy{
@@ -77,17 +83,88 @@ func (sm *ScheduleManager) CreateClassSchedule(
 		},
 	}
 
-	// Create the schedule
 	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
 	if err != nil {
 		return fmt.Errorf("failed to create schedule for %s: %w", className, err)
 	}
 
 	sm.schedules[className] = handle
-	sm.logger.Printf("Created schedule for class %s with ID %s", className, scheduleID)
+	sm.logger.Printf("Created schedule for class %s with ID %s at %d:00 AM on day %d",
+		className, scheduleID, scheduledHour, scheduledDay)
 
+	// Start monitoring this schedule
 	sm.monitorSchedule(ctx, handle, className)
 	return nil
+}
+
+// Helper functions for schedule timing
+func getScheduledHour(className string) int {
+	for hour, classes := range classScheduleTimes {
+		for _, c := range classes {
+			if c == className {
+				return hour % 24 // Convert to 24-hour format
+			}
+		}
+	}
+	return 2 // Default to 2 AM if not found
+}
+
+func getScheduledDay(className string) int {
+	for hour, classes := range classScheduleTimes {
+		for _, c := range classes {
+			if c == className {
+				return (hour / 24) + 2 // Convert to day (2 = Tuesday, 3 = Wednesday)
+			}
+		}
+	}
+	return 2 // Default to Tuesday if not found
+}
+
+// Helper function to validate class time slot
+func isClassInValidTimeSlot(className string) bool {
+	for _, classList := range classScheduleTimes {
+		for _, c := range classList {
+			if c == className {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Helper function to filter config for specific class
+func filterConfigForClass(cfg *workflows.Config, className string) *workflows.Config {
+	filteredConfig := *cfg // Make a copy
+	filteredConfig.Specs = workflows.FilterSpecsForClass(cfg.Specs, className)
+	return &filteredConfig
+}
+
+// CreateOrGetClassSchedule creates a new schedule if it doesn't exist, or returns existing one
+func (sm *ScheduleManager) CreateOrGetClassSchedule(ctx context.Context, className string, cfg *workflows.Config, opts *ScheduleOptions) error {
+	sm.logger.Printf("CreateOrGetClassSchedule called with className: %s", className)
+	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
+
+	listView, err := sm.client.ScheduleClient().List(ctx, client.ScheduleListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list schedules: %w", err)
+	}
+
+	for listView.HasNext() {
+		schedule, err := listView.Next()
+		if err != nil {
+			sm.logger.Printf("Error listing schedule: %v", err)
+			continue
+		}
+
+		if schedule.ID == scheduleID {
+			sm.logger.Printf("Schedule already exists for class %s", className)
+			handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
+			sm.schedules[className] = handle
+			return nil
+		}
+	}
+
+	return sm.CreateClassSchedule(ctx, className, cfg, opts)
 }
 
 // PauseSchedule pauses an existing schedule
@@ -136,31 +213,6 @@ func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, className string)
 	return nil
 }
 
-// BackfillSchedule triggers missed executions for a specific time range
-func (sm *ScheduleManager) BackfillSchedule(ctx context.Context, className string, start, end time.Time) error {
-	handle, exists := sm.schedules[className]
-	if !exists {
-		return fmt.Errorf("no schedule found for class %s", className)
-	}
-
-	err := handle.Backfill(ctx, client.ScheduleBackfillOptions{
-		Backfill: []client.ScheduleBackfill{
-			{
-				Start:   start,
-				End:     end,
-				Overlap: enums.SCHEDULE_OVERLAP_POLICY_ALLOW_ALL,
-			},
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to backfill schedule: %w", err)
-	}
-
-	sm.logger.Printf("Backfilled schedule for class %s from %v to %v",
-		className, start.Format(time.RFC3339), end.Format(time.RFC3339))
-	return nil
-}
-
 // TriggerSchedule triggers an immediate execution of the schedule
 func (sm *ScheduleManager) TriggerSchedule(ctx context.Context, className string) error {
 	handle, exists := sm.schedules[className]
@@ -198,37 +250,6 @@ func (sm *ScheduleManager) GetScheduleDescription(ctx context.Context, className
 	return handle.Describe(ctx)
 }
 
-// CreateOrGetClassSchedule creates a new schedule if it doesn't exist, or returns existing one
-func (sm *ScheduleManager) CreateOrGetClassSchedule(ctx context.Context, className string, cfg *workflows.Config, opts *ScheduleOptions) error {
-	sm.logger.Printf("CreateOrGetClassSchedule called with className: %s", className)
-	scheduleID := fmt.Sprintf("warcraft-logs-%s-schedule", className)
-
-	// Check if schedule already exists using Temporal's List method
-	listView, err := sm.client.ScheduleClient().List(ctx, client.ScheduleListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to list schedules: %w", err)
-	}
-
-	for listView.HasNext() {
-		schedule, err := listView.Next()
-		if err != nil {
-			sm.logger.Printf("Error listing schedule: %v", err)
-			continue
-		}
-
-		if schedule.ID == scheduleID {
-			sm.logger.Printf("Schedule already exists for class %s", className)
-			// Get the handle for the existing schedule
-			handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
-			sm.schedules[className] = handle
-			return nil
-		}
-	}
-
-	// If we get here, schedule doesn't exist, create it
-	return sm.CreateClassSchedule(ctx, className, cfg, opts)
-}
-
 // monitorSchedule monitors the schedule and logs basic information
 func (sm *ScheduleManager) monitorSchedule(ctx context.Context,
 	handle client.ScheduleHandle,
@@ -250,7 +271,6 @@ func (sm *ScheduleManager) monitorSchedule(ctx context.Context,
 					continue
 				}
 
-				// Log schedule info using available information
 				sm.logger.Printf("Schedule monitoring for class %s: Schedule ID: %s, State: %v, Last checked: %v",
 					className,
 					handle.GetID(),

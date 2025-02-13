@@ -47,9 +47,21 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting sync workflow", "workflowID", params.WorkflowID)
 
+	// Get the class name from workflow ID
+	className := getClassFromWorkflowID(params.WorkflowID)
+	if className == "" {
+		return nil, fmt.Errorf("invalid workflow ID format: %s", params.WorkflowID)
+	}
+
 	// Initialize or recover progress
 	progress := params.Progress
 	if progress == nil {
+		// Filter specs for just this class
+		classSpecs := FilterSpecsForClass(params.Config.Specs, className)
+		if len(classSpecs) == 0 {
+			return nil, fmt.Errorf("no specs found for class: %s", className)
+		}
+
 		progress = &WorkflowProgress{
 			CompletedSpecs:    make(map[string]bool),
 			CompletedDungeons: make(map[string]bool),
@@ -57,16 +69,18 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 				StartedAt: workflow.Now(ctx),
 			},
 			Stats: &ProgressStats{
-				TotalSpecs:    len(params.Config.Specs),
+				TotalSpecs:    len(classSpecs),
 				TotalDungeons: len(params.Config.Dungeons),
 				StartedAt:     workflow.Now(ctx),
 			},
 		}
 		logger.Info("Initialized new workflow progress",
+			"class", className,
 			"totalSpecs", progress.Stats.TotalSpecs,
 			"totalDungeons", progress.Stats.TotalDungeons)
 	} else {
 		logger.Info("Resuming workflow progress",
+			"class", className,
 			"completedSpecs", len(progress.CompletedSpecs),
 			"completedDungeons", len(progress.CompletedDungeons),
 			"processedSpecs", progress.Stats.ProcessedSpecs,
@@ -86,16 +100,18 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOpts)
 
+	// Get filtered specs for this class
+	classSpecs := FilterSpecsForClass(params.Config.Specs, className)
+
 	// Phase 1 & 2: Sequential API Processing for Rankings and Reports
 	logger.Info("Starting sequential API processing phase")
-	for i := progress.CurrentSpecIndex; i < len(params.Config.Specs); i++ {
-		spec := params.Config.Specs[i]
+	for i, spec := range classSpecs {
 		progress.Stats.CurrentSpec = &spec
 		progress.Stats.LastSpecUpdate = workflow.Now(ctx)
 
 		logger.Info("Processing spec",
 			"specIndex", i,
-			"totalSpecs", progress.Stats.TotalSpecs,
+			"totalSpecs", len(classSpecs),
 			"className", spec.ClassName,
 			"specName", spec.SpecName,
 			"processedSpecs", progress.Stats.ProcessedSpecs)
@@ -159,7 +175,7 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 			"className", spec.ClassName,
 			"specName", spec.SpecName,
 			"processedSpecs", progress.Stats.ProcessedSpecs,
-			"remainingSpecs", progress.Stats.TotalSpecs-progress.Stats.ProcessedSpecs)
+			"remainingSpecs", len(classSpecs)-progress.Stats.ProcessedSpecs)
 	}
 
 	// Phase 3: Parallel Processing of Builds
@@ -175,6 +191,7 @@ func SyncWorkflow(ctx workflow.Context, params WorkflowParams) (*WorkflowResult,
 	progress.PartialResults.CompletedAt = workflow.Now(ctx)
 
 	logger.Info("Workflow completed successfully",
+		"class", className,
 		"duration", progress.PartialResults.CompletedAt.Sub(progress.PartialResults.StartedAt),
 		"processedSpecs", progress.Stats.ProcessedSpecs,
 		"processedDungeons", progress.Stats.ProcessedDungeons,
@@ -357,16 +374,18 @@ func newWorkflowProgress(startTime time.Time) WorkflowProgress {
 
 // processSpecAndDungeon processes a single spec and dungeon combination
 // It handles only the API operations: Rankings -> Reports
-func processSpecAndDungeon(ctx workflow.Context,
-	spec ClassSpec,
-	dungeon Dungeon,
-	params WorkflowParams,
-	progress *WorkflowProgress) error {
-
+func processSpecAndDungeon(ctx workflow.Context, spec ClassSpec, dungeon Dungeon, params WorkflowParams, progress *WorkflowProgress) error {
 	logger := workflow.GetLogger(ctx)
 	startTime := workflow.Now(ctx)
 
+	// Validate spec matches workflow
+	expectedClass := getClassFromWorkflowID(params.WorkflowID)
+	if spec.ClassName != expectedClass {
+		return fmt.Errorf("spec class %s does not match workflow class %s", spec.ClassName, expectedClass)
+	}
+
 	logger.Info("Processing spec and dungeon",
+		"className", spec.ClassName,
 		"spec", spec.SpecName,
 		"dungeon", dungeon.Name,
 		"startTime", startTime)
@@ -433,15 +452,13 @@ func processSpecAndDungeon(ctx workflow.Context,
 	return nil
 }
 
-// estimateRequiredPoints estimates the number of points needed for a spec and dungeon
 func estimateRequiredPoints(spec ClassSpec, dungeon Dungeon) float64 {
 	basePoints := 1.0
 	reportsPoints := 2.0
-	estimatedReports := 20.0
+	estimatedReports := 20.0 // Average reports per spec/dungeon
 	totalPoints := basePoints + (reportsPoints * estimatedReports)
 
-	// Buffer increased to 20% for more safety
-	return totalPoints * 1.2
+	return totalPoints * 1.2 // 20% buffer
 }
 
 // Error implements the error interface
@@ -499,4 +516,25 @@ func checkPointsAndWait(ctx workflow.Context, state *ProcessState, params Workfl
 // generateDungeonKey generate a key for the completed dungeon so all spec can be processed
 func generateDungeonKey(spec ClassSpec, dungeon Dungeon) string {
 	return fmt.Sprintf("%s_%s_%d", spec.ClassName, spec.SpecName, dungeon.ID)
+}
+
+// Helper function to extract class name from workflow ID
+func getClassFromWorkflowID(workflowID string) string {
+	// Example workflowID: "warcraft-logs-Druid-workflow-2025-02-11T14:55:15Z"
+	parts := strings.Split(workflowID, "-")
+	if len(parts) >= 4 {
+		return parts[2]
+	}
+	return ""
+}
+
+// Helper function to filter specs for a specific class
+func FilterSpecsForClass(specs []ClassSpec, className string) []ClassSpec {
+	filtered := make([]ClassSpec, 0)
+	for _, spec := range specs {
+		if spec.ClassName == className {
+			filtered = append(filtered, spec)
+		}
+	}
+	return filtered
 }
