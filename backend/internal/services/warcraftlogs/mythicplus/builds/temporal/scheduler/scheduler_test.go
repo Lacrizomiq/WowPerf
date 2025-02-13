@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -128,5 +130,232 @@ func TestClassScheduleTimes(t *testing.T) {
 			assert.Equal(t, 1, classCount[class],
 				"Class %s appears in multiple time slots", class)
 		}
+	}
+}
+
+// TestScheduleIDValidation tests the schedule and workflow ID formats
+func TestScheduleIDValidation(t *testing.T) {
+	testCases := []struct {
+		name        string
+		className   string
+		validClass  bool
+		validTiming bool
+		description string
+	}{
+		{
+			name:        "Valid Priest Schedule",
+			className:   "Priest",
+			validClass:  true,
+			validTiming: true,
+			description: "Known class with valid schedule",
+		},
+		{
+			name:        "Valid DeathKnight Schedule",
+			className:   "DeathKnight",
+			validClass:  true,
+			validTiming: true,
+			description: "Known class with valid schedule",
+		},
+		{
+			name:        "Invalid Class Schedule",
+			className:   "InvalidClass",
+			validClass:  false,
+			validTiming: false,
+			description: "Unknown class should be invalid",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Testing case: %s - %s", tc.name, tc.description)
+
+			// Test if class is in valid time slot
+			isValid := isClassInValidTimeSlot(tc.className)
+			assert.Equal(t, tc.validClass, isValid,
+				"Class %s validity should be %v", tc.className, tc.validClass)
+
+			if tc.validClass {
+				// Get scheduled time
+				hour := getScheduledHour(tc.className)
+				day := getScheduledDay(tc.className)
+
+				assert.NotZero(t, hour, "Hour should not be zero for valid class")
+				assert.NotZero(t, day, "Day should not be zero for valid class")
+				t.Logf("Class %s scheduled for day %d at %d:00",
+					tc.className, day, hour)
+			}
+		})
+	}
+}
+
+// TestFilterConfigForClass tests the configuration filtering for specific classes
+func TestFilterConfigForClass(t *testing.T) {
+	baseConfig := &workflows.Config{
+		Specs: []workflows.ClassSpec{
+			{ClassName: "Priest", SpecName: "Shadow"},
+			{ClassName: "Priest", SpecName: "Holy"},
+			{ClassName: "Druid", SpecName: "Balance"},
+			{ClassName: "Mage", SpecName: "Frost"},
+		},
+		Rankings: workflows.RankingsConfig{
+			MaxRankingsPerSpec: 150,
+		},
+	}
+
+	testCases := []struct {
+		name             string
+		config           *workflows.Config
+		className        string
+		expectedSpecsLen int
+		description      string
+	}{
+		{
+			name:             "Filter Priest Specs",
+			config:           baseConfig,
+			className:        "Priest",
+			expectedSpecsLen: 2,
+			description:      "Should return only Priest specs",
+		},
+		{
+			name:             "Filter Druid Specs",
+			config:           baseConfig,
+			className:        "Druid",
+			expectedSpecsLen: 1,
+			description:      "Should return only Druid spec",
+		},
+		{
+			name:             "Non-existent Class",
+			config:           baseConfig,
+			className:        "Warlock",
+			expectedSpecsLen: 0,
+			description:      "Should return empty spec list",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Testing case: %s - %s", tc.name, tc.description)
+
+			filtered := filterConfigForClass(tc.config, tc.className)
+			assert.Equal(t, tc.expectedSpecsLen, len(filtered.Specs),
+				"Expected %d specs for class %s, got %d",
+				tc.expectedSpecsLen, tc.className, len(filtered.Specs))
+
+			// Verify all specs belong to the correct class
+			for _, spec := range filtered.Specs {
+				assert.Equal(t, tc.className, spec.ClassName,
+					"Spec %s should belong to class %s",
+					spec.SpecName, tc.className)
+			}
+		})
+	}
+}
+
+// TestScheduleValidation tests the schedule validation logic
+func TestScheduleValidation(t *testing.T) {
+	testCases := []struct {
+		name          string
+		className     string
+		expectedHour  int
+		expectedDay   int
+		shouldBeValid bool
+		description   string
+	}{
+		{
+			name:          "Valid Tuesday Early Schedule",
+			className:     "DeathKnight",
+			expectedHour:  2,
+			expectedDay:   2,
+			shouldBeValid: true,
+			description:   "DeathKnight should be scheduled for Tuesday 2 AM",
+		},
+		{
+			name:          "Valid Tuesday Late Schedule",
+			className:     "Hunter",
+			expectedHour:  7,
+			expectedDay:   2,
+			shouldBeValid: true,
+			description:   "Hunter should be scheduled for Tuesday 7 AM",
+		},
+		{
+			name:          "Valid Wednesday Schedule",
+			className:     "Priest",
+			expectedHour:  2,
+			expectedDay:   3,
+			shouldBeValid: true,
+			description:   "Priest should be scheduled for Wednesday 2 AM",
+		},
+		{
+			name:          "Invalid Class",
+			className:     "InvalidClass",
+			expectedHour:  0,
+			expectedDay:   0,
+			shouldBeValid: false,
+			description:   "Invalid class should not have a valid schedule",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Testing case: %s - %s", tc.name, tc.description)
+
+			// Verify class validity
+			isValid := isClassInValidTimeSlot(tc.className)
+			assert.Equal(t, tc.shouldBeValid, isValid,
+				"Class %s validity should be %v", tc.className, tc.shouldBeValid)
+
+			if tc.shouldBeValid {
+				// Verify scheduled time
+				hour := getScheduledHour(tc.className)
+				day := getScheduledDay(tc.className)
+
+				assert.Equal(t, tc.expectedHour, hour,
+					"Expected hour %d for class %s", tc.expectedHour, tc.className)
+				assert.Equal(t, tc.expectedDay, day,
+					"Expected day %d for class %s", tc.expectedDay, tc.className)
+			}
+		})
+	}
+}
+
+// TestCronExpressionGeneration tests the generation of cron expressions
+func TestCronExpressionGeneration(t *testing.T) {
+	testCases := []struct {
+		name             string
+		className        string
+		expectedCronExpr string
+		description      string
+	}{
+		{
+			name:             "DeathKnight Cron",
+			className:        "DeathKnight",
+			expectedCronExpr: "0 2 * * 2",
+			description:      "Tuesday 2 AM schedule",
+		},
+		{
+			name:             "Hunter Cron",
+			className:        "Hunter",
+			expectedCronExpr: "0 7 * * 2",
+			description:      "Tuesday 7 AM schedule",
+		},
+		{
+			name:             "Priest Cron",
+			className:        "Priest",
+			expectedCronExpr: "0 2 * * 3",
+			description:      "Wednesday 2 AM schedule",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Testing case: %s - %s", tc.name, tc.description)
+
+			hour := getScheduledHour(tc.className)
+			cronExpr := fmt.Sprintf("0 %d * * %d", hour, getScheduledDay(tc.className))
+
+			assert.Equal(t, tc.expectedCronExpr, cronExpr,
+				"Expected cron expression %s for class %s",
+				tc.expectedCronExpr, tc.className)
+		})
 	}
 }
