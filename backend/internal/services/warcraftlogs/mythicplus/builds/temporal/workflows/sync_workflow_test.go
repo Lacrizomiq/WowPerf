@@ -298,7 +298,6 @@ func TestWorkflowErrorRecovery(t *testing.T) {
 				},
 				simulatedError: &QuotaExceededError{
 					Message: "Rate limit exceeded",
-					ResetIn: 15 * time.Minute,
 				},
 				shouldRecover: true,
 				description:   "Should maintain progress after rate limit error",
@@ -377,14 +376,11 @@ func TestWorkflowStateTransitions(t *testing.T) {
 						ClassName: "Priest",
 						SpecName:  "Shadow",
 					},
-					RemainingPoints: 100,
-					ProcessedCount:  0,
-					RetryCount:      0,
+					ProcessedCount: 0,
 				},
 				action: "process_spec",
 				expectedState: ProcessState{
-					RemainingPoints: 97, // After consuming points
-					ProcessedCount:  1,
+					ProcessedCount: 1,
 				},
 				description: "Should progress normally and consume points",
 			},
@@ -395,14 +391,8 @@ func TestWorkflowStateTransitions(t *testing.T) {
 						ClassName: "Priest",
 						SpecName:  "Holy",
 					},
-					RemainingPoints: 50,
-					RetryCount:      1,
 				},
-				action: "retry",
-				expectedState: ProcessState{
-					RemainingPoints: 50, // Points unchanged during retry
-					RetryCount:      2,
-				},
+				action:      "retry",
 				description: "Should handle retry properly",
 			},
 		}
@@ -411,28 +401,20 @@ func TestWorkflowStateTransitions(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				t.Logf("Testing case: %s - %s", tc.name, tc.description)
 				t.Logf("Initial state: Points=%v, Processed=%v, Retries=%v",
-					tc.initialState.RemainingPoints,
-					tc.initialState.ProcessedCount,
-					tc.initialState.RetryCount)
+
+					tc.initialState.ProcessedCount)
 
 				// Simulate state transition
 				state := tc.initialState
 				switch tc.action {
 				case "process_spec":
-					state.RemainingPoints -= 3 // Simulate point consumption
 					state.ProcessedCount++
-				case "retry":
-					state.RetryCount++
+
 				}
 
 				t.Logf("Final state: Points=%v, Processed=%v, Retries=%v",
-					state.RemainingPoints,
-					state.ProcessedCount,
-					state.RetryCount)
+					state.ProcessedCount)
 
-				// Verify state transition
-				assert.Equal(t, tc.expectedState.RemainingPoints, state.RemainingPoints)
-				assert.Equal(t, tc.expectedState.RetryCount, state.RetryCount)
 			})
 		}
 	})

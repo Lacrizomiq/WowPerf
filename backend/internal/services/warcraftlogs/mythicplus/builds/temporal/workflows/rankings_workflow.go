@@ -126,7 +126,6 @@ type ProgressStats struct {
 // QuotaExceededError is an error type for quota exceeded errors
 type QuotaExceededError struct {
 	Message string
-	ResetIn time.Duration
 }
 
 // LoadConfig loads configuration from file or returns default values

@@ -13,12 +13,9 @@ import (
 
 // ProcessState tracks the detailed progress of spec and dungeon processing
 type ProcessState struct {
-	CurrentSpec     ClassSpec
-	CurrentDungeon  Dungeon
-	RemainingPoints float64
-	LastCheckTime   time.Time
-	RetryCount      int
-	ProcessedCount  int
+	CurrentSpec    ClassSpec
+	CurrentDungeon Dungeon
+	ProcessedCount int
 }
 
 // RebuildResult represents the result of rebuilding player builds from existing reports
@@ -481,36 +478,6 @@ func countPointsUsed(rankings []*warcraftlogsBuilds.ClassRanking) int {
 	}
 	// Base cost + (2 points per ranking for report processing)
 	return 1 + (len(rankings) * 2)
-}
-
-// checkPointsAndWait checks if sufficient points are available and waits if needed
-func checkPointsAndWait(ctx workflow.Context, state *ProcessState, params WorkflowParams) error {
-	logger := workflow.GetLogger(ctx)
-
-	// Check points if enough time has passed or we're running low
-	if time.Since(state.LastCheckTime) > time.Minute*5 || state.RemainingPoints < 5.0 {
-		if err := workflow.ExecuteActivity(ctx, CheckRemainingPointsActivity, params).Get(ctx, &state.RemainingPoints); err != nil {
-			logger.Error("Failed to check remaining points", "error", err)
-			return err
-		}
-		state.LastCheckTime = workflow.Now(ctx)
-
-		if state.RemainingPoints < 1.0 {
-			logger.Info("Insufficient points available",
-				"remainingPoints", state.RemainingPoints,
-				"resetIn", time.Minute*15)
-			return &QuotaExceededError{
-				Message: "Insufficient points available",
-				ResetIn: time.Minute * 15,
-			}
-		}
-
-		logger.Info("Points check completed",
-			"remainingPoints", state.RemainingPoints,
-			"lastCheckTime", state.LastCheckTime)
-	}
-
-	return nil
 }
 
 // generateDungeonKey generate a key for the completed dungeon so all spec can be processed
