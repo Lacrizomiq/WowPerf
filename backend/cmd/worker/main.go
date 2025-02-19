@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 	"wowperf/internal/database"
@@ -13,147 +15,175 @@ import (
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
+	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	"gorm.io/gorm"
 )
 
 const (
 	defaultNamespace = "default"
-	defaultTaskQueue = "warcraft-logs-sync"
 )
 
+// WorkerManager handles multiple workers for different task queues
+type WorkerManager struct {
+	workers map[string]worker.Worker
+	logger  *log.Logger
+}
+
 func main() {
-	log.Printf("[INFO] Starting Temporal worker")
+	logger := log.New(os.Stdout, "[WORKER] ", log.LstdFlags)
+	logger.Printf("Starting Temporal workers")
 
-	// Get Temporal address from environment or use default
-	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
-	if temporalAddress == "" {
-		temporalAddress = "localhost:7233"
-	}
-
-	// Initialize Temporal client
-	temporalClient, err := client.Dial(client.Options{
-		HostPort:  temporalAddress,
-		Namespace: defaultNamespace,
-	})
+	// Initialize all required services
+	temporalClient, db, warcraftLogsClient, err := initializeServices()
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
+		logger.Fatalf("Failed to initialize services: %v", err)
 	}
 	defer temporalClient.Close()
-
-	// Initialize database connection
-	db, err := database.InitDB()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize database: %v", err)
-	}
-
-	// Initialize WarcraftLogs client service
-	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize WarcraftLogs client: %v", err)
-	}
 
 	// Initialize repositories
 	reportsRepo := reportsRepository.NewReportRepository(db)
 	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
 
-	// Configure worker with optimized options
-	w := worker.New(temporalClient, defaultTaskQueue, worker.Options{
-		// Limit concurrent executions to match batch sizes
-		MaxConcurrentActivityExecutionSize:     3,
-		MaxConcurrentWorkflowTaskExecutionSize: 2,
+	// Initialize activities service
+	activitiesService := initializeActivities(warcraftLogsClient, reportsRepo, rankingsRepo, playerBuildsRepo)
 
-		// Rate limiting for better resource management
-		WorkerActivitiesPerSecond: 5,
+	// Create worker manager
+	workerMgr := &WorkerManager{
+		workers: make(map[string]worker.Worker),
+		logger:  logger,
+	}
 
-		// Optimize task polling
-		MaxConcurrentActivityTaskPollers: 2,
-		MaxConcurrentWorkflowTaskPollers: 2,
+	// Create a worker for each time slot
+	for _, slot := range scheduler.ScheduleSlots {
+		w := worker.New(temporalClient, slot.TaskQueue, worker.Options{
+			MaxConcurrentActivityExecutionSize:     1,
+			MaxConcurrentWorkflowTaskExecutionSize: 2,
+			WorkerActivitiesPerSecond:              2,
+			MaxConcurrentActivityTaskPollers:       1,
+			MaxConcurrentWorkflowTaskPollers:       2,
+			EnableSessionWorker:                    true,
+		})
 
-		// Enable sessions for better resource management
-		EnableSessionWorker: true,
+		registerWorkflowsAndActivities(w, activitiesService)
+
+		workerMgr.workers[slot.TaskQueue] = w
+		logger.Printf("Created worker for task queue: %s (Classes: %v)", slot.TaskQueue, slot.Classes)
+	}
+
+	// Start all workers
+	var wg sync.WaitGroup
+	workerErrorChan := make(chan error, len(workerMgr.workers))
+	interruptChan := make(chan interface{})
+
+	for taskQueue, w := range workerMgr.workers {
+		wg.Add(1)
+		go func(tq string, worker worker.Worker) {
+			defer wg.Done()
+			logger.Printf("Starting worker for task queue: %s", tq)
+			if err := worker.Run(interruptChan); err != nil {
+				logger.Printf("Worker error in task queue %s: %v", tq, err)
+				workerErrorChan <- err
+			}
+		}(taskQueue, w)
+	}
+
+	// Handle graceful shutdown
+	handleGracefulShutdown(workerMgr, &wg, workerErrorChan, logger)
+}
+
+func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, error) {
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
+	}
+
+	temporalClient, err := client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: defaultNamespace,
 	})
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
+	}
 
-	// Initialize activities
-	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
-	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
-	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
-	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
-	activitiesService := activities.NewActivities(
-		rankingsActivity,
-		reportsActivity,
-		playerBuildsActivity,
-		rateLimitActivity,
+	db, err := database.InitDB()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
+	}
+
+	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
+	}
+
+	return temporalClient, db, warcraftLogsClient, nil
+}
+
+func initializeActivities(
+	warcraftLogsClient *warcraftlogs.WarcraftLogsClientService,
+	reportsRepo *reportsRepository.ReportRepository,
+	rankingsRepo *rankingsRepository.RankingsRepository,
+	playerBuildsRepo *playerBuildsRepository.PlayerBuildsRepository,
+) *activities.Activities {
+	return activities.NewActivities(
+		activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo),
+		activities.NewReportsActivity(warcraftLogsClient, reportsRepo),
+		activities.NewPlayerBuildsActivity(playerBuildsRepo),
+		activities.NewRateLimitActivity(warcraftLogsClient),
 	)
+}
 
+func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
 	// Register workflows
 	w.RegisterWorkflow(workflows.SyncWorkflow)
 	w.RegisterWorkflow(workflows.ProcessBuildBatch)
 
-	// Register activities using our harmonized activity names
+	// Register activities
+	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
+	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
+	w.RegisterActivity(activitiesService.Reports.ProcessReports)
+	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
+	w.RegisterActivity(activitiesService.Reports.CountAllReports)
+	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
+	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
+	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
+	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+}
 
-	// Rankings activities
-	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)     // FetchRankingsActivity
-	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings) // GetStoredRankingsActivity
+func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Reports activities
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)  // ProcessReportsActivity
-	w.RegisterActivity(activitiesService.Reports.GetReportsBatch) // GetReportsBatchActivity
-	w.RegisterActivity(activitiesService.Reports.CountAllReports) // CountAllReportsActivity
+	select {
+	case <-sigChan:
+		logger.Printf("Shutdown signal received, stopping workers...")
+	case err := <-errorChan:
+		logger.Printf("Worker error detected, initiating shutdown: %v", err)
+	}
 
-	// Player builds activities
-	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)  // ProcessBuildsActivity
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds) // CountPlayerBuildsActivity
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
 
-	// Rate limit activities
-	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)        // ReserveRateLimitPointsActivity
-	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)        // ReleaseRateLimitPointsActivity
-	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints) // CheckRemainingPointsActivity
+	for taskQueue, w := range mgr.workers {
+		logger.Printf("Stopping worker for task queue: %s", taskQueue)
+		w.Stop()
+	}
 
-	log.Printf("[INFO] Starting worker, waiting for workflows...")
-
-	// Setup signal handling for graceful shutdown
-	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
-
-	// Start worker in a goroutine with enhanced error handling
-	workerErrorChan := make(chan error, 1)
+	done := make(chan struct{})
 	go func() {
-		err := w.Run(worker.InterruptCh())
-		if err != nil {
-			log.Printf("[ERROR] Worker stopped with error: %v", err)
-			workerErrorChan <- err
-			interruptChan <- os.Interrupt // Signal main routine to exit
-		}
+		wg.Wait()
+		close(done)
 	}()
 
-	// Implement graceful shutdown
 	select {
-	case <-interruptChan:
-		log.Printf("[INFO] Shutdown signal received, initiating graceful shutdown...")
-
-		// Create context with timeout for graceful shutdown
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Minute*5)
-		defer shutdownCancel()
-
-		// Stop the worker with timeout
-		done := make(chan struct{})
-		go func() {
-			w.Stop()
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			log.Printf("[INFO] Worker stopped gracefully")
-		case <-shutdownCtx.Done():
-			log.Printf("[WARN] Worker stop timeout exceeded, forcing shutdown")
-		}
-
-	case err := <-workerErrorChan:
-		log.Printf("[ERROR] Worker encountered an error, shutting down: %v", err)
+	case <-done:
+		logger.Printf("All workers stopped gracefully")
+	case <-ctx.Done():
+		logger.Printf("Shutdown timeout exceeded, some workers may not have stopped cleanly")
 	}
 }

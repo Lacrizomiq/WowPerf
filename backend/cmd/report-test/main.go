@@ -34,6 +34,13 @@ func main() {
 	// Initialize schedule manager
 	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
 
+	// Todo : Delete this when the live testing is a success
+	// Enable test mode for immediate execution
+	scheduleManager.EnableTestMode(scheduler.TestMode{
+		ImmediateMode: true,
+		ValidateMode:  false,
+	})
+
 	// Load configuration using the new unified config
 	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
 	if err != nil {
@@ -54,19 +61,17 @@ func main() {
 				continue
 			}
 			logger.Printf("Successfully created schedule for class: %s", spec.ClassName)
-
-			// Only trigger the Tuesday 2 AM classes
-			tuesday2AMClasses := []string{"DeathKnight", "DemonHunter", "Druid", "Evoker"}
-			for _, c := range tuesday2AMClasses {
-				if spec.ClassName == c {
-					if err := scheduleManager.TriggerSchedule(context.Background(), spec.ClassName); err != nil {
-						logger.Printf("[ERROR] Failed to trigger schedule for class %s: %v", spec.ClassName, err)
-					} else {
-						logger.Printf("Triggered Tuesday 2 AM schedule for class: %s", spec.ClassName)
-					}
-				}
-			}
 		}
+	}
+
+	// Todo : Delete this when the live testing is a success
+	// Run test mode to trigger Tuesday 2AM classes
+	if err := scheduleManager.RunTestMode(context.Background(), scheduler.TestMode{
+		ImmediateMode: true,
+	}); err != nil {
+		logger.Printf("[ERROR] Test mode execution failed: %v", err)
+	} else {
+		logger.Printf("[INFO] Successfully triggered Tuesday 2AM classes in test mode")
 	}
 
 	// Handle graceful shutdown

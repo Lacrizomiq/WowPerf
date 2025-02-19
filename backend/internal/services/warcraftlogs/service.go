@@ -50,16 +50,33 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 		return nil, err
 	}
 
-	service := &WarcraftLogsClientService{
-		Client: client,
-		rateLimiter: &RateLimiter{
-			lastCheck: time.Now(),
-		},
+	rateLimiter := &RateLimiter{
+		maxPoints: 18000, // Valeur conservative
+		lastCheck: time.Now(),
+		resetTime: time.Now().Add(time.Hour),
 	}
 
-	// Initialize rate limiter with API state
-	if err := service.initializeRateLimiter(); err != nil {
-		return nil, fmt.Errorf("failed to initialize rate limiter: %w", err)
+	service := &WarcraftLogsClientService{
+		Client:      client,
+		rateLimiter: rateLimiter,
+	}
+
+	// Make up to 3 rate limit init
+	var initError error
+	for i := 0; i < 3; i++ {
+		if err := service.initializeRateLimiter(); err != nil {
+			initError = err
+			log.Printf("[WARN] Rate limit initialization attempt %d failed: %v", i+1, err)
+			time.Sleep(time.Second * 2)
+			continue
+		}
+		initError = nil
+		break
+	}
+
+	// even if it fails, return the service, it will use default value
+	if initError != nil {
+		log.Printf("[WARN] Using conservative default values due to initialization failure: %v", initError)
 	}
 
 	return service, nil
@@ -116,9 +133,7 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 	}
 
 	var result struct {
-		Data struct {
-			RateLimitData RateLimitData `json:"rateLimitData"`
-		} `json:"data"`
+		RateLimitData RateLimitData `json:"rateLimitData"`
 	}
 
 	if err := json.Unmarshal(rateLimitResponse, &result); err != nil {
@@ -126,7 +141,7 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 	}
 
 	// Update rate limiter with latest data
-	data := result.Data.RateLimitData
+	data := result.RateLimitData
 	s.rateLimiter.initialize(
 		data.LimitPerHour,
 		data.PointsSpentThisHour,
@@ -157,11 +172,18 @@ func (r *RateLimiter) initialize(limitPerHour, pointsSpent float64, resetIn int)
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	r.maxPoints = limitPerHour
-	r.usedPoints = pointsSpent
+	r.maxPoints = limitPerHour // 18000
+	r.usedPoints = pointsSpent // 326
 	r.resetTime = now.Add(time.Duration(resetIn) * time.Second)
 	r.lastCheck = now
 	r.initialized = true
+
+	// Log après mise à jour pour vérification
+	log.Printf("[DEBUG] Rate limiter - Max: %.2f, Used: %.2f, Remaining: %.2f, Reset in: %v",
+		r.maxPoints,
+		r.usedPoints,
+		r.maxPoints-r.usedPoints,
+		time.Until(r.resetTime))
 }
 
 // GetRateLimitInfo returns current rate limit information for monitoring
@@ -172,6 +194,10 @@ func (r *RateLimiter) GetRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
 	remaining := r.maxPoints - r.usedPoints
 	if remaining < 0 {
 		remaining = 0
+	}
+
+	if time.Now().After(r.resetTime) {
+		remaining = r.maxPoints
 	}
 
 	return &warcraftlogsTypes.RateLimitInfo{
