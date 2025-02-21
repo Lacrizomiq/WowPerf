@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
 	"go.temporal.io/sdk/workflow"
 
@@ -159,4 +160,82 @@ func ProcessRankingsWorkflow(ctx workflow.Context, spec models.ClassSpec, dungeo
 // TestUnitTestSuite runs the test suite
 func TestUnitTestSuite(t *testing.T) {
 	suite.Run(t, new(UnitTestSuite))
+}
+
+// Test_ProcessRankings_ActivityTimeout verifies proper handling of activity timeouts
+func (s *UnitTestSuite) Test_ProcessRankings_ActivityTimeout() {
+	s.T().Log("Testing activity timeout handling")
+
+	spec := models.ClassSpec{
+		ClassName: "Priest",
+		SpecName:  "Shadow",
+	}
+	dungeon := models.Dungeon{
+		ID:   1,
+		Name: "Test Dungeon",
+	}
+	batchConfig := models.BatchConfig{
+		Size:        100,
+		RetryDelay:  time.Millisecond,
+		MaxAttempts: 1,
+	}
+
+	// Register activity with timeout error
+	s.env.RegisterActivityWithOptions(
+		func(ctx context.Context, s models.ClassSpec, d models.Dungeon, b models.BatchConfig) (*models.BatchResult, error) {
+			return nil, &common.WorkflowError{
+				Type:      common.ErrorTypeTimeout,
+				Message:   "activity execution timeout",
+				Retryable: true,
+			}
+		},
+		activity.RegisterOptions{Name: definitions.FetchRankingsActivity},
+	)
+
+	// Execute workflow
+	s.env.ExecuteWorkflow(ProcessRankingsWorkflow, spec, dungeon, batchConfig)
+
+	// Verify error
+	s.True(s.env.IsWorkflowCompleted())
+	err := s.env.GetWorkflowError()
+	s.Error(err)
+	s.Contains(err.Error(), "timeout")
+
+	s.T().Log("Successfully handled activity timeout")
+}
+
+// Test_ProcessRankings_BatchSizeValidation verifies batch size validation
+func (s *UnitTestSuite) Test_ProcessRankings_BatchSizeValidation() {
+	s.T().Log("Testing batch size validation")
+
+	// Test data setup
+	spec := models.ClassSpec{
+		ClassName: "Priest",
+		SpecName:  "Shadow",
+	}
+	dungeon := models.Dungeon{
+		ID:   1,
+		Name: "Test Dungeon",
+	}
+	batchConfig := models.BatchConfig{
+		Size:        1000,
+		RetryDelay:  time.Second,
+		MaxAttempts: 1,
+	}
+
+	// Register activity with validation error
+	s.env.RegisterActivityWithOptions(
+		func(ctx context.Context, s models.ClassSpec, d models.Dungeon, b models.BatchConfig) (*models.BatchResult, error) {
+			return nil, temporal.NewApplicationError("batch size exceeds maximum", "BATCH_SIZE_ERROR")
+		},
+		activity.RegisterOptions{Name: definitions.FetchRankingsActivity},
+	)
+
+	// Execute and verify
+	s.env.ExecuteWorkflow(ProcessRankingsWorkflow, spec, dungeon, batchConfig)
+
+	s.True(s.env.IsWorkflowCompleted())
+	err := s.env.GetWorkflowError()
+	s.Error(err)
+	s.Contains(err.Error(), "batch size exceeds maximum")
 }

@@ -2,11 +2,11 @@ package warcraftlogsBuildsTemporalWorkflowsRankings
 
 import (
 	"context"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
 	"go.temporal.io/sdk/workflow"
 
@@ -176,7 +176,91 @@ func WorkflowProcessRankings(ctx workflow.Context, spec models.ClassSpec, dungeo
 
 // TestWorkflowTestSuite is the entry point for running the workflow test suite.
 // It uses testify’s suite.Run to execute all workflow-specific test cases.
-func TestWorkflowTestSuite(t *testing.T) {
-	// Run the test suite with a new instance of WorkflowTestSuite.
-	suite.Run(t, new(WorkflowTestSuite))
+func (s *WorkflowTestSuite) Test_Workflow_ProcessRankings_CancellationHandling() {
+	s.T().Log("Testing workflow cancellation handling")
+
+	spec := models.ClassSpec{
+		ClassName: "Priest",
+		SpecName:  "Shadow",
+	}
+	dungeon := models.Dungeon{
+		ID:   1,
+		Name: "Test Dungeon",
+	}
+	batchConfig := models.BatchConfig{
+		Size: 100,
+	}
+
+	// Simulate long-running activity
+	s.env.RegisterActivityWithOptions(
+		func(ctx context.Context, s models.ClassSpec, d models.Dungeon, b models.BatchConfig) (*models.BatchResult, error) {
+			// Simulate work
+			time.Sleep(time.Millisecond * 100)
+			return &models.BatchResult{ProcessedItems: 1}, nil
+		},
+		activity.RegisterOptions{
+			Name: definitions.FetchRankingsActivity,
+		},
+	)
+
+	// Start workflow then cancel it with a delay
+	s.env.RegisterDelayedCallback(func() {
+		s.env.CancelWorkflow()
+	}, time.Millisecond*50)
+
+	// Execute workflow
+	s.env.ExecuteWorkflow(WorkflowProcessRankings, spec, dungeon, batchConfig)
+
+	// Verify cancellation
+	s.True(s.env.IsWorkflowCompleted())
+	err := s.env.GetWorkflowError()
+	s.Error(err)
+	s.True(temporal.IsCanceledError(err), "Expected workflow to be canceled")
+
+	s.T().Log("Successfully handled workflow cancellation")
+}
+
+// Test_Workflow_ProcessRankings_ErrorRecovery verifies workflow can recover from temporary failures
+func (s *WorkflowTestSuite) Test_Workflow_ProcessRankings_ErrorRecovery() {
+	s.T().Log("Testing error recovery handling")
+
+	// Test data setup
+	spec := models.ClassSpec{
+		ClassName: "Priest",
+		SpecName:  "Shadow",
+	}
+	dungeon := models.Dungeon{
+		ID:   1,
+		Name: "Test Dungeon",
+	}
+	batchConfig := models.BatchConfig{
+		Size:        100,
+		RetryDelay:  time.Millisecond,
+		MaxAttempts: 3,
+	}
+
+	// Mock activity with retry behavior
+	callCount := 0
+	s.env.RegisterActivityWithOptions(
+		func(ctx context.Context, s models.ClassSpec, d models.Dungeon, b models.BatchConfig) (*models.BatchResult, error) {
+			callCount++
+			if callCount == 1 {
+				return nil, temporal.NewApplicationError("temporary error", "TEST_ERROR")
+			}
+			return &models.BatchResult{ProcessedItems: 42}, nil
+		},
+		activity.RegisterOptions{Name: definitions.FetchRankingsActivity},
+	)
+
+	// Execute workflow
+	var result models.BatchResult
+	s.env.ExecuteWorkflow(WorkflowProcessRankings, spec, dungeon, batchConfig)
+
+	// Verify recovery
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowResult(&result))
+	s.Equal(int32(42), result.ProcessedItems)
+	s.Equal(2, callCount)
+
+	s.T().Log("Successfully recovered from temporary error")
 }

@@ -14,6 +14,7 @@ const (
 	ErrorTypeConfiguration ErrorType = "configuration"
 	ErrorTypeAPI           ErrorType = "api"
 	ErrorTypeDatabase      ErrorType = "database"
+	ErrorTypeTimeout       ErrorType = "timeout"
 )
 
 // WorkflowError represents a custom error with additional context
