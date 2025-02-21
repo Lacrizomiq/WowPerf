@@ -10,7 +10,7 @@ import (
 	state "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/state"
 )
 
-// ReportsWorkflow implements the definitions.ReportsWorkflow interface
+// ReportsWorkflow implements the definitions.ProcessBuildBatchWorkflow interface
 type ReportsWorkflow struct {
 	stateManager *state.Manager
 	processor    *Processor
@@ -35,6 +35,18 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.WorkflowCo
 	}
 
 	state := w.stateManager.GetState()
+	if state.CurrentSpec == nil || state.CurrentDungeon == nil {
+		return nil, &common.WorkflowError{
+			Type:      common.ErrorTypeConfiguration,
+			Message:   "current spec and dungeon must be set before processing reports",
+			Retryable: false,
+		}
+	}
+
+	logger.Info("Processing reports for spec and dungeon",
+		"class", state.CurrentSpec.ClassName,
+		"spec", state.CurrentSpec.SpecName,
+		"dungeon", state.CurrentDungeon.Name)
 
 	// Get rankings to process using definitions constant
 	var rankings []*warcraftlogsBuilds.ClassRanking
@@ -46,38 +58,63 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.WorkflowCo
 	).Get(ctx, &rankings)
 
 	if err != nil {
-		logger.Error("Failed to get stored rankings", "error", err)
+		logger.Error("Failed to get stored rankings",
+			"spec", state.CurrentSpec.SpecName,
+			"dungeon", state.CurrentDungeon.Name,
+			"error", err)
 		return nil, err
 	}
 
-	if len(rankings) > 0 {
-		logger.Info("Processing reports for rankings", "count", len(rankings))
-
-		// Use definitions constant for processing reports
-		var batchResult models.BatchResult
-		err := workflow.ExecuteActivity(ctx,
-			definitions.ProcessReportsActivity,
-			rankings,
-			params.Worker,
-		).Get(ctx, &batchResult)
-
-		if err != nil {
-			if common.IsRateLimitError(err) {
-				w.stateManager.SaveCheckpoint(ctx)
-				return nil, workflow.NewContinueAsNewError(ctx, workflow.GetInfo(ctx).WorkflowExecution.ID, params)
-			}
-			logger.Error("Failed to process reports",
-				"spec", state.CurrentSpec.SpecName,
-				"error", err)
-			return nil, err
-		}
-
-		// Update state with results
-		state.PartialResults.ReportsProcessed += batchResult.ProcessedItems
-
-		// Update progress
-		w.stateManager.UpdateProgress(models.PhaseReports, state.PartialResults.ReportsProcessed)
+	if len(rankings) == 0 {
+		logger.Info("No rankings found to process",
+			"spec", state.CurrentSpec.SpecName,
+			"dungeon", state.CurrentDungeon.Name)
+		return &models.WorkflowResult{
+			StartedAt:   state.StartedAt,
+			CompletedAt: workflow.Now(ctx),
+		}, nil
 	}
+
+	logger.Info("Processing reports for rankings",
+		"count", len(rankings),
+		"spec", state.CurrentSpec.SpecName,
+		"dungeon", state.CurrentDungeon.Name)
+
+	// Process reports
+	var batchResult models.BatchResult
+	err = workflow.ExecuteActivity(ctx,
+		definitions.ProcessReportsActivity,
+		rankings,
+		params.Worker,
+	).Get(ctx, &batchResult)
+
+	if err != nil {
+		if common.IsRateLimitError(err) {
+			if saveErr := w.stateManager.SaveCheckpoint(ctx); saveErr != nil {
+				logger.Error("Failed to save checkpoint",
+					"error", saveErr)
+			}
+			return nil, workflow.NewContinueAsNewError(ctx,
+				workflow.GetInfo(ctx).WorkflowExecution.ID,
+				params)
+		}
+		logger.Error("Failed to process reports",
+			"spec", state.CurrentSpec.SpecName,
+			"dungeon", state.CurrentDungeon.Name,
+			"error", err)
+		return nil, err
+	}
+
+	// Update state with results
+	state.PartialResults.ReportsProcessed += batchResult.ProcessedItems
+
+	// Update progress
+	w.stateManager.UpdateProgress(models.PhaseReports,
+		state.PartialResults.ReportsProcessed)
+
+	logger.Info("Completed processing reports",
+		"processedCount", batchResult.ProcessedItems,
+		"totalProcessed", state.PartialResults.ReportsProcessed)
 
 	return &models.WorkflowResult{
 		ReportsProcessed: state.PartialResults.ReportsProcessed,
