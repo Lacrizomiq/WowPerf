@@ -11,6 +11,7 @@ import (
 	"time"
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
+
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
@@ -27,70 +28,62 @@ const (
 	defaultNamespace = "default"
 )
 
-// WorkerManager handles multiple workers for different task queues
+// WorkerManager handles the worker for the single task queue
 type WorkerManager struct {
-	workers map[string]worker.Worker
-	logger  *log.Logger
+	worker worker.Worker
+	logger *log.Logger
 }
 
 func main() {
 	logger := log.New(os.Stdout, "[WORKER] ", log.LstdFlags)
-	logger.Printf("Starting Temporal workers")
+	logger.Printf("Starting Temporal worker")
 
-	// Initialize all required services
+	// Initialize services
 	temporalClient, db, warcraftLogsClient, err := initializeServices()
 	if err != nil {
 		logger.Fatalf("Failed to initialize services: %v", err)
 	}
 	defer temporalClient.Close()
 
-	// Initialize repositories
+	// Initialize repositories and activities (no changes needed)
 	reportsRepo := reportsRepository.NewReportRepository(db)
 	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
-
-	// Initialize activities service
 	activitiesService := initializeActivities(warcraftLogsClient, reportsRepo, rankingsRepo, playerBuildsRepo)
 
-	// Create worker manager
+	// Create a single worker that will handle both production and test schedules
+	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
+	w := worker.New(temporalClient, taskQueue, worker.Options{
+		MaxConcurrentActivityExecutionSize:     1,
+		MaxConcurrentWorkflowTaskExecutionSize: 2,
+		WorkerActivitiesPerSecond:              2,
+		MaxConcurrentActivityTaskPollers:       1,
+		MaxConcurrentWorkflowTaskPollers:       2,
+		EnableSessionWorker:                    true,
+	})
+
+	registerWorkflowsAndActivities(w, activitiesService)
+
 	workerMgr := &WorkerManager{
-		workers: make(map[string]worker.Worker),
-		logger:  logger,
+		worker: w,
+		logger: logger,
 	}
+	logger.Printf("Created worker for task queue: %s", taskQueue)
 
-	// Create a worker for each time slot
-	for _, slot := range scheduler.ScheduleSlots {
-		w := worker.New(temporalClient, slot.TaskQueue, worker.Options{
-			MaxConcurrentActivityExecutionSize:     1,
-			MaxConcurrentWorkflowTaskExecutionSize: 2,
-			WorkerActivitiesPerSecond:              2,
-			MaxConcurrentActivityTaskPollers:       1,
-			MaxConcurrentWorkflowTaskPollers:       2,
-			EnableSessionWorker:                    true,
-		})
-
-		registerWorkflowsAndActivities(w, activitiesService)
-
-		workerMgr.workers[slot.TaskQueue] = w
-		logger.Printf("Created worker for task queue: %s (Classes: %v)", slot.TaskQueue, slot.Classes)
-	}
-
-	// Start all workers
+	// Start worker
 	var wg sync.WaitGroup
-	workerErrorChan := make(chan error, len(workerMgr.workers))
+	workerErrorChan := make(chan error, 1)
 	interruptChan := make(chan interface{})
 
-	for taskQueue, w := range workerMgr.workers {
-		wg.Add(1)
-		go func(tq string, worker worker.Worker) {
-			defer wg.Done()
-			logger.Printf("Starting worker for task queue: %s", tq)
-			if err := worker.Run(interruptChan); err != nil {
-				logger.Printf("Worker error in task queue %s: %v", tq, err)
-				workerErrorChan <- err
-			}
-		}(taskQueue, w)
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		logger.Printf("Starting worker for task queue: %s", taskQueue)
+		if err := workerMgr.worker.Run(interruptChan); err != nil {
+			logger.Printf("Worker error in task queue %s: %v", taskQueue, err)
+			workerErrorChan <- err
+		}
+	}()
 
 	// Handle graceful shutdown
 	handleGracefulShutdown(workerMgr, &wg, workerErrorChan, logger)
@@ -161,18 +154,16 @@ func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan ch
 
 	select {
 	case <-sigChan:
-		logger.Printf("Shutdown signal received, stopping workers...")
+		logger.Printf("Shutdown signal received, stopping worker...")
 	case err := <-errorChan:
 		logger.Printf("Worker error detected, initiating shutdown: %v", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	for taskQueue, w := range mgr.workers {
-		logger.Printf("Stopping worker for task queue: %s", taskQueue)
-		w.Stop()
-	}
+	logger.Printf("Stopping worker for task queue: %s", scheduler.DefaultScheduleConfig.TaskQueue)
+	mgr.worker.Stop()
 
 	done := make(chan struct{})
 	go func() {
@@ -182,8 +173,8 @@ func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan ch
 
 	select {
 	case <-done:
-		logger.Printf("All workers stopped gracefully")
+		logger.Printf("Worker stopped gracefully")
 	case <-ctx.Done():
-		logger.Printf("Shutdown timeout exceeded, some workers may not have stopped cleanly")
+		logger.Printf("Shutdown timeout exceeded, worker may not have stopped cleanly")
 	}
 }

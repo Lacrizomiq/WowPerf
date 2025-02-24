@@ -28,6 +28,7 @@ type Handler struct {
 		Dungeon     *mythicplus.DungeonLeaderboardHandler
 		Global      *mythicplus.GlobalLeaderboardHandler
 		Leaderboard *mythicplus.DungeonLeaderboardHandler
+		Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
 	}
 	cache        cache.CacheService
 	cacheManager *middleware.CacheManager
@@ -35,6 +36,7 @@ type Handler struct {
 
 func NewHandler(
 	globalService *leaderboard.GlobalLeaderboardService,
+	analysisService *leaderboard.GlobalLeaderboardAnalysisService,
 	warcraftLogsService *service.WarcraftLogsClientService,
 	db *gorm.DB,
 	cache cache.CacheService,
@@ -50,10 +52,12 @@ func NewHandler(
 			Dungeon     *mythicplus.DungeonLeaderboardHandler
 			Global      *mythicplus.GlobalLeaderboardHandler
 			Leaderboard *mythicplus.DungeonLeaderboardHandler
+			Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
 		}{
 			Dungeon:     mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
 			Global:      mythicplus.NewGlobalLeaderboardHandler(globalService),
 			Leaderboard: mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
+			Analysis:    mythicplus.NewGlobalLeaderboardAnalysisHandler(analysisService),
 		},
 		cache:        cache,
 		cacheManager: cacheManager,
@@ -99,6 +103,25 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 			// Get the global leaderboard by spec
 			mythicplus.GET("/global/leaderboard/spec", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Global.GetSpecLeaderboard)
+
+			// Analysis routes (moved under /mythicplus for consistency with M+ ecosystem)
+			// Get average global scores per spec
+			mythicplus.GET("/analysis/specs/avg-scores", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetSpecGlobalScores)
+
+			// Get average global scores per class
+			mythicplus.GET("/analysis/classes/avg-scores", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetClassGlobalScores)
+
+			// Get max key levels per spec and dungeon
+			mythicplus.GET("/analysis/specs/dungeons/max-levels-key", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetSpecDungeonMaxKeyLevels)
+
+			// Get average key levels per dungeon
+			mythicplus.GET("/analysis/dungeons/avg-levels-key", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetDungeonAvgKeyLevels)
+
+			// Get top 10 players per spec
+			mythicplus.GET("/analysis/players/top-specs", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetTop10PlayersPerSpec)
+
+			// Get top 5 players per role
+			mythicplus.GET("/analysis/players/top-roles", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetTop5PlayersPerRole)
 		}
 	}
 }

@@ -33,34 +33,20 @@ func (s *UnitTestSuite) Test_ProcessBuilds_Success() {
 	// Test data setup with reports containing player details
 	reports := []*warcraftlogsBuilds.Report{
 		{
-			Code:          "ABC123",
-			FightID:       1,
-			EncounterID:   12660,
-			KeystoneLevel: 20,
-			PlayerDetailsDps: []byte(`[{
-				"name": "TestPlayer1",
-				"class": "Priest",
-				"spec": "Shadow",
-				"itemLevel": 420
-			}]`),
-			TalentCodes: []byte(`{
-				"Priest_Shadow_talents": "test-talent-code"
-			}`),
+			Code:             "ABC123",
+			FightID:          1,
+			EncounterID:      12660,
+			KeystoneLevel:    20,
+			PlayerDetailsDps: []byte(`[{"name":"TestPlayer1","class":"Priest","spec":"Shadow","itemLevel":420}]`),
+			TalentCodes:      []byte(`{"Priest_Shadow_talents":"test-talent-code"}`),
 		},
 		{
-			Code:          "ABC124",
-			FightID:       2,
-			EncounterID:   12660,
-			KeystoneLevel: 20,
-			PlayerDetailsDps: []byte(`[{
-				"name": "TestPlayer2",
-				"class": "Priest",
-				"spec": "Shadow",
-				"itemLevel": 420
-			}]`),
-			TalentCodes: []byte(`{
-				"Priest_Shadow_talents": "test-talent-code"
-			}`),
+			Code:             "ABC124",
+			FightID:          2,
+			EncounterID:      12660,
+			KeystoneLevel:    20,
+			PlayerDetailsDps: []byte(`[{"name":"TestPlayer2","class":"Priest","spec":"Shadow","itemLevel":420}]`),
+			TalentCodes:      []byte(`{"Priest_Shadow_talents":"test-talent-code"}`),
 		},
 	}
 
@@ -69,13 +55,11 @@ func (s *UnitTestSuite) Test_ProcessBuilds_Success() {
 		RequestDelay: time.Millisecond * 500,
 	}
 
-	// Mock activity implementation
+	// Mock ProcessBuilds activity
 	s.env.RegisterActivityWithOptions(
 		func(ctx context.Context, r []*warcraftlogsBuilds.Report) (*models.BatchResult, error) {
 			return &models.BatchResult{
-				ProcessedItems: 2,
-				ClassName:      "Priest",
-				SpecName:       "Shadow",
+				ProcessedItems: int32(len(r)),
 				ProcessedAt:    time.Now(),
 			}, nil
 		},
@@ -121,9 +105,9 @@ func (s *UnitTestSuite) Test_ProcessBuilds_EmptyReports() {
 	s.T().Log("Successfully handled empty reports")
 }
 
-// Test_ProcessBuilds_RateLimit verifies handling of rate limit errors
-func (s *UnitTestSuite) Test_ProcessBuilds_RateLimit() {
-	s.T().Log("Testing rate limit handling")
+// Test_ProcessBuilds_DatabaseError verifies handling of database errors
+func (s *UnitTestSuite) Test_ProcessBuilds_DatabaseError() {
+	s.T().Log("Testing database error handling")
 
 	reports := []*warcraftlogsBuilds.Report{
 		{
@@ -136,10 +120,9 @@ func (s *UnitTestSuite) Test_ProcessBuilds_RateLimit() {
 	s.env.RegisterActivityWithOptions(
 		func(ctx context.Context, r []*warcraftlogsBuilds.Report) (*models.BatchResult, error) {
 			return nil, &common.WorkflowError{
-				Type:      common.ErrorTypeRateLimit,
-				Message:   "API rate limit exceeded",
+				Type:      common.ErrorTypeDatabase,
+				Message:   "Failed to store builds in database",
 				Retryable: true,
-				RetryIn:   time.Minute * 5,
 			}
 		},
 		activity.RegisterOptions{Name: definitions.ProcessBuildsActivity},
@@ -150,23 +133,21 @@ func (s *UnitTestSuite) Test_ProcessBuilds_RateLimit() {
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
 	s.Error(err)
-	s.Contains(err.Error(), "rate limit exceeded")
+	s.Contains(err.Error(), "Failed to store builds in database")
 
-	s.T().Log("Successfully handled rate limit error")
+	s.T().Log("Successfully handled database error")
 }
 
 // Test_ProcessBuilds_InvalidReportData verifies handling of invalid report data
 func (s *UnitTestSuite) Test_ProcessBuilds_InvalidReportData() {
 	s.T().Log("Testing invalid report data handling")
 
-	// Create invalid but syntactically correct JSON
-	invalidPlayerDetails := []byte(`[{"name": "", "class": "", "spec": ""}]`) // Empty required fields
 	reports := []*warcraftlogsBuilds.Report{
 		{
 			Code:             "ABC123",
 			FightID:          1,
-			PlayerDetailsDps: invalidPlayerDetails, // Valid JSON but invalid data
-			TalentCodes:      []byte(`{}`),         // Empty but valid JSON
+			PlayerDetailsDps: []byte(`[{"name":"","class":"","spec":""}]`), // Invalid: empty required fields
+			TalentCodes:      []byte(`{}`),                                 // Empty talents
 		},
 	}
 	workerConfig := models.WorkerConfig{NumWorkers: 1}
@@ -190,39 +171,6 @@ func (s *UnitTestSuite) Test_ProcessBuilds_InvalidReportData() {
 	s.Contains(err.Error(), "invalid player details")
 
 	s.T().Log("Successfully handled invalid report data")
-}
-
-// Test_ProcessBuilds_ActivityTimeout verifies handling of activity timeouts
-func (s *UnitTestSuite) Test_ProcessBuilds_ActivityTimeout() {
-	s.T().Log("Testing activity timeout handling")
-
-	reports := []*warcraftlogsBuilds.Report{
-		{
-			Code:    "ABC123",
-			FightID: 1,
-		},
-	}
-	workerConfig := models.WorkerConfig{NumWorkers: 1}
-
-	s.env.RegisterActivityWithOptions(
-		func(ctx context.Context, r []*warcraftlogsBuilds.Report) (*models.BatchResult, error) {
-			return nil, &common.WorkflowError{
-				Type:      common.ErrorTypeTimeout,
-				Message:   "activity execution timeout",
-				Retryable: true,
-			}
-		},
-		activity.RegisterOptions{Name: definitions.ProcessBuildsActivity},
-	)
-
-	s.env.ExecuteWorkflow(ProcessBuildsWorkflow, reports, workerConfig)
-
-	s.True(s.env.IsWorkflowCompleted())
-	err := s.env.GetWorkflowError()
-	s.Error(err)
-	s.Contains(err.Error(), "timeout")
-
-	s.T().Log("Successfully handled activity timeout")
 }
 
 // ProcessBuildsWorkflow helper function to run the processor

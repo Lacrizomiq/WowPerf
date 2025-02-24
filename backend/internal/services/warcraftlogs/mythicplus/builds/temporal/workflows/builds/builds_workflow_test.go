@@ -37,12 +37,6 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_Success() {
 			NumWorkers:   2,
 			RequestDelay: time.Millisecond * 100,
 		},
-		Specs: []models.ClassSpec{
-			{ClassName: "Priest", SpecName: "Shadow"},
-		},
-		Dungeons: []models.Dungeon{
-			{Name: "TestDungeon", EncounterID: 12660},
-		},
 	}
 
 	// Mock GetReportsBatch activity
@@ -65,22 +59,13 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_Success() {
 		func(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*models.BatchResult, error) {
 			return &models.BatchResult{
 				ProcessedItems: int32(len(reports)),
-				ClassName:      "Priest",
-				SpecName:       "Shadow",
 				ProcessedAt:    time.Now(),
 			}, nil
 		},
 		activity.RegisterOptions{Name: definitions.ProcessBuildsActivity},
 	)
 
-	// Mock CountAllReports activity
-	s.env.RegisterActivityWithOptions(
-		func(ctx context.Context) (int64, error) {
-			return 1, nil
-		},
-		activity.RegisterOptions{Name: definitions.CountAllReportsActivity},
-	)
-
+	// Execute workflow
 	var result models.WorkflowResult
 	s.env.ExecuteWorkflow(WorkflowProcessBuilds, config)
 
@@ -98,10 +83,6 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_NoReports() {
 
 	config := models.WorkflowConfig{
 		Worker: models.WorkerConfig{NumWorkers: 1},
-		Specs:  []models.ClassSpec{{ClassName: "Priest", SpecName: "Shadow"}},
-		Dungeons: []models.Dungeon{
-			{Name: "TestDungeon", EncounterID: 12660},
-		},
 	}
 
 	s.env.RegisterActivityWithOptions(
@@ -109,13 +90,6 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_NoReports() {
 			return []*warcraftlogsBuilds.Report{}, nil
 		},
 		activity.RegisterOptions{Name: definitions.GetReportsBatchActivity},
-	)
-
-	s.env.RegisterActivityWithOptions(
-		func(ctx context.Context) (int64, error) {
-			return 0, nil
-		},
-		activity.RegisterOptions{Name: definitions.CountAllReportsActivity},
 	)
 
 	var result models.WorkflowResult
@@ -128,37 +102,29 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_NoReports() {
 	s.T().Log("Successfully handled no reports case")
 }
 
-func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_RateLimit() {
-	s.T().Log("Testing rate limit handling")
+func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_DatabaseError() {
+	s.T().Log("Testing database error handling")
 
 	config := models.WorkflowConfig{
 		Worker: models.WorkerConfig{NumWorkers: 1},
-		Specs:  []models.ClassSpec{{ClassName: "Priest", SpecName: "Shadow"}},
-		Dungeons: []models.Dungeon{
-			{Name: "TestDungeon", EncounterID: 12660},
-		},
 	}
 
+	// Return some reports from database
 	s.env.RegisterActivityWithOptions(
 		func(ctx context.Context, batchSize, offset int32) ([]*warcraftlogsBuilds.Report, error) {
-			return []*warcraftlogsBuilds.Report{{Code: "TEST123"}}, nil
+			return []*warcraftlogsBuilds.Report{
+				{Code: "TEST123"},
+			}, nil
 		},
 		activity.RegisterOptions{Name: definitions.GetReportsBatchActivity},
 	)
 
-	s.env.RegisterActivityWithOptions(
-		func(ctx context.Context) (int64, error) {
-			return 1, nil
-		},
-		activity.RegisterOptions{Name: definitions.CountAllReportsActivity},
-	)
-
+	// Simulate database error during build processing
 	s.env.RegisterActivityWithOptions(
 		func(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*models.BatchResult, error) {
 			return nil, &common.WorkflowError{
-				Type:      common.ErrorTypeRateLimit,
-				Message:   "Rate limit exceeded",
-				RetryIn:   5 * time.Minute,
+				Type:      common.ErrorTypeDatabase,
+				Message:   "Database connection failed",
 				Retryable: true,
 			}
 		},
@@ -170,9 +136,9 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_RateLimit() {
 	s.True(s.env.IsWorkflowCompleted())
 	err := s.env.GetWorkflowError()
 	s.Error(err)
-	s.Contains(err.Error(), "Rate limit exceeded")
+	s.Contains(err.Error(), "Database connection failed")
 
-	s.T().Log("Successfully handled rate limit error")
+	s.T().Log("Successfully handled database error")
 }
 
 func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_Cancellation() {
@@ -180,10 +146,6 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_Cancellation() {
 
 	config := models.WorkflowConfig{
 		Worker: models.WorkerConfig{NumWorkers: 1},
-		Specs:  []models.ClassSpec{{ClassName: "Priest", SpecName: "Shadow"}},
-		Dungeons: []models.Dungeon{
-			{Name: "TestDungeon", EncounterID: 12660},
-		},
 	}
 
 	s.env.RegisterActivityWithOptions(
@@ -192,13 +154,6 @@ func (s *WorkflowTestSuite) Test_Workflow_ProcessBuilds_Cancellation() {
 			return []*warcraftlogsBuilds.Report{{Code: "TEST123"}}, nil
 		},
 		activity.RegisterOptions{Name: definitions.GetReportsBatchActivity},
-	)
-
-	s.env.RegisterActivityWithOptions(
-		func(ctx context.Context) (int64, error) {
-			return 1, nil
-		},
-		activity.RegisterOptions{Name: definitions.CountAllReportsActivity},
 	)
 
 	s.env.RegisterDelayedCallback(func() {
