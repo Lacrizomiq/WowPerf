@@ -3,6 +3,15 @@ package warcraftlogsBuildsTemporalWorkflowsModels
 
 import "time"
 
+// TemporalConstants holds all Temporal-related constants
+const (
+	// DefaultNamespace is the Temporal namespace used by all components
+	DefaultNamespace = "default"
+
+	// DefaultTaskQueue is the main task queue for workflow execution
+	DefaultTaskQueue = "warcraft-logs-sync"
+)
+
 // WorkflowConfig represents the root configuration structure
 type WorkflowConfig struct {
 	Rankings RankingsConfig `json:"rankings" yaml:"rankings"`

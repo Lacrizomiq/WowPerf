@@ -9,13 +9,13 @@ import (
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	"go.temporal.io/sdk/client"
 )
 
-const (
-	defaultNamespace = "default"
-)
+// No longer need this constant as we'll use the one from models
+// const defaultNamespace = "default"
 
 func main() {
 	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
@@ -30,6 +30,13 @@ func main() {
 
 	// Initialize schedule manager
 	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
+
+	// Perform cleanup of existing schedules and workflows before creating new ones
+	logger.Printf("[INFO] Starting cleanup of existing schedules and workflows")
+	if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+		logger.Printf("[WARN] Cleanup encountered some errors: %v", err)
+	}
+	logger.Printf("[INFO] Cleanup completed successfully")
 
 	// Load production configuration
 	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
@@ -73,9 +80,10 @@ func initTemporalClient() (client.Client, error) {
 		temporalAddress = "localhost:7233"
 	}
 
+	// Use the shared namespace constant from models
 	return client.Dial(client.Options{
 		HostPort:  temporalAddress,
-		Namespace: defaultNamespace,
+		Namespace: models.DefaultNamespace, // Updated to use models
 	})
 }
 
@@ -86,8 +94,11 @@ func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *
 	sig := <-sigCh
 	logger.Printf("Received signal %v, initiating shutdown", sig)
 
-	// No need to delete schedules explicitly; closing the client is sufficient
-	// If i want to add deletion logic later, scheduler.go would need a Delete method
+	// We now have deletion logic implemented but typically don't need to run it on shutdown
+	// If you want to clean up on shutdown, you could add:
+	// if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+	//     logger.Printf("[WARN] Cleanup on shutdown failed: %v", err)
+	// }
 
 	logger.Printf("Scheduler service shutdown complete")
 }

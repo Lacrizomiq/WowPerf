@@ -7,6 +7,10 @@ import {
   Role,
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
+import {
+  SpecAverageGlobalScore,
+  BestTenPlayerPerSpec,
+} from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 import { RaidRankingsResponse } from "@/types/warcraftlogs/character/raidPlayerRankings";
@@ -138,6 +142,32 @@ export const getPlayerRaidRankings = async (
     return data;
   } catch (error) {
     console.error("Error fetching player raid rankings:", error);
+    throw error;
+  }
+};
+
+// getSpecAverageGlobalScore get the average global score for a spec
+export const getSpecAverageGlobalScore = async () => {
+  try {
+    const { data } = await api.get<SpecAverageGlobalScore[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/avg-scores"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the average global score for a spec");
+    throw error;
+  }
+};
+
+// getBestTenPlayerPerSpec get the average global score for a spec
+export const getBestTenPlayerPerSpec = async () => {
+  try {
+    const { data } = await api.get<BestTenPlayerPerSpec[]>(
+      "/warcraftlogs/mythicplus/analysis/players/top-specs"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the top 10 best players for a spec");
     throw error;
   }
 };

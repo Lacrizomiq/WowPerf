@@ -7,7 +7,10 @@ import (
 	"time"
 
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
+	"go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 )
@@ -137,6 +140,7 @@ func (sm *ScheduleManager) UnpauseSchedule(ctx context.Context) error {
 	return sm.schedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
+// Delete a schedule
 func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, scheduleID string) error {
 	handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
 	return handle.Delete(ctx)
@@ -153,5 +157,51 @@ func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 		}
 		sm.logger.Printf("[INFO] Deleted schedule: %s", id)
 	}
+	return nil
+}
+
+func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
+	// Get all workflows with SyncWorkflow type
+	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
+		Namespace: models.DefaultNamespace,
+		Query:     "WorkflowType='SyncWorkflow'",
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to list workflows: %w", err)
+	}
+
+	for _, execution := range resp.Executions {
+		workflowID := execution.Execution.WorkflowId
+		runID := execution.Execution.RunId
+
+		// Only terminate if it's running
+		if execution.Status != enums.WORKFLOW_EXECUTION_STATUS_RUNNING {
+			sm.logger.Printf("[INFO] Skipping non-running workflow: %s (status: %s)",
+				workflowID, execution.Status.String())
+			continue
+		}
+
+		err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+		if err != nil {
+			sm.logger.Printf("[WARN] Failed to terminate workflow %s: %v", workflowID, err)
+			continue
+		}
+		sm.logger.Printf("[INFO] Terminated workflow: %s", workflowID)
+	}
+
+	return nil
+}
+
+// Add this method to perform complete cleanup
+func (sm *ScheduleManager) CleanupAll(ctx context.Context) error {
+	if err := sm.CleanupExistingSchedules(ctx); err != nil {
+		return fmt.Errorf("failed to cleanup schedules: %w", err)
+	}
+
+	if err := sm.CleanupOldWorkflows(ctx); err != nil {
+		return fmt.Errorf("failed to cleanup workflows: %w", err)
+	}
+
 	return nil
 }

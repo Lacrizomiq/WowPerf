@@ -8,6 +8,10 @@ import {
   Role,
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
+import {
+  SpecAverageGlobalScore,
+  BestTenPlayerPerSpec,
+} from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 import { RaidRankingsResponse } from "@/types/warcraftlogs/character/raidPlayerRankings";
@@ -138,5 +142,27 @@ export const useGetPlayerRaidRankings = (
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry 2 times
     ...queryOptions, // Allow additional query options
+  });
+};
+
+// Hook to get the average global score for all specs (returns an array)
+export const useGetSpecAverageGlobalScore = () => {
+  return useQuery<SpecAverageGlobalScore[], Error>({
+    queryKey: ["warcraftlogs-average-spec-score"],
+    queryFn: () => warcraftLogsApiService.getSpecAverageGlobalScore(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
+  });
+};
+
+// Hook to get the top 10 players for all specs (returns an array)
+export const useGetBestTenPlayerPerSpec = () => {
+  return useQuery<BestTenPlayerPerSpec[], Error>({
+    queryKey: ["warcraftlogs-best-ten-player-spec"],
+    queryFn: () => warcraftLogsApiService.getBestTenPlayerPerSpec(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
   });
 };
