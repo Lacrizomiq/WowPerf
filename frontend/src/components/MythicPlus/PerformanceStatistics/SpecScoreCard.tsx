@@ -3,6 +3,7 @@ import { SpecAverageGlobalScore } from "@/types/warcraftlogs/globalLeaderboardAn
 import { specMapping } from "@/utils/specmapping";
 import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
 import Image from "next/image";
+import Link from "next/link";
 
 interface SpecScoreCardProps {
   specData: SpecAverageGlobalScore;
@@ -57,45 +58,52 @@ const SpecScoreCard: React.FC<SpecScoreCardProps> = ({ specData }) => {
   const specIconUrl = getSpecIconUrl();
   const classColorClass = getClassColorClass();
 
+  // Create the spec slug directly - just lowercase both values and join with hyphen
+  const specSlug = `${specData.class.toLowerCase()}-${specData.spec.toLowerCase()}`;
+
   return (
-    <div
-      className={`bg-[#112240] rounded-md p-4 border-l-4 transition-all hover:transform hover:-translate-y-1 hover:shadow-lg`}
-      style={{
-        borderLeftColor: `var(--color-${formatClassNameForCSS(
-          specData.class
-        )})`,
-      }}
-    >
-      <div className="flex items-center">
-        {/* Spec icon */}
-        {specIconUrl ? (
-          <Image
-            src={specIconUrl}
-            alt={`${specData.spec} icon`}
-            className="rounded mr-3"
-            width={42}
-            height={42}
-            unoptimized // Add this for external images
-          />
-        ) : (
-          <div className="w-8 h-8 bg-gray-700 rounded mr-3"></div>
-        )}
+    <div>
+      <Link href={`/mythic-plus/analysis/${specSlug}`}>
+        <div
+          className="bg-[#112240] rounded-md p-4 border-l-4 transition-all hover:transform hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+          style={{
+            borderLeftColor: `var(--color-${formatClassNameForCSS(
+              specData.class
+            )})`,
+          }}
+        >
+          <div className="flex items-center">
+            {/* Spec icon */}
+            {specIconUrl ? (
+              <Image
+                src={specIconUrl}
+                alt={`${specData.spec} icon`}
+                className="rounded mr-3"
+                width={42}
+                height={42}
+                unoptimized // Add this for external images
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gray-700 rounded mr-3"></div>
+            )}
 
-        <div>
-          <h3 className={`font-bold ${classColorClass}`}>
-            {formatSpecName(specData.class, specData.spec)}
-          </h3>
-          <p className="text-xs text-gray-400 capitalize">
-            {role?.toLowerCase()}
-          </p>
-        </div>
+            <div>
+              <h3 className={`font-bold ${classColorClass}`}>
+                {formatSpecName(specData.class, specData.spec)}
+              </h3>
+              <p className="text-xs text-gray-400 capitalize">
+                {role?.toLowerCase()}
+              </p>
+            </div>
 
-        <div className="ml-auto text-right">
-          <p className="text-2xl font-bold text-white">
-            {Math.round(specData.avg_global_score).toLocaleString()}
-          </p>
+            <div className="ml-auto text-right">
+              <p className="text-2xl font-bold text-white">
+                {Math.round(specData.avg_global_score).toLocaleString()}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 };

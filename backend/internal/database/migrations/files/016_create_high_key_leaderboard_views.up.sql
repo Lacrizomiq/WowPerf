@@ -22,6 +22,10 @@ FROM SpecPlayerScores
 GROUP BY class, spec
 ORDER BY avg_global_score DESC;
 
+-- Should add to spec_global_score_averages
+-- - slug for class-spec ?
+-- - spec ranking in score (eg : paladin protection rank = 1)
+
 -- Create view for max key level per spec for each dungeon (high-key performance)
 CREATE VIEW spec_dungeon_max_key_levels AS
 SELECT 
@@ -108,6 +112,9 @@ SELECT
 FROM RankedPlayers
 WHERE rank <= 10 AND server_region <> 'CN'
 ORDER BY class, spec, total_score DESC;
+
+-- Should add to this view :
+-- - not taking CN player way before cuz its fucked up, some tens best player only send back like 6 or 5 players cuz it filter CN player way too late
 
 -- Create view for top 5 players per role with global score (high-key players)
 CREATE VIEW top_5_players_per_role AS
