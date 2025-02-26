@@ -6,6 +6,10 @@ export interface SpecAverageGlobalScore {
   spec: string;
   avg_global_score: number;
   player_count: number;
+  role: string;
+  overall_rank: number;
+  role_rank: number;
+  slug: string;
 }
 
 // ClassAverageGlobalScore is the average global score for a class

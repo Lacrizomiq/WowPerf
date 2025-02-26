@@ -173,11 +173,9 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
           >
             <p className="text-sm text-gray-400 mb-1">Spec Ranking</p>
             <p className="text-3xl font-bold">
-              {topPlayers.length > 0
-                ? "#" + Math.round(topPlayers[0].rank)
-                : "N/A"}
+              {currentSpecData ? "#" + currentSpecData.overall_rank : "N/A"}
             </p>
-            <p className="text-xs text-gray-400">top player rank</p>
+            <p className="text-xs text-gray-400">Spec rank in average score</p>
           </div>
         </div>
 

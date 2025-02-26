@@ -23,6 +23,9 @@ type SpecGlobalScore struct {
 	Spec           string  `json:"spec"`
 	AvgGlobalScore float64 `json:"avg_global_score"`
 	PlayerCount    int     `json:"player_count"`
+	Role           string  `json:"role"`
+	OverallRank    int     `json:"overall_rank"`
+	RoleRank       int     `json:"role_rank"`
 }
 
 // GetSpecGlobalScores retrieves the average global score per spec from the spec_global_score_averages view

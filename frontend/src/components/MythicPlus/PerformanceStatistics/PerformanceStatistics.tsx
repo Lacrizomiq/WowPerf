@@ -5,12 +5,12 @@ import React, { useMemo, useState } from "react";
 import SpecScoreCard from "./SpecScoreCard";
 import ClassSelector from "./ClassSelector";
 import { SpecAverageGlobalScore } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
-import { specMapping } from "@/utils/specmapping";
-import { useGetSpecAverageGlobalScore } from "@/hooks/useWarcraftLogsApi";
 import { RefreshCw } from "lucide-react";
+import { useGetSpecAverageGlobalScore } from "@/hooks/useWarcraftLogsApi";
+import { spec } from "node:test/reporters";
 
 const PerformanceStatistics: React.FC = () => {
-  type RoleType = "TANK" | "HEALER" | "DPS" | "ALL";
+  type RoleType = "Tank" | "Healer" | "DPS" | "ALL";
 
   const [selectedRole, setSelectedRole] = useState<RoleType>("ALL");
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -21,6 +21,8 @@ const PerformanceStatistics: React.FC = () => {
     if (!data) return [] as SpecAverageGlobalScore[];
     return Array.isArray(data) ? data : [];
   }, [data]);
+
+  console.log(specs);
 
   // Extract all unique class names from the specs data
   const availableClasses = useMemo(() => {
@@ -39,11 +41,7 @@ const PerformanceStatistics: React.FC = () => {
 
     // Filter by role if not ALL
     if (selectedRole !== "ALL") {
-      filtered = filtered.filter((spec) => {
-        if (!spec.class || !spec.spec) return false;
-        const specInfo = specMapping[spec.class]?.[spec.spec];
-        return specInfo && specInfo.role === selectedRole;
-      });
+      filtered = filtered.filter((spec) => spec.role === selectedRole);
     }
 
     // Filter by class if one is selected
@@ -117,21 +115,21 @@ const PerformanceStatistics: React.FC = () => {
             </button>
             <button
               className={`px-4 py-2 rounded-md text-sm ${
-                selectedRole === "TANK"
+                selectedRole === "Tank"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300"
               }`}
-              onClick={() => setSelectedRole("TANK")}
+              onClick={() => setSelectedRole("Tank")}
             >
               Tank
             </button>
             <button
               className={`px-4 py-2 rounded-md text-sm ${
-                selectedRole === "HEALER"
+                selectedRole === "Healer"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-300"
               }`}
-              onClick={() => setSelectedRole("HEALER")}
+              onClick={() => setSelectedRole("Healer")}
             >
               Healer
             </button>
@@ -184,6 +182,7 @@ const PerformanceStatistics: React.FC = () => {
           <SpecScoreCard
             key={`${spec.class}-${spec.spec}-${index}`}
             specData={spec}
+            selectedRole={selectedRole}
           />
         ))}
       </div>

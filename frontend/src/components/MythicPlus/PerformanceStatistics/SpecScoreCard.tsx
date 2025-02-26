@@ -1,28 +1,18 @@
 import React from "react";
 import { SpecAverageGlobalScore } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
-import { specMapping } from "@/utils/specmapping";
 import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
 import Image from "next/image";
 import Link from "next/link";
 
 interface SpecScoreCardProps {
   specData: SpecAverageGlobalScore;
+  selectedRole: "Tank" | "Healer" | "DPS" | "ALL";
 }
 
-const SpecScoreCard: React.FC<SpecScoreCardProps> = ({ specData }) => {
-  // Get role from the spec mapping
-  const getRole = (
-    className: string,
-    specName: string
-  ): "TANK" | "HEALER" | "DPS" | undefined => {
-    if (specMapping[className] && specMapping[className][specName]) {
-      return specMapping[className][specName].role;
-    }
-    return undefined;
-  };
-
-  const role = getRole(specData.class, specData.spec);
-
+const SpecScoreCard: React.FC<SpecScoreCardProps> = ({
+  specData,
+  selectedRole,
+}) => {
   // Helper to format class name for CSS classes (DeathKnight -> death-knight)
   const formatClassNameForCSS = (className: string): string => {
     return className.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
@@ -55,24 +45,40 @@ const SpecScoreCard: React.FC<SpecScoreCardProps> = ({ specData }) => {
     return `${specName} ${formattedClass}`;
   };
 
+  // Determine which rank to display based on selected role
+  const displayRank =
+    selectedRole === "ALL" ? specData.overall_rank : specData.role_rank;
+
   const specIconUrl = getSpecIconUrl();
   const classColorClass = getClassColorClass();
-
-  // Create the spec slug directly - just lowercase both values and join with hyphen
-  const specSlug = `${specData.class.toLowerCase()}-${specData.spec.toLowerCase()}`;
+  const specSlug =
+    specData.slug ||
+    `${specData.class.toLowerCase()}-${specData.spec
+      .toLowerCase()
+      .replace(/ /g, "-")}`;
 
   return (
     <div>
       <Link href={`/mythic-plus/analysis/${specSlug}`}>
         <div
-          className="bg-[#112240] rounded-md p-4 border-l-4 transition-all hover:transform hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+          className="bg-[#112240] rounded-md p-4 transition-all hover:transform hover:-translate-y-1 hover:shadow-lg cursor-pointer relative overflow-hidden"
           style={{
             borderLeftColor: `var(--color-${formatClassNameForCSS(
               specData.class
             )})`,
+            borderLeftWidth: "4px",
           }}
         >
-          <div className="flex items-center">
+          {/* Rank Badge - Positioned at the right side */}
+          <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-16">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-700 text-white font-bold shadow-md">
+              #{displayRank}
+            </div>
+          </div>
+
+          <div className="flex items-center pr-14">
+            {" "}
+            {/* Add padding right to make room for the badge */}
             {/* Spec icon */}
             {specIconUrl ? (
               <Image
@@ -81,21 +87,19 @@ const SpecScoreCard: React.FC<SpecScoreCardProps> = ({ specData }) => {
                 className="rounded mr-3"
                 width={42}
                 height={42}
-                unoptimized // Add this for external images
+                unoptimized
               />
             ) : (
-              <div className="w-8 h-8 bg-gray-700 rounded mr-3"></div>
+              <div className="w-12 h-12 bg-gray-700 rounded mr-3"></div>
             )}
-
             <div>
-              <h3 className={`font-bold ${classColorClass}`}>
+              <h3 className={`text-xl font-bold ${classColorClass}`}>
                 {formatSpecName(specData.class, specData.spec)}
               </h3>
-              <p className="text-xs text-gray-400 capitalize">
-                {role?.toLowerCase()}
+              <p className="text-sm text-gray-400 capitalize">
+                {specData.role?.toLowerCase()}
               </p>
             </div>
-
             <div className="ml-auto text-right">
               <p className="text-2xl font-bold text-white">
                 {Math.round(specData.avg_global_score).toLocaleString()}

@@ -25,6 +25,7 @@ ORDER BY avg_global_score DESC;
 -- Should add to spec_global_score_averages
 -- - slug for class-spec ?
 -- - spec ranking in score (eg : paladin protection rank = 1)
+-- - the role of the spec (eg: tank, healer or dps)
 
 -- Create view for max key level per spec for each dungeon (high-key performance)
 CREATE VIEW spec_dungeon_max_key_levels AS
