@@ -10,6 +10,7 @@ import {
 import {
   SpecAverageGlobalScore,
   BestTenPlayerPerSpec,
+  MaxKeyLevelsPerSpecAndDungeon,
 } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
@@ -168,6 +169,21 @@ export const getBestTenPlayerPerSpec = async () => {
     return data;
   } catch (error) {
     console.error("Error fetching the top 10 best players for a spec");
+    throw error;
+  }
+};
+
+// getMaxKeyLevelPerSpecAndDungeon get the max level key for a spec for each dungeon
+export const getMaxKeyLevelPerSpecAndDungeon = async () => {
+  try {
+    const { data } = await api.get<MaxKeyLevelsPerSpecAndDungeon[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/dungeons/max-levels-key"
+    );
+    return data;
+  } catch (error) {
+    console.error(
+      "Error fetching the max level key for a spec for each dungeon"
+    );
     throw error;
   }
 };

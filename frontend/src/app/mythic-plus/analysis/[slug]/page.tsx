@@ -9,5 +9,9 @@ export default function SpecDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  return <SpecDetailView slug={slug} />;
+  return (
+    <div className="bg-black min-h-screen p-4">
+      <SpecDetailView slug={slug} />
+    </div>
+  );
 }

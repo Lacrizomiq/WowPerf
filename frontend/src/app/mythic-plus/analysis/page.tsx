@@ -3,7 +3,7 @@ import SpecGlobalScoreDashboard from "@/components/MythicPlus/PerformanceStatist
 
 export default function PerformancePage() {
   return (
-    <div className="min-h-screen bg-[#0a192f] text-white">
+    <div className="min-h-screen bg-black text-white">
       <SpecGlobalScoreDashboard />
     </div>
   );

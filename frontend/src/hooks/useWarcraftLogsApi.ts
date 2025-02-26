@@ -11,6 +11,7 @@ import {
 import {
   SpecAverageGlobalScore,
   BestTenPlayerPerSpec,
+  MaxKeyLevelsPerSpecAndDungeon,
 } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
@@ -161,6 +162,17 @@ export const useGetBestTenPlayerPerSpec = () => {
   return useQuery<BestTenPlayerPerSpec[], Error>({
     queryKey: ["warcraftlogs-best-ten-player-spec"],
     queryFn: () => warcraftLogsApiService.getBestTenPlayerPerSpec(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
+  });
+};
+
+// Hook to get the max level key for a spec for each dungeon (returns an array)
+export const useGetMaxKeyLevelPerSpecAndDungeon = () => {
+  return useQuery<MaxKeyLevelsPerSpecAndDungeon[], Error>({
+    queryKey: ["warcraftlogs-max-level-key-spec-dungeon"],
+    queryFn: () => warcraftLogsApiService.getMaxKeyLevelPerSpecAndDungeon(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry 2 times

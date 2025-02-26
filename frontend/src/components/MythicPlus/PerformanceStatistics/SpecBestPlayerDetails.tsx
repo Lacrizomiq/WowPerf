@@ -8,6 +8,8 @@ import { useGetSpecAverageGlobalScore } from "@/hooks/useWarcraftLogsApi";
 import { useGetBestTenPlayerPerSpec } from "@/hooks/useWarcraftLogsApi";
 import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
 import { specMapping } from "@/utils/specmapping";
+import DungeonPerformance from "./MaxKeyLevelSpecDungeon";
+import { getSpecBackground } from "@/utils/classandspecbackgrounds";
 
 interface SpecDetailViewProps {
   slug: string;
@@ -97,19 +99,23 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
   // Get spec icon
   const specIconUrl = getSpecIcon(className, normalizeWowName(specName));
 
+  // Get spec background class
+  const backgroundClass = getSpecBackground(className, specName);
+
   return (
     <div
       style={{
-        backgroundColor: "#0a192f",
+        backgroundColor: "black",
         color: "#e6f1ff",
         minHeight: "100vh",
       }}
     >
       <div
-        className="header-bg py-6"
+        className={`header-bg py-12 ${backgroundClass} mx-auto`}
         style={{
-          backgroundColor: "#112240",
-          borderBottom: "1px solid #1d3557",
+          backgroundSize: "cover",
+          backgroundPosition: "top",
+          backgroundRepeat: "no-repeat",
         }}
       >
         <div className="container mx-auto px-4">
@@ -164,7 +170,9 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
             <p className="text-3xl font-bold">
               {Math.round(currentSpecData.avg_global_score).toLocaleString()}
             </p>
-            <p className="text-xs text-gray-400">Average score</p>
+            <p className="text-xs text-gray-400">
+              Average score of the very best player
+            </p>
           </div>
 
           <div
@@ -211,26 +219,9 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
                     <div className="flex-grow">
                       <div className="flex items-center">
                         <h3 className="font-bold text-lg">{player.name}</h3>
-                        <span
-                          className="text-xs px-2 py-1 rounded-full ml-2"
-                          style={{
-                            backgroundColor:
-                              player.server_region === "EU"
-                                ? "#3182ce"
-                                : player.server_region === "US"
-                                ? "#e53e3e"
-                                : player.server_region === "KR"
-                                ? "#38a169"
-                                : player.server_region === "TW"
-                                ? "#805ad5"
-                                : "#4a5568",
-                          }}
-                        >
-                          {player.server_region}
-                        </span>
                       </div>
                       <p className="text-sm text-gray-400">
-                        {player.server_name}
+                        {player.server_region} - {player.server_name}
                       </p>
                     </div>
                     <div className="text-right">
@@ -245,7 +236,10 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
             </div>
           </div>
 
-          <div>{/* If you want to add dungeon performance later */}</div>
+          <div>
+            <h2 className="text-xl font-bold mb-4">Max Key Level</h2>
+            <DungeonPerformance className={className} specName={specName} />
+          </div>
         </div>
       </div>
     </div>
