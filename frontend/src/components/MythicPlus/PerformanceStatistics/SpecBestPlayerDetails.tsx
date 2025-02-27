@@ -10,6 +10,9 @@ import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
 import { specMapping } from "@/utils/specmapping";
 import DungeonPerformance from "./MaxKeyLevelSpecDungeon";
 import { getSpecBackground } from "@/utils/classandspecbackgrounds";
+// Import realm mapping utilities for character URL generation
+import { buildCharacterUrl, realmService } from "@/utils/realmMappingUtility";
+import type { RegionType } from "@/utils/realmMappingUtility";
 
 interface SpecDetailViewProps {
   slug: string;
@@ -63,6 +66,41 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
     return specMapping[className]?.[specName]?.role || "DPS";
   }, [className, specName]);
 
+  // Build character URL from player data
+  const handleCharacterUrl = (player: any): string => {
+    try {
+      // Find the realm by its name
+      const realm = realmService.getRealmByName(player.server_name);
+
+      if (!realm) {
+        console.warn(
+          `Unable to find realm for server name ${player.server_name}`,
+          "Falling back to basic URL structure"
+        );
+        // Fallback to basic URL structure if the realm is not found
+        const region = player.server_region.toLowerCase();
+        const name = player.name.toLowerCase();
+        return `/character/${region}/${player.server_name.toLowerCase()}/${name}`;
+      }
+
+      // Use buildCharacterUrl with the found ID
+      const url = buildCharacterUrl(
+        player.name,
+        realm.id,
+        player.server_region as RegionType
+      );
+
+      if (!url) {
+        throw new Error("Failed to build character URL");
+      }
+
+      return url;
+    } catch (error) {
+      console.error("Error building character URL:", error);
+      return "#";
+    }
+  };
+
   // Loading state
   if (isLoadingSpecs || isLoadingPlayers) {
     return (
@@ -110,6 +148,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
         minHeight: "100vh",
       }}
     >
+      {/* Header section with spec background */}
       <div
         className={`header-bg py-12 ${backgroundClass} mx-auto`}
         style={{
@@ -151,7 +190,6 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
               >
                 {specName} {className}
               </h1>
-              <p className="text-gray-400 capitalize">{role?.toLowerCase()}</p>
             </div>
           </div>
         </div>
@@ -160,6 +198,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
       <div className="container mx-auto px-4 py-8">
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Global Score Card */}
           <div
             className="p-4 rounded-md"
             style={{ backgroundColor: "#1a365d" }}
@@ -173,6 +212,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
             </p>
           </div>
 
+          {/* Spec Ranking Card */}
           <div
             className="p-4 rounded-md"
             style={{ backgroundColor: "#1a365d" }}
@@ -187,6 +227,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Top Players Section */}
           <div className="lg:col-span-2">
             <h2 className="text-xl font-bold mb-4">Top Players</h2>
 
@@ -198,17 +239,18 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
                   style={{ backgroundColor: "#112240" }}
                 >
                   <div className="flex items-center">
+                    {/* Rank Badge */}
                     <div
                       className={`font-bold text-lg flex items-center justify-center w-7 h-7 rounded-full mr-3`}
                       style={{
                         backgroundColor:
                           player.rank === 1
-                            ? "#d6b656"
+                            ? "#d6b656" // Gold
                             : player.rank === 2
-                            ? "#a6a6a6"
+                            ? "#a6a6a6" // Silver
                             : player.rank === 3
-                            ? "#ad8a56"
-                            : "#1a365d",
+                            ? "#ad8a56" // Bronze
+                            : "#1a365d", // Default blue for other ranks
                         color: player.rank <= 3 ? "#000" : "inherit",
                       }}
                     >
@@ -216,12 +258,24 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
                     </div>
                     <div className="flex-grow">
                       <div className="flex items-center">
-                        <h3 className="font-bold text-lg">{player.name}</h3>
+                        {/* Character name with link to profile */}
+                        <Link
+                          href={handleCharacterUrl(player)}
+                          className={`font-bold text-lg hover:underline`}
+                          style={{
+                            color: `var(--color-${formatClassNameForCSS(
+                              className
+                            )})`,
+                          }}
+                        >
+                          {player.name}
+                        </Link>
                       </div>
                       <p className="text-sm text-gray-400">
                         {player.server_region} - {player.server_name}
                       </p>
                     </div>
+                    {/* Player Score */}
                     <div className="text-right">
                       <p className="text-2xl font-bold">
                         {Math.round(player.total_score).toLocaleString()}
@@ -234,6 +288,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
             </div>
           </div>
 
+          {/* Dungeon Performance Section */}
           <div>
             <h2 className="text-xl font-bold mb-4">Max Key Level</h2>
             <DungeonPerformance className={className} specName={specName} />
