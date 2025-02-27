@@ -55,6 +55,18 @@ func (h *GlobalLeaderboardAnalysisHandler) GetSpecDungeonMaxKeyLevels(c *gin.Con
 	c.JSON(http.StatusOK, levels)
 }
 
+// GetDungeonMedia retrieves the dungeons media
+func (h *GlobalLeaderboardAnalysisHandler) GetDungeonMedia(c *gin.Context) {
+	media, err := h.analysisService.GetDungeonMedia(c.Request.Context())
+	if err != nil {
+		log.Printf("Error getting the dungeon media: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get dungeon media"})
+		return
+	}
+
+	c.JSON(http.StatusOK, media)
+}
+
 // GetDungeonAvgKeyLevels returns the average key levels per dungeon
 func (h *GlobalLeaderboardAnalysisHandler) GetDungeonAvgKeyLevels(c *gin.Context) {
 	levels, err := h.analysisService.GetDungeonAvgKeyLevels(c.Request.Context())

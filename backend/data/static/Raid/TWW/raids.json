@@ -64,6 +64,71 @@
           "name": "Queen Ansurek"
         }
       ]
+    },
+    {
+      "id": 1296,
+      "slug": "liberation-of-undermine",
+      "name": "Liberation of Undermine",
+      "short_name": "LOU",
+      "expansion": "TWW",
+      "mediaUrl": "https://cdn.raiderio.net/images/liberation-of-undermine/headers/_zone.jpg",
+      "icon": "inv_achievement_zone_undermine",
+      "starts": {
+        "us": "2025-03-04T15:00:00Z",
+        "eu": "2025-03-05T04:00:00Z",
+        "tw": "2025-03-05T23:00:00Z",
+        "kr": "2025-03-05T23:00:00Z",
+        "cn": "2025-03-05T23:00:00Z"
+      },
+      "ends": {
+        "us": "2030-01-01T00:00:00Z",
+        "eu": "2030-01-01T00:00:00Z",
+        "tw": "2030-01-01T00:00:00Z",
+        "kr": "2030-01-01T00:00:00Z",
+        "cn": "2030-01-01T00:00:00Z"
+      },
+      "encounters": [
+        {
+          "id": 2639,
+          "slug": "vexie-and-the-geargrinders",
+          "name": "Vexie and the Geargrinders"
+        },
+        {
+          "id": 2640,
+          "slug": "cauldron-of-carnage",
+          "name": "Cauldron of Carnage"
+        },
+        {
+          "id": 2641,
+          "slug": "rik-reverb",
+          "name": "Rik Reverb"
+        },
+        {
+          "id": 2642,
+          "slug": "stix-bunkjunker",
+          "name": "Stix Bunkjunker"
+        },
+        {
+          "id": 2653,
+          "slug": "sprocketmonger-lockenstock",
+          "name": "Sprocketmonger Lockenstock"
+        },
+        {
+          "id": 2644,
+          "slug": "onearmed-bandit",
+          "name": "One-Armed Bandit"
+        },
+        {
+          "id": 2645,
+          "slug": "mugzee-heads-of-security",
+          "name": "Mug'Zee, Heads of Security"
+        },
+        {
+          "id": 2646,
+          "slug": "chrome-king-gallywix",
+          "name": "Chrome King Gallywix"
+        }
+      ]
     }
   ]
 }

@@ -28,6 +28,14 @@ export interface MaxKeyLevelsPerSpecAndDungeon {
   max_key_level: number;
 }
 
+// DungeonMedia is the media of dungeons
+export interface DungeonMedia {
+  dungeon_slug: string;
+  encounter_id: number;
+  icon: string;
+  media_url: string;
+}
+
 // AverageKeyLevelsPerDungeon is the average key levels per dungeon
 export interface AverageKeyLevelsPerDungeon {
   dungeon_name: string;

@@ -114,6 +114,9 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 			// Get max key levels per spec and dungeon
 			mythicplus.GET("/analysis/specs/dungeons/max-levels-key", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetSpecDungeonMaxKeyLevels)
 
+			// Get dungeon media
+			mythicplus.GET("/analysis/specs/dungeons/media", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetDungeonMedia)
+
 			// Get average key levels per dungeon
 			mythicplus.GET("/analysis/dungeons/avg-levels-key", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetDungeonAvgKeyLevels)
 

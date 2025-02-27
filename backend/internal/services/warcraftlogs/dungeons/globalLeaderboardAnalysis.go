@@ -74,6 +74,24 @@ func (s *GlobalLeaderboardAnalysisService) GetSpecDungeonMaxKeyLevels(ctx contex
 	return results, nil
 }
 
+// DungeonMedia
+type DungeonMedia struct {
+	Slug        string `json:"dungeon_slug"`
+	MediaURL    string `json:"media_url"`
+	Icon        string `json:"icon"`
+	EncounterID int    `json:"encounter_id"`
+}
+
+// GetDungeonMedia retrieves the dungeons media
+func (s *GlobalLeaderboardAnalysisService) GetDungeonMedia(ctx context.Context) ([]DungeonMedia, error) {
+	var results []DungeonMedia
+	err := s.db.WithContext(ctx).Raw("SELECT slug, media_url, icon, encounter_id FROM dungeons WHERE encounter_id IS NOT NULL").Scan(&results).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dungeon media: %w", err)
+	}
+	return results, nil
+}
+
 // DungeonAvgKeyLevel represents the average key level for a dungeon from the view
 type DungeonAvgKeyLevel struct {
 	DungeonName string  `json:"dungeon_name"`

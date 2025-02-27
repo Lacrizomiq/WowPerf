@@ -205,6 +205,108 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "season-tww-2",
+      "name": "TWW Season 2",
+      "short_name": "TWW2",
+      "seasonal_affix": null,
+      "starts": {
+        "us": "2025-03-04T15:00:00Z",
+        "eu": "2025-03-05T04:00:00Z",
+        "tw": "2025-03-05T23:00:00Z",
+        "kr": "2025-03-05T23:00:00Z",
+        "cn": "2025-03-05T23:00:00Z"
+      },
+      "ends": {
+        "us": "2030-01-01T00:00:00Z",
+        "eu": "2030-01-01T00:00:00Z",
+        "tw": "2030-01-01T00:00:00Z",
+        "kr": "2030-01-01T00:00:00Z",
+        "cn": "2030-01-01T00:00:00Z"
+      },
+      "dungeons": [
+        {
+          "id": 1272,
+          "challenge_mode_id": 506,
+          "encounter_id": 12661,
+          "slug": "cinderbrew-meadery",
+          "name": "Cinderbrew Meadery",
+          "short_name": "BREW",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/cinderbrew-meadery.jpg",
+          "icon": "inv_achievement_dungeon_cinderbrewmeadery"
+        },
+        {
+          "id": 1210,
+          "challenge_mode_id": 504,
+          "encounter_id": 12651,
+          "slug": "darkflame-cleft",
+          "name": "Darkflame Cleft",
+          "short_name": "DFC",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/darkflame-cleft.jpg",
+          "icon": "inv_achievement_dungeon_darkflamecleft"
+        },
+        {
+          "id": 1178,
+          "challenge_mode_id": 370,
+          "encounter_id": 112098,
+          "slug": "operation-mechagon-workshop",
+          "name": "Mechagon Workshop",
+          "short_name": "WORK",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion7/base/operation-mechagon-workshop.jpg",
+          "icon": "achievement_boss_mechagon"
+        },
+        {
+          "id": 1298,
+          "challenge_mode_id": 525,
+          "encounter_id": 12773,
+          "slug": "operation-floodgate",
+          "name": "Operation: Floodgate",
+          "short_name": "FLOOD",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/operation-floodgate.jpg",
+          "icon": "inv_achievement_dungeon_waterworks"
+        },
+        {
+          "id": 1267,
+          "challenge_mode_id": 499,
+          "encounter_id": 12649,
+          "slug": "priory-of-the-sacred-flame",
+          "name": "Priory of the Sacred Flame",
+          "short_name": "PSF",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/priory-of-the-sacred-flame.jpg",
+          "icon": "inv_achievement_dungeon_prioryofthesacredflame"
+        },
+        {
+          "id": 1012,
+          "challenge_mode_id": 247,
+          "encounter_id": 61594,
+          "slug": "the-motherlode",
+          "name": "The MOTHERLODE!!",
+          "short_name": "ML",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion7/base/the-motherlode.jpg",
+          "icon": "achievement_dungeon_kezan"
+        },
+        {
+          "id": 1268,
+          "challenge_mode_id": 500,
+          "encounter_id": 12648,
+          "slug": "the-rookery",
+          "name": "The Rookery",
+          "short_name": "ROOK",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/the-rookery.jpg",
+          "icon": "inv_achievement_dungeon_rookery"
+        },
+        {
+          "id": 1187,
+          "challenge_mode_id": 382,
+          "encounter_id": 62293,
+          "slug": "theater-of-pain",
+          "name": "Theater of Pain",
+          "short_name": "TOP",
+          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion8/base/theater-of-pain.jpg",
+          "icon": "achievement_dungeon_theatreofpain"
+        }
+      ]
     }
   ]
 }

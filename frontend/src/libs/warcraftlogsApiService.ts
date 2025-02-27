@@ -11,6 +11,7 @@ import {
   SpecAverageGlobalScore,
   BestTenPlayerPerSpec,
   MaxKeyLevelsPerSpecAndDungeon,
+  DungeonMedia,
 } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
@@ -184,6 +185,19 @@ export const getMaxKeyLevelPerSpecAndDungeon = async () => {
     console.error(
       "Error fetching the max level key for a spec for each dungeon"
     );
+    throw error;
+  }
+};
+
+// getDungeonMedia get the dungeon media
+export const getDungeonMedia = async () => {
+  try {
+    const { data } = await api.get<DungeonMedia[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/dungeons/media"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the dungeons media");
     throw error;
   }
 };

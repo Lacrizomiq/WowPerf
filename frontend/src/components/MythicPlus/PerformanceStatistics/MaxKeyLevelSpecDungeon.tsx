@@ -1,26 +1,35 @@
-// components/MythicPlus/DungeonPerformance/DungeonPerformance.tsx
 "use client";
 
 import React, { useMemo } from "react";
-import { useGetMaxKeyLevelPerSpecAndDungeon } from "@/hooks/useWarcraftLogsApi";
-import { MaxKeyLevelsPerSpecAndDungeon } from "@/types/warcraftlogs/globalLeaderboardAnalysis";
+import {
+  useGetMaxKeyLevelPerSpecAndDungeon,
+  useGetDungeonMedia,
+} from "@/hooks/useWarcraftLogsApi";
 
-interface DungeonPerformanceProps {
+const DungeonPerformance: React.FC<{
   className: string;
   specName: string;
-}
-
-const DungeonPerformance: React.FC<DungeonPerformanceProps> = ({
-  className,
-  specName,
-}) => {
+}> = ({ className, specName }) => {
   const {
     data: dungeonData,
     isLoading,
     error,
   } = useGetMaxKeyLevelPerSpecAndDungeon();
 
-  // Filter dungeon data for the specific class and spec
+  const { data: dungeonMedia, isLoading: isLoadingDungeonMedia } =
+    useGetDungeonMedia();
+
+  // Map the media by slug
+  const mediaBySlug = useMemo(() => {
+    if (!dungeonMedia) return {};
+
+    return dungeonMedia.reduce((acc, media) => {
+      acc[media.dungeon_slug] = media;
+      return acc;
+    }, {} as Record<string, (typeof dungeonMedia)[0]>);
+  }, [dungeonMedia]);
+
+  // Filtrer class and spec data
   const specDungeonData = useMemo(() => {
     if (!dungeonData) return [];
     return dungeonData.filter(
@@ -30,7 +39,7 @@ const DungeonPerformance: React.FC<DungeonPerformanceProps> = ({
     );
   }, [dungeonData, className, specName]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingDungeonMedia) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
         <div className="text-white text-center">
@@ -56,14 +65,28 @@ const DungeonPerformance: React.FC<DungeonPerformanceProps> = ({
       {specDungeonData.map((dungeon, index) => (
         <div
           key={index}
-          className="card p-4"
-          style={{ backgroundColor: "#112240" }}
+          className="card p-4 relative overflow-hidden rounded-lg"
+          style={{
+            backgroundColor: "#112240",
+            backgroundImage: mediaBySlug[dungeon.dungeon_slug]?.media_url
+              ? `url('${mediaBySlug[dungeon.dungeon_slug].media_url}')`
+              : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
         >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold">{dungeon.dungeon_name}</h3>
-            <span className="text-lg font-bold">{dungeon.max_key_level}</span>
+          <div className="absolute inset-0 bg-black/50" /> {/* Dark overlay */}
+          <div className="relative z-10">
+            {" "}
+            {/* Content wrapper */}
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-white">{dungeon.dungeon_name}</h3>
+              <span className="text-lg font-bold text-white">
+                +{dungeon.max_key_level}
+              </span>
+            </div>
           </div>
-          <p className="text-xs text-gray-400 mb-2">Max Key Level</p>
         </div>
       ))}
     </div>

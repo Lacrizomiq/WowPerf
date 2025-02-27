@@ -151,9 +151,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
               >
                 {specName} {className}
               </h1>
-              <p className="text-gray-400 capitalize">
-                {role?.toLowerCase()} Specialization
-              </p>
+              <p className="text-gray-400 capitalize">{role?.toLowerCase()}</p>
             </div>
           </div>
         </div>
