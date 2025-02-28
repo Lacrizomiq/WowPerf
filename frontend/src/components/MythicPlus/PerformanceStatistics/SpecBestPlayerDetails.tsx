@@ -201,7 +201,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
           {/* Global Score Card */}
           <div
             className="p-4 rounded-md"
-            style={{ backgroundColor: "#1a365d" }}
+            style={{ backgroundColor: "#112240" }}
           >
             <p className="text-sm text-gray-400 mb-1">Global Score</p>
             <p className="text-3xl font-bold">
@@ -215,7 +215,7 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
           {/* Spec Ranking Card */}
           <div
             className="p-4 rounded-md"
-            style={{ backgroundColor: "#1a365d" }}
+            style={{ backgroundColor: "#112240" }}
           >
             <p className="text-sm text-gray-400 mb-1">Spec Ranking</p>
             <p className="text-3xl font-bold">

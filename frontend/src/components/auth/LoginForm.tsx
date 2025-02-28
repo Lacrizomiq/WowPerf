@@ -1,16 +1,33 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/providers/AuthContext";
 import { AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+
+// Define the form data type
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Initialize React Hook Form with validation
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+    clearErrors,
+  } = useForm<LoginFormData>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -21,78 +38,77 @@ const LoginForm: React.FC = () => {
     }
   }, [isAuthenticated, router]);
 
-  const clearError = () => {
-    if (error) {
-      setError("");
-    }
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    clearError();
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    clearError();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isSubmitting) {
-      return;
-    }
-
-    // Basic validation
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError("");
-
+  // Form submission handler using React Hook Form
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(email, password);
-      // The redirection is handled by the useEffect
+      await login(data.email, data.password);
+      // Redirection is handled by the useEffect
     } catch (err) {
       console.error("Login error:", err);
 
       if (err instanceof AuthError) {
         switch (err.code) {
           case AuthErrorCode.INVALID_CREDENTIALS:
-            setError("Invalid email or password");
+            // Set a form-level error for invalid credentials
+            setError("root", {
+              type: "manual",
+              message: "Invalid email or password",
+            });
             break;
           case AuthErrorCode.NETWORK_ERROR:
-            setError(
-              "Network error. Please check your connection and try again"
-            );
+            setError("root", {
+              type: "manual",
+              message:
+                "Network error. Please check your connection and try again",
+            });
             break;
           case AuthErrorCode.SERVER_ERROR:
-            setError("Server error. Please try again later");
+            setError("root", {
+              type: "manual",
+              message: "Server error. Please try again later",
+            });
             break;
           case AuthErrorCode.INVALID_INPUT:
-            setError("Please check your input and try again");
+            setError("root", {
+              type: "manual",
+              message: "Please check your input and try again",
+            });
             break;
           case AuthErrorCode.LOGIN_ERROR:
-            setError(err.message || "Login failed. Please try again");
+            setError("root", {
+              type: "manual",
+              message: err.message || "Login failed. Please try again",
+            });
             break;
           default:
-            setError("An unexpected error occurred. Please try again");
+            setError("root", {
+              type: "manual",
+              message: "An unexpected error occurred. Please try again",
+            });
         }
       } else if (err instanceof Error) {
-        setError(err.message || "An unexpected error occurred");
+        setError("root", {
+          type: "manual",
+          message: err.message || "An unexpected error occurred",
+        });
       } else {
-        setError("An unexpected error occurred");
+        setError("root", {
+          type: "manual",
+          message: "An unexpected error occurred",
+        });
       }
-    } finally {
-      setIsSubmitting(false);
+    }
+  };
+
+  // Clear errors when user changes input
+  const handleInputChange = () => {
+    if (errors.root) {
+      clearErrors("root");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label
           htmlFor="email"
@@ -103,15 +119,21 @@ const LoginForm: React.FC = () => {
         <input
           id="email"
           type="text"
-          value={email}
-          onChange={handleEmailChange}
-          required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            error ? "border-red-500" : "border-gray-600"
+            errors.email || errors.root ? "border-red-500" : "border-gray-600"
           } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Enter your email"
+          {...register("email", {
+            required: "Email is required",
+            onChange: handleInputChange,
+          })}
         />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-500" role="alert">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
       <div>
@@ -124,23 +146,31 @@ const LoginForm: React.FC = () => {
         <input
           id="password"
           type="password"
-          value={password}
-          onChange={handlePasswordChange}
-          required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            error ? "border-red-500" : "border-gray-600"
+            errors.password || errors.root
+              ? "border-red-500"
+              : "border-gray-600"
           } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Enter your password"
+          {...register("password", {
+            required: "Password is required",
+            onChange: handleInputChange,
+          })}
         />
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-500" role="alert">
+            {errors.password.message}
+          </p>
+        )}
       </div>
 
-      {error && (
+      {errors.root && (
         <div
           className="p-3 bg-red-100 border border-red-400 text-red-700 rounded relative"
           role="alert"
         >
-          <span className="block sm:inline">{error}</span>
+          <span className="block sm:inline">{errors.root.message}</span>
         </div>
       )}
 

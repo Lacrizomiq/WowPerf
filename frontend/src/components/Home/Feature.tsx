@@ -11,15 +11,15 @@ export default function Feature() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Leaderboards */}
             <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300">
-              <Link href="/mythic-plus/leaderboard">
+              <Link href="/mythic-plus/analysis">
                 <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
                   <Trophy className="text-blue-400" size={24} />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">
-                  Mythic+ Global Leaderboards
+                  Mythic+ Performance Analysis
                 </h3>
                 <p className="text-slate-300">
-                  Track the world&apos;s top players by role, spec, and dungeon.
+                  Track the world&apos;s top players by role and specialization.
                   Updated daily with the latest rankings.
                 </p>
               </Link>
@@ -27,30 +27,34 @@ export default function Feature() {
 
             {/* Statistics */}
             <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm">
-              <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
-                <LineChart className="text-blue-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                Mythic+ Statistics
-              </h3>
-              <p className="text-slate-300">
-                Detailed statistics on class distribution, team compositions,
-                and specs distribution in high-level content.
-              </p>
+              <Link href="/mythic-plus/statistics">
+                <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
+                  <LineChart className="text-blue-400" size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Mythic+ Statistics
+                </h3>
+                <p className="text-slate-300">
+                  Detailed statistics on class distribution, team compositions,
+                  and specs distribution in high-level content.
+                </p>
+              </Link>
             </div>
 
             {/* Best Runs */}
             <div className="bg-slate-800/50 rounded-xl p-6 backdrop-blur-sm">
-              <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
-                <Star className="text-blue-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                Best Mythic+ Runs
-              </h3>
-              <p className="text-slate-300">
-                Explore the highest scoring Mythic+ runs with detailed team
-                compositions and builds.
-              </p>
+              <Link href="/mythic-plus/best-runs">
+                <div className="rounded-full bg-blue-600/10 w-12 h-12 flex items-center justify-center mb-4">
+                  <Star className="text-blue-400" size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Best Mythic+ Runs
+                </h3>
+                <p className="text-slate-300">
+                  Explore the highest scoring Mythic+ runs with detailed team
+                  compositions and builds.
+                </p>
+              </Link>
             </div>
 
             {/* Character Progress */}
