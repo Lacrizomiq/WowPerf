@@ -1,7 +1,7 @@
 // AccountProfile.tsx (WoWProfile)
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
 import { useWoWProfile } from "@/hooks/useWowProtectedAccount";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,27 @@ import { toast } from "react-hot-toast";
 import CharacterCard from "./CharacterCard";
 import Image from "next/image";
 
+// Define a type for the character with M+ score
+interface CharacterWithScore {
+  name: string;
+  playable_class: { name: string; id: number };
+  level: number;
+  realm: { name: string; slug: string };
+  mPlusScore?: number;
+  // Add any other properties from your character object
+}
+
 export const WoWProfile: React.FC<{
   showTooltips?: boolean;
   limit?: number;
 }> = ({ showTooltips = false, limit }) => {
   const { linkStatus, initiateLink } = useBattleNetLink();
   const { wowProfile, isLoading, error, refetch } = useWoWProfile();
+  // Properly type the state variable
+  const [sortedCharacters, setSortedCharacters] = useState<
+    CharacterWithScore[]
+  >([]);
+  const [isCharactersLoading, setIsCharactersLoading] = useState(true);
 
   useEffect(() => {
     if (error instanceof WoWError && error.code === WoWErrorCode.UNAUTHORIZED) {
@@ -24,7 +39,94 @@ export const WoWProfile: React.FC<{
     }
   }, [error, initiateLink]);
 
-  if (isLoading) {
+  // New effect to handle character sorting
+  // New approach in the useEffect
+  useEffect(() => {
+    // First set the characters from the profile without fetching scores
+    if (wowProfile && wowProfile.wow_accounts) {
+      const characters = wowProfile.wow_accounts.flatMap(
+        (account) => account.characters
+      ) as CharacterWithScore[];
+
+      // Initially set characters without sorting
+      setSortedCharacters(characters);
+
+      // Then fetch scores and update
+      const fetchAllScores = async () => {
+        setIsCharactersLoading(true);
+
+        try {
+          // Create a map to store scores by character name
+          const scoreMap = new Map();
+
+          // Fetch scores for each character
+          for (const character of characters) {
+            const safeRegion = wowProfile.region || "eu";
+            const profileNamespace = `profile-${safeRegion}`;
+
+            try {
+              const response = await fetch(
+                `/api/blizzard/character/${safeRegion}/${
+                  character.realm.slug
+                }/${character.name.toLowerCase()}/mythic-plus-best-runs?namespace=${profileNamespace}&locale=en_GB&season=13`
+              );
+
+              if (response.ok) {
+                const data = await response.json();
+                const score = data?.OverallMythicRating || 0;
+                scoreMap.set(character.name, score);
+                console.log(`Fetched score for ${character.name}: ${score}`);
+              } else {
+                console.log(
+                  `Error fetching score for ${character.name}: ${response.status}`
+                );
+                scoreMap.set(character.name, 0);
+              }
+            } catch (error) {
+              console.error(`Error for ${character.name}:`, error);
+              scoreMap.set(character.name, 0);
+            }
+          }
+
+          // Now update all characters with their scores
+          const charactersWithScores = characters.map((character) => ({
+            ...character,
+            mPlusScore: scoreMap.get(character.name) || 0,
+          }));
+
+          // Log before sorting
+          console.log(
+            "Before sorting:",
+            charactersWithScores.map((c) => `${c.name}: ${c.mPlusScore}`)
+          );
+
+          // Sort characters by M+ score (highest first)
+          const sortedChars = [...charactersWithScores].sort((a, b) => {
+            const scoreA = Number(a.mPlusScore) || 0;
+            const scoreB = Number(b.mPlusScore) || 0;
+            return scoreB - scoreA;
+          });
+
+          // Log after sorting
+          console.log(
+            "After sorting:",
+            sortedChars.map((c) => `${c.name}: ${c.mPlusScore}`)
+          );
+
+          // Update state with sorted characters
+          setSortedCharacters(sortedChars);
+        } catch (error) {
+          console.error("Error in score fetching:", error);
+        } finally {
+          setIsCharactersLoading(false);
+        }
+      };
+
+      fetchAllScores();
+    }
+  }, [wowProfile]);
+
+  if (isLoading || isCharactersLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -77,26 +179,32 @@ export const WoWProfile: React.FC<{
     );
   }
 
-  // Find all characters from wow profile
-  let characters = wowProfile
-    ? wowProfile.wow_accounts.flatMap((account) => account.characters)
-    : [];
+  // Log the final list of characters being displayed
+  console.log(
+    "Final display characters with scores:",
+    sortedCharacters.map((c) => ({
+      name: c.name,
+      score: c.mPlusScore,
+    }))
+  );
 
   // Limit number of characters if requested (for Overview tab)
-  if (limit && characters.length > limit) {
-    characters = characters.slice(0, limit);
+  let displayCharacters = sortedCharacters;
+  if (limit && displayCharacters.length > limit) {
+    displayCharacters = displayCharacters.slice(0, limit);
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {characters.length > 0 ? (
-        characters.map((character, index) => (
+      {displayCharacters.length > 0 ? (
+        displayCharacters.map((character, index) => (
           <CharacterCard
             key={`${character.name}-${index}`}
             character={character}
             region={wowProfile?.region}
             showTooltip={showTooltips}
             isMainCard={limit === 1}
+            mythicPlusScore={character.mPlusScore} // Pass M+ score to avoid refetching
           />
         ))
       ) : (

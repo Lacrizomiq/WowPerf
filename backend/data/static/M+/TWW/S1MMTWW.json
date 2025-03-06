@@ -233,7 +233,7 @@
           "slug": "cinderbrew-meadery",
           "name": "Cinderbrew Meadery",
           "short_name": "BREW",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/cinderbrew-meadery.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/cinderbrew-meadery-small.jpg",
           "icon": "inv_achievement_dungeon_cinderbrewmeadery"
         },
         {
@@ -243,7 +243,7 @@
           "slug": "darkflame-cleft",
           "name": "Darkflame Cleft",
           "short_name": "DFC",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/darkflame-cleft.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/darkflame-cleft-small.jpg",
           "icon": "inv_achievement_dungeon_darkflamecleft"
         },
         {
@@ -253,7 +253,7 @@
           "slug": "operation-mechagon-workshop",
           "name": "Mechagon Workshop",
           "short_name": "WORK",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion7/base/operation-mechagon-workshop.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/operation-mechagon-small.jpg",
           "icon": "achievement_boss_mechagon"
         },
         {
@@ -263,7 +263,7 @@
           "slug": "operation-floodgate",
           "name": "Operation: Floodgate",
           "short_name": "FLOOD",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/operation-floodgate.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/operation-floodgate-small.jpg",
           "icon": "inv_achievement_dungeon_waterworks"
         },
         {
@@ -273,7 +273,7 @@
           "slug": "priory-of-the-sacred-flame",
           "name": "Priory of the Sacred Flame",
           "short_name": "PSF",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/priory-of-the-sacred-flame.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/priory-of-the-sacred-flame-small.jpg",
           "icon": "inv_achievement_dungeon_prioryofthesacredflame"
         },
         {
@@ -283,7 +283,7 @@
           "slug": "the-motherlode",
           "name": "The MOTHERLODE!!",
           "short_name": "ML",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion7/base/the-motherlode.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-motherlode-small.jpg",
           "icon": "achievement_dungeon_kezan"
         },
         {
@@ -293,7 +293,7 @@
           "slug": "the-rookery",
           "name": "The Rookery",
           "short_name": "ROOK",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion10/base/the-rookery.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/the-rookery-small.jpg",
           "icon": "inv_achievement_dungeon_rookery"
         },
         {
@@ -303,7 +303,7 @@
           "slug": "theater-of-pain",
           "name": "Theater of Pain",
           "short_name": "TOP",
-          "mediaURL": "https://cdn.raiderio.net/images/dungeons/expansion8/base/theater-of-pain.jpg",
+          "mediaURL": "https://render.worldofwarcraft.com/eu/zones/theater-of-pain-small.jpg",
           "icon": "achievement_dungeon_theatreofpain"
         }
       ]

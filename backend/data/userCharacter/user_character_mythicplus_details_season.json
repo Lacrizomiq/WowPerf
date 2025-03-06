@@ -1,0 +1,1086 @@
+[
+  {
+    "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/mythic-keystone-profile/season/13?region=eu&namespace=profile-eu&locale=en_GB"
+  },
+  {
+    "CharacterName": "Ouimagatée",
+    "RealmSlug": "silvermoon",
+    "SeasonID": 13,
+    "OverallMythicRating": 2851.5195,
+    "OverallMythicRatingHex": "#ff8000",
+    "BestRuns": [
+      {
+        "CompletedTimestamp": "2024-12-24T09:18:43+01:00",
+        "DungeonID": 1023,
+        "Dungeon": {
+          "ID": 1023,
+          "ChallengeModeID": 353,
+          "Slug": "siege-of-boralus",
+          "Name": "Siege of Boralus",
+          "ShortName": "SIEGE",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/siege-of-boralus-small.jpg",
+          "Icon": "achievement_dungeon_siegeofboralus",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 353,
+              "QualifyingDuration": 1224000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 353,
+              "QualifyingDuration": 1632000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 353,
+              "QualifyingDuration": 2040000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "SIEGE",
+        "Duration": 2027112,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 11,
+        "MythicRating": 335.77695,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 148,
+            "Name": "Xal'atath's Bargain: Ascendant",
+            "Icon": "inv_nullstone_cosmicvoid",
+            "WowheadURL": "https://wowhead.com/affix=148"
+          },
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 621,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 65608307,
+            "CharacterName": "Purytas",
+            "RealmID": 581,
+            "RealmSlug": "blackrock",
+            "EquippedItemLevel": 625,
+            "RaceID": 2,
+            "RaceName": "Orc",
+            "SpecializationID": 73,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 176201516,
+            "CharacterName": "Legenddrake",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 627,
+            "RaceID": 70,
+            "RaceName": "Dracthyr",
+            "SpecializationID": 1473,
+            "Specialization": "Augmentation"
+          },
+          {
+            "CharacterID": 164732214,
+            "CharacterName": "Pierrewls",
+            "RealmID": 566,
+            "RealmSlug": "blackhand",
+            "EquippedItemLevel": 628,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 267,
+            "Specialization": "Destruction"
+          },
+          {
+            "CharacterID": 192006576,
+            "CharacterName": "Кукуруза",
+            "RealmID": 1615,
+            "RealmSlug": "howling-fjord",
+            "EquippedItemLevel": 631,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 251,
+            "Specialization": "Frost"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2024-12-31T09:10:56+01:00",
+        "DungeonID": 1271,
+        "Dungeon": {
+          "ID": 1271,
+          "ChallengeModeID": 503,
+          "Slug": "arakara-city-of-echoes",
+          "Name": "Ara-Kara, City of Echoes",
+          "ShortName": "ARAK",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/ara-kara-city-of-echoes-small.jpg",
+          "Icon": "inv_achievement_dungeon_arak-ara",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 503,
+              "QualifyingDuration": 1080000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 503,
+              "QualifyingDuration": 1440000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 503,
+              "QualifyingDuration": 1800000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "ARAK",
+        "Duration": 1978635,
+        "IsCompletedWithinTime": false,
+        "KeyStoneUpgrades": 0,
+        "KeystoneLevel": 11,
+        "MythicRating": 303.24136,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 160,
+            "Name": "Xal'atath's Bargain: Devour",
+            "Icon": "inv_ability_voidweaverpriest_entropicrift",
+            "WowheadURL": "https://wowhead.com/affix=160"
+          },
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 206829100,
+            "CharacterName": "Yoshamy",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 634,
+            "RaceID": 11,
+            "RaceName": "Draenei",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 218612786,
+            "CharacterName": "Bulkino",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 631,
+            "RaceID": 32,
+            "RaceName": "Kul Tiran",
+            "SpecializationID": 72,
+            "Specialization": "Fury"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 623,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 147362178,
+            "CharacterName": "Skullcrush",
+            "RealmID": 1316,
+            "RealmSlug": "nemesis",
+            "EquippedItemLevel": 631,
+            "RaceID": 36,
+            "RaceName": "Mag'har Orc",
+            "SpecializationID": 251,
+            "Specialization": "Frost"
+          },
+          {
+            "CharacterID": 173867823,
+            "CharacterName": "Proxypal",
+            "RealmID": 554,
+            "RealmSlug": "ravencrest",
+            "EquippedItemLevel": 630,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2025-01-10T15:02:17+01:00",
+        "DungeonID": 71,
+        "Dungeon": {
+          "ID": 71,
+          "ChallengeModeID": 507,
+          "Slug": "grim-batol",
+          "Name": "Grim Batol",
+          "ShortName": "GB",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/grim-batol-small.jpg",
+          "Icon": "achievement_dungeon_grimbatol",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 507,
+              "QualifyingDuration": 1224000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 507,
+              "QualifyingDuration": 1632000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 507,
+              "QualifyingDuration": 2040000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "GB",
+        "Duration": 1974602,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 12,
+        "MythicRating": 367.73587,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 147,
+            "Name": "Xal'atath's Guile",
+            "Icon": "ability_racial_chillofnight",
+            "WowheadURL": "https://wowhead.com/affix=147"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 629,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 185046649,
+            "CharacterName": "Krankin",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 177885603,
+            "CharacterName": "Twerkforjesu",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 102,
+            "Specialization": "Balance"
+          },
+          {
+            "CharacterID": 204531464,
+            "CharacterName": "Peliseh",
+            "RealmID": 1305,
+            "RealmSlug": "kazzak",
+            "EquippedItemLevel": 635,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 183992630,
+            "CharacterName": "Swggint",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 64,
+            "Specialization": "Frost"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2025-01-10T17:09:53+01:00",
+        "DungeonID": 1269,
+        "Dungeon": {
+          "ID": 1269,
+          "ChallengeModeID": 501,
+          "Slug": "the-stonevault",
+          "Name": "The Stonevault",
+          "ShortName": "SV",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/the-stonevault-small.jpg",
+          "Icon": "inv_achievement_dungeon_stonevault",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 501,
+              "QualifyingDuration": 1188000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 501,
+              "QualifyingDuration": 1584000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 501,
+              "QualifyingDuration": 1980000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "SV",
+        "Duration": 1852651,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 12,
+        "MythicRating": 368.93747,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          },
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 147,
+            "Name": "Xal'atath's Guile",
+            "Icon": "ability_racial_chillofnight",
+            "WowheadURL": "https://wowhead.com/affix=147"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 183992630,
+            "CharacterName": "Swggint",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 64,
+            "Specialization": "Frost"
+          },
+          {
+            "CharacterID": 204531464,
+            "CharacterName": "Peliseh",
+            "RealmID": 1305,
+            "RealmSlug": "kazzak",
+            "EquippedItemLevel": 635,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 177885603,
+            "CharacterName": "Twerkforjesu",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 102,
+            "Specialization": "Balance"
+          },
+          {
+            "CharacterID": 185046649,
+            "CharacterName": "Krankin",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 629,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2025-01-08T11:08:23+01:00",
+        "DungeonID": 1270,
+        "Dungeon": {
+          "ID": 1270,
+          "ChallengeModeID": 505,
+          "Slug": "the-dawnbreaker",
+          "Name": "The Dawnbreaker",
+          "ShortName": "DAWN",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/the-dawnbreaker-small.jpg",
+          "Icon": "inv_achievement_dungeon_dawnbreaker",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 505,
+              "QualifyingDuration": 1080000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 505,
+              "QualifyingDuration": 1440000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 505,
+              "QualifyingDuration": 1800000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "DAWN",
+        "Duration": 1735776,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 12,
+        "MythicRating": 369.1197,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 147,
+            "Name": "Xal'atath's Guile",
+            "Icon": "ability_racial_chillofnight",
+            "WowheadURL": "https://wowhead.com/affix=147"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          },
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 219759843,
+            "CharacterName": "Amygdal",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 631,
+            "RaceID": 1,
+            "RaceName": "Human",
+            "SpecializationID": 70,
+            "Specialization": "Retribution"
+          },
+          {
+            "CharacterID": 185948593,
+            "CharacterName": "Maldoriat",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 630,
+            "RaceID": 84,
+            "RaceName": "Earthen",
+            "SpecializationID": 263,
+            "Specialization": "Enhancement"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 626,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 166039961,
+            "CharacterName": "Jujubaë",
+            "RealmID": 1335,
+            "RealmSlug": "ysondre",
+            "EquippedItemLevel": 634,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 174632765,
+            "CharacterName": "Forestwitch",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 636,
+            "RaceID": 2,
+            "RaceName": "Orc",
+            "SpecializationID": 266,
+            "Specialization": "Demonology"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2024-12-30T14:58:45+01:00",
+        "DungeonID": 1274,
+        "Dungeon": {
+          "ID": 1274,
+          "ChallengeModeID": 502,
+          "Slug": "city-of-threads",
+          "Name": "City of Threads",
+          "ShortName": "COT",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/city-of-threads-small.jpg",
+          "Icon": "inv_achievement_dungeon_cityofthreads",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 502,
+              "QualifyingDuration": 1260000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 502,
+              "QualifyingDuration": 1680000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 502,
+              "QualifyingDuration": 2100000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "COT",
+        "Duration": 1803394,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 11,
+        "MythicRating": 341.61996,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 160,
+            "Name": "Xal'atath's Bargain: Devour",
+            "Icon": "inv_ability_voidweaverpriest_entropicrift",
+            "WowheadURL": "https://wowhead.com/affix=160"
+          },
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 192699171,
+            "CharacterName": "Sam",
+            "RealmID": 545,
+            "RealmSlug": "chogall",
+            "EquippedItemLevel": 628,
+            "RaceID": 36,
+            "RaceName": "Mag'har Orc",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 623,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 178819796,
+            "CharacterName": "Gravewalkerz",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 638,
+            "RaceID": 2,
+            "RaceName": "Orc",
+            "SpecializationID": 267,
+            "Specialization": "Destruction"
+          },
+          {
+            "CharacterID": 210549129,
+            "CharacterName": "Jnxng",
+            "RealmID": 1316,
+            "RealmSlug": "nemesis",
+            "EquippedItemLevel": 631,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 185275441,
+            "CharacterName": "Драг",
+            "RealmID": 1615,
+            "RealmSlug": "howling-fjord",
+            "EquippedItemLevel": 632,
+            "RaceID": 70,
+            "RaceName": "Dracthyr",
+            "SpecializationID": 1473,
+            "Specialization": "Augmentation"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2025-01-10T15:37:56+01:00",
+        "DungeonID": 1184,
+        "Dungeon": {
+          "ID": 1184,
+          "ChallengeModeID": 375,
+          "Slug": "mists-of-tirna-scithe",
+          "Name": "Mists of Tirna Scithe",
+          "ShortName": "MISTS",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/mists-of-tirna-scithe-small.jpg",
+          "Icon": "achievement_dungeon_mistsoftirnascithe",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 375,
+              "QualifyingDuration": 1080000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 375,
+              "QualifyingDuration": 1440000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 375,
+              "QualifyingDuration": 1800000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "MISTS",
+        "Duration": 1854358,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 0,
+        "KeystoneLevel": 13,
+        "MythicRating": 380.70718,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          },
+          {
+            "ID": 147,
+            "Name": "Xal'atath's Guile",
+            "Icon": "ability_racial_chillofnight",
+            "WowheadURL": "https://wowhead.com/affix=147"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 204531464,
+            "CharacterName": "Peliseh",
+            "RealmID": 1305,
+            "RealmSlug": "kazzak",
+            "EquippedItemLevel": 635,
+            "RaceID": 10,
+            "RaceName": "Blood Elf",
+            "SpecializationID": 66,
+            "Specialization": "Protection"
+          },
+          {
+            "CharacterID": 177885603,
+            "CharacterName": "Twerkforjesu",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 102,
+            "Specialization": "Balance"
+          },
+          {
+            "CharacterID": 185046649,
+            "CharacterName": "Krankin",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 629,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 183992630,
+            "CharacterName": "Swggint",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 637,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 62,
+            "Specialization": "Arcane"
+          }
+        ]
+      },
+      {
+        "CompletedTimestamp": "2024-12-30T14:15:52+01:00",
+        "DungeonID": 1182,
+        "Dungeon": {
+          "ID": 1182,
+          "ChallengeModeID": 376,
+          "Slug": "the-necrotic-wake",
+          "Name": "The Necrotic Wake",
+          "ShortName": "NW",
+          "MediaURL": "https://render.worldofwarcraft.com/eu/zones/the-necrotic-wake-small.jpg",
+          "Icon": "achievement_dungeon_theneroticwake",
+          "Seasons": [
+            {
+              "Slug": "season-tww-1",
+              "Name": "TWW Season 1",
+              "ShortName": "TWW1",
+              "Dungeons": null
+            }
+          ],
+          "KeyStoneUpgrades": [
+            {
+              "ChallengeModeID": 376,
+              "QualifyingDuration": 1152000,
+              "UpgradeLevel": 3
+            },
+            {
+              "ChallengeModeID": 376,
+              "QualifyingDuration": 1536000,
+              "UpgradeLevel": 2
+            },
+            {
+              "ChallengeModeID": 376,
+              "QualifyingDuration": 1920000,
+              "UpgradeLevel": 1
+            }
+          ]
+        },
+        "ShortName": "NW",
+        "Duration": 1627597,
+        "IsCompletedWithinTime": true,
+        "KeyStoneUpgrades": 1,
+        "KeystoneLevel": 11,
+        "MythicRating": 341.20007,
+        "SeasonID": 13,
+        "Season": {
+          "Slug": "season-tww-1",
+          "Name": "TWW Season 1",
+          "ShortName": "TWW1",
+          "Dungeons": null
+        },
+        "Affixes": [
+          {
+            "ID": 152,
+            "Name": "Challenger's Peril",
+            "Icon": "achievement_challengemode_everbloom_hourglass",
+            "WowheadURL": "https://wowhead.com/affix=152"
+          },
+          {
+            "ID": 160,
+            "Name": "Xal'atath's Bargain: Devour",
+            "Icon": "inv_ability_voidweaverpriest_entropicrift",
+            "WowheadURL": "https://wowhead.com/affix=160"
+          },
+          {
+            "ID": 10,
+            "Name": "Fortified",
+            "Icon": "ability_toughness",
+            "WowheadURL": "https://wowhead.com/affix=10"
+          },
+          {
+            "ID": 9,
+            "Name": "Tyrannical",
+            "Icon": "achievement_boss_archaedas",
+            "WowheadURL": "https://wowhead.com/affix=9"
+          }
+        ],
+        "Members": [
+          {
+            "CharacterID": 96454986,
+            "CharacterName": "Crazydawg",
+            "RealmID": 583,
+            "RealmSlug": "eredar",
+            "EquippedItemLevel": 632,
+            "RaceID": 31,
+            "RaceName": "Zandalari Troll",
+            "SpecializationID": 72,
+            "Specialization": "Fury"
+          },
+          {
+            "CharacterID": 171649184,
+            "CharacterName": "Glânex",
+            "RealmID": 564,
+            "RealmSlug": "antonidas",
+            "EquippedItemLevel": 636,
+            "RaceID": 3,
+            "RaceName": "Dwarf",
+            "SpecializationID": 70,
+            "Specialization": "Retribution"
+          },
+          {
+            "CharacterID": 204820513,
+            "CharacterName": "Ouimagatée",
+            "RealmID": 549,
+            "RealmSlug": "silvermoon",
+            "EquippedItemLevel": 622,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 256,
+            "Specialization": "Discipline"
+          },
+          {
+            "CharacterID": 184068718,
+            "CharacterName": "Turbofetol",
+            "RealmID": 1092,
+            "RealmSlug": "drakthul",
+            "EquippedItemLevel": 625,
+            "RaceID": 2,
+            "RaceName": "Orc",
+            "SpecializationID": 262,
+            "Specialization": "Elemental"
+          },
+          {
+            "CharacterID": 174701897,
+            "CharacterName": "Spakz",
+            "RealmID": 1306,
+            "RealmSlug": "tarren-mill",
+            "EquippedItemLevel": 632,
+            "RaceID": 4,
+            "RaceName": "Night Elf",
+            "SpecializationID": 581,
+            "Specialization": "Vengeance"
+          }
+        ]
+      }
+    ]
+  }
+]

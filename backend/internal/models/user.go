@@ -34,6 +34,10 @@ type User struct {
 	BattleNetExpiresAt    time.Time `json:"-"`
 	BattleNetScopes       []string  `gorm:"type:text[]" json:"-"`
 	LastTokenRefresh      time.Time `json:"-"`
+
+	// Character relationship
+	FavoriteCharacterID *uint           `json:"favorite_character_id"`
+	Characters          []UserCharacter `gorm:"foreignKey:UserID" json:"characters,omitempty"`
 }
 
 // UserCreate is the struct for creating a new user

@@ -72,7 +72,7 @@ export default function CharacterLayout({
                 region={region}
                 namespace={`profile-${region}`}
                 locale="en_GB"
-                seasonSlug={seasonSlug || "season-tww-1"}
+                seasonSlug={seasonSlug || "season-tww-2"}
               />
             );
           case "raid-progression":

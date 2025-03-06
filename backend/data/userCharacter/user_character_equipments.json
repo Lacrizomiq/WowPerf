@@ -1,0 +1,427 @@
+[
+  {
+    "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/equipment?region=eu&namespace=profile-eu&locale=en_GB"
+  },
+
+  {
+    "item_level_equipped": 630.8125,
+    "item_level_total": 0,
+    "items": {
+      "back": {
+        "item_id": 222817,
+        "item_level": 636,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_outdoorarathor_d_01_cape",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_outdoorarathor_d_01_cape.jpg",
+        "name": "Consecrated Cloak",
+        "enchant": 7403,
+        "bonuses": [10421, 9633, 8902, 9627, 10222, 8792, 11144],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2076
+          },
+          {
+            "type": "Stamina",
+            "value": 13070
+          },
+          {
+            "type": "Haste",
+            "value": 561
+          },
+          {
+            "type": "Versatility",
+            "value": 561
+          }
+        ]
+      },
+      "chest": {
+        "item_id": 212086,
+        "item_level": 639,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_chest",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_chest.jpg",
+        "name": "Living Luster's Raiment",
+        "enchant": 7364,
+        "bonuses": [6652, 10390, 10373, 10299, 1540, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 3794
+          },
+          {
+            "type": "Stamina",
+            "value": 24202
+          },
+          {
+            "type": "Haste",
+            "value": 1362
+          },
+          {
+            "type": "Mastery",
+            "value": 662
+          }
+        ]
+      },
+      "feet": {
+        "item_id": 222814,
+        "item_level": 636,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_outdoorarathor_d_01_boot",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_outdoorarathor_d_01_boot.jpg",
+        "name": "Consecrated Slippers",
+        "enchant": 7424,
+        "bonuses": [10421, 9633, 8902, 9627, 10222, 8792, 11144],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2767
+          },
+          {
+            "type": "Stamina",
+            "value": 17426
+          },
+          {
+            "type": "Haste",
+            "value": 749
+          },
+          {
+            "type": "Versatility",
+            "value": 749
+          }
+        ]
+      },
+      "finger_1": {
+        "item_id": 228411,
+        "item_level": 655,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_siren_isle_ring",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_siren_isle_ring.jpg",
+        "name": "Cyrce's Circlet",
+        "enchant": 7476,
+        "gems": [228638, 228639, 228646],
+        "bonuses": [12027, 1508],
+        "stats": [
+          {
+            "type": "Stamina",
+            "value": 16797
+          }
+        ]
+      },
+      "finger_2": {
+        "item_id": 225728,
+        "item_level": 629,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_11_0_nerubian_ring_02_color3",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_11_0_nerubian_ring_02_color3.jpg",
+        "name": "Acidic Attendant's Loop",
+        "enchant": 7476,
+        "gems": [213485, 213485],
+        "bonuses": [6652, 10356, 10258, 3278, 10255, 10879, 10396],
+        "stats": [
+          {
+            "type": "Stamina",
+            "value": 11902
+          },
+          {
+            "type": "Versatility",
+            "value": 4157
+          },
+          {
+            "type": "Mastery",
+            "value": 1549
+          }
+        ]
+      },
+      "hands": {
+        "item_id": 212084,
+        "item_level": 626,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_glove",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_glove.jpg",
+        "name": "Living Luster's Touch",
+        "bonuses": [10355, 10372, 6652, 10256, 1527, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2521
+          },
+          {
+            "type": "Stamina",
+            "value": 15226
+          },
+          {
+            "type": "Critical Strike",
+            "value": 447
+          },
+          {
+            "type": "Versatility",
+            "value": 981
+          }
+        ]
+      },
+      "head": {
+        "item_id": 225720,
+        "item_level": 639,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_helm",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_helm.jpg",
+        "name": "Web Acolyte's Hood",
+        "bonuses": [6652, 10876, 10380, 10356, 10299, 1540, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 3794
+          },
+          {
+            "type": "Stamina",
+            "value": 24202
+          },
+          {
+            "type": "Haste",
+            "value": 629
+          },
+          {
+            "type": "Mastery",
+            "value": 1395
+          }
+        ]
+      },
+      "legs": {
+        "item_id": 212082,
+        "item_level": 639,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_pant",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_pant.jpg",
+        "name": "Living Luster's Trousers",
+        "enchant": 7534,
+        "enchant_name": "+930 Intellect",
+        "bonuses": [10370, 10390, 42, 10299, 1540, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 3794
+          },
+          {
+            "type": "Stamina",
+            "value": 24202
+          },
+          {
+            "type": "Critical Strike",
+            "value": 1392
+          },
+          {
+            "type": "Haste",
+            "value": 632
+          },
+          {
+            "type": "Speed",
+            "value": 867
+          }
+        ]
+      },
+      "main_hand": {
+        "item_id": 222568,
+        "item_level": 636,
+        "item_quality": 4,
+        "is_two_hand": true,
+        "icon_name": "inv_staff_2h_arathoroutdoor_d_01",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_staff_2h_arathoroutdoor_d_01.jpg",
+        "name": "Vagabond's Bounding Baton",
+        "enchant": 7463,
+        "bonuses": [10421, 9633, 8902, 9627, 10222, 11302, 8960, 8792, 11144],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 16404
+          },
+          {
+            "type": "Stamina",
+            "value": 23235
+          },
+          {
+            "type": "Haste",
+            "value": 998
+          },
+          {
+            "type": "Versatility",
+            "value": 998
+          }
+        ]
+      },
+      "neck": {
+        "item_id": 215136,
+        "item_level": 619,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_11_0_earthen_earthennecklace02_color1",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_11_0_earthen_earthennecklace02_color1.jpg",
+        "name": "Amulet of Earthen Craftsmanship",
+        "gems": [213485, 213485],
+        "bonuses": [10421, 9633, 8902, 10395, 10879, 9627, 10222, 8792, 11143],
+        "stats": [
+          {
+            "type": "Stamina",
+            "value": 10359
+          },
+          {
+            "type": "Haste",
+            "value": 2641
+          },
+          {
+            "type": "Versatility",
+            "value": 2641
+          }
+        ]
+      },
+      "shirt": {
+        "item_id": 167197,
+        "item_level": 1,
+        "item_quality": 2,
+        "is_two_hand": false,
+        "icon_name": "inv_misc_bandage_08",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_misc_bandage_08.jpg",
+        "name": "Antiseptic-Soaked Dressing"
+      },
+      "shoulder": {
+        "item_id": 212081,
+        "item_level": 629,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_shoulder",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_shoulder.jpg",
+        "name": "Living Luster's Dominion",
+        "bonuses": [6652, 10356, 8095, 10369, 10258, 1530, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2593
+          },
+          {
+            "type": "Stamina",
+            "value": 15870
+          },
+          {
+            "type": "Haste",
+            "value": 966
+          },
+          {
+            "type": "Versatility",
+            "value": 483
+          }
+        ]
+      },
+      "tabard": {
+        "item_id": 40643,
+        "item_level": 1,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_chest_cloth_30",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_chest_cloth_30.jpg",
+        "name": "Tabard of the Achiever"
+      },
+      "trinket_1": {
+        "item_id": 219314,
+        "item_level": 619,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_raid_mercurialegg_red",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_raid_mercurialegg_red.jpg",
+        "name": "Ara-Kara Sacbrood",
+        "bonuses": [10390, 6652, 10383, 10262, 1654, 10255],
+        "stats": [
+          {
+            "type": "Haste",
+            "value": 1314
+          }
+        ]
+      },
+      "trinket_2": {
+        "item_id": 219317,
+        "item_level": 613,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_11_0_dungeon_oldgodstatuepiece_purple",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_11_0_dungeon_oldgodstatuepiece_purple.jpg",
+        "name": "Harvester's Edict",
+        "bonuses": [10264, 10390, 42, 10383, 1648, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2831
+          },
+          {
+            "type": "Speed",
+            "value": 574
+          }
+        ]
+      },
+      "waist": {
+        "item_id": 225585,
+        "item_level": 619,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_belt",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_belt.jpg",
+        "name": "Acrid Ascendant's Sash",
+        "bonuses": [6652, 10876, 10379, 10355, 10262, 1520, 10255],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 2362
+          },
+          {
+            "type": "Stamina",
+            "value": 13812
+          },
+          {
+            "type": "Haste",
+            "value": 436
+          },
+          {
+            "type": "Mastery",
+            "value": 945
+          }
+        ]
+      },
+      "wrist": {
+        "item_id": 212079,
+        "item_level": 623,
+        "item_quality": 4,
+        "is_two_hand": false,
+        "icon_name": "inv_cloth_raidpriestnerubian_d_01_bracer",
+        "icon_url": "https://render.worldofwarcraft.com/eu/icons/56/inv_cloth_raidpriestnerubian_d_01_bracer.jpg",
+        "name": "Living Luster's Crystbands",
+        "enchant": 7385,
+        "enchant_name": "+1090 Avoidance",
+        "bonuses": [6652, 10877, 10260, 10390, 1524],
+        "stats": [
+          {
+            "type": "Intellect",
+            "value": 1839
+          },
+          {
+            "type": "Stamina",
+            "value": 10948
+          },
+          {
+            "type": "Haste",
+            "value": 352
+          },
+          {
+            "type": "Versatility",
+            "value": 704
+          }
+        ]
+      }
+    }
+  }
+]

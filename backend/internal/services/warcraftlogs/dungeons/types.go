@@ -14,6 +14,17 @@ const (
 
 // Constants for dungeons
 const (
+	// Season 2 dungeons
+	DungeonCinderbrew  = 12661  // Cinderbrew Meadery
+	DungeonDarkflame   = 12651  // Darkflame Cleft
+	DungeonFloodgate   = 12773  // Operation: Floodgate
+	DungeonMechagon    = 112098 // Operation: Mechagon - Workshop
+	DungeonPriory      = 12649  // Priory of the Sacred Flame
+	DungeonMotherlode  = 61594  // The MOTHERLODE!!
+	DungeonRookery     = 12648  // The Rookery
+	DungeonTheaterPain = 62293  // Theater of Pain
+
+	// Season 1 dungeons
 	DungeonAraKara       = 12660
 	DungeonCityOfThreads = 12669
 	DungeonGrimBatol     = 60670

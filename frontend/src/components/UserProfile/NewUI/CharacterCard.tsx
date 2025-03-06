@@ -15,10 +15,12 @@ interface CharacterCardProps {
     playable_class: { name: string; id: number };
     level: number;
     realm: { name: string; slug: string };
+    mPlusScore?: number; // Add this property
   };
   region?: string;
   showTooltip?: boolean;
   isMainCard?: boolean;
+  mythicPlusScore?: number; // New prop for passing pre-fetched score
 }
 
 const CharacterCard: React.FC<CharacterCardProps> = ({
@@ -26,6 +28,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   region,
   showTooltip = false,
   isMainCard = false,
+  mythicPlusScore,
 }) => {
   const router = useRouter();
   const { name, playable_class, level, realm } = character;
@@ -36,16 +39,23 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   const realmSlug = realm.slug;
 
   // Dynamically build namespace based on the region
-  const staticNamespace = `static-${safeRegion}`;
-  const dynamicNamespace = `dynamic-${safeRegion}`;
   const profileNamespace = `profile-${safeRegion}`;
+
+  // Fetch character profile information
+  const { data: characterData } = useGetBlizzardCharacterProfile(
+    safeRegion,
+    realmSlug,
+    characterName,
+    profileNamespace,
+    "en_GB"
+  );
 
   // Fetch character equipment data
   const { data: equipmentData } = useGetBlizzardCharacterEquipment(
     safeRegion,
     realmSlug,
     characterName,
-    staticNamespace,
+    profileNamespace,
     "en_GB"
   );
 
@@ -54,27 +64,29 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     safeRegion,
     realmSlug,
     characterName,
-    dynamicNamespace,
+    profileNamespace,
     "en_GB",
     "13"
   );
 
   // Get item level and round it
-  const itemLevel = equipmentData?.data?.item_level_equipped
-    ? Math.round(equipmentData.data.item_level_equipped)
+  const itemLevel = equipmentData?.item_level_equipped
+    ? Math.round(equipmentData.item_level_equipped)
     : "-";
 
-  // Calculate M+ score
-  const mPlusScore = mythicPlusData?.OverallMythicRating || "-";
+  // Use API data if available and non-zero, otherwise fall back to prop
+  const mPlusScore = mythicPlusData?.OverallMythicRating
+    ? mythicPlusData.OverallMythicRating.toFixed(0)
+    : mythicPlusScore !== undefined
+    ? mythicPlusScore.toFixed(0)
+    : "0";
 
-  // Fetch additional character profile information
-  const { data: characterData } = useGetBlizzardCharacterProfile(
-    safeRegion,
-    realmSlug,
-    characterName,
-    profileNamespace,
-    "en_GB"
-  );
+  // Add debugging
+  console.log(`Character ${name} - M+ Score:`, {
+    mythicPlusScore,
+    apiScore: mythicPlusData?.OverallMythicRating,
+    displayed: mPlusScore,
+  });
 
   const handleCharacterClick = () => {
     router.push(`/character/${safeRegion}/${realmSlug}/${characterName}`);
@@ -114,8 +126,8 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
             <Image
               src={classIcon}
               alt={playable_class.name}
-              width={24}
-              height={24}
+              width={38}
+              height={38}
               className="rounded-full"
             />
             {name}
@@ -128,8 +140,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
 
         <div className="text-white/90 text-sm">
           <div>
-            {playable_class.name} ({characterData?.data?.active_spec_name || ""}
-            )
+            {playable_class.name} ({characterData?.active_spec_name || ""})
           </div>
           <div className="text-white/70">
             {realm.name} ({safeRegion.toUpperCase()})
