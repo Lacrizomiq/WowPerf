@@ -47,6 +47,8 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
   const { data: raidRankings, isLoading: isRankingsLoading } =
     useGetPlayerRaidRankings(characterName, realmSlug, region, 42);
 
+  console.log(raidRankings);
+
   const handleExpansionChange = (newExpansion: string) => {
     setSelectedExpansion(newExpansion);
     setSelectedRaid(null);

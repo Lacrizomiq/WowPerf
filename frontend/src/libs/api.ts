@@ -27,8 +27,6 @@ const api = axios.create({
   },
 });
 
-console.log("API initialized with baseURL:", API_BASE_URL);
-
 // Interceptor for requests
 api.interceptors.request.use(
   async (config) => {
@@ -60,11 +58,6 @@ api.interceptors.request.use(
 // Interceptor for responses
 api.interceptors.response.use(
   (response) => {
-    console.log("Response received:", {
-      status: response.status,
-      data: response.data,
-      headers: response.headers,
-    });
     return response;
   },
   async (error) => {

@@ -3,11 +3,9 @@ package characterRanking
 
 // WarcraftLogsResponse is the response from the WarcraftLogs API
 type WarcraftLogsResponse struct {
-	Data struct {
-		CharacterData struct {
-			Character CharacterData `json:"character"`
-		} `json:"characterData"`
-	} `json:"data"`
+	CharacterData struct {
+		Character CharacterData `json:"character"`
+	} `json:"characterData"`
 }
 
 // CharacterData is the data for a character

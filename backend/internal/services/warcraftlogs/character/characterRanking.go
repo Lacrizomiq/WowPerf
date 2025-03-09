@@ -76,5 +76,5 @@ func GetCharacterRanking(s *service.WarcraftLogsClientService, characterName, se
 	}
 
 	// return the character ranking
-	return &warcraftLogsResponse.Data.CharacterData.Character, nil
+	return &warcraftLogsResponse.CharacterData.Character, nil
 }

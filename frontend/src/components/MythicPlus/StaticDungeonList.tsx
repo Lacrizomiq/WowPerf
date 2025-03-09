@@ -34,8 +34,9 @@ const StaticDungeonList: React.FC<StaticDungeonListProps> = ({
               <Image
                 src={dungeon.MediaURL}
                 alt={dungeon.Name}
-                layout="fill"
-                objectFit="cover"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                style={{ objectFit: "cover" }}
                 className="mb-2"
               />
             </div>
