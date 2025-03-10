@@ -55,8 +55,6 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     error: mythicPlusPlayerRankingsError,
   } = useGetPlayerMythicPlusRankings(characterName, realmSlug, region, 43);
 
-  console.log(mythicPlusPlayerRankings);
-
   // Handle season change
   const handleSeasonChange = (seasonSlug: string) => {
     const newSeason = seasons.find((s) => s.slug === seasonSlug);
