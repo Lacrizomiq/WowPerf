@@ -22,33 +22,38 @@ func NewRateLimitActivity(client *warcraftlogs.WarcraftLogsClientService) *RateL
 	}
 }
 
-// CheckRemainingPoints returns the remaining points based on local tracking
+// CheckRemainingPoints gets real-time points status from API
 func (a *RateLimitActivity) CheckRemainingPoints(ctx context.Context, _ workflows.WorkflowParams) (float64, error) {
 	logger := activity.GetLogger(ctx)
+
+	// Use directly the data from the rate limiter struct
 	info := a.client.GetRateLimiter().GetRateLimitInfo()
 
-	logger.Info("Checking remaining points",
+	logger.Info("Rate limit check from limiter",
 		"remainingPoints", info.RemainingPoints,
 		"resetIn", info.ResetIn)
 
 	return info.RemainingPoints, nil
 }
 
-// ReservePoints checks if we have enough points
+// ReservePoints checks if we have enough points for the workflow
 func (a *RateLimitActivity) ReservePoints(ctx context.Context, params workflows.WorkflowParams) error {
 	logger := activity.GetLogger(ctx)
-	info := a.client.GetRateLimiter().GetRateLimitInfo()
 
+	// Calculate required points including rate limit checks
 	required := estimateRequiredPoints(&params)
 
-	// Simple check
+	// Get real-time point status
+	info := a.client.GetRateLimiter().GetRateLimitInfo()
+
+	// Check if we have enough points (including rate limit check costs)
 	if info.RemainingPoints < required {
 		logger.Warn("Insufficient points for workflow",
 			"available", info.RemainingPoints,
 			"required", required,
 			"resetIn", info.ResetIn)
 
-		// If the reset is close, wait
+		// If reset is close, wait
 		if info.ResetIn < time.Minute*15 {
 			return nil // Let the workflow continue
 		}
@@ -56,42 +61,51 @@ func (a *RateLimitActivity) ReservePoints(ctx context.Context, params workflows.
 		return warcraftlogsTypes.NewQuotaExceededError(info)
 	}
 
-	return nil
-}
-
-// ReleasePoints is now a monitoring operation
-func (a *RateLimitActivity) ReleasePoints(ctx context.Context, params workflows.WorkflowParams) error {
-	logger := activity.GetLogger(ctx)
-	info := a.client.GetRateLimiter().GetRateLimitInfo()
-
-	logger.Info("Workflow completion status",
-		"remainingPoints", info.RemainingPoints,
-		"resetIn", info.ResetIn,
+	logger.Info("Points reserved for workflow",
+		"required", required,
+		"available", info.RemainingPoints,
 		"workflowID", params.WorkflowID)
 
 	return nil
 }
 
-// estimateRequiredPoints provides a rough estimate of points needed for a workflow
+// ReleasePoints monitors workflow completion status
+func (a *RateLimitActivity) ReleasePoints(ctx context.Context, params workflows.WorkflowParams) error {
+	logger := activity.GetLogger(ctx)
+	info := a.client.GetRateLimiter().GetRateLimitInfo()
+
+	logger.Info("Workflow completion monitoring",
+		"remainingPoints", info.RemainingPoints,
+		"resetIn", info.ResetIn,
+		"workflowID", params.WorkflowID)
+
+	// Add monitoring metrics if needed
+	activity.RecordHeartbeat(ctx, map[string]interface{}{
+		"remainingPoints": info.RemainingPoints,
+		"resetIn":         info.ResetIn,
+		"workflowID":      params.WorkflowID,
+	})
+
+	return nil
+}
+
+// estimateRequiredPoints calculates points needed including rate limit checks
 func estimateRequiredPoints(params *workflows.WorkflowParams) float64 {
 	if params == nil || params.Config == nil {
 		return 1.0
 	}
 
-	// Base cost for workflow
-	totalPoints := 1.0
-
-	// Calculate points needed for each spec/dungeon combination
+	// Calculate operations per spec/dungeon combo
 	numSpecs := len(params.Config.Specs)
 	numDungeons := len(params.Config.Dungeons)
 
-	// Points per combination:
-	// - 1 point for rankings query
-	// - ~2 points for processing reports (average)
-	pointsPerCombo := 3.0
+	// Points breakdown per spec/dungeon combination:
+	// - Rankings query: ~13 points + 2 points (rate limit check) = 15 points
+	// - Reports queries (x2): (~13-16 points + 2 points check) × 2 = ~36 points
+	pointsPerCombo := 51.0 // Total: 15 + 36 = 51 points per combination
 
-	totalPoints += float64(numSpecs*numDungeons) * pointsPerCombo
+	totalPoints := float64(numSpecs*numDungeons) * pointsPerCombo
 
-	// Add 20% buffer for unexpected operations
+	// Add 20% buffer for unexpected variations
 	return totalPoints * 1.2
 }

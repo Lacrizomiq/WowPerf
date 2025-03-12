@@ -9,17 +9,17 @@ import (
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	"go.temporal.io/sdk/client"
 )
 
-const (
-	defaultNamespace = "default"
-	defaultTaskQueue = "warcraft-logs-sync"
-)
+// No longer need this constant as we'll use the one from models
+// const defaultNamespace = "default"
 
 func main() {
-	log.Printf("[INFO] Starting scheduler service")
+	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
+	logger.Printf("[INFO] Starting scheduler service")
 
 	// Initialize Temporal client
 	temporalClient, err := initTemporalClient()
@@ -28,42 +28,50 @@ func main() {
 	}
 	defer temporalClient.Close()
 
-	// Create logger
-	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
-
 	// Initialize schedule manager
 	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
 
-	// Load configuration using the new unified config
+	// Perform cleanup of existing schedules and workflows before creating new ones
+	logger.Printf("[INFO] Starting cleanup of existing schedules and workflows")
+	if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+		logger.Printf("[WARN] Cleanup encountered some errors: %v", err)
+	}
+	logger.Printf("[INFO] Cleanup completed successfully")
+
+	// Load production configuration
 	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to load config: %v", err)
+		log.Fatalf("[FATAL] Failed to load production config: %v", err)
 	}
 
-	// Configure schedule
+	// Create production schedule
 	opts := scheduler.DefaultScheduleOptions()
+	if err := scheduleManager.CreateSchedule(context.Background(), cfg, opts); err != nil {
+		logger.Fatalf("[FATAL] Failed to create production schedule: %v", err)
+	}
+	logger.Printf("[INFO] Successfully created production schedule")
 
-	// Create a map to track unique classes
-	classMap := make(map[string]bool)
-	for _, spec := range cfg.Specs {
-		if !classMap[spec.ClassName] {
-			classMap[spec.ClassName] = true
-			// Create a schedule for each class
-			if err := scheduleManager.CreateOrGetClassSchedule(context.Background(), spec.ClassName, cfg, opts); err != nil {
-				log.Printf("[ERROR] Failed to manage schedule for class %s: %v", spec.ClassName, err)
-				continue
-			}
-			logger.Printf("Successfully created schedule for class: %s", spec.ClassName)
+	// Create and trigger test schedule for Priest
+	testCfg, err := workflows.LoadConfig("configs/config_s1_tww.priest.yaml")
+	if err != nil {
+		log.Fatalf("[FATAL] Failed to load test config: %v", err)
+	}
 
-			// Trigger immediate execution
-			if err := scheduleManager.TriggerSchedule(context.Background(), spec.ClassName); err != nil {
-				logger.Printf("[ERROR] Failed to trigger schedule for class %s: %v", spec.ClassName, err)
-			}
+	if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
+		logger.Printf("[ERROR] Failed to create test schedule: %v", err)
+	} else {
+		logger.Printf("[TEST] Successfully created test schedule")
+
+		// Trigger test schedule immediately
+		if err := scheduleManager.TriggerSyncNow(context.Background()); err != nil {
+			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
+		} else {
+			logger.Printf("[TEST] Successfully triggered test schedule")
 		}
 	}
 
 	// Handle graceful shutdown
-	handleGracefulShutdown(scheduleManager, logger, classMap)
+	handleGracefulShutdown(scheduleManager, logger)
 }
 
 func initTemporalClient() (client.Client, error) {
@@ -72,26 +80,25 @@ func initTemporalClient() (client.Client, error) {
 		temporalAddress = "localhost:7233"
 	}
 
+	// Use the shared namespace constant from models
 	return client.Dial(client.Options{
 		HostPort:  temporalAddress,
-		Namespace: defaultNamespace,
+		Namespace: models.DefaultNamespace, // Updated to use models
 	})
 }
 
-func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger, classMap map[string]bool) {
+func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	sig := <-sigCh
 	logger.Printf("Received signal %v, initiating shutdown", sig)
 
-	// Cleanup before shutdown
-	ctx := context.Background()
-	for className := range classMap {
-		if err := scheduleManager.DeleteSchedule(ctx, className); err != nil {
-			logger.Printf("Error deleting schedule for class %s: %v", className, err)
-		}
-	}
+	// We now have deletion logic implemented but typically don't need to run it on shutdown
+	// If you want to clean up on shutdown, you could add:
+	// if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+	//     logger.Printf("[WARN] Cleanup on shutdown failed: %v", err)
+	// }
 
 	logger.Printf("Scheduler service shutdown complete")
 }

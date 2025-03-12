@@ -2,158 +2,179 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
+
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
+	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	"gorm.io/gorm"
 )
 
 const (
 	defaultNamespace = "default"
-	defaultTaskQueue = "warcraft-logs-sync"
 )
 
-func main() {
-	log.Printf("[INFO] Starting Temporal worker")
+// WorkerManager handles the worker for the single task queue
+type WorkerManager struct {
+	worker worker.Worker
+	logger *log.Logger
+}
 
-	// Get Temporal address from environment or use default
+func main() {
+	logger := log.New(os.Stdout, "[WORKER] ", log.LstdFlags)
+	logger.Printf("Starting Temporal worker")
+
+	// Initialize services
+	temporalClient, db, warcraftLogsClient, err := initializeServices()
+	if err != nil {
+		logger.Fatalf("Failed to initialize services: %v", err)
+	}
+	defer temporalClient.Close()
+
+	// Initialize repositories and activities (no changes needed)
+	reportsRepo := reportsRepository.NewReportRepository(db)
+	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
+	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
+	activitiesService := initializeActivities(warcraftLogsClient, reportsRepo, rankingsRepo, playerBuildsRepo)
+
+	// Create a single worker that will handle both production and test schedules
+	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
+	w := worker.New(temporalClient, taskQueue, worker.Options{
+		MaxConcurrentActivityExecutionSize:     1,
+		MaxConcurrentWorkflowTaskExecutionSize: 2,
+		WorkerActivitiesPerSecond:              2,
+		MaxConcurrentActivityTaskPollers:       1,
+		MaxConcurrentWorkflowTaskPollers:       2,
+		EnableSessionWorker:                    true,
+	})
+
+	registerWorkflowsAndActivities(w, activitiesService)
+
+	workerMgr := &WorkerManager{
+		worker: w,
+		logger: logger,
+	}
+	logger.Printf("Created worker for task queue: %s", taskQueue)
+
+	// Start worker
+	var wg sync.WaitGroup
+	workerErrorChan := make(chan error, 1)
+	interruptChan := make(chan interface{})
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		logger.Printf("Starting worker for task queue: %s", taskQueue)
+		if err := workerMgr.worker.Run(interruptChan); err != nil {
+			logger.Printf("Worker error in task queue %s: %v", taskQueue, err)
+			workerErrorChan <- err
+		}
+	}()
+
+	// Handle graceful shutdown
+	handleGracefulShutdown(workerMgr, &wg, workerErrorChan, logger)
+}
+
+func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, error) {
 	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
 	if temporalAddress == "" {
 		temporalAddress = "localhost:7233"
 	}
 
-	// Initialize Temporal client
 	temporalClient, err := client.Dial(client.Options{
 		HostPort:  temporalAddress,
 		Namespace: defaultNamespace,
 	})
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
 	}
-	defer temporalClient.Close()
 
-	// Initialize database connection
 	db, err := database.InitDB()
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize database: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	// Initialize WarcraftLogs client service
 	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to initialize WarcraftLogs client: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
 	}
 
-	// Initialize repositories
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
-	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
+	return temporalClient, db, warcraftLogsClient, nil
+}
 
-	// Configure worker with optimized options
-	w := worker.New(temporalClient, defaultTaskQueue, worker.Options{
-		// Limit concurrent executions to match batch sizes
-		MaxConcurrentActivityExecutionSize:     3,
-		MaxConcurrentWorkflowTaskExecutionSize: 2,
-
-		// Rate limiting for better resource management
-		WorkerActivitiesPerSecond: 5,
-
-		// Optimize task polling
-		MaxConcurrentActivityTaskPollers: 2,
-		MaxConcurrentWorkflowTaskPollers: 2,
-
-		// Enable sessions for better resource management
-		EnableSessionWorker: true,
-	})
-
-	// Initialize activities
-	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
-	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
-	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
-	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
-	activitiesService := activities.NewActivities(
-		rankingsActivity,
-		reportsActivity,
-		playerBuildsActivity,
-		rateLimitActivity,
+func initializeActivities(
+	warcraftLogsClient *warcraftlogs.WarcraftLogsClientService,
+	reportsRepo *reportsRepository.ReportRepository,
+	rankingsRepo *rankingsRepository.RankingsRepository,
+	playerBuildsRepo *playerBuildsRepository.PlayerBuildsRepository,
+) *activities.Activities {
+	return activities.NewActivities(
+		activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo),
+		activities.NewReportsActivity(warcraftLogsClient, reportsRepo),
+		activities.NewPlayerBuildsActivity(playerBuildsRepo),
+		activities.NewRateLimitActivity(warcraftLogsClient),
 	)
+}
 
+func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
 	// Register workflows
 	w.RegisterWorkflow(workflows.SyncWorkflow)
 	w.RegisterWorkflow(workflows.ProcessBuildBatch)
 
-	// Register activities using our harmonized activity names
+	// Register activities
+	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
+	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
+	w.RegisterActivity(activitiesService.Reports.ProcessReports)
+	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
+	w.RegisterActivity(activitiesService.Reports.CountAllReports)
+	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
+	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
+	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
+	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+}
 
-	// Rankings activities
-	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)     // FetchRankingsActivity
-	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings) // GetStoredRankingsActivity
+func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Reports activities
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)  // ProcessReportsActivity
-	w.RegisterActivity(activitiesService.Reports.GetReportsBatch) // GetReportsBatchActivity
-	w.RegisterActivity(activitiesService.Reports.CountAllReports) // CountAllReportsActivity
+	select {
+	case <-sigChan:
+		logger.Printf("Shutdown signal received, stopping worker...")
+	case err := <-errorChan:
+		logger.Printf("Worker error detected, initiating shutdown: %v", err)
+	}
 
-	// Player builds activities
-	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)  // ProcessBuildsActivity
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds) // CountPlayerBuildsActivity
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
-	// Rate limit activities
-	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)        // ReserveRateLimitPointsActivity
-	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)        // ReleaseRateLimitPointsActivity
-	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints) // CheckRemainingPointsActivity
+	logger.Printf("Stopping worker for task queue: %s", scheduler.DefaultScheduleConfig.TaskQueue)
+	mgr.worker.Stop()
 
-	log.Printf("[INFO] Starting worker, waiting for workflows...")
-
-	// Setup signal handling for graceful shutdown
-	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
-
-	// Start worker in a goroutine with enhanced error handling
-	workerErrorChan := make(chan error, 1)
+	done := make(chan struct{})
 	go func() {
-		err := w.Run(worker.InterruptCh())
-		if err != nil {
-			log.Printf("[ERROR] Worker stopped with error: %v", err)
-			workerErrorChan <- err
-			interruptChan <- os.Interrupt // Signal main routine to exit
-		}
+		wg.Wait()
+		close(done)
 	}()
 
-	// Implement graceful shutdown
 	select {
-	case <-interruptChan:
-		log.Printf("[INFO] Shutdown signal received, initiating graceful shutdown...")
-
-		// Create context with timeout for graceful shutdown
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Minute*5)
-		defer shutdownCancel()
-
-		// Stop the worker with timeout
-		done := make(chan struct{})
-		go func() {
-			w.Stop()
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			log.Printf("[INFO] Worker stopped gracefully")
-		case <-shutdownCtx.Done():
-			log.Printf("[WARN] Worker stop timeout exceeded, forcing shutdown")
-		}
-
-	case err := <-workerErrorChan:
-		log.Printf("[ERROR] Worker encountered an error, shutting down: %v", err)
+	case <-done:
+		logger.Printf("Worker stopped gracefully")
+	case <-ctx.Done():
+		logger.Printf("Shutdown timeout exceeded, worker may not have stopped cleanly")
 	}
 }

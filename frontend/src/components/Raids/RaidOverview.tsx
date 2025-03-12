@@ -45,7 +45,9 @@ const RaidOverview: React.FC<RaidOverviewProps> = ({
 
   // Add WarcraftLogs data fetch
   const { data: raidRankings, isLoading: isRankingsLoading } =
-    useGetPlayerRaidRankings(characterName, realmSlug, region, 38);
+    useGetPlayerRaidRankings(characterName, realmSlug, region, 42);
+
+  console.log(raidRankings);
 
   const handleExpansionChange = (newExpansion: string) => {
     setSelectedExpansion(newExpansion);

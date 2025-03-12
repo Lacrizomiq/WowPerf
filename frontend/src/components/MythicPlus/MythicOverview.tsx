@@ -53,7 +53,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     data: mythicPlusPlayerRankings,
     isLoading: isLoadingMythicPlusPlayerRankings,
     error: mythicPlusPlayerRankingsError,
-  } = useGetPlayerMythicPlusRankings(characterName, realmSlug, region, 39);
+  } = useGetPlayerMythicPlusRankings(characterName, realmSlug, region, 43);
 
   // Handle season change
   const handleSeasonChange = (seasonSlug: string) => {
@@ -118,8 +118,9 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
               Season Mythic Rating:{" "}
               <span
                 style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
+                className="font-bold"
               >
-                {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
+                {mythicPlusSeasonInfo.OverallMythicRating.toFixed(0)}
               </span>
             </p>
           ) : (

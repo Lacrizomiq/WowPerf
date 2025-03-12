@@ -1,19 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/libs/api";
 import { toast } from "react-hot-toast";
+import { useForm } from "react-hook-form";
+
+type ResetPasswordFormData = {
+  password: string;
+  confirmPassword: string;
+};
 
 const ResetPasswordForm = () => {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
+  const [isValidToken, setIsValidToken] = React.useState<boolean | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams?.get("token");
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormData>({
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Watch password for confirmation validation
+  const password = watch("password");
 
   useEffect(() => {
     const validateToken = async () => {
@@ -33,31 +51,13 @@ const ResetPasswordForm = () => {
     validateToken();
   }, [token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 8 || password.length > 32) {
-      setError("Password must be between 8 and 32 characters");
-      toast.error("Password must be between 8 and 32 characters");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError("");
-
+  const onSubmit = async (data: ResetPasswordFormData) => {
     const toastId = toast.loading("Resetting password...");
 
     try {
       await api.post("/auth/reset-password", {
         token: token,
-        new_password: password,
+        new_password: data.password,
       });
 
       toast.success("Password reset successfully!", {
@@ -72,12 +72,15 @@ const ResetPasswordForm = () => {
       const errorMessage =
         err.response?.data?.error ||
         "An error occurred while resetting your password";
-      setError(errorMessage);
+
+      setError("root", {
+        type: "manual",
+        message: errorMessage,
+      });
+
       toast.error(errorMessage, {
         id: toastId,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -119,7 +122,7 @@ const ResetPasswordForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label
           htmlFor="password"
@@ -130,50 +133,68 @@ const ResetPasswordForm = () => {
         <input
           id="password"
           type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setError("");
-          }}
-          required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            error ? "border-red-500" : "border-gray-600"
+            errors.password || errors.root
+              ? "border-red-500"
+              : "border-gray-600"
           } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Enter your new password"
+          {...register("password", {
+            required: "Password is required",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters long",
+            },
+            maxLength: {
+              value: 32,
+              message: "Password must be less than 32 characters",
+            },
+          })}
         />
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-500" role="alert">
+            {errors.password.message}
+          </p>
+        )}
       </div>
 
       <div>
         <label
-          htmlFor="confirm-password"
+          htmlFor="confirmPassword"
           className="block text-sm font-medium text-gray-300 mb-2"
         >
           Confirm New Password
         </label>
         <input
-          id="confirm-password"
+          id="confirmPassword"
           type="password"
-          value={confirmPassword}
-          onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            setError("");
-          }}
-          required
           disabled={isSubmitting}
           className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            error ? "border-red-500" : "border-gray-600"
+            errors.confirmPassword || errors.root
+              ? "border-red-500"
+              : "border-gray-600"
           } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Confirm your new password"
+          {...register("confirmPassword", {
+            required: "Please confirm your password",
+            validate: (value) =>
+              value === password || "The passwords do not match",
+          })}
         />
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-red-500" role="alert">
+            {errors.confirmPassword.message}
+          </p>
+        )}
       </div>
 
-      {error && (
+      {errors.root && (
         <div
           className="p-3 bg-red-100 border border-red-400 text-red-700 rounded relative"
           role="alert"
         >
-          <span className="block sm:inline">{error}</span>
+          <span className="block sm:inline">{errors.root.message}</span>
         </div>
       )}
 

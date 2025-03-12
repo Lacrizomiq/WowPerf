@@ -81,13 +81,13 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   <div className="ml-4 mt-2 space-y-2">
                     <button
                       onClick={() => {
-                        router.push("/mythic-plus/leaderboard");
+                        router.push("/mythic-plus/analysis");
                         onClose();
                       }}
                       className="w-full flex items-center p-2 hover:bg-slate-800 rounded-md"
                     >
                       <Rows4 className="mr-2 h-4 w-4" />
-                      <span>Leaderboard</span>
+                      <span>Performance Analysis</span>
                     </button>
 
                     <button

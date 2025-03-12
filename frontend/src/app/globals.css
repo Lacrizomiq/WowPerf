@@ -117,7 +117,8 @@ body {
   color: #fff !important;
 }
 
-.bg-spec-256 {
+.bg-spec-256,
+.bg-spec-priest-discipline {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-discipline.jpg");
 }

@@ -29,6 +29,7 @@ const (
 	staticRaidsPath      = "./data/static/Raid"
 )
 
+// InitializeDatabase sets up the database with all required data
 func InitializeDatabase(db *gorm.DB) error {
 	log.Println("Initializing database...")
 
@@ -48,8 +49,8 @@ func InitializeDatabase(db *gorm.DB) error {
 	return nil
 }
 
+// ensureUpdateState initializes update state records if they don't exist
 func ensureUpdateState(db *gorm.DB) error {
-
 	// Mythic+ Update State
 	var updateState raiderioMythicPlus.UpdateState
 	if err := db.FirstOrCreate(&updateState, raiderioMythicPlus.UpdateState{LastUpdateTime: time.Now().Add(-25 * time.Hour)}).Error; err != nil {
@@ -63,6 +64,7 @@ func ensureUpdateState(db *gorm.DB) error {
 	return nil
 }
 
+// ensureInitialData ensures all required data is present in the database
 func ensureInitialData(db *gorm.DB) error {
 	if err := ensureMythicPlusData(db); err != nil {
 		return err
@@ -87,16 +89,20 @@ func ensureInitialData(db *gorm.DB) error {
 	return nil
 }
 
+// ensureMythicPlusData ensures Mythic+ data is up to date
+// Modified to use UpdateSeasons and UpdateAffixes for keeping data in sync with JSON files
 func ensureMythicPlusData(db *gorm.DB) error {
+	log.Println("Checking and updating Mythic+ data...")
+	absPath, err := filepath.Abs(staticMythicPlusPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %v", err)
+	}
+
+	// Check if tables are empty - use original seed functions for initial population
 	var count int64
 	db.Model(&mythicplus.Season{}).Count(&count)
 	if count == 0 {
-		log.Println("Seeding Mythic+ data...")
-		absPath, err := filepath.Abs(staticMythicPlusPath)
-		if err != nil {
-			return fmt.Errorf("failed to get absolute path: %v", err)
-		}
-
+		log.Println("Seeding initial Mythic+ data...")
 		if err := staticMythicPlus.SeedSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
 			return err
 		}
@@ -106,11 +112,23 @@ func ensureMythicPlusData(db *gorm.DB) error {
 		if err := staticMythicPlus.SeedAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
 			return err
 		}
+	} else {
+		// Tables have data, use the new update functions to check for changes
+		log.Println("Updating existing Mythic+ data...")
+		if err := staticMythicPlus.UpdateSeasons(db, filepath.Join(absPath, "DF", "MMDF.json")); err != nil {
+			return err
+		}
+		if err := staticMythicPlus.UpdateSeasons(db, filepath.Join(absPath, "TWW", "S1MMTWW.json")); err != nil {
+			return err
+		}
+		if err := staticMythicPlus.UpdateAffixes(db, filepath.Join(absPath, "affix.json")); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// Ensure Talents data is present
+// ensureTalentsData ensures Talents data is present
 func ensureTalentsData(db *gorm.DB) error {
 	var count int64
 	db.Model(&talents.TalentTree{}).Count(&count)
@@ -123,29 +141,40 @@ func ensureTalentsData(db *gorm.DB) error {
 	return nil
 }
 
-// Ensure Raids data is present
+// ensureRaidsData ensures Raids data is up to date
+// Modified to use UpdateRaids for keeping data in sync with JSON files
 func ensureRaidsData(db *gorm.DB) error {
+	log.Println("Checking and updating Raids data...")
+	absPath, err := filepath.Abs(staticRaidsPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %v", err)
+	}
+
+	// Check if tables are empty - use original seed functions for initial population
 	var count int64
 	db.Model(&raids.Raid{}).Count(&count)
 	if count == 0 {
-		log.Println("Seeding Raids data...")
-		absPath, err := filepath.Abs(staticRaidsPath)
-		if err != nil {
-			return fmt.Errorf("failed to get absolute path: %v", err)
-		}
-
+		log.Println("Seeding initial Raids data...")
 		if err := staticRaids.SeedRaids(db, filepath.Join(absPath, "TWW", "raids.json")); err != nil {
 			return err
 		}
-
 		if err := staticRaids.SeedRaids(db, filepath.Join(absPath, "DF", "raids.json")); err != nil {
+			return err
+		}
+	} else {
+		// Tables have data, use the new update function to check for changes
+		log.Println("Updating existing Raids data...")
+		if err := staticRaids.UpdateRaids(db, filepath.Join(absPath, "TWW", "raids.json")); err != nil {
+			return err
+		}
+		if err := staticRaids.UpdateRaids(db, filepath.Join(absPath, "DF", "raids.json")); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// Ensure DungeonStats data is present
+// ensureDungeonStats ensures DungeonStats data is present and up to date
 func ensureDungeonStats(db *gorm.DB) error {
 	if mythicplusUpdate.IsDungeonStatsEmpty(db) {
 		log.Println("DungeonStats table is effectively empty. Resetting update state and initiating update...")
@@ -194,7 +223,7 @@ func ensureDungeonStats(db *gorm.DB) error {
 	return nil
 }
 
-// Ensure WarcraftLogs Rankings data is present
+// ensureRankingsData ensures WarcraftLogs Rankings data is present
 func ensureRankingsData(db *gorm.DB) error {
 	// Check if the rankings table is empty
 	if err := db.AutoMigrate(&rankingsModels.PlayerRanking{}, &rankingsModels.RankingsUpdateState{}); err != nil {
@@ -206,5 +235,24 @@ func ensureRankingsData(db *gorm.DB) error {
 	if count == 0 {
 		log.Println("Initial rankings data is empty, will be populated on first update...")
 	}
+	return nil
+}
+
+// UpdateGameData manually triggers an update of all game data from JSON files
+// This function can be called from an API endpoint or CLI command
+func UpdateGameData(db *gorm.DB) error {
+	log.Println("Manually updating all game data...")
+
+	// Update Mythic+ data
+	if err := ensureMythicPlusData(db); err != nil {
+		return fmt.Errorf("error updating Mythic+ data: %v", err)
+	}
+
+	// Update Raids data
+	if err := ensureRaidsData(db); err != nil {
+		return fmt.Errorf("error updating Raids data: %v", err)
+	}
+
+	log.Println("Game data update completed successfully.")
 	return nil
 }

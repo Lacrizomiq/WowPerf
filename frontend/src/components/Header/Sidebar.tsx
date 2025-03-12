@@ -118,10 +118,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                   <SidebarMenuSub>
                     <SidebarMenuSubItem className="pt-4">
                       <SidebarMenuSubButton
-                        onClick={() => router.push("/mythic-plus/leaderboard")}
+                        onClick={() => router.push("/mythic-plus/analysis")}
                       >
                         <Rows4 />
-                        <span className="cursor-pointer">Leaderboard</span>
+                        <span className="cursor-pointer">
+                          Performance Analysis
+                        </span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem className="py-4">

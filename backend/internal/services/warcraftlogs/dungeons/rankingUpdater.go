@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	MinimumUpdateInterval = 12 * time.Hour
+	MinimumUpdateInterval = 20 * time.Hour
 	DefaultUpdateInterval = 24 * time.Hour
 	updateLockKey         = "warcraftlogs:rankings:update:lock"
 	batchSize             = 100
@@ -141,14 +141,14 @@ func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
 // UpdateRankings updates the rankings in the database
 func (r *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 	dungeonIDs := []int{
-		DungeonAraKara,
-		DungeonCityOfThreads,
-		DungeonGrimBatol,
-		DungeonMists,
-		DungeonSiege,
-		DungeonDawnbreaker,
-		DungeonNecroticWake,
-		DungeonStonevault,
+		DungeonCinderbrew,
+		DungeonDarkflame,
+		DungeonFloodgate,
+		DungeonMechagon,
+		DungeonPriory,
+		DungeonMotherlode,
+		DungeonRookery,
+		DungeonTheaterPain,
 	}
 	pagesPerDungeon := 1
 

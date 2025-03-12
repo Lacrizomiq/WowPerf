@@ -25,12 +25,14 @@ const RaidRanking: FC<RaidRankingProps> = ({
     if (!raidProgressionData?.expansions) return null;
 
     const currentExpansion = raidProgressionData.expansions.find(
-      (exp: any) => exp.name === "Current Season"
+      (exp: any) =>
+        exp.name === "Current Season" || exp.name === "The War Within"
     );
     if (!currentExpansion) return null;
 
+    // Utiliser le nom du raid passé en tant que prop
     const currentRaid = currentExpansion.raids.find(
-      (raid: any) => raid.name === "Nerub-ar Palace"
+      (raid: any) => raid.name === raidName
     );
     if (!currentRaid) return null;
 

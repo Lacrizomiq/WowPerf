@@ -36,13 +36,13 @@ export default function CharacterSummary({
     data: mythicPlusPlayerRankings,
     isLoading: isLoadingMythicPlusPlayerRankings,
     error: mythicPlusPlayerRankingsError,
-  } = useGetPlayerMythicPlusRankings(name, realm, region, 39);
+  } = useGetPlayerMythicPlusRankings(name, realm, region, 43);
 
   const {
     data: raidPlayerRankings,
     isLoading: isLoadingRaidPlayerRankings,
     error: raidPlayerRankingsError,
-  } = useGetPlayerRaidRankings(name, realm, region, 38);
+  } = useGetPlayerRaidRankings(name, realm, region, 42);
 
   const { data: raidProgressionData, isLoading: isProgressionLoading } =
     useGetBlizzardCharacterEncounterRaid(
@@ -138,7 +138,7 @@ export default function CharacterSummary({
         {shouldShowMythicPlusRanking && allStarsMythicPlusData && (
           <div className="flex-1 sm:flex-none">
             <MythicPlusRanking
-              seasonName="TWW M+ S1"
+              seasonName="TWW M+ S2"
               rank={allStarsMythicPlusData?.rank}
               points={allStarsMythicPlusData?.points}
               classId={mythicPlusPlayerRankings?.classID || 0}
@@ -151,7 +151,7 @@ export default function CharacterSummary({
         {shouldShowRaidRanking && allStarsRaidData && (
           <div className="flex-1 sm:flex-none">
             <RaidRanking
-              raidName="Nerubar Palace"
+              raidName="Liberation of Undermine"
               rank={allStarsRaidData?.rank}
               classId={raidPlayerRankings?.classID || 0}
               spec={allStarsRaidData?.spec || ""}

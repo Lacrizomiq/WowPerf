@@ -7,7 +7,7 @@ import { Dungeon } from "@/types/mythicPlusRuns";
 import Image from "next/image";
 
 const MythicPlusBestRuns: React.FC = () => {
-  const season = "season-tww-1";
+  const season = "season-tww-2";
   const [region, setRegion] = useState("world");
   const [dungeon, setDungeon] = useState("all");
   const [page, setPage] = useState(0);

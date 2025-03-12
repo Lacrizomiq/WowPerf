@@ -1,0 +1,483 @@
+"https://localhost/api/blizzard/characters/silvermoon/ouimagatée/encounters/raids?region=eu&namespace=profile-eu&locale=en_GB"
+  
+ {
+  "expansions": [
+    {
+      "id": 503,
+      "name": "Dragonflight",
+      "raids": [
+        {
+          "id": 1200,
+          "name": "Vault of the Incarnates",
+          "modes": [
+            {
+              "difficulty": "Heroic",
+              "progress": {
+                "completed_count": 8,
+                "total_count": 8,
+                "encounters": [
+                  {
+                    "id": 2480,
+                    "name": "Eranog",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714502344000
+                  },
+                  {
+                    "id": 2500,
+                    "name": "Terros",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714503973000
+                  },
+                  {
+                    "id": 2486,
+                    "name": "The Primal Council",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714502944000
+                  },
+                  {
+                    "id": 2482,
+                    "name": "Sennarth, the Cold Breath",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714504412000
+                  },
+                  {
+                    "id": 2502,
+                    "name": "Dathea, Ascended",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714503471000
+                  },
+                  {
+                    "id": 2491,
+                    "name": "Kurog Grimtotem",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714504850000
+                  },
+                  {
+                    "id": 2493,
+                    "name": "Broodkeeper Diurna",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714505415000
+                  },
+                  {
+                    "id": 2499,
+                    "name": "Raszageth the Storm-Eater",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1714507924000
+                  }
+                ]
+              },
+              "status": "COMPLETE"
+            }
+          ]
+        },
+        {
+          "id": 1208,
+          "name": "Aberrus, the Shadowed Crucible",
+          "modes": [
+            {
+              "difficulty": "Raid Finder",
+              "progress": {
+                "completed_count": 6,
+                "total_count": 9,
+                "encounters": [
+                  {
+                    "id": 2522,
+                    "name": "Kazzara, the Hellforged",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686055252000
+                  },
+                  {
+                    "id": 2529,
+                    "name": "The Amalgamation Chamber",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686055845000
+                  },
+                  {
+                    "id": 2530,
+                    "name": "The Forgotten Experiments",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686056487000
+                  },
+                  {
+                    "id": 2524,
+                    "name": "Assault of the Zaqali",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686057186000
+                  },
+                  {
+                    "id": 2525,
+                    "name": "Rashok, the Elder",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686058018000
+                  },
+                  {
+                    "id": 2532,
+                    "name": "The Vigilant Steward, Zskarn",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1686058453000
+                  }
+                ]
+              },
+              "status": "IN_PROGRESS"
+            },
+            {
+              "difficulty": "Normal",
+              "progress": {
+                "completed_count": 7,
+                "total_count": 9,
+                "encounters": [
+                  {
+                    "id": 2522,
+                    "name": "Kazzara, the Hellforged",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685281730000
+                  },
+                  {
+                    "id": 2529,
+                    "name": "The Amalgamation Chamber",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685282756000
+                  },
+                  {
+                    "id": 2530,
+                    "name": "The Forgotten Experiments",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685283444000
+                  },
+                  {
+                    "id": 2524,
+                    "name": "Assault of the Zaqali",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685284700000
+                  },
+                  {
+                    "id": 2525,
+                    "name": "Rashok, the Elder",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685285140000
+                  },
+                  {
+                    "id": 2532,
+                    "name": "The Vigilant Steward, Zskarn",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685286143000
+                  },
+                  {
+                    "id": 2527,
+                    "name": "Magmorax",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1685286988000
+                  }
+                ]
+              },
+              "status": "IN_PROGRESS"
+            },
+            {
+              "difficulty": "Heroic",
+              "progress": {
+                "completed_count": 9,
+                "total_count": 9,
+                "encounters": [
+                  {
+                    "id": 2522,
+                    "name": "Kazzara, the Hellforged",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715020862000
+                  },
+                  {
+                    "id": 2529,
+                    "name": "The Amalgamation Chamber",
+                    "completed_count": 5,
+                    "last_kill_timestamp": 1715021288000
+                  },
+                  {
+                    "id": 2530,
+                    "name": "The Forgotten Experiments",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715021682000
+                  },
+                  {
+                    "id": 2524,
+                    "name": "Assault of the Zaqali",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715022161000
+                  },
+                  {
+                    "id": 2525,
+                    "name": "Rashok, the Elder",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715022487000
+                  },
+                  {
+                    "id": 2532,
+                    "name": "The Vigilant Steward, Zskarn",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715022852000
+                  },
+                  {
+                    "id": 2527,
+                    "name": "Magmorax",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715023260000
+                  },
+                  {
+                    "id": 2523,
+                    "name": "Echo of Neltharion",
+                    "completed_count": 4,
+                    "last_kill_timestamp": 1715023712000
+                  },
+                  {
+                    "id": 2520,
+                    "name": "Scalecommander Sarkareth",
+                    "completed_count": 5,
+                    "last_kill_timestamp": 1715026730000
+                  }
+                ]
+              },
+              "status": "COMPLETE"
+            }
+          ]
+        },
+        {
+          "id": 1207,
+          "name": "Amirdrassil, the Dream's Hope",
+          "modes": [
+            {
+              "difficulty": "Normal",
+              "progress": {
+                "completed_count": 9,
+                "total_count": 9,
+                "encounters": [
+                  {
+                    "id": 2564,
+                    "name": "Gnarlroot",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700840378000
+                  },
+                  {
+                    "id": 2554,
+                    "name": "Igira the Cruel",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700840752000
+                  },
+                  {
+                    "id": 2557,
+                    "name": "Volcoross",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700841281000
+                  },
+                  {
+                    "id": 2555,
+                    "name": "Council of Dreams",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700842429000
+                  },
+                  {
+                    "id": 2553,
+                    "name": "Larodar, Keeper of the Flame",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700841793000
+                  },
+                  {
+                    "id": 2556,
+                    "name": "Nymue, Weaver of the Cycle",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700842817000
+                  },
+                  {
+                    "id": 2563,
+                    "name": "Smolderon",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700843363000
+                  },
+                  {
+                    "id": 2565,
+                    "name": "Tindral Sageswift, Seer of the Flame",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1700844274000
+                  },
+                  {
+                    "id": 2519,
+                    "name": "Fyrakk the Blazing",
+                    "completed_count": 3,
+                    "last_kill_timestamp": 1700845179000
+                  }
+                ]
+              },
+              "status": "COMPLETE"
+            },
+            {
+              "difficulty": "Heroic",
+              "progress": {
+                "completed_count": 9,
+                "total_count": 9,
+                "encounters": [
+                  {
+                    "id": 2564,
+                    "name": "Gnarlroot",
+                    "completed_count": 2,
+                    "last_kill_timestamp": 1706644897000
+                  },
+                  {
+                    "id": 2554,
+                    "name": "Igira the Cruel",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706645420000
+                  },
+                  {
+                    "id": 2557,
+                    "name": "Volcoross",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706646099000
+                  },
+                  {
+                    "id": 2555,
+                    "name": "Council of Dreams",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706647236000
+                  },
+                  {
+                    "id": 2553,
+                    "name": "Larodar, Keeper of the Flame",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706646608000
+                  },
+                  {
+                    "id": 2556,
+                    "name": "Nymue, Weaver of the Cycle",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706647731000
+                  },
+                  {
+                    "id": 2563,
+                    "name": "Smolderon",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706648302000
+                  },
+                  {
+                    "id": 2565,
+                    "name": "Tindral Sageswift, Seer of the Flame",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706650402000
+                  },
+                  {
+                    "id": 2519,
+                    "name": "Fyrakk the Blazing",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1706651862000
+                  }
+                ]
+              },
+              "status": "COMPLETE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 505,
+      "name": "Current Season",
+      "raids": [
+        {
+          "id": 1273,
+          "name": "Nerub-ar Palace",
+          "modes": [
+            {
+              "difficulty": "Heroic",
+              "progress": {
+                "completed_count": 8,
+                "total_count": 8,
+                "encounters": [
+                  {
+                    "id": 2607,
+                    "name": "Ulgrax the Devourer",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733317309000
+                  },
+                  {
+                    "id": 2611,
+                    "name": "The Bloodbound Horror",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733317834000
+                  },
+                  {
+                    "id": 2599,
+                    "name": "Sikran, Captain of the Sureki",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733318341000
+                  },
+                  {
+                    "id": 2609,
+                    "name": "Rasha'nan",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733318782000
+                  },
+                  {
+                    "id": 2612,
+                    "name": "Broodtwister Ovi'nax",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733319525000
+                  },
+                  {
+                    "id": 2601,
+                    "name": "Nexus-Princess Ky'veza",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733320190000
+                  },
+                  {
+                    "id": 2608,
+                    "name": "The Silken Court",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733320851000
+                  },
+                  {
+                    "id": 2602,
+                    "name": "Queen Ansurek",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1733321844000
+                  }
+                ]
+              },
+              "status": "COMPLETE"
+            },
+            {
+              "difficulty": "Mythic",
+              "progress": {
+                "completed_count": 4,
+                "total_count": 8,
+                "encounters": [
+                  {
+                    "id": 2607,
+                    "name": "Ulgrax the Devourer",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1736345275000
+                  },
+                  {
+                    "id": 2611,
+                    "name": "The Bloodbound Horror",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1736345764000
+                  },
+                  {
+                    "id": 2599,
+                    "name": "Sikran, Captain of the Sureki",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1736346386000
+                  },
+                  {
+                    "id": 2609,
+                    "name": "Rasha'nan",
+                    "completed_count": 1,
+                    "last_kill_timestamp": 1736347111000
+                  }
+                ]
+              },
+              "status": "IN_PROGRESS"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
