@@ -85,8 +85,6 @@ class CSRFService {
         },
       });
 
-      console.log("CSRF token response:", response.data);
-
       if (response.data.token) {
         this.token = response.data.token;
         this.tokenExpiryTime = Date.now() + this.TOKEN_LIFETIME;

@@ -1,7 +1,5 @@
-[
-  {
-    "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/equipment?region=eu&namespace=profile-eu&locale=en_GB"
-  },
+
+  "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/equipment?region=eu&namespace=profile-eu&locale=en_GB"
 
   {
     "item_level_equipped": 630.8125,
@@ -424,4 +422,4 @@
       }
     }
   }
-]
+

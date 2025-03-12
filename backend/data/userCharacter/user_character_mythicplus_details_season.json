@@ -1,7 +1,5 @@
-[
-  {
-    "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/mythic-keystone-profile/season/13?region=eu&namespace=profile-eu&locale=en_GB"
-  },
+"https://localhost/api/blizzard/characters/silvermoon/ouimagatée/mythic-keystone-profile/season/13?region=eu&namespace=profile-eu&locale=en_GB"
+  
   {
     "CharacterName": "Ouimagatée",
     "RealmSlug": "silvermoon",
@@ -1082,5 +1080,5 @@
         ]
       }
     ]
-  }
-]
+}
+

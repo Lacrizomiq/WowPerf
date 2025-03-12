@@ -22,8 +22,6 @@ const PerformanceStatistics: React.FC = () => {
     return Array.isArray(data) ? data : [];
   }, [data]);
 
-  console.log(specs);
-
   // Extract all unique class names from the specs data
   const availableClasses = useMemo(() => {
     if (!specs || specs.length === 0) return [] as string[];
