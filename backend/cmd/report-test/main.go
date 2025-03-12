@@ -3,95 +3,102 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"wowperf/internal/database"
-	"wowperf/internal/services/warcraftlogs"
-	warcraftlogsBuildsConfig "wowperf/internal/services/warcraftlogs/mythicplus/builds/config"
-	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsService "wowperf/internal/services/warcraftlogs/mythicplus/builds/service"
-	warcraftlogsBuildsSync "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync"
-	warcraftlogsBuildsMetrics "wowperf/internal/services/warcraftlogs/mythicplus/builds/service/sync/metrics"
+	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
+	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
+
+	"go.temporal.io/sdk/client"
 )
 
+// No longer need this constant as we'll use the one from models
+// const defaultNamespace = "default"
+
 func main() {
+	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
+	logger.Printf("[INFO] Starting scheduler service")
 
-	// Load config
-	cfg, err := warcraftlogsBuildsConfig.Load("configs/config_s1_tww.priest.yaml") // Use Priest config only for testing
+	// Initialize Temporal client
+	temporalClient, err := initTemporalClient()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("[FATAL] Failed to create Temporal client: %v", err)
 	}
-	// Initialize database
-	db, err := database.InitDB()
+	defer temporalClient.Close()
+
+	// Initialize schedule manager
+	scheduleManager := scheduler.NewScheduleManager(temporalClient, logger)
+
+	// Perform cleanup of existing schedules and workflows before creating new ones
+	logger.Printf("[INFO] Starting cleanup of existing schedules and workflows")
+	if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+		logger.Printf("[WARN] Cleanup encountered some errors: %v", err)
+	}
+	logger.Printf("[INFO] Cleanup completed successfully")
+
+	// Load production configuration
+	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatalf("[FATAL] Failed to load production config: %v", err)
 	}
 
-	// Initialize WarcraftLogs client
-	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
+	// Create production schedule
+	opts := scheduler.DefaultScheduleOptions()
+	if err := scheduleManager.CreateSchedule(context.Background(), cfg, opts); err != nil {
+		logger.Fatalf("[FATAL] Failed to create production schedule: %v", err)
+	}
+	logger.Printf("[INFO] Successfully created production schedule")
+
+	// Create and trigger test schedule for Priest
+	testCfg, err := workflows.LoadConfig("configs/config_s1_tww.priest.yaml")
 	if err != nil {
-		log.Fatalf("Failed to initialize WarcraftLogs client: %v", err)
+		log.Fatalf("[FATAL] Failed to load test config: %v", err)
 	}
 
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Rankings.UpdateInterval)
-	defer cancel()
+	if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
+		logger.Printf("[ERROR] Failed to create test schedule: %v", err)
+	} else {
+		logger.Printf("[TEST] Successfully created test schedule")
 
-	// Initialize worker pool
-	metrics := warcraftlogsBuildsMetrics.NewSyncMetrics()
-	workerPool := warcraftlogs.NewWorkerPool(warcraftLogsClient, cfg.Worker.NumWorkers, metrics) // 3 workers
-	workerPool.Start(ctx)                                                                        // Start the worker pool
-	defer workerPool.Stop()                                                                      // Stop the worker pool when the program exits
-
-	// Initialize repository
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
-
-	// Initialize services
-	reportsService := reportsService.NewReportService(warcraftLogsClient, reportsRepo, db, metrics)
-
-	// Initialize sync service
-	syncConfig := &warcraftlogsBuildsConfig.Config{
-		Rankings: cfg.Rankings,
-		Worker:   cfg.Worker,
-		Specs:    cfg.Specs,
-		Dungeons: cfg.Dungeons,
-	}
-
-	// Initialize and start sync service
-	syncService := warcraftlogsBuildsSync.NewSyncService(
-		workerPool,
-		rankingsRepo,
-		syncConfig,
-	)
-
-	log.Println("Starting rankings synchronization")
-	if err := syncService.StartSync(ctx); err != nil {
-		log.Printf("Rankings sync error: %v", err)
-	}
-
-	// Process reports after rankings sync
-	log.Println("Processing reports from rankings ...")
-	reports, err := reportsService.GetReportsFromRankings(ctx)
-	if err != nil {
-		log.Fatalf("Failed to get reports from rankings: %v", err)
-	}
-
-	log.Printf("Found %d reports", len(reports))
-	if len(reports) > 0 {
-		if err := reportsService.ProcessReports(ctx, reports); err != nil {
-			log.Fatalf("Failed to process reports: %v", err)
+		// Trigger test schedule immediately
+		if err := scheduleManager.TriggerSyncNow(context.Background()); err != nil {
+			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
+		} else {
+			logger.Printf("[TEST] Successfully triggered test schedule")
 		}
 	}
 
-	log.Println("Reports processed successfully")
+	// Handle graceful shutdown
+	handleGracefulShutdown(scheduleManager, logger)
 }
 
-// extractDungeonIDs extracts the dungeon IDs from the given dungeons
-func extractDungeonIDs(dungeons []warcraftlogsBuildsConfig.Dungeon) []uint {
-	ids := make([]uint, len(dungeons))
-	for i, dungeon := range dungeons {
-		ids[i] = uint(dungeon.ID)
+func initTemporalClient() (client.Client, error) {
+	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
+	if temporalAddress == "" {
+		temporalAddress = "localhost:7233"
 	}
-	return ids
+
+	// Use the shared namespace constant from models
+	return client.Dial(client.Options{
+		HostPort:  temporalAddress,
+		Namespace: models.DefaultNamespace, // Updated to use models
+	})
+}
+
+func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *log.Logger) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	sig := <-sigCh
+	logger.Printf("Received signal %v, initiating shutdown", sig)
+
+	// We now have deletion logic implemented but typically don't need to run it on shutdown
+	// If you want to clean up on shutdown, you could add:
+	// if err := scheduleManager.CleanupAll(context.Background()); err != nil {
+	//     logger.Printf("[WARN] Cleanup on shutdown failed: %v", err)
+	// }
+
+	logger.Printf("Scheduler service shutdown complete")
 }

@@ -1,18 +1,22 @@
 rankings:
-  max_rankings_per_spec: 150
+  max_rankings_per_spec: 120
   update_interval: 168h
 
 worker:
   num_workers: 3
   retry_attempts: 3
   retry_delay: 5s
-  batch_size: 100
+  batch_size: 5
   request_delay: 500ms
 
 specs:
   # Priest
   - class_name: "Priest"
     spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"
 
 dungeons:
   - id: 12660

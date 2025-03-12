@@ -46,18 +46,20 @@ import (
 	blizzardAuthMiddleware "wowperf/pkg/middleware/blizzard" // Battle.net middleware
 )
 
-// Structures pour regrouper les services et handlers
+// Struct to group Services
 type AppServices struct {
-	Auth            *auth.AuthService
-	BattleNet       *bnetAuth.BattleNetAuthService
-	User            *userService.UserService
-	Blizzard        *serviceBlizzard.Service
-	RaiderIO        *serviceRaiderio.RaiderIOService
-	WarcraftLogs    *warcraftlogs.WarcraftLogsClientService
-	LeaderBoard     *warcraftLogsLeaderboard.GlobalLeaderboardService
-	RankingsUpdater *warcraftLogsLeaderboard.RankingsUpdater
+	Auth                *auth.AuthService
+	BattleNet           *bnetAuth.BattleNetAuthService
+	User                *userService.UserService
+	Blizzard            *serviceBlizzard.Service
+	RaiderIO            *serviceRaiderio.RaiderIOService
+	WarcraftLogs        *warcraftlogs.WarcraftLogsClientService
+	LeaderBoard         *warcraftLogsLeaderboard.GlobalLeaderboardService
+	LeaderboardAnalysis *warcraftLogsLeaderboard.GlobalLeaderboardAnalysisService
+	RankingsUpdater     *warcraftLogsLeaderboard.RankingsUpdater
 }
 
+// Struct to group Handlers
 type AppHandlers struct {
 	Auth             *authHandler.AuthHandler
 	User             *userHandler.UserHandler
@@ -134,6 +136,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	}
 
 	globalLeaderboardService := warcraftLogsLeaderboard.NewGlobalLeaderboardService(db)
+	globalLeaderboardAnalysisService := warcraftLogsLeaderboard.NewGlobalLeaderboardAnalysisService(db) // Add analysis service
 	rankingsUpdater := warcraftLogsLeaderboard.NewRankingsUpdater(
 		db,
 		warcraftLogsService,
@@ -142,14 +145,15 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	)
 
 	return &AppServices{
-		Auth:            authService,
-		BattleNet:       battleNetService,
-		User:            userSvc,
-		Blizzard:        blizzardService,
-		RaiderIO:        rioService,
-		WarcraftLogs:    warcraftLogsService,
-		LeaderBoard:     globalLeaderboardService,
-		RankingsUpdater: rankingsUpdater,
+		Auth:                authService,
+		BattleNet:           battleNetService,
+		User:                userSvc,
+		Blizzard:            blizzardService,
+		RaiderIO:            rioService,
+		WarcraftLogs:        warcraftLogsService,
+		LeaderBoard:         globalLeaderboardService,
+		LeaderboardAnalysis: globalLeaderboardAnalysisService, // Add analysis service to AppServices
+		RankingsUpdater:     rankingsUpdater,
 	}, nil
 }
 
@@ -163,6 +167,7 @@ func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.C
 		Blizzard:  apiBlizzard.NewHandler(services.Blizzard, db, cacheService, cacheManagers.Blizzard),
 		WarcraftLogs: apiWarcraftlogs.NewHandler(
 			services.LeaderBoard,
+			services.LeaderboardAnalysis, // Use analysis service instead of WarcraftLogsClientService
 			services.WarcraftLogs,
 			db,
 			cacheService,

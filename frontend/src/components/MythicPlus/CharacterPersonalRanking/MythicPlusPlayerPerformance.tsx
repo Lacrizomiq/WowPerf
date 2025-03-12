@@ -88,7 +88,7 @@ const MythicPlusPlayerPerformance: React.FC<
   };
 
   return (
-    <div className="bg-deep-blue rounded-lg p-4 text-white shadow-2xl">
+    <div className="bg-deep-blue rounded-xl p-4 text-white shadow-2xl">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="bg-gray-900/50 border-gray-800">
@@ -107,7 +107,7 @@ const MythicPlusPlayerPerformance: React.FC<
                     ),
                   }}
                 >
-                  {Math.floor(playerData.zoneRankings.bestPerformanceAverage)}
+                  {Math.floor(playerData.zoneRankings.bestPerformanceAverage)}%
                 </p>
               </div>
             </div>
@@ -179,12 +179,12 @@ const MythicPlusPlayerPerformance: React.FC<
       </div>
 
       {/* Additional Info */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-2">
         <h2 className="text-2xl font-bold mb-4">
           Player rankings for {allStarsData.spec} Spec
         </h2>
         <div className="flex justify-center items-center space-x-6">
-          <p className="text-sm text-gray-400">
+          {/* <p className="text-sm text-gray-400">
             Median Perf. Avg:{" "}
             <span
               style={{
@@ -195,7 +195,7 @@ const MythicPlusPlayerPerformance: React.FC<
             >
               {playerData.zoneRankings.medianPerformanceAverage.toFixed(1)}
             </span>
-          </p>
+          </p> */}
           <p className="text-sm text-gray-400">
             Top %:{" "}
             <span
@@ -206,7 +206,7 @@ const MythicPlusPlayerPerformance: React.FC<
               {formatTopPercent(allStarsData.rankPercent)}
             </span>
           </p>
-          <p className="text-sm text-gray-400">
+          {/* <p className="text-sm text-gray-400">
             Kills Logged:{" "}
             <span className="text-white">
               {playerData.zoneRankings.rankings.reduce(
@@ -214,12 +214,12 @@ const MythicPlusPlayerPerformance: React.FC<
                 0
               )}
             </span>
-          </p>
+          </p> */}
         </div>
       </div>
 
       {/* Modern Table */}
-      <div className="bg-gray-900/50 rounded-lg border border-gray-800">
+      {/* <div className="bg-gray-900/50 rounded-lg border border-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -343,7 +343,7 @@ const MythicPlusPlayerPerformance: React.FC<
             </tbody>
           </table>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

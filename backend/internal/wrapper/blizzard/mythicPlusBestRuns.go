@@ -13,6 +13,7 @@ import (
 )
 
 var SeasonIDMapping = map[string]int{
+	"season-tww-2": 14,
 	"season-tww-1": 13,
 	"season-df-4":  12,
 	"season-df-3":  11,

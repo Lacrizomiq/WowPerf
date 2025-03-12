@@ -49,6 +49,7 @@ type Dungeon struct {
 	ShortName        string
 	MediaURL         string
 	Icon             *string
+	EncounterID      uint
 	Seasons          []Season          `gorm:"many2many:season_dungeons;"`
 	KeyStoneUpgrades []KeyStoneUpgrade `gorm:"foreignKey:ChallengeModeID;references:ChallengeModeID"`
 }

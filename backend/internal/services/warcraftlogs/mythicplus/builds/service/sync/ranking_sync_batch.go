@@ -18,7 +18,7 @@ import (
 type RankingBatch struct {
 	ClassName   string // ex: "Priest"
 	SpecName    string // ex: "Discipline"
-	DungeonID   uint   // ex: 123
+	EncounterID uint   // ex: 12660
 	BatchSize   uint   // ex: 100
 	CurrentPage uint   // ex: 1
 }
@@ -37,6 +37,7 @@ type BatchResult struct {
 	HasMore  bool                               // true if there are more pages to fetch
 	Error    error                              // error that occurred during processing
 	RetryAt  time.Time                          // time at which the batch should be retried
+	Skipped  bool                               // true if the batch has been skipped
 }
 
 // NewBatchProcessor creates a new BatchProcessor instance
@@ -58,12 +59,12 @@ func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (
 		Batch: batch,
 	}
 
-	log.Printf("[DEBUG] Processing batch for %s-%s, dungeon: %d, page: %d",
-		batch.ClassName, batch.SpecName, batch.DungeonID, batch.CurrentPage)
+	log.Printf("[DEBUG] Processing batch for %s-%s, encounter: %d, page: %d",
+		batch.ClassName, batch.SpecName, batch.EncounterID, batch.CurrentPage)
 
 	var lastErr error
 	for attempt := 1; attempt <= p.config.Rankings.Batch.MaxAttempts; attempt++ {
-		result.Rankings, result.HasMore, lastErr = p.fetchRankings(ctx, batch)
+		result.Rankings, lastErr = p.fetchRankings(ctx, batch)
 		if lastErr == nil {
 			break
 		}
@@ -112,11 +113,11 @@ func (p *BatchProcessor) ProcessBatch(ctx context.Context, batch RankingBatch) (
 }
 
 // fetchRankings fetches rankings from the API and returns the rankings, if there are more pages, and an error if it occurs
-func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) ([]*warcraftlogsBuilds.ClassRanking, bool, error) {
+func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	job := warcraftlogs.Job{
 		Query: rankingsQueries.ClassRankingsQuery,
 		Variables: map[string]interface{}{
-			"encounterId": batch.DungeonID,
+			"encounterId": batch.EncounterID,
 			"className":   batch.ClassName,
 			"specName":    batch.SpecName,
 			"page":        batch.CurrentPage,
@@ -130,20 +131,20 @@ func (p *BatchProcessor) fetchRankings(ctx context.Context, batch RankingBatch) 
 	case result := <-p.workerPool.Results():
 		if result.Error != nil {
 			if wlErr, ok := result.Error.(*warcraftlogsTypes.WarcraftLogsError); ok {
-				wlErr.Message = fmt.Sprintf("%s (class: %s, spec: %s, dungeon: %d, page: %d)",
-					wlErr.Message, batch.ClassName, batch.SpecName, batch.DungeonID, batch.CurrentPage)
+				wlErr.Message = fmt.Sprintf("%s (class: %s, spec: %s, encounter: %d, page: %d)",
+					wlErr.Message, batch.ClassName, batch.SpecName, batch.EncounterID, batch.CurrentPage)
 			}
-			return nil, false, result.Error
+			return nil, result.Error
 		}
-		return rankingsQueries.ParseRankingsResponse(result.Data, batch.DungeonID, batch.DungeonID)
+		return rankingsQueries.ParseRankingsResponse(result.Data, batch.EncounterID)
 	case <-ctx.Done():
-		return nil, false, ctx.Err()
+		return nil, ctx.Err()
 	}
 }
 
 // updateMetrics updates the metrics for a specific batch
 func (p *BatchProcessor) updateMetrics(batch RankingBatch, rankingsCount int) {
-	p.metrics.RecordBatchProcessed(batch.SpecName, batch.DungeonID)
+	p.metrics.RecordBatchProcessed(batch.SpecName, batch.EncounterID)
 	// Update metrics for this specific batch
 	p.metrics.RecordRankingChanges(
 		rankingsCount, // total

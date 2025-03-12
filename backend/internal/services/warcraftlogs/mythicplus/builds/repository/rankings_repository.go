@@ -2,6 +2,7 @@ package warcraftlogsBuildsRepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -21,17 +22,19 @@ func NewRankingsRepository(db *gorm.DB) *RankingsRepository {
 }
 
 // GetLastRankingsForEncounter retrieves the last rankings for a given encounter
-func (r *RankingsRepository) GetLastRankingForEncounter(ctx context.Context, encounterID uint) (*warcraftlogsBuilds.ClassRanking, error) {
+func (r *RankingsRepository) GetLastRankingForEncounter(ctx context.Context, encounterID uint, className string, specName string) (*warcraftlogsBuilds.ClassRanking, error) {
 	var ranking warcraftlogsBuilds.ClassRanking
-	result := r.db.WithContext(ctx).
-		Where("encounter_id = ?", encounterID).
-		Order("created_at DESC").
-		First(&ranking)
 
-	if result.Error == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
+	result := r.db.Where("encounter_id = ? AND class = ? AND spec = ?",
+		encounterID,
+		className,
+		specName,
+	).Order("updated_at DESC").First(&ranking)
+
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to get last ranking: %w", result.Error)
 	}
 
@@ -126,7 +129,7 @@ func buildRankingKey(r *warcraftlogsBuilds.ClassRanking) string {
 func (r *RankingsRepository) GetRankingsForAnalysis(ctx context.Context, encounterID uint, limit int) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	var rankings []*warcraftlogsBuilds.ClassRanking
 	err := r.db.WithContext(ctx).
-		Where("encounter_id = ? AND deleted_at IS NULL", encounterID).
+		Where("encounter_id = ?", encounterID).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&rankings).Error
@@ -137,6 +140,22 @@ func (r *RankingsRepository) GetRankingsForAnalysis(ctx context.Context, encount
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rankings: %w", err)
+	}
+
+	return rankings, nil
+}
+
+// GetRankingsForSpec retrieves rankings from the database for a specific class/spec/encounter
+func (r *RankingsRepository) GetRankingsForSpec(ctx context.Context, className, specName string, encounterID uint) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	var rankings []*warcraftlogsBuilds.ClassRanking
+
+	result := r.db.WithContext(ctx).
+		Where("class = ? AND spec = ? AND encounter_id = ?",
+			className, specName, encounterID).
+		Find(&rankings)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get rankings: %w", result.Error)
 	}
 
 	return rankings, nil

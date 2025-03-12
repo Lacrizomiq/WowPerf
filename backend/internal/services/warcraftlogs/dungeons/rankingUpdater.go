@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	MinimumUpdateInterval = 12 * time.Hour
+	MinimumUpdateInterval = 20 * time.Hour
 	DefaultUpdateInterval = 24 * time.Hour
 	updateLockKey         = "warcraftlogs:rankings:update:lock"
 	batchSize             = 100
@@ -126,7 +126,6 @@ func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
 			return fmt.Errorf("failed to update rankings: %w", err)
 		}
 
-		// Utilise la nouvelle méthode pour mettre à jour le timestamp
 		if err := r.updateLastUpdateTime(ctx); err != nil {
 			return fmt.Errorf("failed to update timestamp: %w", err)
 		}
@@ -142,16 +141,16 @@ func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
 // UpdateRankings updates the rankings in the database
 func (r *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 	dungeonIDs := []int{
-		DungeonAraKara,
-		DungeonCityOfThreads,
-		DungeonGrimBatol,
-		DungeonMists,
-		DungeonSiege,
-		DungeonDawnbreaker,
-		DungeonNecroticWake,
-		DungeonStonevault,
+		DungeonCinderbrew,
+		DungeonDarkflame,
+		DungeonFloodgate,
+		DungeonMechagon,
+		DungeonPriory,
+		DungeonMotherlode,
+		DungeonRookery,
+		DungeonTheaterPain,
 	}
-	pagesPerDungeon := 10
+	pagesPerDungeon := 1
 
 	rankings, err := GetGlobalRankings(r.service, ctx, dungeonIDs, pagesPerDungeon)
 	if err != nil {

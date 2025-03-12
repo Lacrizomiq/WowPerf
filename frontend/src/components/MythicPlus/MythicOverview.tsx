@@ -7,12 +7,7 @@ import {
   useGetBlizzardMythicDungeonPerSeason,
   useGetBlizzardCharacterMythicPlusBestRuns,
 } from "@/hooks/useBlizzardApi";
-import {
-  MythicDungeonProps,
-  Dungeon,
-  MythicPlusSeasonInfo,
-  Season,
-} from "@/types/mythicPlusRuns";
+import { MythicDungeonProps, Dungeon, Season } from "@/types/mythicPlusRuns";
 import { useGetPlayerMythicPlusRankings } from "@/hooks/useWarcraftLogsApi";
 import MythicPlusPlayerPerformance from "./CharacterPersonalRanking/MythicPlusPlayerPerformance";
 
@@ -24,18 +19,22 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
   locale,
   seasonSlug,
 }) => {
+  // Get the selected season
   const [selectedSeason, setSelectedSeason] = useState<Season>(
     seasons.find((s) => s.slug === seasonSlug) || seasons[0]
   );
 
+  // Get the selected dungeon
   const [selectedDungeon, setSelectedDungeon] = useState<Dungeon | null>(null);
 
+  // Get the dungeon data via a custom Hook
   const {
     data: dungeonData,
     isLoading: isDungeonLoading,
     error: dungeonError,
   } = useGetBlizzardMythicDungeonPerSeason(selectedSeason.slug);
 
+  // Get the season Mythic Rating via a custom Hook
   const {
     data: mythicPlusSeasonInfo,
     isLoading: isRunsLoading,
@@ -49,12 +48,14 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     selectedSeason.id.toString()
   );
 
+  // Get the player's personal performance for the selected season via a custom Hook
   const {
     data: mythicPlusPlayerRankings,
     isLoading: isLoadingMythicPlusPlayerRankings,
     error: mythicPlusPlayerRankingsError,
-  } = useGetPlayerMythicPlusRankings(characterName, realmSlug, region, 39);
+  } = useGetPlayerMythicPlusRankings(characterName, realmSlug, region, 43);
 
+  // Handle season change
   const handleSeasonChange = (seasonSlug: string) => {
     const newSeason = seasons.find((s) => s.slug === seasonSlug);
     if (newSeason) {
@@ -63,16 +64,22 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
     }
   };
 
+  // Handle dungeon click
   const handleDungeonClick = (dungeon: Dungeon) => {
     setSelectedDungeon(dungeon);
   };
 
+  // Display loading message
   if (isDungeonLoading || isRunsLoading)
     return <div className="text-white text-center p-4">Loading data...</div>;
+
+  // Display error message
   if (dungeonError || runsError)
     return (
       <div className="text-red-500 text-center p-4">Error loading data</div>
     );
+
+  // Display no dungeon data message
   if (!dungeonData)
     return (
       <div className="text-yellow-500 text-center p-4">
@@ -90,6 +97,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
         <h2 className="text-2xl font-bold text-white">Mythic+ Dungeons</h2>
       </div>
 
+      {/* Display the player's personal performance for the selected season */}
       {mythicPlusPlayerRankings && (
         <div className="mb-6">
           <h3 className="text-xl text-white mb-2">
@@ -104,15 +112,15 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
 
       <div className="flex justify-between items-center mb-6">
         <div className="flex-1">
-          {" "}
-          {/* Cette div prend l'espace disponible */}
+          {/* Display the season Mythic Rating */}
           {mythicPlusSeasonInfo ? (
             <p className="text-xl text-white">
               Season Mythic Rating:{" "}
               <span
                 style={{ color: mythicPlusSeasonInfo.OverallMythicRatingHex }}
+                className="font-bold"
               >
-                {mythicPlusSeasonInfo.OverallMythicRating.toFixed(2)}
+                {mythicPlusSeasonInfo.OverallMythicRating.toFixed(0)}
               </span>
             </p>
           ) : (
@@ -122,7 +130,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
 
         <div>
           {" "}
-          {/* Cette div ne prend que l'espace nécessaire */}
+          {/* Season selector */}
           <SeasonsSelector
             seasons={seasons}
             onSeasonChange={handleSeasonChange}
@@ -131,6 +139,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
         </div>
       </div>
 
+      {/* Display the dungeon list */}
       <StaticDungeonList
         dungeons={dungeonData.dungeons}
         mythicPlusRuns={mythicPlusSeasonInfo?.BestRuns || []}
@@ -138,6 +147,7 @@ const MythicDungeonOverview: React.FC<MythicDungeonProps> = ({
         selectedDungeon={selectedDungeon}
       />
 
+      {/* Display the dungeon details with the team composition */}
       {selectedRun && <DungeonDetails run={selectedRun} region={region} />}
     </div>
   );

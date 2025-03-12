@@ -11,7 +11,7 @@ import (
 type Report struct {
 	// primary key and metadata
 	Code        string `gorm:"primaryKey;type:varchar(255)"`
-	FightID     int    `gorm:"not null"`
+	FightID     int    `gorm:"primaryKey;autoIncrement:false"` // Part of composite primary key
 	EncounterID uint   `gorm:"index"`
 
 	// base data

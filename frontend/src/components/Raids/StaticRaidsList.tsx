@@ -59,8 +59,10 @@ const StaticRaidsList: React.FC<StaticRaidsListProps> = ({
             <Image
               src={raid.MediaURL}
               alt={raid.Name}
-              layout="fill"
-              className="object-cover mb-2"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              style={{ objectFit: "cover" }}
+              className="mb-2"
             />
           </div>
           <div className="p-4">

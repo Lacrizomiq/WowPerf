@@ -32,8 +32,6 @@ const DynamicMythicPlusRuns: React.FC<DynamicMythicPlusRunsProps> = ({
     seasonId
   );
 
-  console.log("Mythic+ Season Info:", mythicPlusSeasonInfo);
-
   if (isLoading) return <div>Loading Mythic+ runs...</div>;
   if (error) return <div>Error loading Mythic+ runs: {error.message}</div>;
   if (!mythicPlusSeasonInfo)

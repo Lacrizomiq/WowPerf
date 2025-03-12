@@ -29,7 +29,7 @@ const RaidLeaderboard: React.FC = () => {
   useEffect(() => {
     if (raidsData && !isRaidsLoading) {
       const defaultRaid = raidsData.find(
-        (raid) => raid.Slug === "nerubar-palace"
+        (raid) => raid.Slug === "liberation-of-undermine"
       );
       if (defaultRaid) {
         setSelectedRaid(defaultRaid);

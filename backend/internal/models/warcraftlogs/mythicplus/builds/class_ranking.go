@@ -19,7 +19,7 @@ type ClassRanking struct {
 	Spec       string `gorm:"type:varchar(255);not null"`
 
 	// Dungeon info
-	DungeonID   uint `gorm:"index"`
+	DungeonID   uint `gorm:"-"`
 	EncounterID uint `gorm:"index"`
 
 	// Run info

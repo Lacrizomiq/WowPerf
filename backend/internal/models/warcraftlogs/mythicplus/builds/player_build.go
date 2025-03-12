@@ -24,9 +24,9 @@ type PlayerBuild struct {
 	FightID    int    `gorm:"not null"`
 
 	// Talent information
-	TalentCode string         `gorm:"type:text"`
-	TalentTree datatypes.JSON `gorm:"type:jsonb"`
-	ActorID    int            `gorm:"index"`
+	TalentImport string         `gorm:"column:talent_import;type:text"`
+	TalentTree   datatypes.JSON `gorm:"type:jsonb"`
+	ActorID      int            `gorm:"index"`
 
 	// Equipment and stats
 	ItemLevel float64        `gorm:"type:numeric"`
