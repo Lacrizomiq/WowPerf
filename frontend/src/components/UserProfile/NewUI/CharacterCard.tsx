@@ -66,7 +66,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     characterName,
     profileNamespace,
     "en_GB",
-    "13"
+    "14"
   );
 
   // Get item level and round it
