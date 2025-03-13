@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard/types"
 
@@ -184,57 +186,72 @@ func (s *ProtectedProfileService) ListAccountCharacters(ctx context.Context, use
 	return characters, nil
 }
 
-// SyncSelectedCharacters synchronize the selectect character with the database
-func (s *ProtectedProfileService) SyncSelectedCharacters(ctx context.Context, userID uint, selections []CharacterSelection) ([]CharacterSyncResult, error) {
-	results := make([]CharacterSyncResult, 0, len(selections))
+// SyncAllAccountCharacters synchronizes all level 80+ characters from the account
+func (s *ProtectedProfileService) SyncAllAccountCharacters(ctx context.Context, userID uint, region string) (int, error) {
+	// Get all characters level 80+
+	characters, err := s.ListAccountCharacters(ctx, userID, region)
+	if err != nil {
+		return 0, fmt.Errorf("error retrieving account characters: %w", err)
+	}
 
-	for _, selection := range selections {
+	successCount := 0
+
+	for _, char := range characters {
 		// Create a model for the character
 		character := &models.UserCharacter{
 			UserID:      userID,
-			CharacterID: selection.CharacterID,
-			Name:        selection.Name,
-			Realm:       selection.Realm,
-			Region:      selection.Region,
-			Class:       selection.Class,
-			Race:        selection.Race,
-			Level:       selection.Level,
-			Faction:     selection.Faction,
+			CharacterID: char.CharacterID,
+			Name:        char.Name,
+			Realm:       char.Realm,
+			Region:      char.Region,
+			Class:       char.Class,
+			Race:        char.Race,
+			Level:       char.Level,
+			Faction:     char.Faction,
 			IsDisplayed: true,
 		}
 
 		// Save the character in the database
 		err := s.repository.CreateCharacter(character)
 		if err != nil {
-			results = append(results, CharacterSyncResult{
-				Success:     false,
-				CharacterID: selection.CharacterID,
-				Message:     fmt.Sprintf("Error creating character: %v", err),
-			})
+			// Log but continue with other characters
+			log.Printf("Error creating character %s: %v", char.Name, err)
 			continue
 		}
 
-		// Set character favorite if its the case
-		if selection.IsFavorite {
-			if err := s.repository.SetFavoriteCharacter(userID, character.ID); err != nil {
-				// Continue even if there is an issue with favorite
-				results = append(results, CharacterSyncResult{
-					Success:     true,
-					CharacterID: selection.CharacterID,
-					Message:     "Character synchronized but failed to set as favorite",
-				})
-				continue
-			}
-		}
-
-		results = append(results, CharacterSyncResult{
-			Success:     true,
-			CharacterID: selection.CharacterID,
-			Message:     "Character synchronized successfully",
-		})
+		successCount++
 	}
 
-	return results, nil
+	return successCount, nil
+}
+
+// RefreshUserCharacters refreshes all user characters and adds new ones if necessary
+func (s *ProtectedProfileService) RefreshUserCharacters(ctx context.Context, userID uint, region string) (int, int, error) {
+	// First step: synchronize all account characters (new and existing)
+	newOrUpdatedCount, err := s.SyncAllAccountCharacters(ctx, userID, region)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Second step: update all existing characters
+	existingChars, err := s.repository.GetCharactersByUserID(userID)
+	if err != nil {
+		return newOrUpdatedCount, 0, err
+	}
+
+	updatedCount := 0
+	for i := range existingChars {
+		// Update timestamp and potentially other info
+		existingChars[i].LastAPIUpdate = time.Now()
+		if err := s.repository.UpdateCharacter(&existingChars[i]); err != nil {
+			// Log but continue
+			log.Printf("Error updating character %s: %v", existingChars[i].Name, err)
+			continue
+		}
+		updatedCount++
+	}
+
+	return newOrUpdatedCount, updatedCount, nil
 }
 
 // GetUserCharacters get all the characters of a user
