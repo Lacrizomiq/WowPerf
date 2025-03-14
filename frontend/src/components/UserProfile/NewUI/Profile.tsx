@@ -2,7 +2,7 @@
 // Main component that coordinates the profile interface and tab navigation
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuth } from "@/providers/AuthContext";
 import { useRouter } from "next/navigation";
@@ -19,10 +19,15 @@ import CharactersTab from "./Tabs/CharactersTab";
 import AccountTab from "./Tabs/AccountTab";
 import SecurityTab from "./Tabs/SecurityTab";
 import ConnectionsTab from "./Tabs/ConnectionsTab";
+import toast from "react-hot-toast";
+import FavoriteCharacterSection from "./FavoriteCharacterSection";
 
 const Profile: React.FC = () => {
   // State for active tab navigation
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Ref to track if Battle.net warning was already shown
+  const battleNetWarningShown = useRef(false);
 
   // Authentication and routing
   const { isAuthenticated } = useAuth();
@@ -47,6 +52,35 @@ const Profile: React.FC = () => {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
+
+  // Check if the user can access the Characters tab - ONE TIME useEffect
+  useEffect(() => {
+    // If the user tries to access the Characters tab but does not have a linked BattleNet account
+    if (
+      activeTab === "characters" &&
+      !linkStatus?.linked &&
+      !battleNetWarningShown.current
+    ) {
+      // Mark the warning as displayed to avoid duplication
+      battleNetWarningShown.current = true;
+
+      // Redirect to the Connections tab
+      setActiveTab("connections");
+
+      // Display a notification ONCE with a specific ID
+      toast.error(
+        "You must link your Battle.net account to access your characters",
+        {
+          id: "battlenet-link-required",
+        }
+      );
+
+      // Reset the flag after a delay to allow future warnings
+      setTimeout(() => {
+        battleNetWarningShown.current = false;
+      }, 2000);
+    }
+  }, [activeTab, linkStatus]);
 
   // Loading state
   if (isLoading) {
@@ -81,6 +115,10 @@ const Profile: React.FC = () => {
   const handleBattleNetUnlink = async () => {
     try {
       await unlinkAccount();
+      // If in the Characters tab, redirect to Connections after disconnection
+      if (activeTab === "characters") {
+        setActiveTab("connections");
+      }
     } catch (error) {
       console.error("Failed to unlink Battle.net:", error);
     }
@@ -97,7 +135,13 @@ const Profile: React.FC = () => {
 
   // Handle tab navigation
   const handleNavigate = (tab: string) => {
-    setActiveTab(tab);
+    // Check if the user can access the Characters tab
+    if (tab === "characters" && !linkStatus?.linked) {
+      // The notification will be handled by the useEffect, no need to put it here
+      setActiveTab("connections"); // Redirect to the Connections tab
+    } else {
+      setActiveTab(tab);
+    }
   };
 
   return (
@@ -106,7 +150,7 @@ const Profile: React.FC = () => {
       <ProfileHeader profile={profile} />
 
       {/* Tab navigation */}
-      <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <TabNavigation activeTab={activeTab} setActiveTab={handleNavigate} />
 
       {/* Tab content container */}
       <div className="mt-6">
@@ -123,7 +167,19 @@ const Profile: React.FC = () => {
           />
         )}
 
-        {activeTab === "characters" && <CharactersTab />}
+        {/* Modified condition for CharactersTab */}
+        {activeTab === "characters" && linkStatus?.linked ? (
+          <CharactersTab />
+        ) : activeTab === "characters" ? (
+          <ConnectionsTab
+            profile={profile}
+            linkStatus={linkStatus}
+            isLinkLoading={isLinkLoading}
+            isUnlinking={isUnlinking}
+            onBattleNetLink={handleBattleNetLink}
+            onBattleNetUnlink={handleBattleNetUnlink}
+          />
+        ) : null}
 
         {activeTab === "account" && (
           <AccountTab profile={profile} onNavigate={handleNavigate} />

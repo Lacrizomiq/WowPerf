@@ -8,6 +8,8 @@ export interface UserProfile {
   username: string;
   email: string;
   battle_tag?: string;
+  battle_net_id?: string;
+  favorite_character_id?: number;
 }
 
 export interface ApiResponse {

@@ -23,7 +23,7 @@ func NewHandler(service *protectedProfile.ProtectedProfileService) *Handler {
 	}
 }
 
-// RegisterRoutes enregistre les routes pour le profil protégé
+// RegisterRoutes registers the routes for the protected profile
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	protected := r.Group("/wow/profile")
 	{
@@ -40,7 +40,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-// GetAccountProfile récupère le profil WoW de l'utilisateur
+// GetAccountProfile retrieves the WoW profile of the user
 func (h *Handler) GetAccountProfile(c *gin.Context) {
 	// Get userID from context (set by auth middleware)
 	userID := c.GetUint("user_id")
@@ -269,7 +269,7 @@ func (h *Handler) SetFavoriteCharacter(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Character set as favorite successfully"})
 }
 
-// ToggleCharacterDisplay active ou désactive l'affichage d'un personnage
+// ToggleCharacterDisplay activates or deactivates the display of a character
 func (h *Handler) ToggleCharacterDisplay(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	if userID == 0 {
@@ -284,7 +284,7 @@ func (h *Handler) ToggleCharacterDisplay(c *gin.Context) {
 		return
 	}
 
-	// Récupérer la valeur d'affichage depuis le corps de la requête
+	// Retrieve the display value from the request body
 	var requestBody struct {
 		Display bool `json:"display"`
 	}

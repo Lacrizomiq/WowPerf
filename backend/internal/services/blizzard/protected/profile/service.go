@@ -274,9 +274,9 @@ func (s *ProtectedProfileService) SetFavoriteCharacter(ctx context.Context, user
 	return s.repository.SetFavoriteCharacter(userID, characterID)
 }
 
-// ToggleCharacterDisplay active ou désactive l'affichage d'un personnage
+// ToggleCharacterDisplay activates or deactivates the display of a character
 func (s *ProtectedProfileService) ToggleCharacterDisplay(ctx context.Context, userID uint, characterID uint, display bool) error {
-	// Vérifier que le personnage appartient à l'utilisateur
+	// Check that the character belongs to the user
 	character, err := s.repository.GetCharacterByID(characterID)
 	if err != nil {
 		return fmt.Errorf("character not found: %w", err)
