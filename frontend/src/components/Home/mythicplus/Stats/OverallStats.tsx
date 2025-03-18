@@ -23,8 +23,8 @@ export const OverallStats: React.FC<StatsProps> = ({ stats }) => {
         const percentage = Number(((count / total) * 100).toFixed(2));
         return {
           name: className,
-          value: percentage, // Utiliser le pourcentage comme valeur
-          rawValue: count, // Garder le compte brut comme donnée supplémentaire
+          value: percentage, // use the percentage as value
+          rawValue: count, // keep the raw count as additional data
           percentage,
           color: `var(--color-${className.toLowerCase().replace(" ", "-")})`,
         };

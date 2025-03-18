@@ -12,7 +12,7 @@ import { SpecStats } from "./SpecStats";
 import { TeamComposition } from "./TeamComposition";
 
 const DungeonStats: React.FC = () => {
-  const [season] = useState("season-tww-1");
+  const [season] = useState("season-tww-2");
   const [region, setRegion] = useState("world");
   const [dungeon, setDungeon] = useState("all");
   const [activeTab, setActiveTab] = useState("overall");

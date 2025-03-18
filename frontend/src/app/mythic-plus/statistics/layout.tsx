@@ -75,7 +75,7 @@ function StatisticsNav() {
   const { region, dungeon, season, setRegion, setDungeon } = useStats();
 
   const { data: dungeonData } =
-    useGetBlizzardMythicDungeonPerSeason("season-tww-1");
+    useGetBlizzardMythicDungeonPerSeason("season-tww-2");
 
   const { data: statsData } = useGetDungeonStats(season, region);
 
