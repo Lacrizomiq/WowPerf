@@ -19,7 +19,7 @@ import CharactersTab from "./Tabs/CharactersTab";
 import AccountTab from "./Tabs/AccountTab";
 import SecurityTab from "./Tabs/SecurityTab";
 import ConnectionsTab from "./Tabs/ConnectionsTab";
-import toast from "react-hot-toast";
+import { showError, TOAST_IDS } from "@/utils/toastManager";
 import FavoriteCharacterSection from "./FavoriteCharacterSection";
 
 const Profile: React.FC = () => {
@@ -55,27 +55,20 @@ const Profile: React.FC = () => {
 
   // Check if the user can access the Characters tab - ONE TIME useEffect
   useEffect(() => {
-    // If the user tries to access the Characters tab but does not have a linked BattleNet account
     if (
       activeTab === "characters" &&
       !linkStatus?.linked &&
       !battleNetWarningShown.current
     ) {
-      // Mark the warning as displayed to avoid duplication
       battleNetWarningShown.current = true;
-
-      // Redirect to the Connections tab
       setActiveTab("connections");
 
-      // Display a notification ONCE with a specific ID
-      toast.error(
+      // Use the centralized function with ID
+      showError(
         "You must link your Battle.net account to access your characters",
-        {
-          id: "battlenet-link-required",
-        }
+        TOAST_IDS.BATTLENET_LINKING
       );
 
-      // Reset the flag after a delay to allow future warnings
       setTimeout(() => {
         battleNetWarningShown.current = false;
       }, 2000);

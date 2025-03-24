@@ -6,7 +6,6 @@ import (
 	"log"
 	"time"
 
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	"go.temporal.io/api/enums/v1"
@@ -37,7 +36,7 @@ func NewScheduleManager(temporalClient client.Client, logger *log.Logger) *Sched
 }
 
 // CreateSchedule creates the main weekly synchronization schedule
-func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *workflows.Config, opts *ScheduleOptions) error {
+func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
 	}
@@ -53,9 +52,9 @@ func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *workflows.Co
 		},
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  workflows.SyncWorkflow,
+			Workflow:  "SyncWorkflow",
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
-			Args:      []interface{}{workflows.WorkflowParams{Config: cfg, WorkflowID: workflowID}},
+			Args:      []interface{}{*cfg},
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    opts.Retry.InitialInterval,
 				BackoffCoefficient: opts.Retry.BackoffCoefficient,
@@ -77,7 +76,7 @@ func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *workflows.Co
 }
 
 // CreateTestSchedule creates a separate test schedule for Priest class only
-func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *workflows.Config, opts *ScheduleOptions) error {
+func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
 	}
@@ -93,9 +92,9 @@ func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *workflow
 		},
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  workflows.SyncWorkflow,
+			Workflow:  "SyncWorkflow",
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
-			Args:      []interface{}{workflows.WorkflowParams{Config: cfg, WorkflowID: workflowID}},
+			Args:      []interface{}{*cfg},
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    opts.Retry.InitialInterval,
 				BackoffCoefficient: opts.Retry.BackoffCoefficient,
@@ -164,7 +163,7 @@ func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 	// Get all workflows with SyncWorkflow type
 	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
 		Namespace: models.DefaultNamespace,
-		Query:     "WorkflowType='SyncWorkflow'",
+		Query:     "WorkflowType='SyncWorkflow' OR WorkflowType='ProcessBuildBatchWorkflow'",
 	})
 
 	if err != nil {

@@ -140,7 +140,8 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
 
         <div className="text-white/90 text-sm">
           <div>
-            {playable_class.name} ({characterData?.active_spec_name || ""})
+            {/* {playable_class.name} ({characterData?.active_spec_name || ""}) */}
+            {characterData?.active_spec_name || ""}
           </div>
           <div className="text-white/70">
             {realm.name} ({safeRegion.toUpperCase()})

@@ -182,20 +182,3 @@ func (c *Client) MakeGraphQLRequest(query string, variables map[string]interface
 func isRateLimitError(err GraphQLError) bool {
 	return strings.Contains(err.Message, "Rate limit exceeded")
 }
-
-// containsRateLimitKeywords checks if the error message contains rate limit related keywords
-func containsRateLimitKeywords(message string) bool {
-	rateLimitKeywords := []string{
-		"rate limit",
-		"too many requests",
-		"quota exceeded",
-	}
-
-	messageLower := strings.ToLower(message)
-	for _, keyword := range rateLimitKeywords {
-		if strings.Contains(messageLower, keyword) {
-			return true
-		}
-	}
-	return false
-}

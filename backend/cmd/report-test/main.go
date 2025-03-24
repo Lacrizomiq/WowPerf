@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	"go.temporal.io/sdk/client"
@@ -39,7 +39,7 @@ func main() {
 	logger.Printf("[INFO] Cleanup completed successfully")
 
 	// Load production configuration
-	cfg, err := workflows.LoadConfig("configs/config_s1_tww.dev.yaml")
+	cfg, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load production config: %v", err)
 	}
@@ -52,7 +52,7 @@ func main() {
 	logger.Printf("[INFO] Successfully created production schedule")
 
 	// Create and trigger test schedule for Priest
-	testCfg, err := workflows.LoadConfig("configs/config_s1_tww.priest.yaml")
+	testCfg, err := definitions.LoadConfig("configs/config_s2_tww.priest.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load test config: %v", err)
 	}

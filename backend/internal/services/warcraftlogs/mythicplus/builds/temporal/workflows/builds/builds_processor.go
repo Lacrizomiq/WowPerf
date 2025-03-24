@@ -61,11 +61,22 @@ func (p *Processor) ProcessBuilds(
 
 // GetStoredReports retrieves stored reports for processing
 func (p *Processor) GetStoredReports(ctx workflow.Context) ([]*warcraftlogsBuilds.Report, error) {
+	activityOpts := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Hour,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    time.Second * 5,
+			BackoffCoefficient: 2.0,
+			MaximumInterval:    time.Minute * 10,
+			MaximumAttempts:    3,
+		},
+	}
+	ctx = workflow.WithActivityOptions(ctx, activityOpts)
+
 	var reports []*warcraftlogsBuilds.Report
 	err := workflow.ExecuteActivity(ctx,
 		definitions.GetReportsBatchActivity,
-		100, // batchSize
-		0,   // offset
+		5, // batchSize
+		0, // offset
 	).Get(ctx, &reports)
 
 	if err != nil {
@@ -77,6 +88,17 @@ func (p *Processor) GetStoredReports(ctx workflow.Context) ([]*warcraftlogsBuild
 
 // CountStoredReports returns the total number of reports available
 func (p *Processor) CountStoredReports(ctx workflow.Context) (int64, error) {
+	activityOpts := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Minute * 5,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    time.Second * 5,
+			BackoffCoefficient: 2.0,
+			MaximumInterval:    time.Minute * 10,
+			MaximumAttempts:    3,
+		},
+	}
+	ctx = workflow.WithActivityOptions(ctx, activityOpts)
+
 	var count int64
 	err := workflow.ExecuteActivity(ctx,
 		definitions.CountAllReportsActivity,

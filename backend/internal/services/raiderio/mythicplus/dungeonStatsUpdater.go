@@ -81,7 +81,7 @@ func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error
 	log.Println("Starting dungeon stats update...")
 
 	seasons := []string{"season-tww-2"}
-	regions := []string{"world", "us", "eu", "tw", "kr", "cn"}
+	regions := []string{"world", "us", "eu", "tw", "kr"}
 	dungeonSlugs := []string{"all", "cinderbrew-meadery", "darkflame-cleft",
 		"operation-mechagon-workshop", "operation-floodgate", "priory-of-the-sacred-flame",
 		"the-motherlode", "the-rookery", "theater-of-pain"}

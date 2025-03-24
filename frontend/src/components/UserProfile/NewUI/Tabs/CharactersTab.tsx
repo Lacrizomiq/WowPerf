@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useWoWCharacters } from "@/hooks/useWowProtectedAccount";
 import CharacterCardItem from "../CharacterCardItem";
-import toast from "react-hot-toast";
+import { showSuccess, TOAST_IDS } from "@/utils/toastManager";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
 const CharactersTab: React.FC = () => {
@@ -33,13 +33,19 @@ const CharactersTab: React.FC = () => {
   // Handle initial sync action if no characters
   const handleSync = () => {
     syncCharacters();
-    toast.success("Synchronization of characters in progress...");
+    showSuccess(
+      "Synchronization of characters in progress...",
+      TOAST_IDS.CHARACTERS_SYNC
+    );
   };
 
   // Handle refresh action
   const handleRefresh = () => {
     refreshCharacters();
-    toast.success("Refreshing characters in progress...");
+    showSuccess(
+      "Refreshing characters in progress...",
+      TOAST_IDS.CHARACTERS_REFRESH
+    );
   };
 
   // Apply filters to characters

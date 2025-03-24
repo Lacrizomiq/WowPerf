@@ -1,0 +1,53 @@
+rankings:
+  max_rankings_per_spec: 120
+  update_interval: 168h
+
+worker:
+  num_workers: 3
+  retry_attempts: 3
+  retry_delay: 5s
+  batch_size: 5
+  request_delay: 500ms
+
+specs:
+  # Priest
+  - class_name: "Priest"
+    spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"
+
+dungeons:
+  - id: 12661
+    encounter_id: 12661
+    name: "Cinderbrew Meadery"
+    slug: "cinderbrew-meadery"
+  - id: 12651
+    encounter_id: 12651
+    name: "Darkflame Cleft"
+    slug: "darkflame-cleft"
+  - id: 112098
+    encounter_id: 112098
+    name: "Mechagon Workshop"
+    slug: "operation-mechagon-workshop"
+  - id: 12773
+    encounter_id: 12773
+    name: "Operation: Floodgate"
+    slug: "operation-floodgate"
+  - id: 12649
+    encounter_id: 12649
+    name: "Priory of the Sacred Flame"
+    slug: "priory-of-the-sacred-flame"
+  - id: 61594
+    encounter_id: 61594
+    name: "The MOTHERLODE!!"
+    slug: "the-motherlode"
+  - id: 12648
+    encounter_id: 12648
+    name: "The Rookery"
+    slug: "the-rookery"
+  - id: 62293
+    encounter_id: 62293
+    name: "Theater of Pain"
+    slug: "theater-of-pain"

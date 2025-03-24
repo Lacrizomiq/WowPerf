@@ -15,6 +15,7 @@ import {
 import { useBattleNetLink } from "./useBattleNetLink";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { showError, showSuccess, TOAST_IDS } from "@/utils/toastManager";
 
 /**
  * Hook to handle WoW errors in a centralized way
@@ -24,24 +25,28 @@ export function useWoWErrorHandler() {
     if (error instanceof WoWError) {
       switch (error.code) {
         case WoWErrorCode.UNAUTHORIZED:
-          toast.error("Please link your Battle.net account first");
+          showError(
+            "Please link your Battle.net account first",
+            TOAST_IDS.BATTLENET_LINKING
+          );
           break;
         case WoWErrorCode.TOKEN_EXPIRED:
-          toast.error(
-            "Session expired. Please re-link your Battle.net account"
+          showError(
+            "Session expired. Please re-link your Battle.net account",
+            TOAST_IDS.BATTLENET_LINK_ERROR
           );
           break;
         case WoWErrorCode.NOT_FOUND:
-          toast.error("The requested character was not found");
+          showError("The requested character was not found");
           break;
         case WoWErrorCode.SERVER_ERROR:
-          toast.error("A server error occurred. Please try again later");
+          showError("A server error occurred. Please try again later");
           break;
         default:
-          toast.error(defaultMessage);
+          showError(defaultMessage);
       }
     } else {
-      toast.error(defaultMessage);
+      showError(defaultMessage);
     }
   }, []);
 }
@@ -135,7 +140,10 @@ export function useWoWCharacters() {
   const syncMutation = useMutation<SyncResult, Error>({
     mutationFn: () => wowService.syncAllAccountCharacters(region),
     onSuccess: (data) => {
-      toast.success(`${data.count} characters synchronized successfully`);
+      showSuccess(
+        `${data.count} characters synchronized successfully`,
+        TOAST_IDS.CHARACTERS_SYNC_SUCCESS
+      );
       queryClient.invalidateQueries({ queryKey: ["userCharacters"] });
     },
     onError: (error: Error) => {
@@ -147,8 +155,9 @@ export function useWoWCharacters() {
   const refreshMutation = useMutation<RefreshResult, Error>({
     mutationFn: () => wowService.refreshUserCharacters(region),
     onSuccess: (data) => {
-      toast.success(
-        `${data.new_characters} new characters added, ${data.updated_characters} characters updated`
+      showSuccess(
+        `${data.new_characters} new characters added, ${data.updated_characters} characters updated`,
+        TOAST_IDS.CHARACTERS_REFRESH_SUCCESS
       );
       queryClient.invalidateQueries({ queryKey: ["userCharacters"] });
     },
@@ -162,11 +171,12 @@ export function useWoWCharacters() {
     mutationFn: (characterId: number) =>
       wowService.setFavoriteCharacter(characterId),
     onSuccess: () => {
-      toast.success("Character set as favorite successfully");
-
-      // Invalidate both the characters and the user profile queries
+      showSuccess(
+        "Character set as favorite successfully",
+        TOAST_IDS.CHARACTER_FAVORITE
+      );
       queryClient.invalidateQueries({ queryKey: ["userCharacters"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] }); // Important to update favorite_character_id
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error: Error) => {
       handleError(error, "Failed to set favorite character");
@@ -182,7 +192,10 @@ export function useWoWCharacters() {
     mutationFn: ({ characterId, display }) =>
       wowService.toggleCharacterDisplay(characterId, display),
     onSuccess: () => {
-      toast.success("Character display updated successfully");
+      showSuccess(
+        "Character display updated successfully",
+        TOAST_IDS.CHARACTER_TOGGLE
+      );
       queryClient.invalidateQueries({ queryKey: ["userCharacters"] });
     },
     onError: (error: Error) => {

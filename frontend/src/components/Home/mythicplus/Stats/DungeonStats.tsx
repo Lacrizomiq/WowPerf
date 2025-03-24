@@ -85,7 +85,7 @@ const DungeonStats: React.FC = () => {
 
       <div className="mb-4 flex space-x-4">
         <RegionSelector
-          regions={["us", "eu", "kr", "tw", "cn"]}
+          regions={["us", "eu", "kr", "tw"]}
           onRegionChange={setRegion}
           selectedRegion={region}
         />

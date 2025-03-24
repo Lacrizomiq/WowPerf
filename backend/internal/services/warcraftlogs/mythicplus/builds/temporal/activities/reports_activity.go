@@ -258,12 +258,12 @@ func (a *ReportsActivity) getReportDetails(
 
 	talentsResponse, err := a.client.MakeRequest(ctx, talentsQuery, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch talents for report %s: %w", err)
+		return nil, fmt.Errorf("failed to fetch talents for report %s: %w", ranking.ReportCode, err)
 	}
 
 	talentCodes, err := reportsQueries.ParseReportTalentsResponse(talentsResponse)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse talents for report %s: %w", err)
+		return nil, fmt.Errorf("failed to parse talents for report %s: %w", ranking.ReportCode, err)
 	}
 
 	report.TalentCodes, err = json.Marshal(talentCodes)

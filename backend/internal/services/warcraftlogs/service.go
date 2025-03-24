@@ -35,12 +35,13 @@ type WarcraftLogsClientService struct {
 
 // RateLimiter handles API rate limiting with real-time point tracking
 type RateLimiter struct {
-	mu          sync.RWMutex
-	maxPoints   float64   // Maximum points allowed per hour
-	usedPoints  float64   // Currently used points based on last API check
-	resetTime   time.Time // Time of next reset based on API
-	lastCheck   time.Time // Last time we checked the API
-	initialized bool
+	mu            sync.RWMutex
+	maxPoints     float64       // Maximum points allowed per hour
+	usedPoints    float64       // Currently used points based on last API check
+	resetTime     time.Time     // Time of next reset based on API
+	lastCheckTime time.Time     // Last time we checked the rate limit
+	checkInterval time.Duration // Minimum interval between checks
+	initialized   bool          // If the rate limiter has been initialized
 }
 
 // NewWarcraftLogsClientService creates a new service instance
@@ -51,9 +52,12 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 	}
 
 	rateLimiter := &RateLimiter{
-		maxPoints: 18000, // Valeur conservative
-		lastCheck: time.Now(),
-		resetTime: time.Now().Add(time.Hour),
+		maxPoints:     18000, // Conservative default value
+		usedPoints:    0,
+		resetTime:     time.Now().Add(time.Hour),
+		lastCheckTime: time.Now().Add(-time.Hour), // Force a check at the first request
+		checkInterval: time.Minute * 1,            // Check at most once per minute
+		initialized:   false,
 	}
 
 	service := &WarcraftLogsClientService{
@@ -61,33 +65,14 @@ func NewWarcraftLogsClientService() (*WarcraftLogsClientService, error) {
 		rateLimiter: rateLimiter,
 	}
 
-	// Make up to 3 rate limit init
-	var initError error
-	for i := 0; i < 3; i++ {
-		if err := service.initializeRateLimiter(); err != nil {
-			initError = err
-			log.Printf("[WARN] Rate limit initialization attempt %d failed: %v", i+1, err)
-			time.Sleep(time.Second * 2)
-			continue
-		}
-		initError = nil
-		break
-	}
-
-	// even if it fails, return the service, it will use default value
-	if initError != nil {
-		log.Printf("[WARN] Using conservative default values due to initialization failure: %v", initError)
-	}
-
 	return service, nil
 }
 
-// Initialize rate limiter with API data
-func (s *WarcraftLogsClientService) initializeRateLimiter() error {
-	// Initial API check for rate limit data
+// fetchRateLimitData fetches the rate limit data from the WarcraftLogs API
+func (s *WarcraftLogsClientService) fetchRateLimitData() (*RateLimitData, error) {
 	response, err := s.Client.MakeGraphQLRequest(RateLimitQuery, nil)
 	if err != nil {
-		return fmt.Errorf("failed to get initial rate limit data: %w", err)
+		return nil, fmt.Errorf("failed to get rate limit data: %w", err)
 	}
 
 	var result struct {
@@ -97,22 +82,21 @@ func (s *WarcraftLogsClientService) initializeRateLimiter() error {
 	}
 
 	if err := json.Unmarshal(response, &result); err != nil {
-		return fmt.Errorf("failed to parse initial rate limit data: %w", err)
+		return nil, fmt.Errorf("failed to parse rate limit data: %w", err)
 	}
 
+	// Validate and correct values if necessary
 	data := result.Data.RateLimitData
-	s.rateLimiter.initialize(
-		data.LimitPerHour,
-		data.PointsSpentThisHour,
-		data.PointsResetIn,
-	)
+	if data.LimitPerHour <= 0 {
+		data.LimitPerHour = 18000
+		log.Printf("[WARN] Invalid limitPerHour: %.2f, using default: 18000", data.LimitPerHour)
+	}
+	if data.PointsResetIn <= 0 {
+		data.PointsResetIn = 3600 // 1 hour default
+		log.Printf("[WARN] Invalid resetIn: %d, using default: 3600", data.PointsResetIn)
+	}
 
-	log.Printf("[INFO] Rate limiter initialized - Max: %.2f, Used: %.2f, Reset in: %ds",
-		data.LimitPerHour,
-		data.PointsSpentThisHour,
-		data.PointsResetIn)
-
-	return nil
+	return &data, nil
 }
 
 // MakeRequest performs a rate-limited API request with real-time point checking
@@ -121,36 +105,49 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 		return nil, fmt.Errorf("empty query not allowed")
 	}
 
-	// Skip rate checking for rate limit queries to avoid recursion
+	// Avoid recursion for rate limit queries
 	if query == RateLimitQuery {
 		return s.Client.MakeGraphQLRequest(query, variables)
 	}
+	// Check if we need to update rate limit info
+	shouldCheck := false
+	s.rateLimiter.mu.RLock()
+	shouldCheck = !s.rateLimiter.initialized || time.Since(s.rateLimiter.lastCheckTime) > s.rateLimiter.checkInterval
+	s.rateLimiter.mu.RUnlock()
 
-	// Check current rate limit status
-	rateLimitResponse, err := s.Client.MakeGraphQLRequest(RateLimitQuery, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check rate limit: %w", err)
+	if shouldCheck {
+		// Make a request to get the latest info
+		rateLimitData, err := s.fetchRateLimitData()
+		if err != nil {
+			log.Printf("[WARN] Failed to get rate limit data: %v, using existing values", err)
+		} else {
+			s.rateLimiter.mu.Lock()
+			s.rateLimiter.maxPoints = rateLimitData.LimitPerHour
+			s.rateLimiter.usedPoints = rateLimitData.PointsSpentThisHour
+			s.rateLimiter.resetTime = time.Now().Add(time.Duration(rateLimitData.PointsResetIn) * time.Second)
+			s.rateLimiter.lastCheckTime = time.Now()
+			s.rateLimiter.initialized = true
+			s.rateLimiter.mu.Unlock()
+
+			log.Printf("[DEBUG] Rate limit updated - Max: %.2f, Used: %.2f, Remaining: %.2f, Reset in: %v",
+				rateLimitData.LimitPerHour,
+				rateLimitData.PointsSpentThisHour,
+				rateLimitData.LimitPerHour-rateLimitData.PointsSpentThisHour,
+				time.Until(s.rateLimiter.resetTime))
+		}
 	}
 
-	var result struct {
-		RateLimitData RateLimitData `json:"rateLimitData"`
-	}
+	// Check if we have enough points (with a safety margin)
+	s.rateLimiter.mu.RLock()
+	remaining := s.rateLimiter.maxPoints - s.rateLimiter.usedPoints
+	resetIn := time.Until(s.rateLimiter.resetTime)
+	s.rateLimiter.mu.RUnlock()
 
-	if err := json.Unmarshal(rateLimitResponse, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse rate limit data: %w", err)
-	}
-
-	// Update rate limiter with latest data
-	data := result.RateLimitData
-	s.rateLimiter.initialize(
-		data.LimitPerHour,
-		data.PointsSpentThisHour,
-		data.PointsResetIn,
-	)
-
-	// Check if we have enough points (considering the 2 points just used for checking)
-	if s.rateLimiter.maxPoints-s.rateLimiter.usedPoints < 3.0 { // 2 points for check + 1 minimum for request
-		info := s.rateLimiter.GetRateLimitInfo()
+	if remaining < 500.0 {
+		info := &warcraftlogsTypes.RateLimitInfo{
+			RemainingPoints: remaining,
+			ResetIn:         resetIn,
+		}
 		return nil, warcraftlogsTypes.NewQuotaExceededError(info)
 	}
 
@@ -158,32 +155,18 @@ func (s *WarcraftLogsClientService) MakeRequest(ctx context.Context, query strin
 	response, err := s.Client.MakeGraphQLRequest(query, variables)
 	if err != nil {
 		if warcraftlogsTypes.IsRateLimit(err) {
-			return nil, warcraftlogsTypes.NewQuotaExceededError(s.rateLimiter.GetRateLimitInfo())
+			s.rateLimiter.mu.RLock()
+			info := &warcraftlogsTypes.RateLimitInfo{
+				RemainingPoints: s.rateLimiter.maxPoints - s.rateLimiter.usedPoints,
+				ResetIn:         time.Until(s.rateLimiter.resetTime),
+			}
+			s.rateLimiter.mu.RUnlock()
+			return nil, warcraftlogsTypes.NewQuotaExceededError(info)
 		}
 		return nil, err
 	}
 
 	return response, nil
-}
-
-// initialize sets up the rate limiter with latest API data
-func (r *RateLimiter) initialize(limitPerHour, pointsSpent float64, resetIn int) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	now := time.Now()
-	r.maxPoints = limitPerHour // 18000
-	r.usedPoints = pointsSpent // 326
-	r.resetTime = now.Add(time.Duration(resetIn) * time.Second)
-	r.lastCheck = now
-	r.initialized = true
-
-	// Log après mise à jour pour vérification
-	log.Printf("[DEBUG] Rate limiter - Max: %.2f, Used: %.2f, Remaining: %.2f, Reset in: %v",
-		r.maxPoints,
-		r.usedPoints,
-		r.maxPoints-r.usedPoints,
-		time.Until(r.resetTime))
 }
 
 // GetRateLimitInfo returns current rate limit information for monitoring
@@ -210,7 +193,7 @@ func (r *RateLimiter) GetRateLimitInfo() *warcraftlogsTypes.RateLimitInfo {
 func (r *RateLimiter) GetLastCheck() time.Time {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.lastCheck
+	return r.lastCheckTime
 }
 
 // GetMaxPoints returns the maximum points per hour (for monitoring)

@@ -70,6 +70,17 @@ func (p *Processor) GetStoredRankings(ctx workflow.Context, spec *models.ClassSp
 		}
 	}
 
+	activityOpts := workflow.ActivityOptions{
+		StartToCloseTimeout: time.Hour,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    time.Second * 5,
+			BackoffCoefficient: 2.0,
+			MaximumInterval:    time.Minute * 10,
+			MaximumAttempts:    3,
+		},
+	}
+	ctx = workflow.WithActivityOptions(ctx, activityOpts)
+
 	var rankings []*warcraftlogsBuilds.ClassRanking
 	err := workflow.ExecuteActivity(ctx,
 		definitions.GetStoredRankingsActivity,
