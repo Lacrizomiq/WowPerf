@@ -63,7 +63,7 @@ func main() {
 		logger.Printf("[TEST] Successfully created test schedule")
 
 		// Trigger test schedule immediately
-		if err := scheduleManager.TriggerSyncNow(context.Background()); err != nil {
+		if err := scheduleManager.TriggerTestNow(context.Background()); err != nil {
 			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
 		} else {
 			logger.Printf("[TEST] Successfully triggered test schedule")

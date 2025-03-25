@@ -17,21 +17,15 @@ import (
 // SyncWorkflow implements the definitions.SyncWorkflow interface
 // This is the main workflow that orchestrates the entire process
 type SyncWorkflow struct {
-	stateManager    *state.Manager
-	orchestrator    *Orchestrator
-	rankingsService *rankings.RankingsService
-	reportsService  *reports.ReportsService
-	buildsService   *builds.BuildsService
+	stateManager *state.Manager
+	orchestrator *Orchestrator
 }
 
 // NewSyncWorkflow creates a new instance of the sync workflow
 func NewSyncWorkflow() definitions.SyncWorkflow {
 	return &SyncWorkflow{
-		stateManager:    state.NewManager(),
-		orchestrator:    NewOrchestrator(),
-		rankingsService: rankings.NewRankingsService(),
-		reportsService:  reports.NewReportsService(),
-		buildsService:   builds.NewBuildsService(),
+		stateManager: state.NewManager(),
+		orchestrator: NewOrchestrator(),
 	}
 }
 
@@ -77,7 +71,7 @@ func (w *SyncWorkflow) Execute(ctx workflow.Context, params models.WorkflowConfi
 		logger.Info("Starting rankings phase")
 
 		// Use the rankings service instead of a child workflow
-		if err := w.rankingsService.ProcessAllRankings(ctx, params, state); err != nil {
+		if err := rankings.ProcessAllRankings(ctx, params, state); err != nil {
 			if common.IsRateLimitError(err) {
 				// Save state and continue as new if we hit rate limits
 				if saveErr := w.stateManager.SaveCheckpoint(ctx); saveErr != nil {
@@ -99,7 +93,7 @@ func (w *SyncWorkflow) Execute(ctx workflow.Context, params models.WorkflowConfi
 		logger.Info("Starting reports phase")
 
 		// Use the reports service instead of a child workflow
-		if err := w.reportsService.ProcessAllReports(ctx, params, state); err != nil {
+		if err := reports.ProcessAllReports(ctx, params, state); err != nil {
 			if common.IsRateLimitError(err) {
 				// Save state and continue as new if we hit rate limits
 				if saveErr := w.stateManager.SaveCheckpoint(ctx); saveErr != nil {
@@ -121,7 +115,7 @@ func (w *SyncWorkflow) Execute(ctx workflow.Context, params models.WorkflowConfi
 		logger.Info("Starting builds phase")
 
 		// Use the builds service instead of a child workflow
-		if err := w.buildsService.ProcessAllBuilds(ctx, params, state); err != nil {
+		if err := builds.ProcessAllBuilds(ctx, params, state); err != nil {
 			if common.IsRateLimitError(err) {
 				// Save state and continue as new if we hit rate limits
 				if saveErr := w.stateManager.SaveCheckpoint(ctx); saveErr != nil {

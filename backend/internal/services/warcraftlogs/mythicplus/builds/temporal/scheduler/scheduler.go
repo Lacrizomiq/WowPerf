@@ -22,9 +22,10 @@ const (
 
 // ScheduleManager handles Temporal schedule for WarcraftLogs sync
 type ScheduleManager struct {
-	client   client.Client
-	schedule client.ScheduleHandle
-	logger   *log.Logger
+	client       client.Client
+	prodSchedule client.ScheduleHandle
+	testSchedule client.ScheduleHandle
+	logger       *log.Logger
 }
 
 // NewScheduleManager creates a new ScheduleManager instance
@@ -70,7 +71,7 @@ func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *models.Workf
 		return fmt.Errorf("failed to create production schedule: %w", err)
 	}
 
-	sm.schedule = handle
+	sm.prodSchedule = handle
 	sm.logger.Printf("[INFO] Created weekly sync schedule %s for Tuesday 2 AM UTC", scheduleID)
 	return nil
 }
@@ -110,42 +111,66 @@ func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *models.W
 		return fmt.Errorf("failed to create test schedule: %w", err)
 	}
 
-	sm.schedule = handle
-	sm.logger.Printf("[TEST] Created Priest test schedule %s for immediate execution", scheduleID)
+	sm.testSchedule = handle
+	sm.logger.Printf("[TEST] Created Priest test schedule %s", scheduleID)
 	return nil
 }
 
-// TriggerSyncNow triggers an immediate execution of the current schedule
+// TriggerSyncNow triggers the immediate execution of the production schedule
 func (sm *ScheduleManager) TriggerSyncNow(ctx context.Context) error {
-	if sm.schedule == nil {
-		return fmt.Errorf("no schedule has been created")
+	if sm.prodSchedule == nil {
+		return fmt.Errorf("no production schedule has been created")
 	}
-	return sm.schedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+	return sm.prodSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
-// PauseSchedule pauses the current schedule
+// TriggerTestNow triggers the immediate execution of the test schedule
+func (sm *ScheduleManager) TriggerTestNow(ctx context.Context) error {
+	if sm.testSchedule == nil {
+		return fmt.Errorf("no test schedule has been created")
+	}
+	return sm.testSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+}
+
+// PauseSchedule pauses the production schedule
 func (sm *ScheduleManager) PauseSchedule(ctx context.Context) error {
-	if sm.schedule == nil {
-		return fmt.Errorf("no schedule has been created")
+	if sm.prodSchedule == nil {
+		return fmt.Errorf("no production schedule has been created")
 	}
-	return sm.schedule.Pause(ctx, client.SchedulePauseOptions{})
+	return sm.prodSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
-// UnpauseSchedule unpauses the current schedule
+// PauseTestSchedule pauses the test schedule
+func (sm *ScheduleManager) PauseTestSchedule(ctx context.Context) error {
+	if sm.testSchedule == nil {
+		return fmt.Errorf("no test schedule has been created")
+	}
+	return sm.testSchedule.Pause(ctx, client.SchedulePauseOptions{})
+}
+
+// UnpauseSchedule reactivates the production schedule
 func (sm *ScheduleManager) UnpauseSchedule(ctx context.Context) error {
-	if sm.schedule == nil {
-		return fmt.Errorf("no schedule has been created")
+	if sm.prodSchedule == nil {
+		return fmt.Errorf("no production schedule has been created")
 	}
-	return sm.schedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+	return sm.prodSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
-// Delete a schedule
+// UnpauseTestSchedule reactivates the test schedule
+func (sm *ScheduleManager) UnpauseTestSchedule(ctx context.Context) error {
+	if sm.testSchedule == nil {
+		return fmt.Errorf("no test schedule has been created")
+	}
+	return sm.testSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+}
+
+// DeleteSchedule deletes a schedule by its ID
 func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, scheduleID string) error {
 	handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
 	return handle.Delete(ctx)
 }
 
-// Add cleanup functionality
+// CleanupExistingSchedules deletes existing schedules
 func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 	// List and delete existing schedules
 	schedules := []string{prodScheduleID, testScheduleID}
@@ -156,9 +181,15 @@ func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 		}
 		sm.logger.Printf("[INFO] Deleted schedule: %s", id)
 	}
+
+	// Reset references
+	sm.prodSchedule = nil
+	sm.testSchedule = nil
+
 	return nil
 }
 
+// CleanupOldWorkflows terminates running workflows
 func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 	// Get all workflows with SyncWorkflow type
 	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
@@ -192,7 +223,7 @@ func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 	return nil
 }
 
-// Add this method to perform complete cleanup
+// CleanupAll do a complete cleanup
 func (sm *ScheduleManager) CleanupAll(ctx context.Context) error {
 	if err := sm.CleanupExistingSchedules(ctx); err != nil {
 		return fmt.Errorf("failed to cleanup schedules: %w", err)

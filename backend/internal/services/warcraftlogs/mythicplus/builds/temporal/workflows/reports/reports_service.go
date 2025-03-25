@@ -13,21 +13,9 @@ import (
 	state "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/state"
 )
 
-// ReportsService encapsulates the reports processing logic
-type ReportsService struct {
-	processor *Processor
-}
-
-// NewReportsService creates a new reports service
-func NewReportsService() *ReportsService {
-	return &ReportsService{
-		processor: NewProcessor(),
-	}
-}
-
 // ProcessAllReports processes all reports for the rankings stored in the state
 // It updates the state with the processing results
-func (s *ReportsService) ProcessAllReports(
+func ProcessAllReports(
 	ctx workflow.Context,
 	params models.WorkflowConfig,
 	state *state.WorkflowState,
@@ -49,8 +37,9 @@ func (s *ReportsService) ProcessAllReports(
 		"spec", state.CurrentSpec.SpecName,
 		"dungeon", state.CurrentDungeon.Name)
 
+	// Configure activity options
 	activityOpts := workflow.ActivityOptions{
-		StartToCloseTimeout: time.Hour,
+		StartToCloseTimeout: time.Hour * 24,
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second * 5,
 			BackoffCoefficient: 2.0,
@@ -60,14 +49,13 @@ func (s *ReportsService) ProcessAllReports(
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Get rankings to process
+	// Get rankings to process (appel direct à l'activité)
 	var rankings []*warcraftlogsBuilds.ClassRanking
 	err := workflow.ExecuteActivity(activityCtx,
 		definitions.GetStoredRankingsActivity,
 		state.CurrentSpec.ClassName,
 		state.CurrentSpec.SpecName,
-		state.CurrentDungeon.EncounterID,
-	).Get(ctx, &rankings)
+		state.CurrentDungeon.EncounterID).Get(ctx, &rankings)
 
 	if err != nil {
 		logger.Error("Failed to get stored rankings",
@@ -89,13 +77,11 @@ func (s *ReportsService) ProcessAllReports(
 		"spec", state.CurrentSpec.SpecName,
 		"dungeon", state.CurrentDungeon.Name)
 
-	// Process reports based on the rankings
+	// Process reports based on the rankings (appel direct à l'activité)
 	var batchResult models.BatchResult
 	err = workflow.ExecuteActivity(activityCtx,
 		definitions.ProcessReportsActivity,
-		rankings,
-		params.Worker,
-	).Get(ctx, &batchResult)
+		rankings).Get(ctx, &batchResult)
 
 	if err != nil {
 		if common.IsRateLimitError(err) {

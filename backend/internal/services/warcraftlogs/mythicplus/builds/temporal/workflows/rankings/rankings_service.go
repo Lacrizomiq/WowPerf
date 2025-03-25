@@ -12,22 +12,9 @@ import (
 	state "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/state"
 )
 
-// RankingsService encapsulates the rankings processing logic
-// This is no longer a workflow but a service used by the main workflow
-type RankingsService struct {
-	processor *Processor
-}
-
-// NewRankingsService creates a new rankings service
-func NewRankingsService() *RankingsService {
-	return &RankingsService{
-		processor: NewProcessor(),
-	}
-}
-
 // ProcessAllRankings processes all rankings for the given specs and dungeons
 // It updates the state as it processes each spec/dungeon combination
-func (s *RankingsService) ProcessAllRankings(
+func ProcessAllRankings(
 	ctx workflow.Context,
 	params models.WorkflowConfig,
 	state *state.WorkflowState,
@@ -67,8 +54,9 @@ func (s *RankingsService) ProcessAllRankings(
 
 			logger.Info("Processing dungeon", "dungeon", dungeon.Name, "for spec", spec.SpecName)
 
+			// Configure activity options
 			activityOpts := workflow.ActivityOptions{
-				StartToCloseTimeout: time.Hour,
+				StartToCloseTimeout: time.Hour * 24,
 				HeartbeatTimeout:    time.Minute * 10,
 				RetryPolicy: &temporal.RetryPolicy{
 					InitialInterval:    time.Second * 5,
@@ -79,12 +67,11 @@ func (s *RankingsService) ProcessAllRankings(
 			}
 			activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-			// Execute the rankings activity
+			// Execute the rankings activity directly
 			var batchResult models.BatchResult
 			err := workflow.ExecuteActivity(activityCtx,
 				definitions.FetchRankingsActivity,
-				spec, dungeon, params.Rankings.Batch,
-			).Get(ctx, &batchResult)
+				spec, dungeon, params.Rankings.Batch).Get(ctx, &batchResult)
 
 			if err != nil {
 				if common.IsRateLimitError(err) {
