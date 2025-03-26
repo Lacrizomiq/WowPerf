@@ -2,6 +2,13 @@ import { Season } from "@/types/mythicPlusRuns";
 
 export const seasons: Season[] = [
   {
+    slug: "season-tww-2",
+    name: "TWW Season 2",
+    shortName: "TWW2",
+    id: 14,
+    Dungeons: null,
+  },
+  {
     slug: "season-tww-1",
     name: "TWW Season 1",
     shortName: "TWW1",

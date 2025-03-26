@@ -57,7 +57,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
   const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   const { data: dungeonData } =
-    useGetBlizzardMythicDungeonPerSeason("season-tww-1");
+    useGetBlizzardMythicDungeonPerSeason("season-tww-2");
   const {
     data: mythicPlusData,
     isLoading,

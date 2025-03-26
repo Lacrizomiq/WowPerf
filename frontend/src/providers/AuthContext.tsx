@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 "use client";
 
 import React, {
@@ -9,14 +10,14 @@ import React, {
 } from "react";
 import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
 import { useRouter } from "next/navigation";
-import axios, { AxiosError } from "axios";
-import { resetCSRFToken } from "@/libs/api";
+import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
+import { usePathname } from "next/navigation";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserData | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
 }
@@ -24,7 +25,6 @@ interface AuthContextType {
 interface UserData {
   username: string;
   email?: string;
-  battlenet_id?: string;
 }
 
 interface AuthState {
@@ -47,49 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [state, setState] = useState<AuthState>(initialState);
   const router = useRouter();
 
+  // Using a state to track CSRF initialization only if necessary
+  const [csrfInitialized, setCsrfInitialized] = useState(false);
+
   const updateState = useCallback((updates: Partial<AuthState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  const resetState = useCallback(() => {
-    setState(initialState);
-  }, []);
-
-  const handleAuthError = useCallback(
-    async (error: unknown): Promise<string> => {
-      if (error instanceof AuthError) {
-        switch (error.code) {
-          case AuthErrorCode.INVALID_CREDENTIALS:
-            return "Invalid username or password";
-          case AuthErrorCode.USERNAME_EXISTS:
-            return "Username already exists";
-          case AuthErrorCode.EMAIL_EXISTS:
-            return "Email already exists";
-          case AuthErrorCode.NETWORK_ERROR:
-            return "Network error, please try again";
-          default:
-            return error.message;
-        }
-      }
-
-      if (axios.isAxiosError(error)) {
-        const err = error as AxiosError;
-        if (err.response?.status === 401) {
-          updateState({
-            isAuthenticated: false,
-            user: null,
-          });
-          resetCSRFToken();
-          router.push("/login");
-          return "Session expired";
-        }
-      }
-
-      return "An unexpected error occurred";
-    },
-    [router, updateState]
-  );
-
+  // Checking authentication
   const checkAuth = useCallback(async () => {
     try {
       const isAuth = await authService.isAuthenticated();
@@ -97,30 +62,93 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: isAuth,
         isLoading: false,
       });
+
+      // If authenticated, preload the CSRF token
+      if (isAuth && !csrfInitialized) {
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
+      }
     } catch (error) {
       updateState({
         isAuthenticated: false,
         isLoading: false,
+        user: null,
       });
     }
-  }, [updateState]);
+  }, [updateState, csrfInitialized]);
 
+  // Effect for initial authentication check
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  const handleAuthError = useCallback(
+    async (error: unknown): Promise<string> => {
+      if (error instanceof AuthError) {
+        switch (error.code) {
+          case AuthErrorCode.INVALID_CSRF_TOKEN:
+            try {
+              // Attempt to refresh the CSRF token
+              await preloadCSRFToken();
+              return "Please try again. Security token refreshed.";
+            } catch {
+              resetCSRFToken();
+              return "Security verification failed. Please try again.";
+            }
+          case AuthErrorCode.INVALID_CREDENTIALS:
+            return "Invalid username or password";
+          case AuthErrorCode.USERNAME_EXISTS:
+            return "Username already exists";
+          case AuthErrorCode.EMAIL_EXISTS:
+            return "Email already exists";
+          case AuthErrorCode.NETWORK_ERROR:
+            return "Connection error. Please check your internet connection.";
+          case AuthErrorCode.UNAUTHORIZED:
+            updateState({
+              isAuthenticated: false,
+              user: null,
+            });
+            resetCSRFToken();
+            router.push("/login");
+            return "Session expired. Please log in again.";
+          default:
+            return error.message || "An unexpected error occurred";
+        }
+      }
+      return "An unexpected error occurred";
+    },
+    [router, updateState]
+  );
+
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (email: string, password: string) => {
       try {
-        const response = await authService.login(username, password);
+        console.log("Starting login process...");
+        const response = await authService.login(email, password);
+        console.log("Login successful:", response);
+
         updateState({
           isAuthenticated: true,
-          user: {
-            username: response.user.username,
-          },
+          user: response.user,
+          isLoading: false,
         });
+
+        console.log("State updated after login");
+
+        try {
+          await preloadCSRFToken();
+          setCsrfInitialized(true);
+          console.log("CSRF token preloaded");
+        } catch (csrfError) {
+          console.error("Failed to preload CSRF token:", csrfError);
+        }
+
+        // Add a small delay before redirect
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        console.log("Redirecting to profile...");
         router.push("/profile");
       } catch (error) {
+        console.error("Login process failed:", error);
         const errorMessage = await handleAuthError(error);
         throw new Error(errorMessage);
       }
@@ -136,15 +164,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user: null,
       });
       resetCSRFToken();
+      setCsrfInitialized(false);
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
-      // Even in case of error, reset the state
+      // Cleaning the state even in case of error
       updateState({
         isAuthenticated: false,
         user: null,
       });
       resetCSRFToken();
+      setCsrfInitialized(false);
       router.push("/login");
     }
   }, [router, updateState]);
@@ -152,15 +182,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signup = useCallback(
     async (username: string, email: string, password: string) => {
       try {
-        await authService.signup(username, email, password);
-        // Auto-login after successful signup
-        await login(username, password);
+        const signupResponse = await authService.signup(
+          username,
+          email,
+          password
+        );
+
+        updateState({
+          isAuthenticated: true,
+          user: signupResponse.user,
+        });
+
+        // Preload the CSRF token
+        await preloadCSRFToken();
+        setCsrfInitialized(true);
+
+        // Redirect
+        router.push("/profile");
       } catch (error) {
         const errorMessage = await handleAuthError(error);
         throw new Error(errorMessage);
       }
     },
-    [login, handleAuthError]
+    [router, handleAuthError, updateState]
   );
 
   const value = {
@@ -192,16 +236,17 @@ export const useAuth = () => {
   return context;
 };
 
-// Utility hook for redirection if not authenticated
 export const useRequireAuth = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/login");
+      // Store the current page to redirect after login if necessary
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   return { isAuthenticated, isLoading };
 };

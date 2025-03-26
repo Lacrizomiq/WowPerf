@@ -1,5 +1,3 @@
-// Dans ta page principale
-import { RoleLeaderboards } from "@/components/MythicPlus/Leaderboard/RoleLeaderboard/RoleLeaderboards";
 import LeaderboardTabs from "@/components/MythicPlus/Leaderboard/LeaderboardTabs";
 
 export default function HomePage() {

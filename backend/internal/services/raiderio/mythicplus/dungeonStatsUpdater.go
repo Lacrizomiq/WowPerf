@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const updateInterval = 7 * 24 * time.Hour // 7 jours
+const updateInterval = 1 * 24 * time.Hour // 1 day
 
 func IsDungeonStatsEmpty(db *gorm.DB) bool {
 	var count int64
@@ -80,9 +80,11 @@ func UpdateDungeonStats(db *gorm.DB, rioService *raiderio.RaiderIOService) error
 
 	log.Println("Starting dungeon stats update...")
 
-	seasons := []string{"season-tww-1"}
-	regions := []string{"world", "us", "eu", "tw", "kr", "cn"}
-	dungeonSlugs := []string{"all", "arakara-city-of-echoes", "city-of-threads", "grim-batol", "mists-of-tirna-scithe", "siege-of-boralus", "the-dawnbreaker", "the-necrotic-wake", "the-stonevault"}
+	seasons := []string{"season-tww-2"}
+	regions := []string{"world", "us", "eu", "tw", "kr"}
+	dungeonSlugs := []string{"all", "cinderbrew-meadery", "darkflame-cleft",
+		"operation-mechagon-workshop", "operation-floodgate", "priory-of-the-sacred-flame",
+		"the-motherlode", "the-rookery", "theater-of-pain"}
 
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, 5) // Limit the concurrency to 5 goroutines at a time

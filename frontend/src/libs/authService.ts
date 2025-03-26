@@ -1,41 +1,44 @@
-import api, { APIError, resetCSRFToken } from "./api";
+// src/libs/authService.ts
+import api, { APIError } from "./api";
+import { csrfService } from "./csrfService";
 import axios, { AxiosError } from "axios";
 
-// Precise types for API responses
+// Updated API response types to match the backend
 interface AuthResponse {
   message: string;
-  user?: {
+  code: string;
+  user: {
     username: string;
     email?: string;
   };
-  csrf_token?: string;
-}
-
-interface LoginResponse extends AuthResponse {
-  user: {
-    username: string;
-  };
-}
-
-interface SignupResponse extends AuthResponse {
-  code?: string;
 }
 
 interface AuthCheckResponse {
   authenticated: boolean;
+  code: string;
 }
 
-// Possible errors
+// Error codes aligned with the backend
 export enum AuthErrorCode {
+  // Authentication errors
   INVALID_CREDENTIALS = "invalid_credentials",
   INVALID_INPUT = "invalid_input",
   USERNAME_EXISTS = "username_exists",
   EMAIL_EXISTS = "email_exists",
-  SIGNUP_ERROR = "signup_error",
-  LOGIN_ERROR = "login_error",
+
+  // Security errors
+  INVALID_CSRF_TOKEN = "INVALID_CSRF_TOKEN",
+  UNAUTHORIZED = "unauthorized",
+
+  // Technical errors
   NETWORK_ERROR = "network_error",
-  OAUTH_ERROR = "oauth_error",
-  UNKNOWN_ERROR = "unknown_error",
+  SERVER_ERROR = "server_error",
+
+  // Other errors
+  LOGIN_ERROR = "login_error",
+  SIGNUP_ERROR = "signup_error",
+  LOGOUT_ERROR = "logout_error",
+  REFRESH_ERROR = "refresh_token_error",
 }
 
 export class AuthError extends Error {
@@ -54,87 +57,95 @@ export const authService = {
     username: string,
     email: string,
     password: string
-  ): Promise<SignupResponse> {
+  ): Promise<AuthResponse> {
     try {
-      console.log("AuthService: Starting signup request");
-      const response = await api.post<SignupResponse>("/auth/signup", {
+      const response = await api.post<AuthResponse>("/auth/signup", {
         username,
         email,
         password,
       });
 
-      console.log("AuthService: Signup successful");
       return response.data;
     } catch (error) {
-      console.error("AuthService: Signup error:", error);
-
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        const errorCode = err.response?.data?.code;
 
-        switch (err.response?.data?.code) {
+        switch (errorCode) {
           case "username_exists":
             throw new AuthError(
               AuthErrorCode.USERNAME_EXISTS,
-              "Username already exists"
+              "Username already taken"
             );
           case "email_exists":
             throw new AuthError(
               AuthErrorCode.EMAIL_EXISTS,
-              "Email already exists"
+              "Email already registered"
             );
           case "invalid_input":
             throw new AuthError(
               AuthErrorCode.INVALID_INPUT,
-              "Invalid signup data"
+              err.response?.data?.error || "Invalid input data"
             );
           default:
             throw new AuthError(
               AuthErrorCode.SIGNUP_ERROR,
-              err.response?.data?.error || "Signup failed",
-              err
+              "Failed to create account"
             );
         }
       }
-
       throw new AuthError(
-        AuthErrorCode.UNKNOWN_ERROR,
-        "An unexpected error occurred during signup",
-        error
+        AuthErrorCode.NETWORK_ERROR,
+        "Network error during signup"
       );
     }
   },
 
-  async login(username: string, password: string): Promise<LoginResponse> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<LoginResponse>("/auth/login", {
-        username,
+      console.log("Attempting login for email:", email);
+
+      const response = await api.post<AuthResponse>("/auth/login", {
+        email,
         password,
       });
 
-      // Store user information if needed
+      console.log("Login response:", response.data);
+
+      if (!response.data.user) {
+        console.error("Invalid server response - missing user:", response.data);
+        throw new AuthError(
+          AuthErrorCode.LOGIN_ERROR,
+          "Invalid server response - missing user data"
+        );
+      }
+
       return response.data;
     } catch (error) {
+      console.error("Login error:", error);
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
+        console.log("Axios error details:", {
+          status: err.response?.status,
+          data: err.response?.data,
+          message: err.message,
+        });
 
         if (err.response?.status === 401) {
           throw new AuthError(
             AuthErrorCode.INVALID_CREDENTIALS,
-            "Invalid username or password"
+            "Invalid email or password"
           );
         }
 
         throw new AuthError(
           AuthErrorCode.LOGIN_ERROR,
-          err.response?.data?.error || "Login failed",
-          err
+          err.response?.data?.error || "Login failed"
         );
       }
-
       throw new AuthError(
         AuthErrorCode.NETWORK_ERROR,
-        "Network error during login",
-        error
+        "Network error during login"
       );
     }
   },
@@ -142,13 +153,21 @@ export const authService = {
   async logout(): Promise<void> {
     try {
       await api.post<AuthResponse>("/auth/logout");
-      // Reset the CSRF token after logout
-      resetCSRFToken();
+      csrfService.clearToken();
     } catch (error) {
-      console.error("Logout error:", error);
-      // Reset the CSRF token even in case of error
-      resetCSRFToken();
-      throw error;
+      // Always clear the token in case of error
+      csrfService.clearToken();
+
+      if (axios.isAxiosError(error)) {
+        throw new AuthError(
+          AuthErrorCode.LOGOUT_ERROR,
+          "Failed to logout properly"
+        );
+      }
+      throw new AuthError(
+        AuthErrorCode.NETWORK_ERROR,
+        "Network error during logout"
+      );
     }
   },
 
@@ -159,27 +178,14 @@ export const authService = {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const err = error as AxiosError<APIError>;
-
-        // If the refresh token is invalid or expired
         if (err.response?.status === 401) {
-          resetCSRFToken(); // Reset CSRF token
-          throw new AuthError(
-            AuthErrorCode.INVALID_CREDENTIALS,
-            "Session expired"
-          );
+          csrfService.clearToken();
+          throw new AuthError(AuthErrorCode.UNAUTHORIZED, "Session expired");
         }
-
-        throw new AuthError(
-          AuthErrorCode.UNKNOWN_ERROR,
-          err.response?.data?.error || "Token refresh failed",
-          err
-        );
       }
-
       throw new AuthError(
-        AuthErrorCode.NETWORK_ERROR,
-        "Network error during token refresh",
-        error
+        AuthErrorCode.REFRESH_ERROR,
+        "Failed to refresh session"
       );
     }
   },
@@ -189,7 +195,6 @@ export const authService = {
       const response = await api.get<AuthCheckResponse>("/auth/check");
       return response.data.authenticated;
     } catch (error) {
-      // In case of error, consider the user not authenticated
       return false;
     }
   },

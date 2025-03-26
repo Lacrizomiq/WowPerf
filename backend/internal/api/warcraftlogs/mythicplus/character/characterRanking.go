@@ -1,6 +1,7 @@
 package warcraftlogs
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	service "wowperf/internal/services/warcraftlogs"
@@ -48,8 +49,16 @@ func (h *CharacterRankingHandler) GetCharacterRanking(c *gin.Context) {
 		return
 	}
 
+	// decode the character name
+	decodedCharacterName, err := character.DecodeCharacterName(characterName)
+	if err != nil {
+		log.Printf("Failed to decode character name: %s %v", characterName, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode character name"})
+		return
+	}
+
 	// get the character ranking
-	characterRanking, err := character.GetCharacterRanking(h.characterRankingService, characterName, serverSlug, serverRegion, zoneID)
+	characterRanking, err := character.GetCharacterRanking(h.characterRankingService, decodedCharacterName, serverSlug, serverRegion, zoneID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get character ranking"})
 		return

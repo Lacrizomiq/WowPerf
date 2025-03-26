@@ -1,0 +1,53 @@
+rankings:
+  max_rankings_per_spec: 120
+  update_interval: 168h
+
+worker:
+  num_workers: 3
+  retry_attempts: 3
+  retry_delay: 5s
+  batch_size: 5
+  request_delay: 500ms
+
+specs:
+  # Priest
+  - class_name: "Priest"
+    spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"
+
+dungeons:
+  - id: 12660
+    encounter_id: 12660
+    name: "Ara-Kara"
+    slug: "arakara-city-of-echoes"
+  - id: 12669
+    encounter_id: 12669
+    name: "City of Threads"
+    slug: "city-of-threads"
+  - id: 60670
+    encounter_id: 60670
+    name: "Grim Batol"
+    slug: "grim-batol"
+  - id: 62290
+    encounter_id: 62290
+    name: "Mists of Tirna Scithe"
+    slug: "mists-of-tirna-scithe"
+  - id: 61822
+    encounter_id: 61822
+    name: "Siege of Boralus"
+    slug: "siege-of-boralus"
+  - id: 12662
+    encounter_id: 12662
+    name: "The Dawnbreaker"
+    slug: "the-dawnbreaker"
+  - id: 62286
+    encounter_id: 62286
+    name: "The Necrotic Wake"
+    slug: "the-necrotic-wake"
+  - id: 12652
+    encounter_id: 12652
+    name: "The Stonevault"
+    slug: "the-stonevault"

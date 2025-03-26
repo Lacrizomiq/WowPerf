@@ -1,0 +1,137 @@
+[
+  {
+    "url": "https://localhost/api/blizzard/characters/silvermoon/ouimagatée/stats?region=eu&namespace=profile-eu&locale=en_GB"
+  },
+  {
+    "_links": {
+      "self": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e/statistics?namespace=profile-eu"
+      }
+    },
+    "agility": {
+      "base": 14649,
+      "effective": 14649
+    },
+    "armor": {
+      "base": 0,
+      "effective": 15555
+    },
+    "attack_power": 0,
+    "avoidance": {
+      "rating": 1635,
+      "rating_bonus": 3.0055292
+    },
+    "block": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 0
+    },
+    "bonus_armor": 0,
+    "character": {
+      "id": 204820513,
+      "key": {
+        "href": "https://eu.api.blizzard.com/profile/wow/character/silvermoon/ouimagat%C3%A9e?namespace=profile-eu"
+      },
+      "name": "Ouimagatée",
+      "realm": {
+        "id": 549,
+        "key": {
+          "href": "https://eu.api.blizzard.com/data/wow/realm/549?namespace=dynamic-eu"
+        },
+        "name": "Silvermoon",
+        "slug": "silvermoon"
+      }
+    },
+    "dodge": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 4.9999995
+    },
+    "health": 6189860,
+    "intellect": {
+      "base": 17647,
+      "effective": 67301
+    },
+    "lifesteal": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 4
+    },
+    "main_hand_damage_max": 6702.0806,
+    "main_hand_damage_min": 4953.4077,
+    "main_hand_dps": 1910.7358,
+    "main_hand_speed": 3.05,
+    "mana_regen": 100000,
+    "mana_regen_combat": 100000,
+    "mastery": {
+      "rating": 6951,
+      "rating_bonus": 13.4055,
+      "value": 24.205502
+    },
+    "melee_crit": {
+      "rating": 2520,
+      "rating_bonus": 3.6,
+      "value": 8.599999
+    },
+    "melee_haste": {
+      "rating": 11909,
+      "rating_bonus": 18.04394,
+      "value": 18.043938
+    },
+    "off_hand_damage_max": 0.582891,
+    "off_hand_damage_min": 0.582891,
+    "off_hand_dps": 0.3440915,
+    "off_hand_speed": 1.694,
+    "parry": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 0
+    },
+    "power": 2500000,
+    "power_type": {
+      "id": 0,
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/power-type/0?namespace=static-11.1.0_59095-eu"
+      },
+      "name": "Mana"
+    },
+    "ranged_crit": {
+      "rating": 2520,
+      "rating_bonus": 3.6,
+      "value": 8.599999
+    },
+    "ranged_haste": {
+      "rating": 11909,
+      "rating_bonus": 18.04394,
+      "value": 18.043938
+    },
+    "speed": {
+      "rating": 1441,
+      "rating_bonus": 8.476511
+    },
+    "spell_crit": {
+      "rating": 2520,
+      "rating_bonus": 3.6,
+      "value": 8.599999
+    },
+    "spell_haste": {
+      "rating": 11909,
+      "rating_bonus": 18.04394,
+      "value": 18.043938
+    },
+    "spell_penetration": 0,
+    "spell_power": 67301,
+    "stamina": {
+      "base": 86452,
+      "effective": 309493
+    },
+    "strength": {
+      "base": 10233,
+      "effective": 10233
+    },
+    "versatility": 12931,
+    "versatility_damage_done_bonus": 16.578205,
+    "versatility_damage_taken_bonus": 8.289103,
+    "versatility_healing_done_bonus": 16.578205
+  }
+]

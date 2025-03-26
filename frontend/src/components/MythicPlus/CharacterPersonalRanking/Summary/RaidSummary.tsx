@@ -8,6 +8,7 @@ interface RaidRankingProps {
   classId: number;
   spec: string;
   isLoading?: boolean;
+  raidProgressionData?: any;
 }
 
 const RaidRanking: FC<RaidRankingProps> = ({
@@ -16,13 +17,55 @@ const RaidRanking: FC<RaidRankingProps> = ({
   classId,
   spec,
   isLoading = false,
+  raidProgressionData,
 }) => {
   const imageUrl = getSpecIconById(classId, spec);
 
+  const getHighestDifficulty = () => {
+    if (!raidProgressionData?.expansions) return null;
+
+    const currentExpansion = raidProgressionData.expansions.find(
+      (exp: any) =>
+        exp.name === "Current Season" || exp.name === "The War Within"
+    );
+    if (!currentExpansion) return null;
+
+    // Utiliser le nom du raid passé en tant que prop
+    const currentRaid = currentExpansion.raids.find(
+      (raid: any) => raid.name === raidName
+    );
+    if (!currentRaid) return null;
+
+    const difficultyOrder = ["Mythic", "Heroic", "Normal", "LFR"];
+
+    for (const difficulty of difficultyOrder) {
+      const mode = currentRaid.modes.find(
+        (mode: any) =>
+          mode.difficulty === difficulty && mode.progress.completed_count > 0
+      );
+      if (mode) {
+        return mode;
+      }
+    }
+
+    return null;
+  };
+
+  const highestMode = getHighestDifficulty();
+
+  const modeProgress =
+    highestMode?.difficulty === "Mythic"
+      ? "M"
+      : highestMode?.difficulty === "Heroic"
+      ? "HC"
+      : highestMode?.difficulty === "Normal"
+      ? "NM"
+      : "LFR";
+
   return (
-    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-4 py-2.5 min-w-[180px]">
+    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 min-w-0 sm:min-w-[150px]">
       <div className="text-sm text-slate-300/90 mb-2 w-full text-center border-b border-slate-700/50 pb-2">
-        {raidName}
+        {raidName} {highestMode && `${highestMode.difficulty}`}
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-center">
@@ -30,12 +73,22 @@ const RaidRanking: FC<RaidRankingProps> = ({
             <Image src={imageUrl} alt={spec} width={32} height={32} />
           )}
         </div>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <span className="text-slate-400 text-sm">World Rank</span>
+        <div className="flex flex-col md:flex-row items-center gap-2 text-center justify-center md:px-2">
+          <span className="text-slate-400 text-sm">Rank</span>
           {isLoading ? (
             <div className="animate-pulse w-6 h-6 bg-slate-700/50 rounded" />
           ) : (
             <span className="text-xl font-semibold text-white/90">{rank}</span>
+          )}
+          <span className="text-slate-400 text-sm">Progress</span>
+          {isLoading ? (
+            <div className="animate-pulse w-6 h-6 bg-slate-700/50 rounded" />
+          ) : (
+            <span className="text-xl font-semibold text-white/90">
+              {highestMode
+                ? `${highestMode.progress.completed_count}/${highestMode.progress.total_count} ${modeProgress}`
+                : "0/0"}
+            </span>
           )}
         </div>
       </div>

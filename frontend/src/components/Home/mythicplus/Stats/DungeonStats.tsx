@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useGetDungeonStats } from "@/hooks/useRaiderioApi";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
@@ -10,7 +12,7 @@ import { SpecStats } from "./SpecStats";
 import { TeamComposition } from "./TeamComposition";
 
 const DungeonStats: React.FC = () => {
-  const [season] = useState("season-tww-1");
+  const [season] = useState("season-tww-2");
   const [region, setRegion] = useState("world");
   const [dungeon, setDungeon] = useState("all");
   const [activeTab, setActiveTab] = useState("overall");
@@ -83,7 +85,7 @@ const DungeonStats: React.FC = () => {
 
       <div className="mb-4 flex space-x-4">
         <RegionSelector
-          regions={["us", "eu", "kr", "tw", "cn"]}
+          regions={["us", "eu", "kr", "tw"]}
           onRegionChange={setRegion}
           selectedRegion={region}
         />

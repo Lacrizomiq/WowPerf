@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Header from "@/components/Header/Header";
+import React, { useState } from "react";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
@@ -11,6 +10,7 @@ import RaidOverview from "@/components/Raids/RaidOverview";
 import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import "@/app/globals.css";
+
 export default function CharacterLayout({
   params,
 }: {
@@ -40,74 +40,58 @@ export default function CharacterLayout({
 
   useWowheadTooltips();
 
-  console.log("Character Profile Loading:", isLoading);
-  console.log("Character Profile Error:", error);
-  console.log("Character Profile Data:", characterProfile);
-
-  const renderContent = () => {
-    return (
-      <>
-        <div className="rounded-xl mt-5">
-          {(() => {
-            switch (selectedTab) {
-              case "gear":
-                return (
-                  <CharacterGear
-                    region={region}
-                    realm={realm}
-                    name={name}
-                    namespace={`profile-${region}`}
-                    locale="en_GB"
-                  />
-                );
-              case "talents":
-                return (
-                  <CharacterTalent
-                    region={region}
-                    realm={realm}
-                    name={name}
-                    namespace={`profile-${region}`}
-                    locale="en_GB"
-                  />
-                );
-              case "mythic-plus":
-                return (
-                  <MythicDungeonOverview
-                    characterName={name}
-                    realmSlug={realm}
-                    region={region}
-                    namespace={`profile-${region}`}
-                    locale="en_GB"
-                    seasonSlug={seasonSlug || "season-tww-1"}
-                  />
-                );
-              case "raid-progression":
-                return (
-                  <RaidOverview
-                    characterName={name}
-                    realmSlug={realm}
-                    region={region}
-                    namespace={`profile-${region}`}
-                    locale="en_GB"
-                    expansion={expansion || "TWW"}
-                  />
-                );
-              default:
-                return null;
-            }
-          })()}
-        </div>
-      </>
-    );
-  };
-
-  const backgroundStyle = {
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundAttachment: "fixed",
-  };
-
-  const defaultBackgroundClass = "bg-deep-blue";
+  const renderContent = () => (
+    <div className="rounded-xl w-full">
+      {(() => {
+        switch (selectedTab) {
+          case "gear":
+            return (
+              <CharacterGear
+                region={region}
+                realm={realm}
+                name={name}
+                namespace={`profile-${region}`}
+                locale="en_GB"
+              />
+            );
+          case "talents":
+            return (
+              <CharacterTalent
+                region={region}
+                realm={realm}
+                name={name}
+                namespace={`profile-${region}`}
+                locale="en_GB"
+              />
+            );
+          case "mythic-plus":
+            return (
+              <MythicDungeonOverview
+                characterName={name}
+                realmSlug={realm}
+                region={region}
+                namespace={`profile-${region}`}
+                locale="en_GB"
+                seasonSlug={seasonSlug || "season-tww-2"}
+              />
+            );
+          case "raid-progression":
+            return (
+              <RaidOverview
+                characterName={name}
+                realmSlug={realm}
+                region={region}
+                namespace={`profile-${region}`}
+                locale="en_GB"
+                expansion={expansion || "TWW"}
+              />
+            );
+          default:
+            return null;
+        }
+      })()}
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -124,9 +108,9 @@ export default function CharacterLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
-      <div className="flex-1 transition-all duration-300">
-        <div className="max-w-7xl mx-auto p-5">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
+        <div className="mb-4">
           <CharacterSummary
             region={region}
             realm={realm}
@@ -134,57 +118,58 @@ export default function CharacterLayout({
             namespace={`profile-${region}`}
             locale="en_GB"
           />
-
-          <div className="flex justify-center p-5 mt-5 rounded-xl">
-            <nav className="flex justify-center mt-5 bg-[#002440] overflow-hidden rounded-full border-2 border-[#003660]">
-              {[
-                { name: "Gear", icon: <Shield size={20} />, key: "gear" },
-                {
-                  name: "Talents",
-                  icon: <ScrollText size={20} />,
-                  key: "talents",
-                },
-                {
-                  name: "Mythic+",
-                  icon: <Hourglass size={20} />,
-                  key: "mythic-plus",
-                },
-                {
-                  name: "Raids",
-                  icon: <Sword size={20} />,
-                  key: "raid-progression",
-                },
-              ].map((tab, index, array) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setSelectedTab(tab.key)}
-                  className={`flex items-center space-x-2 px-6 py-3 transition-all bg-[#002440] justify-center
-                ${
-                  selectedTab === tab.key
-                    ? "bg-[#003660]"
-                    : "hover:bg-[#003660] hover:bg-opacity-50"
-                }
-                ${index === 0 ? "rounded-l-full" : ""}
-                ${index === array.length - 1 ? "rounded-r-full" : ""}
-                ${index !== 0 ? "border-l border-[#003660]" : ""}`}
-                >
-                  {tab.icon}
-                  <span>{tab.name}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div
-            className={`max-w-7xl mx-auto rounded-2xl shadow-2xl ${
-              characterProfile?.spec_id
-                ? `bg-spec-${characterProfile.spec_id}`
-                : defaultBackgroundClass
-            }`}
-            style={backgroundStyle}
-          >
-            {renderContent()}
-          </div>
         </div>
+
+        {/* Navigation */}
+        <div className="flex justify-center w-full mb-4">
+          <nav className="flex flex-col md:flex-row md:inline-flex justify-center bg-[#002440] rounded-2xl md:rounded-full border-2 border-[#003660] overflow-hidden">
+            {[
+              { name: "Gear", icon: <Shield size={20} />, key: "gear" },
+              {
+                name: "Talents",
+                icon: <ScrollText size={20} />,
+                key: "talents",
+              },
+              {
+                name: "Mythic+",
+                icon: <Hourglass size={20} />,
+                key: "mythic-plus",
+              },
+              {
+                name: "Raids",
+                icon: <Sword size={20} />,
+                key: "raid-progression",
+              },
+            ].map((tab, index, array) => (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedTab(tab.key)}
+                className={`
+          flex items-center justify-center gap-2 
+          px-6 py-3
+          transition-all bg-[#002440]
+          ${
+            selectedTab === tab.key
+              ? "bg-[#003660]"
+              : "hover:bg-[#003660] hover:bg-opacity-50"
+          }
+          ${
+            index !== array.length - 1
+              ? "md:border-r border-b md:border-b-0 border-[#003660]"
+              : ""
+          }
+          ${index === 0 ? "md:rounded-l-full" : ""}
+          ${index === array.length - 1 ? "md:rounded-r-full" : ""}
+        `}
+              >
+                {tab.icon}
+                <span className="whitespace-nowrap">{tab.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="w-full">{renderContent()}</div>
       </div>
     </div>
   );

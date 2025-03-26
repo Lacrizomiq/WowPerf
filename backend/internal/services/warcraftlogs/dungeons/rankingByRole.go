@@ -72,11 +72,6 @@ func GetGlobalRankings(s *service.WarcraftLogsClientService, ctx context.Context
 				sem <- struct{}{}
 				defer func() { <-sem }()
 
-				if err := s.RateLimiter.Wait(ctx); err != nil {
-					errorsChan <- fmt.Errorf("rate limiter error: %w", err)
-					return
-				}
-
 				reqCtx, cancel := context.WithTimeout(ctx, requestTimeout)
 				defer cancel()
 

@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"wowperf/internal/models"
+	"wowperf/internal/services/email"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -48,7 +50,7 @@ type AuthService struct {
 	RedisClient     *redis.Client
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
-	BlizzardAuth    *BlizzardAuthService // Reference to Battle.net auth service
+	EmailService    *email.EmailService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -56,19 +58,25 @@ func NewAuthService(
 	db *gorm.DB,
 	jwtSecret string,
 	redisClient *redis.Client,
-	blizzardAuth *BlizzardAuthService,
+	emailService *email.EmailService,
 ) *AuthService {
+
+	domain := os.Getenv("DOMAIN")
+
+	// Development configuration
+	secure := true
+
 	return &AuthService{
 		DB:              db,
 		JWTSecret:       []byte(jwtSecret),
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
-		BlizzardAuth:    blizzardAuth,
+		EmailService:    emailService,
 		CookieConfig: CookieConfig{
-			Domain:   ".localhost", // Add . to the domain to allow subdomains
+			Domain:   domain,
 			Path:     "/",
-			Secure:   true,                 // Set to true in production for https
-			SameSite: http.SameSiteLaxMode, // Set to SameSiteLaxMode in production
+			Secure:   secure, // true for HTTPS
+			SameSite: http.SameSiteLaxMode,
 		},
 	}
 }
@@ -98,24 +106,29 @@ func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken s
 
 // SignUp registers a new user
 func (s *AuthService) SignUp(user *models.User) error {
+	log.Printf("Starting SignUp process for user: %s", user.Username)
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	user.Password = string(hashedPassword)
 
 	if err := s.DB.Create(user).Error; err != nil {
+		log.Printf("Failed to create user in database: %v", err)
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
+	log.Printf("User created successfully: %s", user.Username)
 	return nil
 }
 
 // Login authenticates a user and generates tokens
-func (s *AuthService) Login(c *gin.Context, username, password string) error {
+func (s *AuthService) Login(c *gin.Context, email, password string) error {
 	var user models.User
-	if err := s.DB.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
 		return ErrInvalidCredentials
 	}
 
@@ -304,4 +317,79 @@ func (s *AuthService) isTokenNearExpiry(token string) (bool, error) {
 	}
 
 	return false, errors.New("invalid token claims")
+}
+
+// Reset password method for AuthService
+func (s *AuthService) InitiatePasswordReset(email string) error {
+	var user models.User
+	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil // Return silently to avoid email enumeration
+	}
+
+	// Generate reset token
+	token, err := user.GeneratePasswordResetToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate reset token: %w", err)
+	}
+
+	// Save user with the new token
+	if err := s.DB.Save(&user).Error; err != nil {
+		return fmt.Errorf("failed to save reset token: %w", err)
+	}
+
+	// Send reset email directly using the email service
+	if err := s.EmailService.SendPasswordResetEmail(&user, token); err != nil {
+		return fmt.Errorf("failed to send reset email: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateResetToken validates a reset token and returns the user
+func (s *AuthService) ValidateResetToken(token string) (*models.User, error) {
+	var user models.User
+	if err := s.DB.Where("reset_password_token = ?", token).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	if !user.ValidatePasswordResetToken(token) {
+		return nil, fmt.Errorf("invalid or expired token")
+	}
+
+	return &user, nil
+}
+
+// ResetPassword resets a user's password
+func (s *AuthService) ResetPassword(token, newPassword string) error {
+	user, err := s.ValidateResetToken(token)
+	if err != nil {
+		return err
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password and clear reset token
+	user.Password = string(hashedPassword)
+	user.ClearPasswordResetToken()
+
+	// Save changes
+	if err := s.DB.Save(user).Error; err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
+}
+
+// Close cleans up resources used by the auth service
+func (s *AuthService) Close() error {
+	if s.EmailService != nil {
+		if err := s.EmailService.Close(); err != nil {
+			return fmt.Errorf("failed to close email service: %w", err)
+		}
+	}
+	return nil
 }

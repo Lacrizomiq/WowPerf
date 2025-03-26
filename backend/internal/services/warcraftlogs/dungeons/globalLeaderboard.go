@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const REQUIRED_DUNGEON_COUNT = 8
+const RequiredDungeonCount = 8
 
 // LeaderboardEntry represents a single entry in the leaderboard
 type LeaderboardEntry struct {
@@ -159,7 +159,7 @@ func (s *GlobalLeaderboardService) GetGlobalLeaderboard(ctx context.Context, lim
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(sanitizedOrder),
 		"", // No additional WHERE conditions
-		REQUIRED_DUNGEON_COUNT,
+		RequiredDungeonCount,
 	)
 
 	var entries []LeaderboardEntry
@@ -180,7 +180,7 @@ func (s *GlobalLeaderboardService) GetGlobalLeaderboardByRole(ctx context.Contex
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
-		REQUIRED_DUNGEON_COUNT,
+		RequiredDungeonCount,
 	)
 
 	var entries []LeaderboardEntry
@@ -201,7 +201,7 @@ func (s *GlobalLeaderboardService) GetGlobalLeaderboardByClass(ctx context.Conte
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
-		REQUIRED_DUNGEON_COUNT,
+		RequiredDungeonCount,
 	)
 
 	var entries []LeaderboardEntry
@@ -223,7 +223,7 @@ func (s *GlobalLeaderboardService) GetGlobalLeaderboardBySpec(ctx context.Contex
 	rankQuery := fmt.Sprintf(
 		s.getBaseLeaderboardQuery(sanitizedOrder),
 		whereClause,
-		REQUIRED_DUNGEON_COUNT,
+		RequiredDungeonCount,
 	)
 
 	var entries []LeaderboardEntry

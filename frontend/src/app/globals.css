@@ -117,7 +117,8 @@ body {
   color: #fff !important;
 }
 
-.bg-spec-256 {
+.bg-spec-256,
+.bg-spec-priest-discipline {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("https://wow.zamimg.com/images/tools/dragonflight-talent-calc/blizzard/talentbg-priest-discipline.jpg");
 }
@@ -460,4 +461,111 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+}
+
+/* Add API class name matches */
+.class-color--death-knight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--demon-hunter {
+  color: var(--color-demon-hunter) !important;
+}
+/* Add original API names without modification */
+.class-color--Death-Knight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--Demon-Hunter {
+  color: var(--color-demon-hunter) !important;
+}
+/* Add space versions */
+.class-color--death\ knight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--demon\ hunter {
+  color: var(--color-demon-hunter) !important;
+}
+/* Add exact API match */
+.class-color--Death\ Knight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--Demon\ Hunter {
+  color: var(--color-demon-hunter) !important;
+}
+
+.class-color--warrior {
+  color: var(--color-warrior) !important;
+}
+.class-color--paladin {
+  color: var(--color-paladin) !important;
+}
+.class-color--hunter {
+  color: var(--color-hunter) !important;
+}
+.class-color--rogue {
+  color: var(--color-rogue) !important;
+}
+.class-color--priest {
+  color: var(--color-priest) !important;
+}
+.class-color--shaman {
+  color: var(--color-shaman) !important;
+}
+.class-color--mage {
+  color: var(--color-mage) !important;
+}
+.class-color--warlock {
+  color: var(--color-warlock) !important;
+}
+.class-color--monk {
+  color: var(--color-monk) !important;
+}
+.class-color--druid {
+  color: var(--color-druid) !important;
+}
+.class-color--demonhunter {
+  color: var(--color-demon-hunter) !important;
+}
+.class-color--evoker {
+  color: var(--color-evoker) !important;
+}
+
+/* Class colors by ID */
+.class-color--1 {
+  color: var(--color-warrior) !important;
+}
+.class-color--2 {
+  color: var(--color-paladin) !important;
+}
+.class-color--3 {
+  color: var(--color-hunter) !important;
+}
+.class-color--4 {
+  color: var(--color-rogue) !important;
+}
+.class-color--5 {
+  color: var(--color-priest) !important;
+}
+.class-color--6 {
+  color: var(--color-death-knight) !important;
+}
+.class-color--7 {
+  color: var(--color-shaman) !important;
+}
+.class-color--8 {
+  color: var(--color-mage) !important;
+}
+.class-color--9 {
+  color: var(--color-warlock) !important;
+}
+.class-color--10 {
+  color: var(--color-monk) !important;
+}
+.class-color--11 {
+  color: var(--color-druid) !important;
+}
+.class-color--12 {
+  color: var(--color-demon-hunter) !important;
+}
+.class-color--13 {
+  color: var(--color-evoker) !important;
 }

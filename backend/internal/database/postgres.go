@@ -13,26 +13,39 @@ import (
 var DB *gorm.DB
 
 func InitDB() (*gorm.DB, error) {
+	// Ignore the .env loading error because the variables are in the environment
+	_ = godotenv.Load()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
+	// Check that the required variables are present
 	host := os.Getenv("DB_HOST")
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-	sslmode := os.Getenv("DB_SSL_MODE")
+	port := getEnvOrDefault("DB_PORT", "5432") // Default value for the port
+	sslmode := getEnvOrDefault("DB_SSL_MODE", "disable")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, dbname, port, sslmode)
-
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database", err)
+	// Check that the required variables are present
+	if host == "" || user == "" || password == "" || dbname == "" {
+		return nil, fmt.Errorf("missing required database environment variables")
 	}
-	fmt.Println("Connected to database")
 
-	return DB, nil
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		host, user, password, dbname, port, sslmode)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	log.Println("Connected to database successfully")
+	DB = db
+	return db, nil
+}
+
+// Helper function for default values
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

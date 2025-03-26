@@ -1,0 +1,10 @@
+# deploy/local/traefik/dynamic/tls.yml
+tls:
+  certificates:
+    - certFile: "/certs/cert.pem"
+      keyFile: "/certs/key.pem"
+  stores:
+    default:
+      defaultCertificate:
+        certFile: "/certs/cert.pem"
+        keyFile: "/certs/key.pem"

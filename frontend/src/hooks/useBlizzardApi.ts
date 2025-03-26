@@ -28,6 +28,38 @@ export const useGetBlizzardCharacterProfile = (
         namespace,
         locale
       ),
+    staleTime: 30000, // 30 seconds
+  });
+};
+
+// useSearchBlizzardCharacter is a hook that searches for a character without auto-fetching
+export const useSearchBlizzardCharacter = (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: [
+      "characterSearch",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
+      apiServices.getBlizzardCharacterProfile(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale
+      ),
+    enabled: false, // Disable auto-fetch for search
+    retry: false,
+    staleTime: 30000,
   });
 };
 
@@ -190,5 +222,36 @@ export const useGetBlizzardCharacterEncounterRaid = (
       }
       return data;
     },
+  });
+};
+
+// useGetBlizzardCharacterStats retrieves the stats for a character
+export const useGetBlizzardCharacterStats = (
+  region: string,
+  realmSlug: string,
+  characterName: string,
+  namespace: string,
+  locale: string
+) => {
+  return useQuery({
+    queryKey: [
+      "characterStats",
+      region,
+      realmSlug,
+      characterName,
+      namespace,
+      locale,
+    ],
+    queryFn: () =>
+      apiServices.getBlizzardCharacterStats(
+        region,
+        realmSlug,
+        characterName,
+        namespace,
+        locale
+      ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry 2 times
   });
 };

@@ -1,0 +1,343 @@
+[
+  {
+    "id": 7,
+    "guid": 223836762,
+    "icon": "Priest-Discipline",
+    "name": "Gregxo",
+    "type": "Priest",
+    "specs": ["Discipline"],
+    "server": "Illidan",
+    "potionUse": 7,
+    "maxItemLevel": 634,
+    "minItemLevel": 634,
+    "combatantInfo": {
+      "gear": [
+        {
+          "id": 212440,
+          "gems": [
+            {
+              "id": 213470,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color5_3.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_cloth_raidwarlocknerubian_d_01_helm.jpg",
+          "name": "Devotee's Discarded Headdress",
+          "slot": 0,
+          "quality": 4,
+          "bonusIDs": [6652, 10380, 10356, 10299, 1540, 10255, 10397],
+          "itemLevel": 639
+        },
+        {
+          "id": 225577,
+          "gems": [
+            {
+              "id": 213746,
+              "icon": "inv_misc_gem_x4_metagem_cut.jpg",
+              "itemLevel": 610
+            },
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_nerubian_necklace_01_color4.jpg",
+          "name": "Sureki Zealot's Insignia",
+          "slot": 1,
+          "quality": 4,
+          "bonusIDs": [6652, 10354, 10266, 1520, 10255, 10395, 10879],
+          "itemLevel": 619
+        },
+        {
+          "id": 212081,
+          "icon": "inv_cloth_raidpriestnerubian_d_01_shoulder.jpg",
+          "name": "Living Luster's Dominion",
+          "slot": 2,
+          "setID": 1688,
+          "quality": 4,
+          "bonusIDs": [10356, 10369, 6652, 10299, 1540, 10255],
+          "itemLevel": 639
+        },
+        {
+          "id": 0,
+          "icon": "inv_axe_02.jpg",
+          "name": "",
+          "slot": 3,
+          "quality": 1,
+          "itemLevel": 0
+        },
+        {
+          "id": 212086,
+          "icon": "inv_cloth_raidpriestnerubian_d_01_chest.jpg",
+          "name": "Living Luster's Raiment",
+          "slot": 4,
+          "setID": 1688,
+          "quality": 4,
+          "bonusIDs": [6652, 10390, 10299, 10373, 1540],
+          "itemLevel": 639,
+          "permanentEnchant": 7364,
+          "permanentEnchantName": "Crystalline Radiance"
+        },
+        {
+          "id": 222816,
+          "gems": [
+            {
+              "id": 213455,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color4_3.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_cloth_outdoorarathor_d_01_belt.jpg",
+          "name": "Consecrated Cord",
+          "slot": 5,
+          "quality": 4,
+          "bonusIDs": [10421, 9633, 8902, 9627, 10222, 8792, 11144, 11307],
+          "itemLevel": 636
+        },
+        {
+          "id": 212082,
+          "icon": "inv_cloth_raidpriestnerubian_d_01_pant.jpg",
+          "name": "Living Luster's Trousers",
+          "slot": 6,
+          "setID": 1688,
+          "quality": 4,
+          "bonusIDs": [6652, 10390, 10370, 10299, 1540, 10255],
+          "itemLevel": 639,
+          "permanentEnchant": 7534,
+          "permanentEnchantName": "+747 Intellect & +230 Stamina"
+        },
+        {
+          "id": 212085,
+          "icon": "inv_cloth_raidpriestnerubian_d_01_boot.jpg",
+          "name": "Living Luster's Boots",
+          "slot": 7,
+          "quality": 4,
+          "bonusIDs": [6652, 10299, 10356, 8095, 1540],
+          "itemLevel": 639,
+          "permanentEnchant": 7418,
+          "permanentEnchantName": "Scout's March"
+        },
+        {
+          "id": 212079,
+          "gems": [
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_cloth_raidpriestnerubian_d_01_bracer.jpg",
+          "name": "Living Luster's Crystbands",
+          "slot": 8,
+          "quality": 4,
+          "bonusIDs": [6652, 10390, 10397, 10299, 1540, 10255],
+          "itemLevel": 639,
+          "permanentEnchant": 7391,
+          "permanentEnchantName": "+2040 Leech"
+        },
+        {
+          "id": 212084,
+          "icon": "inv_cloth_raidpriestnerubian_d_01_glove.jpg",
+          "name": "Living Luster's Touch",
+          "slot": 9,
+          "setID": 1688,
+          "quality": 4,
+          "bonusIDs": [10355, 10372, 6652, 10262, 1520, 10255],
+          "itemLevel": 619
+        },
+        {
+          "id": 215133,
+          "gems": [
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            },
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_11_0_jewelcrafting_ring_color1.jpg",
+          "name": "Binding of Binding",
+          "slot": 10,
+          "quality": 4,
+          "bonusIDs": [
+            10421, 9633, 8902, 8960, 10394, 10879, 9627, 10222, 8792, 11144
+          ],
+          "itemLevel": 636,
+          "permanentEnchant": 7340,
+          "permanentEnchantName": "+315 Haste"
+        },
+        {
+          "id": 221189,
+          "gems": [
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            },
+            {
+              "id": 213485,
+              "icon": "inv_jewelcrafting_cut-standart-gem-hybrid_color1_1.jpg",
+              "itemLevel": 610
+            }
+          ],
+          "icon": "inv_11_0_nerubian_ring_01_color5.jpg",
+          "name": "Experiment 08752's Band",
+          "slot": 11,
+          "quality": 3,
+          "bonusIDs": [10390, 6652, 10383, 10394, 10879, 10299, 3131, 10255],
+          "itemLevel": 639,
+          "permanentEnchant": 7340,
+          "permanentEnchantName": "+315 Haste"
+        },
+        {
+          "id": 219314,
+          "icon": "inv_raid_mercurialegg_red.jpg",
+          "name": "Ara-Kara Sacbrood",
+          "slot": 12,
+          "quality": 3,
+          "bonusIDs": [10390, 6652, 10383, 10299, 3131, 10255],
+          "itemLevel": 639
+        },
+        {
+          "id": 133304,
+          "icon": "spell_shadow_gathershadows.jpg",
+          "name": "Gale of Shadows",
+          "slot": 13,
+          "quality": 3,
+          "bonusIDs": [10390, 6652, 10383, 10256, 10056, 10255],
+          "itemLevel": 626
+        },
+        {
+          "id": 222817,
+          "icon": "inv_cloth_outdoorarathor_d_01_cape.jpg",
+          "name": "Consecrated Cloak",
+          "slot": 14,
+          "quality": 4,
+          "bonusIDs": [10421, 9633, 8902, 9627, 10222, 11941, 8792, 11144],
+          "itemLevel": 636,
+          "permanentEnchant": 7409,
+          "permanentEnchantName": "Chant of Leeching Fangs"
+        },
+        {
+          "id": 222568,
+          "icon": "inv_staff_2h_arathoroutdoor_d_01.jpg",
+          "name": "Vagabond's Bounding Baton",
+          "slot": 15,
+          "quality": 4,
+          "bonusIDs": [
+            10421, 9633, 8902, 9627, 10222, 11302, 8960, 8792, 11144
+          ],
+          "itemLevel": 636,
+          "permanentEnchant": 7463,
+          "temporaryEnchant": 7495,
+          "permanentEnchantName": "Authority of Radiant Power",
+          "temporaryEnchantName": "Algari Mana Oil"
+        },
+        {
+          "id": 0,
+          "icon": "inv_axe_02.jpg",
+          "name": "",
+          "slot": 16,
+          "quality": 1,
+          "itemLevel": 0
+        },
+        {
+          "id": 0,
+          "icon": "inv_axe_02.jpg",
+          "name": "",
+          "slot": 17,
+          "quality": 1,
+          "itemLevel": 0
+        }
+      ],
+      "stats": {
+        "Crit": { "max": 5495, "min": 5495 },
+        "Haste": { "max": 25455, "min": 25455 },
+        "Leech": { "max": 3060, "min": 3060 },
+        "Speed": { "max": 250, "min": 250 },
+        "Mastery": { "max": 5150, "min": 5150 },
+        "Stamina": { "max": 329481, "min": 329481 },
+        "Intellect": { "max": 66013, "min": 66013 },
+        "Versatility": { "max": 14171, "min": 14171 }
+      },
+      "specIDs": [256],
+      "talents": [],
+      "talentTree": [
+        { "id": 103687, "rank": 1, "nodeID": 82564 },
+        { "id": 103690, "rank": 1, "nodeID": 82566 },
+        { "id": 103692, "rank": 1, "nodeID": 82567 },
+        { "id": 103693, "rank": 2, "nodeID": 82568 },
+        { "id": 103694, "rank": 1, "nodeID": 82569 },
+        { "id": 103695, "rank": 1, "nodeID": 82570 },
+        { "id": 103697, "rank": 2, "nodeID": 82572 },
+        { "id": 103701, "rank": 1, "nodeID": 82576 },
+        { "id": 103702, "rank": 1, "nodeID": 82577 },
+        { "id": 103704, "rank": 1, "nodeID": 82579 },
+        { "id": 103706, "rank": 1, "nodeID": 82581 },
+        { "id": 103708, "rank": 1, "nodeID": 82582 },
+        { "id": 103709, "rank": 2, "nodeID": 82583 },
+        { "id": 103710, "rank": 1, "nodeID": 82584 },
+        { "id": 103712, "rank": 1, "nodeID": 82586 },
+        { "id": 103713, "rank": 1, "nodeID": 82587 },
+        { "id": 103714, "rank": 1, "nodeID": 82588 },
+        { "id": 103718, "rank": 1, "nodeID": 82590 },
+        { "id": 103719, "rank": 1, "nodeID": 82591 },
+        { "id": 103721, "rank": 1, "nodeID": 82592 },
+        { "id": 103722, "rank": 1, "nodeID": 82593 },
+        { "id": 103723, "rank": 1, "nodeID": 82594 },
+        { "id": 103724, "rank": 1, "nodeID": 82595 },
+        { "id": 103725, "rank": 1, "nodeID": 82596 },
+        { "id": 103726, "rank": 1, "nodeID": 82597 },
+        { "id": 103727, "rank": 1, "nodeID": 82598 },
+        { "id": 103731, "rank": 1, "nodeID": 82601 },
+        { "id": 103821, "rank": 1, "nodeID": 82675 },
+        { "id": 103823, "rank": 1, "nodeID": 82677 },
+        { "id": 103824, "rank": 1, "nodeID": 82678 },
+        { "id": 103826, "rank": 2, "nodeID": 82679 },
+        { "id": 103832, "rank": 1, "nodeID": 82683 },
+        { "id": 103833, "rank": 2, "nodeID": 82684 },
+        { "id": 103835, "rank": 1, "nodeID": 82685 },
+        { "id": 103836, "rank": 2, "nodeID": 82686 },
+        { "id": 103840, "rank": 1, "nodeID": 82690 },
+        { "id": 103844, "rank": 1, "nodeID": 82694 },
+        { "id": 103847, "rank": 2, "nodeID": 82697 },
+        { "id": 103851, "rank": 1, "nodeID": 82701 },
+        { "id": 103853, "rank": 1, "nodeID": 82703 },
+        { "id": 103856, "rank": 1, "nodeID": 82706 },
+        { "id": 103858, "rank": 1, "nodeID": 82707 },
+        { "id": 103863, "rank": 1, "nodeID": 82711 },
+        { "id": 103864, "rank": 1, "nodeID": 82712 },
+        { "id": 103866, "rank": 1, "nodeID": 82714 },
+        { "id": 103872, "rank": 1, "nodeID": 82720 },
+        { "id": 114735, "rank": 1, "nodeID": 82691 },
+        { "id": 115883, "rank": 1, "nodeID": 82674 },
+        { "id": 115884, "rank": 1, "nodeID": 82676 },
+        { "id": 117271, "rank": 1, "nodeID": 94668 },
+        { "id": 117272, "rank": 1, "nodeID": 94669 },
+        { "id": 117273, "rank": 1, "nodeID": 94670 },
+        { "id": 117295, "rank": 1, "nodeID": 94692 },
+        { "id": 117297, "rank": 1, "nodeID": 94694 },
+        { "id": 117306, "rank": 1, "nodeID": 94703 },
+        { "id": 123288, "rank": 1, "nodeID": 99801 },
+        { "id": 123841, "rank": 1, "nodeID": 100212 },
+        { "id": 123844, "rank": 1, "nodeID": 94696 },
+        { "id": 123845, "rank": 1, "nodeID": 94693 },
+        { "id": 125982, "rank": 1, "nodeID": 94695 },
+        { "id": 103865, "rank": 1, "nodeID": 82713 },
+        { "id": 103869, "rank": 1, "nodeID": 82717 },
+        { "id": 117287, "rank": 1, "nodeID": 94684 },
+        { "id": 103819, "rank": 1, "nodeID": 82673 },
+        { "id": 103860, "rank": 1, "nodeID": 82708 },
+        { "id": 103861, "rank": 1, "nodeID": 82709 },
+        { "id": 103873, "rank": 1, "nodeID": 82721 },
+        { "id": 103838, "rank": 1, "nodeID": 82688 }
+      ]
+    },
+    "healthstoneUse": 2
+  }
+]

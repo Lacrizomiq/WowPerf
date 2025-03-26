@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import MiniSearchBar from "./MiniSearchBar";
 
 export default function Header() {
   return (
@@ -27,9 +26,7 @@ export default function Header() {
               Raids
             </Link>
           </li>
-          <li>
-            <MiniSearchBar />
-          </li>
+
           <li>
             <Link
               href="/signin"

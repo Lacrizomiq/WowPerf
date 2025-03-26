@@ -1,0 +1,22 @@
+ "https://localhost/api/blizzard/characters/silvermoon/ouimagatée?region=eu&namespace=profile-eu&locale=en_GB"
+
+  {
+    "name": "Ouimagatée",
+    "race": "Night Elf",
+    "class": "Priest",
+    "active_spec_name": "Discipline",
+    "active_spec_role": "Healer",
+    "tree_id": 795,
+    "spec_id": 256,
+    "gender": "Female",
+    "faction": "Alliance",
+    "achievement_points": 21800,
+    "honorable_kills": 0,
+    "avatar_url": "https://render.worldofwarcraft.com/eu/character/silvermoon/33/204820513-avatar.jpg",
+    "inset_avatar_url": "https://render.worldofwarcraft.com/eu/character/silvermoon/33/204820513-inset.jpg",
+    "main_raw_url": "https://render.worldofwarcraft.com/eu/character/silvermoon/33/204820513-main-raw.png",
+    "region": "eu",
+    "realm": "Silvermoon",
+    "profile_url": "https://worldofwarcraft.com/en-gb/character/eu/silvermoon/ouimagatée"
+  }
+

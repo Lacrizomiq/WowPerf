@@ -1,0 +1,622 @@
+=== RUN   TestWorkflowError
+    errors_test.go:17: Starting workflow error tests
+=== RUN   TestWorkflowError/Basic_error_without_retry
+    errors_test.go:56: Testing error with type: api
+    errors_test.go:57: Error message: API request failed
+    errors_test.go:60: Generated error string: api error: API request failed
+    errors_test.go:63: Error string format validated successfully
+=== RUN   TestWorkflowError/Error_with_retry_duration
+    errors_test.go:56: Testing error with type: rate_limit
+    errors_test.go:57: Error message: Rate limit exceeded
+    errors_test.go:60: Generated error string: rate_limit error: Rate limit exceeded (retry in 5m0s)
+    errors_test.go:63: Error string format validated successfully
+=== RUN   TestWorkflowError/Configuration_error
+    errors_test.go:56: Testing error with type: configuration
+    errors_test.go:57: Error message: Invalid config
+    errors_test.go:60: Generated error string: configuration error: Invalid config
+    errors_test.go:63: Error string format validated successfully
+--- PASS: TestWorkflowError (0.00s)
+    --- PASS: TestWorkflowError/Basic_error_without_retry (0.00s)
+    --- PASS: TestWorkflowError/Error_with_retry_duration (0.00s)
+    --- PASS: TestWorkflowError/Configuration_error (0.00s)
+=== RUN   TestNewRateLimitError
+    errors_test.go:74: Starting rate limit error creation tests
+=== RUN   TestNewRateLimitError/Standard_rate_limit
+    errors_test.go:100: Creating rate limit error with message: API rate limit exceeded
+    errors_test.go:101: Retry duration: 1m0s
+    errors_test.go:105: Validating error properties...
+    errors_test.go:112: Rate limit error validated successfully
+=== RUN   TestNewRateLimitError/Zero_retry_duration
+    errors_test.go:100: Creating rate limit error with message: Quota exceeded
+    errors_test.go:101: Retry duration: 0s
+    errors_test.go:105: Validating error properties...
+    errors_test.go:112: Rate limit error validated successfully
+=== RUN   TestNewRateLimitError/Long_retry_duration
+    errors_test.go:100: Creating rate limit error with message: Daily limit reached
+    errors_test.go:101: Retry duration: 24h0m0s
+    errors_test.go:105: Validating error properties...
+    errors_test.go:112: Rate limit error validated successfully
+--- PASS: TestNewRateLimitError (0.00s)
+    --- PASS: TestNewRateLimitError/Standard_rate_limit (0.00s)
+    --- PASS: TestNewRateLimitError/Zero_retry_duration (0.00s)
+    --- PASS: TestNewRateLimitError/Long_retry_duration (0.00s)
+=== RUN   TestIsRateLimitError
+    errors_test.go:123: Starting rate limit error identification tests
+=== RUN   TestIsRateLimitError/Nil_error
+    errors_test.go:160: Testing error: <nil>
+    errors_test.go:163: Is rate limit error: false
+    errors_test.go:166: Error identification validated successfully
+=== RUN   TestIsRateLimitError/Rate_limit_error
+    errors_test.go:160: Testing error: rate_limit error: Rate limit exceeded
+    errors_test.go:163: Is rate limit error: true
+    errors_test.go:166: Error identification validated successfully
+=== RUN   TestIsRateLimitError/Different_workflow_error
+    errors_test.go:160: Testing error: api error: API error
+    errors_test.go:163: Is rate limit error: false
+    errors_test.go:166: Error identification validated successfully
+=== RUN   TestIsRateLimitError/Standard_error
+    errors_test.go:160: Testing error: random error
+    errors_test.go:163: Is rate limit error: false
+    errors_test.go:166: Error identification validated successfully
+--- PASS: TestIsRateLimitError (0.00s)
+    --- PASS: TestIsRateLimitError/Nil_error (0.00s)
+    --- PASS: TestIsRateLimitError/Rate_limit_error (0.00s)
+    --- PASS: TestIsRateLimitError/Different_workflow_error (0.00s)
+    --- PASS: TestIsRateLimitError/Standard_error (0.00s)
+=== RUN   TestNewMetricsCollector
+    metrics_test.go:17: Starting metrics collector initialization test
+    metrics_test.go:22: Validating collector initialization...
+    metrics_test.go:26: Collector initialized at: 2025-03-22 16:33:58.217149 +0100 CET m=+0.001300167
+    metrics_test.go:27: Metrics collector initialization validated successfully
+--- PASS: TestNewMetricsCollector (0.00s)
+=== RUN   TestRecordDuration
+    metrics_test.go:36: Starting duration recording tests
+=== RUN   TestRecordDuration/Short_operation
+    metrics_test.go:64: Recording duration for operation: quick_task
+    metrics_test.go:65: Duration value: 100ms
+    metrics_test.go:75: Duration recorded with key: quick_task_duration
+    metrics_test.go:76: Duration recording validated successfully
+=== RUN   TestRecordDuration/Long_operation
+    metrics_test.go:64: Recording duration for operation: heavy_task
+    metrics_test.go:65: Duration value: 5s
+    metrics_test.go:75: Duration recorded with key: heavy_task_duration
+    metrics_test.go:76: Duration recording validated successfully
+=== RUN   TestRecordDuration/Zero_duration
+    metrics_test.go:64: Recording duration for operation: instant_task
+    metrics_test.go:65: Duration value: 0s
+    metrics_test.go:75: Duration recorded with key: instant_task_duration
+    metrics_test.go:76: Duration recording validated successfully
+--- PASS: TestRecordDuration (0.00s)
+    --- PASS: TestRecordDuration/Short_operation (0.00s)
+    --- PASS: TestRecordDuration/Long_operation (0.00s)
+    --- PASS: TestRecordDuration/Zero_duration (0.00s)
+=== RUN   TestRecordCount
+    metrics_test.go:87: Starting count recording tests
+=== RUN   TestRecordCount/Positive_count
+    metrics_test.go:115: Recording count for metric: processed_items
+    metrics_test.go:116: Count value: 42
+    metrics_test.go:125: Count recorded with key: processed_items
+    metrics_test.go:126: Count recording validated successfully
+=== RUN   TestRecordCount/Zero_count
+    metrics_test.go:115: Recording count for metric: errors
+    metrics_test.go:116: Count value: 0
+    metrics_test.go:125: Count recorded with key: errors
+    metrics_test.go:126: Count recording validated successfully
+=== RUN   TestRecordCount/Large_count
+    metrics_test.go:115: Recording count for metric: total_requests
+    metrics_test.go:116: Count value: 99999
+    metrics_test.go:125: Count recorded with key: total_requests
+    metrics_test.go:126: Count recording validated successfully
+--- PASS: TestRecordCount (0.00s)
+    --- PASS: TestRecordCount/Positive_count (0.00s)
+    --- PASS: TestRecordCount/Zero_count (0.00s)
+    --- PASS: TestRecordCount/Large_count (0.00s)
+=== RUN   TestGetMetrics
+    metrics_test.go:137: Starting metrics retrieval test
+    metrics_test.go:145: Recorded test metrics, waiting briefly before retrieval...
+    metrics_test.go:148: Retrieving all metrics
+    metrics_test.go:151: Validating retrieved metrics...
+    metrics_test.go:164: Retrieved 3 metrics
+    metrics_test.go:166: Metric - total_duration: 101.091417ms
+    metrics_test.go:166: Metric - operation1_duration: 1s
+    metrics_test.go:166: Metric - count1: 10
+    metrics_test.go:168: Metrics retrieval validated successfully
+--- PASS: TestGetMetrics (0.10s)
+=== RUN   TestGenerateWorkflowID
+    utils_test.go:18: Starting workflow ID generation tests
+=== RUN   TestGenerateWorkflowID/Valid_class_name
+    utils_test.go:44: Testing with class name: 'Priest'
+    utils_test.go:47: Generated workflow ID: warcraft-logs-Priest-workflow-2025-03-22
+    utils_test.go:50: Successfully validated workflow ID format
+=== RUN   TestGenerateWorkflowID/Empty_class_name
+    utils_test.go:44: Testing with class name: ''
+    utils_test.go:47: Generated workflow ID: warcraft-logs--workflow-2025-03-22
+    utils_test.go:50: Successfully validated workflow ID format
+=== RUN   TestGenerateWorkflowID/Class_name_with_special_characters
+    utils_test.go:44: Testing with class name: 'Death-Knight'
+    utils_test.go:47: Generated workflow ID: warcraft-logs-Death-Knight-workflow-2025-03-22
+    utils_test.go:50: Successfully validated workflow ID format
+--- PASS: TestGenerateWorkflowID (0.00s)
+    --- PASS: TestGenerateWorkflowID/Valid_class_name (0.00s)
+    --- PASS: TestGenerateWorkflowID/Empty_class_name (0.00s)
+    --- PASS: TestGenerateWorkflowID/Class_name_with_special_characters (0.00s)
+=== RUN   TestExtractClassFromWorkflowID
+    utils_test.go:63: Starting class name extraction tests
+=== RUN   TestExtractClassFromWorkflowID/Valid_workflow_ID_-_Simple_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-priest-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-priest-workflow-2025-02-19, parts=[warcraft logs priest workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped priest to Priest
+    utils_test.go:182: Extracted class name: 'Priest'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Valid_workflow_ID_-_Test_workflow
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-priest-test-2025-03-22'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-priest-test-2025-03-22, parts=[warcraft logs priest test 2025 03 22]
+DEBUG ExtractClassFromWorkflowID: mapped priest to Priest
+    utils_test.go:182: Extracted class name: 'Priest'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/DeathKnight_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-deathknight-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-deathknight-workflow-2025-02-19, parts=[warcraft logs deathknight workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped deathknight to DeathKnight
+    utils_test.go:182: Extracted class name: 'DeathKnight'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/DemonHunter_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-demonhunter-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-demonhunter-workflow-2025-02-19, parts=[warcraft logs demonhunter workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped demonhunter to DemonHunter
+    utils_test.go:182: Extracted class name: 'DemonHunter'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Mixed_case_class_name_-_PRIEST
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-PRIEST-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-PRIEST-workflow-2025-02-19, parts=[warcraft logs PRIEST workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped priest to Priest
+    utils_test.go:182: Extracted class name: 'Priest'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Mixed_case_class_name_-_pRiEsT
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-pRiEsT-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-pRiEsT-workflow-2025-02-19, parts=[warcraft logs pRiEsT workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped priest to Priest
+    utils_test.go:182: Extracted class name: 'Priest'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Mixed_case_compound_class_-_DeAtHkNiGhT
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-DeAtHkNiGhT-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-DeAtHkNiGhT-workflow-2025-02-19, parts=[warcraft logs DeAtHkNiGhT workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped deathknight to DeathKnight
+    utils_test.go:182: Extracted class name: 'DeathKnight'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Invalid_workflow_ID_format
+    utils_test.go:179: Testing workflow ID: 'invalid-workflow-id'
+DEBUG ExtractClassFromWorkflowID: workflowID=invalid-workflow-id, parts=[invalid workflow id]
+DEBUG ExtractClassFromWorkflowID: insufficient parts in workflowID, returning empty string
+    utils_test.go:182: Extracted class name: ''
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Empty_workflow_ID
+    utils_test.go:179: Testing workflow ID: ''
+DEBUG ExtractClassFromWorkflowID: workflowID=, parts=[]
+DEBUG ExtractClassFromWorkflowID: insufficient parts in workflowID, returning empty string
+    utils_test.go:182: Extracted class name: ''
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Class_with_hyphen_-_not_properly_handled_yet
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-Death-Knight-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-Death-Knight-workflow-2025-02-19, parts=[warcraft logs Death Knight workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: fallback capitalization Death to Death
+    utils_test.go:182: Extracted class name: 'Death'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Druid_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-druid-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-druid-workflow-2025-02-19, parts=[warcraft logs druid workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped druid to Druid
+    utils_test.go:182: Extracted class name: 'Druid'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Hunter_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-hunter-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-hunter-workflow-2025-02-19, parts=[warcraft logs hunter workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped hunter to Hunter
+    utils_test.go:182: Extracted class name: 'Hunter'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Mage_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-mage-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-mage-workflow-2025-02-19, parts=[warcraft logs mage workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped mage to Mage
+    utils_test.go:182: Extracted class name: 'Mage'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Monk_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-monk-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-monk-workflow-2025-02-19, parts=[warcraft logs monk workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped monk to Monk
+    utils_test.go:182: Extracted class name: 'Monk'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Paladin_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-paladin-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-paladin-workflow-2025-02-19, parts=[warcraft logs paladin workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped paladin to Paladin
+    utils_test.go:182: Extracted class name: 'Paladin'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Rogue_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-rogue-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-rogue-workflow-2025-02-19, parts=[warcraft logs rogue workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped rogue to Rogue
+    utils_test.go:182: Extracted class name: 'Rogue'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Shaman_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-shaman-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-shaman-workflow-2025-02-19, parts=[warcraft logs shaman workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped shaman to Shaman
+    utils_test.go:182: Extracted class name: 'Shaman'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Warlock_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-warlock-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-warlock-workflow-2025-02-19, parts=[warcraft logs warlock workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped warlock to Warlock
+    utils_test.go:182: Extracted class name: 'Warlock'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Warrior_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-warrior-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-warrior-workflow-2025-02-19, parts=[warcraft logs warrior workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped warrior to Warrior
+    utils_test.go:182: Extracted class name: 'Warrior'
+    utils_test.go:185: Extraction validation completed
+=== RUN   TestExtractClassFromWorkflowID/Evoker_class
+    utils_test.go:179: Testing workflow ID: 'warcraft-logs-evoker-workflow-2025-02-19'
+DEBUG ExtractClassFromWorkflowID: workflowID=warcraft-logs-evoker-workflow-2025-02-19, parts=[warcraft logs evoker workflow 2025 02 19]
+DEBUG ExtractClassFromWorkflowID: mapped evoker to Evoker
+    utils_test.go:182: Extracted class name: 'Evoker'
+    utils_test.go:185: Extraction validation completed
+--- PASS: TestExtractClassFromWorkflowID (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Valid_workflow_ID_-_Simple_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Valid_workflow_ID_-_Test_workflow (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/DeathKnight_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/DemonHunter_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Mixed_case_class_name_-_PRIEST (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Mixed_case_class_name_-_pRiEsT (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Mixed_case_compound_class_-_DeAtHkNiGhT (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Invalid_workflow_ID_format (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Empty_workflow_ID (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Class_with_hyphen_-_not_properly_handled_yet (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Druid_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Hunter_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Mage_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Monk_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Paladin_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Rogue_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Shaman_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Warlock_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Warrior_class (0.00s)
+    --- PASS: TestExtractClassFromWorkflowID/Evoker_class (0.00s)
+=== RUN   TestGenerateSpecKey
+    utils_test.go:196: Starting spec key generation tests
+=== RUN   TestGenerateSpecKey/Valid_spec
+    utils_test.go:239: Testing spec - Class: 'Priest', Spec: 'Shadow'
+    utils_test.go:242: Generated spec key: 'Priest-Shadow'
+    utils_test.go:245: Successfully validated spec key format
+=== RUN   TestGenerateSpecKey/Composite_class_name
+    utils_test.go:239: Testing spec - Class: 'DeathKnight', Spec: 'Blood'
+    utils_test.go:242: Generated spec key: 'DeathKnight-Blood'
+    utils_test.go:245: Successfully validated spec key format
+=== RUN   TestGenerateSpecKey/Empty_spec_name
+    utils_test.go:239: Testing spec - Class: 'Priest', Spec: ''
+    utils_test.go:242: Generated spec key: 'Priest-'
+    utils_test.go:245: Successfully validated spec key format
+=== RUN   TestGenerateSpecKey/Empty_class_name
+    utils_test.go:239: Testing spec - Class: '', Spec: 'Shadow'
+    utils_test.go:242: Generated spec key: '-Shadow'
+    utils_test.go:245: Successfully validated spec key format
+--- PASS: TestGenerateSpecKey (0.00s)
+    --- PASS: TestGenerateSpecKey/Valid_spec (0.00s)
+    --- PASS: TestGenerateSpecKey/Composite_class_name (0.00s)
+    --- PASS: TestGenerateSpecKey/Empty_spec_name (0.00s)
+    --- PASS: TestGenerateSpecKey/Empty_class_name (0.00s)
+=== RUN   TestFilterSpecsForClass
+    utils_test.go:259: Starting spec filtering tests
+    utils_test.go:280: Initialized test data with 13 specs across multiple classes
+=== RUN   TestFilterSpecsForClass/Filter_Priest_specs_-_exact_case
+    utils_test.go:357: Testing filtering for class: 'Priest'
+DEBUG FilterSpecsForClass: input className=Priest, total specs=13
+DEBUG FilterSpecsForClass: normalized className to Priest
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Shadow
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Holy
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Discipline
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'Priest'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='Priest', Spec='Shadow'
+    utils_test.go:368: Spec 2: Class='Priest', Spec='Holy'
+    utils_test.go:368: Spec 3: Class='Priest', Spec='Discipline'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_Priest_specs_-_lowercase
+    utils_test.go:357: Testing filtering for class: 'priest'
+DEBUG FilterSpecsForClass: input className=priest, total specs=13
+DEBUG FilterSpecsForClass: normalized className to Priest
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Shadow
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Holy
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Discipline
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'priest'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='Priest', Spec='Shadow'
+    utils_test.go:368: Spec 2: Class='Priest', Spec='Holy'
+    utils_test.go:368: Spec 3: Class='Priest', Spec='Discipline'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_Priest_specs_-_mixed_case
+    utils_test.go:357: Testing filtering for class: 'pRiEsT'
+DEBUG FilterSpecsForClass: input className=pRiEsT, total specs=13
+DEBUG FilterSpecsForClass: normalized className to Priest
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Shadow
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Holy
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: matched spec Priest-Discipline
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'pRiEsT'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='Priest', Spec='Shadow'
+    utils_test.go:368: Spec 2: Class='Priest', Spec='Holy'
+    utils_test.go:368: Spec 3: Class='Priest', Spec='Discipline'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_Mage_specs
+    utils_test.go:357: Testing filtering for class: 'Mage'
+DEBUG FilterSpecsForClass: input className=Mage, total specs=13
+DEBUG FilterSpecsForClass: normalized className to Mage
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: matched spec Mage-Frost
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: matched spec Mage-Fire
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: matched spec Mage-Arcane
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'Mage'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='Mage', Spec='Frost'
+    utils_test.go:368: Spec 2: Class='Mage', Spec='Fire'
+    utils_test.go:368: Spec 3: Class='Mage', Spec='Arcane'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_DeathKnight_specs_-_exact_case
+    utils_test.go:357: Testing filtering for class: 'DeathKnight'
+DEBUG FilterSpecsForClass: input className=DeathKnight, total specs=13
+DEBUG FilterSpecsForClass: normalized className to DeathKnight
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Blood
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Frost
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Unholy
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'DeathKnight'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='DeathKnight', Spec='Blood'
+    utils_test.go:368: Spec 2: Class='DeathKnight', Spec='Frost'
+    utils_test.go:368: Spec 3: Class='DeathKnight', Spec='Unholy'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_DeathKnight_specs_-_lowercase
+    utils_test.go:357: Testing filtering for class: 'deathknight'
+DEBUG FilterSpecsForClass: input className=deathknight, total specs=13
+DEBUG FilterSpecsForClass: normalized className to DeathKnight
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Blood
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Frost
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Unholy
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'deathknight'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='DeathKnight', Spec='Blood'
+    utils_test.go:368: Spec 2: Class='DeathKnight', Spec='Frost'
+    utils_test.go:368: Spec 3: Class='DeathKnight', Spec='Unholy'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_DeathKnight_specs_-_mixed_case
+    utils_test.go:357: Testing filtering for class: 'dEaThKnIgHt'
+DEBUG FilterSpecsForClass: input className=dEaThKnIgHt, total specs=13
+DEBUG FilterSpecsForClass: normalized className to DeathKnight
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Blood
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Frost
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: matched spec DeathKnight-Unholy
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 3 matching specs
+    utils_test.go:360: Found 3 specs for class 'dEaThKnIgHt'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='DeathKnight', Spec='Blood'
+    utils_test.go:368: Spec 2: Class='DeathKnight', Spec='Frost'
+    utils_test.go:368: Spec 3: Class='DeathKnight', Spec='Unholy'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_DemonHunter_specs
+    utils_test.go:357: Testing filtering for class: 'demonhunter'
+DEBUG FilterSpecsForClass: input className=demonhunter, total specs=13
+DEBUG FilterSpecsForClass: normalized className to DemonHunter
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: matched spec DemonHunter-Havoc
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: matched spec DemonHunter-Vengeance
+DEBUG FilterSpecsForClass: found 2 matching specs
+    utils_test.go:360: Found 2 specs for class 'demonhunter'
+    utils_test.go:366: Validating filtered specs...
+    utils_test.go:368: Spec 1: Class='DemonHunter', Spec='Havoc'
+    utils_test.go:368: Spec 2: Class='DemonHunter', Spec='Vengeance'
+    utils_test.go:372: All filtered specs validated successfully
+=== RUN   TestFilterSpecsForClass/Filter_non-existent_class
+    utils_test.go:357: Testing filtering for class: 'InvalidClass'
+DEBUG FilterSpecsForClass: input className=InvalidClass, total specs=13
+DEBUG FilterSpecsForClass: normalized className to InvalidClass
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 0 matching specs
+    utils_test.go:360: Found 0 specs for class 'InvalidClass'
+=== RUN   TestFilterSpecsForClass/Filter_with_empty_class_name
+    utils_test.go:357: Testing filtering for class: ''
+DEBUG FilterSpecsForClass: input className=, total specs=13
+DEBUG FilterSpecsForClass: normalized className to 
+DEBUG FilterSpecsForClass: checking spec[0] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[1] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[2] with class=Priest
+DEBUG FilterSpecsForClass: checking spec[3] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[4] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[5] with class=Mage
+DEBUG FilterSpecsForClass: checking spec[6] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[7] with class=Warrior
+DEBUG FilterSpecsForClass: checking spec[8] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[9] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[10] with class=DeathKnight
+DEBUG FilterSpecsForClass: checking spec[11] with class=DemonHunter
+DEBUG FilterSpecsForClass: checking spec[12] with class=DemonHunter
+DEBUG FilterSpecsForClass: found 0 matching specs
+    utils_test.go:360: Found 0 specs for class ''
+--- PASS: TestFilterSpecsForClass (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_Priest_specs_-_exact_case (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_Priest_specs_-_lowercase (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_Priest_specs_-_mixed_case (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_Mage_specs (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_DeathKnight_specs_-_exact_case (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_DeathKnight_specs_-_lowercase (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_DeathKnight_specs_-_mixed_case (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_DemonHunter_specs (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_non-existent_class (0.00s)
+    --- PASS: TestFilterSpecsForClass/Filter_with_empty_class_name (0.00s)
+=== RUN   TestValidateConfig
+    validation_test.go:18: Starting configuration validation tests
+=== RUN   TestValidateConfig/Valid_configuration
+    validation_test.go:78: Testing configuration: &{Rankings:{MaxRankingsPerSpec:100 UpdateInterval:0s Batch:{Size:0 RetryDelay:0s MaxAttempts:0}} Worker:{NumWorkers:3 RequestDelay:0s} Specs:[{ClassName:Priest SpecName:Shadow}] Dungeons:[{ID:1 EncounterID:0 Name:Test Dungeon Slug:}]}
+    validation_test.go:92: Expecting successful validation
+    validation_test.go:94: Configuration validated successfully
+=== RUN   TestValidateConfig/Nil_configuration
+    validation_test.go:78: Testing configuration: <nil>
+    validation_test.go:83: Expecting an error...
+    validation_test.go:87: Received expected error: configuration error: configuration cannot be nil
+=== RUN   TestValidateConfig/Invalid_max_rankings
+    validation_test.go:78: Testing configuration: &{Rankings:{MaxRankingsPerSpec:0 UpdateInterval:0s Batch:{Size:0 RetryDelay:0s MaxAttempts:0}} Worker:{NumWorkers:3 RequestDelay:0s} Specs:[{ClassName:Priest SpecName:}] Dungeons:[{ID:1 EncounterID:0 Name: Slug:}]}
+    validation_test.go:83: Expecting an error...
+    validation_test.go:87: Received expected error: configuration error: max rankings per spec must be greater than 0
+=== RUN   TestValidateConfig/No_specs_configured
+    validation_test.go:78: Testing configuration: &{Rankings:{MaxRankingsPerSpec:100 UpdateInterval:0s Batch:{Size:0 RetryDelay:0s MaxAttempts:0}} Worker:{NumWorkers:3 RequestDelay:0s} Specs:[] Dungeons:[{ID:1 EncounterID:0 Name: Slug:}]}
+    validation_test.go:83: Expecting an error...
+    validation_test.go:87: Received expected error: configuration error: at least one spec must be configured
+--- PASS: TestValidateConfig (0.00s)
+    --- PASS: TestValidateConfig/Valid_configuration (0.00s)
+    --- PASS: TestValidateConfig/Nil_configuration (0.00s)
+    --- PASS: TestValidateConfig/Invalid_max_rankings (0.00s)
+    --- PASS: TestValidateConfig/No_specs_configured (0.00s)
+=== RUN   TestValidateSpec
+    validation_test.go:106: Starting spec validation tests
+=== RUN   TestValidateSpec/Valid_spec
+    validation_test.go:153: Testing spec - Class: 'Priest', Spec: 'Shadow'
+    validation_test.go:167: Expecting successful validation
+    validation_test.go:169: Spec validated successfully
+=== RUN   TestValidateSpec/Empty_class_name
+    validation_test.go:153: Testing spec - Class: '', Spec: 'Shadow'
+    validation_test.go:158: Expecting an error...
+    validation_test.go:162: Received expected error: configuration error: class name cannot be empty
+=== RUN   TestValidateSpec/Empty_spec_name
+    validation_test.go:153: Testing spec - Class: 'Priest', Spec: ''
+    validation_test.go:158: Expecting an error...
+    validation_test.go:162: Received expected error: configuration error: spec name cannot be empty
+=== RUN   TestValidateSpec/Both_names_empty
+    validation_test.go:153: Testing spec - Class: '', Spec: ''
+    validation_test.go:158: Expecting an error...
+    validation_test.go:162: Received expected error: configuration error: class name cannot be empty
+--- PASS: TestValidateSpec (0.00s)
+    --- PASS: TestValidateSpec/Valid_spec (0.00s)
+    --- PASS: TestValidateSpec/Empty_class_name (0.00s)
+    --- PASS: TestValidateSpec/Empty_spec_name (0.00s)
+    --- PASS: TestValidateSpec/Both_names_empty (0.00s)
+PASS
+ok  	wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/common	0.341s

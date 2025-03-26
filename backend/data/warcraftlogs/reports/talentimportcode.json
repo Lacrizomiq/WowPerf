@@ -1,0 +1,55 @@
+"
+query {
+  reportData {
+    report(code: "g9Lhy8JmkV1xQ3Gj") {
+      fights(fightIDs: [26]) {
+        id
+        name
+        encounterID
+        keystoneLevel
+        keystoneTime
+        friendlyPlayers
+        
+        player1Talents: talentImportCode(actorID: 4)
+        player2Talents: talentImportCode(actorID: 5)
+        player3Talents: talentImportCode(actorID: 6)
+        player4Talents: talentImportCode(actorID: 3)
+        player5Talents: talentImportCode(actorID: 7)
+      }
+    }
+  }
+}
+"
+
+// This request is used to get the talent import code for a report
+// It returns the talent import code for each player in the report with their friendly players ID
+
+{
+	"data": {
+		"reportData": {
+			"report": {
+				"fights": [
+					{
+						"id": 26,
+						"name": "Ara-Kara, City of Echoes",
+						"encounterID": 12660,
+						"keystoneLevel": 18,
+						"keystoneTime": 1786004,
+						"friendlyPlayers": [
+							4,
+							5,
+							6,
+							3,
+							7
+						],
+						"player1Talents": "CIEAAAAAAAAAAAAAAAAAAAAAAsZMMzyYZmZMzMLbzMzMzsNmxAAAMAAAAAAA0WmZWMMzwYG2CAwADAw2AAAAAmZW2WaZmxCDGAGMzGG",
+						"player2Talents": "CsPAAAAAAAAAAAAAAAAAAAAAAMAMzYMjxMDzYmZmZGGmpZGDjBMzYMjZmZmZmZZmBAAAAAAAAAAAYssNwAWALDTgxCmZMmBA",
+						"player3Talents": "CEcBAAAAAAAAAAAAAAAAAAAAAwMLzsNzMzYZgZWmxYYmNAAAAAAAAMzgZYMegaYmZAAAAgZmZbMzsNmZMM2MGsALjhxyAYGEbYmB",
+						"player4Talents": "CcQAAAAAAAAAAAAAAAAAAAAAAMzMDMjZYmZmhZZmZZZMDAAAAAAAAAgNA2MjhNYBmhhGsAgZZyAzyiZMGjxMbGLzMTzCLDjZGAgZMA",
+						"player5Talents": "CAQAAAAAAAAAAAAAAAAAAAAAAAA2mlZGDWGjZmxMbmtZmZmhBAAAAAAAAAAAzysMbDmZGjZhhBjhZZ5BMTDxyAmZAgAMbz2GYsZD"
+					}
+				]
+			}
+		}
+	}
+}

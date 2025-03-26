@@ -22,8 +22,5 @@ In the future, the goals is to includes other data sources such as WarcraftLogs 
 - Docker
 - Docker Compose
 - OAuth 2.0
-- NextAuth.js
 
-## Contributing
-
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+.

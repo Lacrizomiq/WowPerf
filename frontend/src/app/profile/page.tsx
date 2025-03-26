@@ -1,5 +1,9 @@
-import Profile from "@/components/UserProfile/Profile";
+import Profile from "@/components/UserProfile/NewUI/Profile";
 
 export default function ProfilePage() {
-  return <Profile />;
+  return (
+    <div className="bg-black min-h-screen">
+      <Profile />
+    </div>
+  );
 }

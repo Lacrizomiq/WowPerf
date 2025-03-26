@@ -7,6 +7,12 @@ import {
   Role,
   WowClass,
 } from "../types/warcraftlogs/globalLeaderboard";
+import {
+  SpecAverageGlobalScore,
+  BestTenPlayerPerSpec,
+  MaxKeyLevelsPerSpecAndDungeon,
+  DungeonMedia,
+} from "@/types/warcraftlogs/globalLeaderboardAnalysis";
 import { DungeonLeaderboardResponse } from "../types/warcraftlogs/dungeonRankings";
 import { MythicPlusPlayerRankings } from "@/types/warcraftlogs/character/mythicplusPlayerRankings";
 import { RaidRankingsResponse } from "@/types/warcraftlogs/character/raidPlayerRankings";
@@ -138,6 +144,60 @@ export const getPlayerRaidRankings = async (
     return data;
   } catch (error) {
     console.error("Error fetching player raid rankings:", error);
+    throw error;
+  }
+};
+
+// getSpecAverageGlobalScore get the average global score for a spec
+export const getSpecAverageGlobalScore = async () => {
+  try {
+    const { data } = await api.get<SpecAverageGlobalScore[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/avg-scores"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the average global score for a spec");
+    throw error;
+  }
+};
+
+// getBestTenPlayerPerSpec get the average global score for a spec
+export const getBestTenPlayerPerSpec = async () => {
+  try {
+    const { data } = await api.get<BestTenPlayerPerSpec[]>(
+      "/warcraftlogs/mythicplus/analysis/players/top-specs"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the top 10 best players for a spec");
+    throw error;
+  }
+};
+
+// getMaxKeyLevelPerSpecAndDungeon get the max level key for a spec for each dungeon
+export const getMaxKeyLevelPerSpecAndDungeon = async () => {
+  try {
+    const { data } = await api.get<MaxKeyLevelsPerSpecAndDungeon[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/dungeons/max-levels-key"
+    );
+    return data;
+  } catch (error) {
+    console.error(
+      "Error fetching the max level key for a spec for each dungeon"
+    );
+    throw error;
+  }
+};
+
+// getDungeonMedia get the dungeon media
+export const getDungeonMedia = async () => {
+  try {
+    const { data } = await api.get<DungeonMedia[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/dungeons/media"
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching the dungeons media");
     throw error;
   }
 };

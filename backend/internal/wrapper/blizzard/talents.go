@@ -176,7 +176,6 @@ func processTalents(loadoutMap map[string]interface{}, key string, selected map[
 				SpellName:       spellName,
 				Description:     description,
 			}
-			log.Printf("Added selected talent: id=%d, rank=%d, selectedEntryID=%d, spellID=%d, spellName=%s", int(id), int(rank), selectedEntryID, spellID, spellName)
 		}
 	}
 }
@@ -348,7 +347,6 @@ func filterTalentsByType(talents []profile.TalentNode, nodeType string) []profil
 	for _, talent := range talents {
 		if talent.NodeType == nodeType {
 			filtered = append(filtered, talent)
-			log.Printf("Filtered talent: NodeID=%d, Name=%s, Type=%s, Rank=%d", talent.NodeID, talent.Name, talent.NodeType, talent.Rank)
 		}
 	}
 	return filtered
@@ -366,7 +364,6 @@ func getTalentTreeFromDB(db *gorm.DB, treeID, specID int) (*talents.TalentTree, 
 		return nil, fmt.Errorf("failed to get talent tree: %w", err)
 	}
 
-	log.Printf("Number of SubTreeNodes: %d", len(talentTree.SubTreeNodes))
 	for _, node := range talentTree.SubTreeNodes {
 		log.Printf("SubTreeNode %d: %s", node.SubTreeNodeID, node.Name)
 	}
@@ -431,8 +428,6 @@ func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB, specID 
 		return []profile.SubTreeNode{}
 	}
 
-	log.Printf("Fetching SubTreeNode for specID: %d, talentTreeID: %d, subTreeID: %f", specID, talentTreeID, subTreeID)
-
 	var subTreeNode talents.SubTreeNode
 	err := db.Where("spec_id = ? AND talent_tree_id = ?", specID, talentTreeID).First(&subTreeNode).Error
 	if err != nil {
@@ -453,10 +448,7 @@ func getSelectedHeroTalentTree(data map[string]interface{}, db *gorm.DB, specID 
 		return []profile.SubTreeNode{}
 	}
 
-	log.Printf("Found SubTreeNode: %+v", subTreeNode)
-
 	transformed := transformSubTreeNode(subTreeNode, subTreeEntries)
-	log.Printf("Transformed SubTreeNode: %+v", transformed)
 
 	return []profile.SubTreeNode{transformed}
 }
@@ -507,12 +499,10 @@ func extractSelectedHeroTalentTree(data map[string]interface{}) map[string]inter
 				continue
 			}
 
-			log.Printf("Found selected hero talent tree: %+v", selectedTree)
 			return selectedTree
 		}
 	}
 
-	log.Println("No active loadout or selected hero talent tree found")
 	return nil
 }
 
