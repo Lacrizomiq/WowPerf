@@ -12,6 +12,17 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+/*
+	BuildsStatisticsRepository handles all database operations for builds statistics.
+
+	Methods:
+	- DeleteBuildStatistics: Deletes build statistics for a class and spec.
+	- GetBuildStatistics: Retrieves build statistics from the database based on filter criteria.
+	- StoreManyBuildStatistics: Persists multiple build statistics to the database.
+	- CountBuildStatistics: Returns the total count of build statistics in the database.
+
+*/
+
 // BuildsStatisticsRepository handles all database operations for builds statistics.
 type BuildsStatisticsRepository struct {
 	db *gorm.DB
