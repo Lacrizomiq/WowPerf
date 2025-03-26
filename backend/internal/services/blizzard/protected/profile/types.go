@@ -1,4 +1,4 @@
-package character
+package protectedProfile
 
 // CharacterSelection represent the selection of a character by the user
 type CharacterSelection struct {

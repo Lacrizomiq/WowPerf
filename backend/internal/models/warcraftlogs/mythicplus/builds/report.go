@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Report represents a report from Warcraft Logs
 type Report struct {
 	// primary key and metadata
 	Code        string `gorm:"primaryKey;type:varchar(255)"`

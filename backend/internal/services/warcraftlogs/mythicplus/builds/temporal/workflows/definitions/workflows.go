@@ -15,14 +15,15 @@ import (
 */
 
 // RankingsWorkflow defines the interface for rankings synchronization workflow
-type RankingsWorkflow interface {
+/* type RankingsWorkflow interface {
 	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
 }
+*/
 
 // ProcessBuildBatchWorkflow defines the interface for build batch processing workflow
-type ProcessBuildBatchWorkflow interface {
+/* type ProcessBuildBatchWorkflow interface {
 	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
-}
+} */
 
 // SyncWorkflow defines the interface for the main synchronization workflow
 type SyncWorkflow interface {

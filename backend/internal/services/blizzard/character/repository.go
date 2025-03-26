@@ -2,34 +2,48 @@ package character
 
 import (
 	"fmt"
+	"time"
 	"wowperf/internal/models"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
+// CharacterRepository handles database operations for UserCharacter
 type CharacterRepository struct {
 	db *gorm.DB
 }
 
-func NewCharacterRepository(db *gorm.DB) *CharacterRepository {
+// NewCharacterRepository creates a new character repository
+// Returns a CharacterRepositoryInterface to be used by the CharacterService
+// This allows for mocking the repository in tests and dependency injection
+func NewCharacterRepository(db *gorm.DB) CharacterRepositoryInterface {
 	return &CharacterRepository{db}
 }
 
-// CreateCharacter create a new character in the database
+// CreateCharacter creates a new character in the database
 func (r *CharacterRepository) CreateCharacter(character *models.UserCharacter) error {
-	// Use clause OnConflit to avoid duplicates
+	// Use clause OnConflict to avoid duplicates
 	result := r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "character_id"}, {Name: "realm"}, {Name: "region"}},
-		DoUpdates: clause.AssignmentColumns([]string{"name", "class", "race", "level", "faction", "is_displayed"}),
+		DoUpdates: clause.AssignmentColumns([]string{"name", "class", "race", "gender", "level", "faction", "is_displayed"}),
 	}).Create(character)
 
 	return result.Error
 }
 
-// SetFavoriteCharacter define a character as favorite
-func (r *CharacterRepository) SetFavoriteCharacter(userID uint, characterID uint) error {
-	return r.db.Model(&models.User{}).Where("id = ?", userID).Update("favorite_character_id", characterID).Error
+// CreateOrUpdateCharacter creates or updates a character with all fields
+func (r *CharacterRepository) CreateOrUpdateCharacter(character *models.UserCharacter) error {
+	// Set last update timestamp
+	character.LastAPIUpdate = time.Now()
+
+	// Use clause OnConflict to upsert the character
+	result := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "character_id"}, {Name: "realm"}, {Name: "region"}},
+		UpdateAll: true,
+	}).Create(character)
+
+	return result.Error
 }
 
 // GetCharacterByID retrieves a character by its ID
@@ -62,12 +76,40 @@ func (r *CharacterRepository) GetCharacterByGameID(userID uint, characterID int6
 
 // UpdateCharacter updates an existing character in the database
 func (r *CharacterRepository) UpdateCharacter(character *models.UserCharacter) error {
+	character.LastAPIUpdate = time.Now()
 	return r.db.Save(character).Error
+}
+
+// UpdateCharacterSummary updates only the summary fields of a character
+func (r *CharacterRepository) UpdateCharacterSummary(character *models.UserCharacter) error {
+	character.LastAPIUpdate = time.Now()
+	return r.db.Model(character).Updates(map[string]interface{}{
+		"name":               character.Name,
+		"race":               character.Race,
+		"class":              character.Class,
+		"gender":             character.Gender,
+		"faction":            character.Faction,
+		"active_spec_name":   character.ActiveSpecName,
+		"active_spec_id":     character.ActiveSpecID,
+		"active_spec_role":   character.ActiveSpecRole,
+		"achievement_points": character.AchievementPoints,
+		"honorable_kills":    character.HonorableKills,
+		"avatar_url":         character.AvatarURL,
+		"inset_avatar_url":   character.InsetAvatarURL,
+		"main_raw_url":       character.MainRawURL,
+		"profile_url":        character.ProfileURL,
+		"last_api_update":    character.LastAPIUpdate,
+	}).Error
 }
 
 // DeleteCharacter removes a character from the database
 func (r *CharacterRepository) DeleteCharacter(characterID uint) error {
 	return r.db.Delete(&models.UserCharacter{}, characterID).Error
+}
+
+// SetFavoriteCharacter defines a character as the user's favorite
+func (r *CharacterRepository) SetFavoriteCharacter(userID uint, characterID uint) error {
+	return r.db.Model(&models.User{}).Where("id = ?", userID).Update("favorite_character_id", characterID).Error
 }
 
 // GetFavoriteCharacter gets the user's favorite character

@@ -17,15 +17,14 @@ import (
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
+	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
 	"gorm.io/gorm"
-)
-
-const (
-	defaultNamespace = "default"
 )
 
 // WorkerManager handles the worker for the single task queue
@@ -97,7 +96,7 @@ func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsCl
 
 	temporalClient, err := client.Dial(client.Options{
 		HostPort:  temporalAddress,
-		Namespace: defaultNamespace,
+		Namespace: models.DefaultNamespace,
 	})
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
@@ -132,8 +131,11 @@ func initializeActivities(
 
 func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
 	// Register workflows
-	w.RegisterWorkflow(workflows.SyncWorkflow)
-	w.RegisterWorkflow(workflows.ProcessBuildBatch)
+	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
+
+	w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.SyncWorkflowName,
+	})
 
 	// Register activities
 	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)

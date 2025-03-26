@@ -59,7 +59,7 @@ func NewService(db *gorm.DB, redisClient *redis.Client) (*Service, error) {
 	}
 
 	protectedClient := NewProtectedClient(os.Getenv("BLIZZARD_REGION"), battleNetAuth)
-	protectedProfileService := protectedProfile.NewProtectedProfileService(protectedClient)
+	protectedProfileService := protectedProfile.NewProtectedProfileService(protectedClient, db)
 	return &Service{
 		Client:           client,
 		ProtectedClient:  protectedClient,

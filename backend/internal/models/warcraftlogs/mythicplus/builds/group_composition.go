@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// GroupComposition represents the composition of a group of players in a specific dungeon and encounter
 type GroupComposition struct {
 	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time
