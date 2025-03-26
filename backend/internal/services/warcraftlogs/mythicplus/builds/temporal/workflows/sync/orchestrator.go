@@ -1,12 +1,12 @@
 package warcraftlogsBuildsTemporalWorkflowsSync
 
 import (
-	"go.temporal.io/sdk/workflow"
-
 	common "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/common"
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 	state "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/state"
+
+	"go.temporal.io/sdk/workflow"
 )
 
 // Orchestrator handles the coordination and phase tracking
@@ -21,12 +21,16 @@ func NewOrchestrator() *Orchestrator {
 	}
 }
 
-// handleWorkflowError processes workflow errors and determines next steps
-func handleWorkflowError(ctx workflow.Context, err error, state *state.WorkflowState) (*models.WorkflowResult, error) {
+// Todo : Use this function to handle workflow errors instead of coding it in each part of the workflow sync
+func handleWorkflowError(ctx workflow.Context, err error, state *state.WorkflowState, stateManager *state.Manager) (*models.WorkflowResult, error) {
+	logger := workflow.GetLogger(ctx) // Get logger from context
+
 	if common.IsRateLimitError(err) {
-		return nil, workflow.NewContinueAsNewError(ctx,
-			definitions.SyncWorkflowName, // Utilisation de la constante de definitions
-			state.PartialResults)
+		// Save state and continue as new if we hit rate limits
+		if saveErr := stateManager.SaveCheckpoint(ctx); saveErr != nil {
+			logger.Error("Failed to save checkpoint", "error", saveErr)
+		}
+		return nil, workflow.NewContinueAsNewError(ctx, definitions.SyncWorkflowName, state.PartialResults)
 	}
 	return nil, err
 }

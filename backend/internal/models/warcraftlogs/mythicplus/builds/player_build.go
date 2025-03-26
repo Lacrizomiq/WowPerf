@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// PlayerBuild represents a player's build for a specific dungeon and encounter
 type PlayerBuild struct {
 	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time

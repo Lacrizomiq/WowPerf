@@ -171,8 +171,11 @@ const PerformanceStatistics: React.FC = () => {
       <p className="text-gray-400">
         Showing average global scores for the very best players of each spec.
       </p>
-      <p className="text-gray-400 mb-8">
+      <p className="text-gray-400">
         Data is based on high-level Mythic+ runs from the current season.
+      </p>
+      <p className="text-gray-400 mb-8">
+        Note : Chinese players are not included in the data.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">

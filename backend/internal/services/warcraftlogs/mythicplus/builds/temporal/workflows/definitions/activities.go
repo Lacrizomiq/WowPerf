@@ -19,28 +19,32 @@ import (
 // Activity name constants - matching exactly with the activity methods
 const (
 	// Rankings activities
-	FetchRankingsActivity     = "FetchAndStore"
-	GetStoredRankingsActivity = "GetStoredRankings"
+	FetchRankingsActivity     = "FetchAndStore"     // Fetch and store rankings
+	GetStoredRankingsActivity = "GetStoredRankings" // Get stored rankings
 
 	// Reports activities
-	ProcessReportsActivity      = "ProcessReports"
-	GetProcessedReportsActivity = "GetProcessedReports"
-	GetReportsBatchActivity     = "GetReportsBatch"
-	CountAllReportsActivity     = "CountAllReports"
+	ProcessReportsActivity  = "ProcessReports"  // Process reports
+	GetReportsBatchActivity = "GetReportsBatch" // Get reports batch
+	CountAllReportsActivity = "CountAllReports" // Count all reports
 
 	// Player builds activities
-	ProcessBuildsActivity     = "ProcessAllBuilds"
-	CountPlayerBuildsActivity = "CountPlayerBuilds"
+	ProcessBuildsActivity     = "ProcessAllBuilds"  // Process all builds
+	CountPlayerBuildsActivity = "CountPlayerBuilds" // Count player builds
 
 	// Rate limit activities
-	ReserveRateLimitPointsActivity = "ReservePoints"
-	ReleaseRateLimitPointsActivity = "ReleasePoints"
-	CheckRemainingPointsActivity   = "CheckRemainingPoints"
+	ReserveRateLimitPointsActivity = "ReservePoints"        // Reserve rate limit points
+	ReleaseRateLimitPointsActivity = "ReleasePoints"        // Release rate limit points
+	CheckRemainingPointsActivity   = "CheckRemainingPoints" // Check remaining points
 
 	// Sub-workflow names
-	ProcessBuildBatchWorkflowName = "ProcessBuildBatch"
-	SyncWorkflowName              = "SyncWorkflow"
+	ProcessBuildBatchWorkflowName = "ProcessBuildBatch" // Process build batch
+	SyncWorkflowName              = "SyncWorkflow"      // Sync workflow
 )
+
+/*
+	Those interfaces are used to define the activities that can be used in the workflow.
+	They are not used in the workflow, but they are used to define the activities that can be used in the workflow.
+*/
 
 // RankingsActivity defines the interface for rankings-related activities
 type RankingsActivity interface {

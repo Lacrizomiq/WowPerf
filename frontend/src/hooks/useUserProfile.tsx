@@ -14,7 +14,7 @@ import { useAuth } from "@/providers/AuthContext";
 import { useRouter } from "next/navigation";
 import { csrfService } from "@/libs/csrfService";
 
-// Types améliorés pour les mutations
+// Improved types for mutations
 interface MutationState {
   isError: boolean;
   error: Error | null;

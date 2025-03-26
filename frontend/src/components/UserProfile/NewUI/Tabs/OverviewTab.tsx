@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { WoWProfile } from "../AccountProfile";
 import { UserProfile } from "@/libs/userService";
-
+import FavoriteCharacterSection from "../FavoriteCharacterSection";
 interface OverviewTabProps {
   profile: UserProfile;
   linkStatus: { linked: boolean; battleTag?: string } | null;
@@ -70,6 +70,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </Card>
 
+      {/* Favorite character */}
       <Card className="bg-[#131e33] border-gray-800 p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
@@ -87,7 +88,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             >
               <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            Your Characters
+            Your favorite character
           </h2>
           <button
             className="text-blue-500 flex items-center gap-1 hover:underline"
@@ -111,7 +112,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           </button>
         </div>
 
-        <WoWProfile limit={1} />
+        <FavoriteCharacterSection />
       </Card>
 
       <Card className="bg-[#131e33] border-gray-800 p-6">

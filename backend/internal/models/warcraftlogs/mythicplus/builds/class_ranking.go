@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ClassRanking represents the ranking of a specific class in a specific spec
 type ClassRanking struct {
 	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time

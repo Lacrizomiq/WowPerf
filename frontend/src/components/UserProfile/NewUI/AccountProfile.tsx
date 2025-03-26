@@ -1,132 +1,44 @@
 // AccountProfile.tsx (WoWProfile)
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
-import { useWoWProfile } from "@/hooks/useWowProtectedAccount";
+import { useWoWCharacters } from "@/hooks/useWowProtectedAccount";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { WoWError, WoWErrorCode } from "@/libs/wowProtectedAccountService";
-import { toast } from "react-hot-toast";
-import CharacterCard from "./CharacterCard";
+import { WoWError, WoWErrorCode } from "@/types/userCharacter/userCharacter";
+import CharacterCardItem from "./CharacterCardItem";
 import Image from "next/image";
-
-// Define a type for the character with M+ score
-interface CharacterWithScore {
-  name: string;
-  playable_class: { name: string; id: number };
-  level: number;
-  realm: { name: string; slug: string };
-  mPlusScore?: number;
-  // Add any other properties from your character object
-}
 
 export const WoWProfile: React.FC<{
   showTooltips?: boolean;
   limit?: number;
 }> = ({ showTooltips = false, limit }) => {
+  // Get Battle.net link status
   const { linkStatus, initiateLink } = useBattleNetLink();
-  const { wowProfile, isLoading, error, refetch } = useWoWProfile();
-  // Properly type the state variable
-  const [sortedCharacters, setSortedCharacters] = useState<
-    CharacterWithScore[]
-  >([]);
-  const [isCharactersLoading, setIsCharactersLoading] = useState(true);
 
+  // Use the WoWCharacters hook to access locally stored characters
+  // This replaces direct Blizzard API calls with cached data from our database
+  const {
+    userCharacters,
+    isLoadingUserCharacters,
+    wowProfile,
+    syncCharacters,
+    userCharactersError,
+  } = useWoWCharacters();
+
+  // Handle unauthorized errors by initiating Battle.net link
   useEffect(() => {
-    if (error instanceof WoWError && error.code === WoWErrorCode.UNAUTHORIZED) {
+    if (
+      userCharactersError instanceof WoWError &&
+      userCharactersError.code === WoWErrorCode.UNAUTHORIZED
+    ) {
       initiateLink();
     }
-  }, [error, initiateLink]);
+  }, [userCharactersError, initiateLink]);
 
-  // New effect to handle character sorting
-  // New approach in the useEffect
-  useEffect(() => {
-    // First set the characters from the profile without fetching scores
-    if (wowProfile && wowProfile.wow_accounts) {
-      const characters = wowProfile.wow_accounts.flatMap(
-        (account) => account.characters
-      ) as CharacterWithScore[];
-
-      // Initially set characters without sorting
-      setSortedCharacters(characters);
-
-      // Then fetch scores and update
-      const fetchAllScores = async () => {
-        setIsCharactersLoading(true);
-
-        try {
-          // Create a map to store scores by character name
-          const scoreMap = new Map();
-
-          // Fetch scores for each character
-          for (const character of characters) {
-            const safeRegion = wowProfile.region || "eu";
-            const profileNamespace = `profile-${safeRegion}`;
-
-            try {
-              const response = await fetch(
-                `/api/blizzard/character/${safeRegion}/${
-                  character.realm.slug
-                }/${character.name.toLowerCase()}/mythic-plus-best-runs?namespace=${profileNamespace}&locale=en_GB&season=13`
-              );
-
-              if (response.ok) {
-                const data = await response.json();
-                const score = data?.OverallMythicRating || 0;
-                scoreMap.set(character.name, score);
-                console.log(`Fetched score for ${character.name}: ${score}`);
-              } else {
-                console.log(
-                  `Error fetching score for ${character.name}: ${response.status}`
-                );
-                scoreMap.set(character.name, 0);
-              }
-            } catch (error) {
-              console.error(`Error for ${character.name}:`, error);
-              scoreMap.set(character.name, 0);
-            }
-          }
-
-          // Now update all characters with their scores
-          const charactersWithScores = characters.map((character) => ({
-            ...character,
-            mPlusScore: scoreMap.get(character.name) || 0,
-          }));
-
-          // Log before sorting
-          console.log(
-            "Before sorting:",
-            charactersWithScores.map((c) => `${c.name}: ${c.mPlusScore}`)
-          );
-
-          // Sort characters by M+ score (highest first)
-          const sortedChars = [...charactersWithScores].sort((a, b) => {
-            const scoreA = Number(a.mPlusScore) || 0;
-            const scoreB = Number(b.mPlusScore) || 0;
-            return scoreB - scoreA;
-          });
-
-          // Log after sorting
-          console.log(
-            "After sorting:",
-            sortedChars.map((c) => `${c.name}: ${c.mPlusScore}`)
-          );
-
-          // Update state with sorted characters
-          setSortedCharacters(sortedChars);
-        } catch (error) {
-          console.error("Error in score fetching:", error);
-        } finally {
-          setIsCharactersLoading(false);
-        }
-      };
-
-      fetchAllScores();
-    }
-  }, [wowProfile]);
-
-  if (isLoading || isCharactersLoading) {
+  // Loading state - display spinner while characters are loading
+  if (isLoadingUserCharacters) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -134,6 +46,7 @@ export const WoWProfile: React.FC<{
     );
   }
 
+  // If not linked to Battle.net, show connection card
   if (!linkStatus?.linked) {
     return (
       <Card className="bg-[#131e33] border-gray-800">
@@ -179,39 +92,62 @@ export const WoWProfile: React.FC<{
     );
   }
 
-  // Log the final list of characters being displayed
-  console.log(
-    "Final display characters with scores:",
-    sortedCharacters.map((c) => ({
-      name: c.name,
-      score: c.mPlusScore,
-    }))
-  );
+  // Use userCharacters directly instead of fetching from Blizzard API
+  // These characters are already stored in our database from previous syncs
+  let displayCharacters = userCharacters || [];
+
+  // If no characters are found, prompt for synchronization
+  if (displayCharacters.length === 0) {
+    return (
+      <Card className="bg-[#131e33] border-gray-800">
+        <CardHeader>
+          <CardTitle>No Characters Found</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8">
+            <p className="text-gray-400 text-center mb-6">
+              No characters found. Synchronize your Battle.net account to see
+              your characters.
+            </p>
+            <Button
+              onClick={() => syncCharacters()}
+              className="flex items-center gap-2"
+            >
+              Synchronize Characters
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Limit number of characters if requested (for Overview tab)
-  let displayCharacters = sortedCharacters;
   if (limit && displayCharacters.length > limit) {
     displayCharacters = displayCharacters.slice(0, limit);
   }
 
+  // Render character grid
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {displayCharacters.length > 0 ? (
-        displayCharacters.map((character, index) => (
-          <CharacterCard
-            key={`${character.name}-${index}`}
-            character={character}
-            region={wowProfile?.region}
-            showTooltip={showTooltips}
-            isMainCard={limit === 1}
-            mythicPlusScore={character.mPlusScore} // Pass M+ score to avoid refetching
-          />
-        ))
-      ) : (
-        <div className="col-span-full text-center py-8 text-gray-400">
-          <p>No characters found for your account.</p>
-        </div>
-      )}
+      {displayCharacters.map((character, index) => (
+        <CharacterCardItem
+          key={`${character.name}-${index}`}
+          character={character}
+          region={wowProfile?.region || character.region || "eu"}
+          onToggleDisplay={(display) => {
+            /* Not used in this view */
+          }}
+          onSetFavorite={() => {
+            /* Not used in this view */
+          }}
+          isTogglingDisplay={false}
+          isSettingFavorite={false}
+          // We can directly use the character's mythic_plus_rating from our database
+          // No need to fetch it from Blizzard API again
+        />
+      ))}
     </div>
   );
 };
+
+export default WoWProfile;

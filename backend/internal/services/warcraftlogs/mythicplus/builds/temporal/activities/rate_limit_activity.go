@@ -26,10 +26,11 @@ func NewRateLimitActivity(client *warcraftlogs.WarcraftLogsClientService) *RateL
 func (a *RateLimitActivity) CheckRemainingPoints(ctx context.Context, _ workflows.WorkflowParams) (float64, error) {
 	logger := activity.GetLogger(ctx)
 
-	// Use directly the data from the rate limiter struct
-	info := a.client.GetRateLimiter().GetRateLimitInfo()
+	// Trigger an update if necessary
+	limiter := a.client.GetRateLimiter()
+	info := limiter.GetRateLimitInfo()
 
-	logger.Info("Rate limit check from limiter",
+	logger.Info("Rate limit check",
 		"remainingPoints", info.RemainingPoints,
 		"resetIn", info.ResetIn)
 
@@ -40,22 +41,22 @@ func (a *RateLimitActivity) CheckRemainingPoints(ctx context.Context, _ workflow
 func (a *RateLimitActivity) ReservePoints(ctx context.Context, params workflows.WorkflowParams) error {
 	logger := activity.GetLogger(ctx)
 
-	// Calculate required points including rate limit checks
+	// Calculer les points requis
 	required := estimateRequiredPoints(&params)
 
-	// Get real-time point status
+	// Obtenir l'état actuel
 	info := a.client.GetRateLimiter().GetRateLimitInfo()
 
-	// Check if we have enough points (including rate limit check costs)
+	// Vérifier si nous avons assez de points
 	if info.RemainingPoints < required {
 		logger.Warn("Insufficient points for workflow",
 			"available", info.RemainingPoints,
 			"required", required,
 			"resetIn", info.ResetIn)
 
-		// If reset is close, wait
+		// Si le reset est proche, attendre
 		if info.ResetIn < time.Minute*15 {
-			return nil // Let the workflow continue
+			return nil // Laisser le workflow continuer
 		}
 
 		return warcraftlogsTypes.NewQuotaExceededError(info)

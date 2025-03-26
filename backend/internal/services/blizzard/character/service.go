@@ -1,188 +1,130 @@
-// services/blizzard/character/service.go
-
 package character
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"log"
-	"time"
 	"wowperf/internal/models"
-	"wowperf/internal/services/blizzard/types"
+	"wowperf/internal/services/blizzard"
+	characterSummary "wowperf/internal/services/blizzard/character/character_summary"
 
 	"gorm.io/gorm"
 )
 
-// CharacterService handles operations related to WoW characters
+// CharacterService handles operations related to characters
+// Implements the CharacterServiceInterface to be used by the CharacterService
 type CharacterService struct {
-	db              *gorm.DB
-	protectedClient types.ProtectedClientInterface
-	repo            *CharacterRepository
+	db             *gorm.DB
+	profileService *blizzard.ProfileService
+	repository     CharacterRepositoryInterface
 }
 
-// NewCharacterService creates a new instance of the character service
-func NewCharacterService(db *gorm.DB, protectedClient types.ProtectedClientInterface) *CharacterService {
-	repo := NewCharacterRepository(db)
+// NewCharacterService creates a new character service
+// Returns a CharacterServiceInterface to be used by the CharacterService
+// This allows for mocking the service in tests and dependency injection
+func NewCharacterService(db *gorm.DB, profileService *blizzard.ProfileService) CharacterServiceInterface {
 	return &CharacterService{
-		db:              db,
-		protectedClient: protectedClient,
-		repo:            repo,
+		db:             db,
+		profileService: profileService,
+		repository:     NewCharacterRepository(db),
 	}
 }
 
-// ListAccountCharacters retrieves all characters linked to the user's Battle.net account
-func (s *CharacterService) ListAccountCharacters(ctx context.Context, userID uint) ([]CharacterBasicInfo, error) {
-	// Battle.net API requires profile namespace format: profile-{region}
-	// The region is determined by the OAuth token associated with the user
-	namespace := "profile-eu" // This will be used properly by the protectedClient
-	locale := "en_GB"         // Can be configurable if needed
+// GetCharacterDetails retrieves the details of a character and saves them
+func (s *CharacterService) GetCharacterDetails(character *models.UserCharacter) error {
+	// Fetch data using character_summary
+	if err := characterSummary.GetCharacterSummaryDetails(s.profileService, character); err != nil {
+		return fmt.Errorf("failed to get character details: %w", err)
+	}
 
-	// Call the API to retrieve account characters using the existing protected client
-	data, err := s.protectedClient.MakeProtectedRequest(ctx, userID, "/profile/user/wow", namespace, locale)
+	// Save updated character to database
+	return s.repository.UpdateCharacterSummary(character)
+}
+
+// UpdateCharacterDetails retrieves and saves the details of a character
+func (s *CharacterService) UpdateCharacterDetails(character *models.UserCharacter) error {
+	return s.GetCharacterDetails(character)
+}
+
+// UpdateAllCharactersForUser updates all characters for a specific user
+func (s *CharacterService) UpdateAllCharactersForUser(userID uint) (int, error) {
+	characters, err := s.repository.GetCharactersByUserID(userID)
 	if err != nil {
-		return nil, fmt.Errorf("error retrieving characters: %w", err)
+		return 0, fmt.Errorf("failed to retrieve user characters: %w", err)
 	}
 
-	// Parse the response
-	var response AccountCharactersResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("error parsing response: %w", err)
-	}
-
-	// Convert to a simpler format and filter level 80+ characters
-	characters := make([]CharacterBasicInfo, 0)
-	for _, account := range response.WowAccounts {
-		for _, char := range account.Characters {
-			// Only include max level characters (customize this filter as needed)
-			if char.Level >= 80 {
-				characters = append(characters, CharacterBasicInfo{
-					CharacterID: char.ID,
-					Name:        char.Name,
-					Realm:       char.Realm.Slug,
-					Region:      "eu", // This comes from the token, but we hardcode for simplicity
-					Class:       char.PlayableClass.Name,
-					Race:        char.PlayableRace.Name,
-					Level:       char.Level,
-					Faction:     char.Faction.Type,
-				})
-			}
-		}
-	}
-
-	return characters, nil
-}
-
-// SyncSelectedCharacters synchronizes the selected characters with the database
-func (s *CharacterService) SyncSelectedCharacters(ctx context.Context, userID uint, selections []CharacterSelection) ([]CharacterSyncResult, error) {
-	results := make([]CharacterSyncResult, 0, len(selections))
-
-	for _, selection := range selections {
-		// Create a base model for the character
-		character := &models.UserCharacter{
-			UserID:      userID,
-			CharacterID: selection.CharacterID,
-			Name:        selection.Name,
-			Realm:       selection.Realm,
-			Region:      selection.Region,
-			Class:       selection.Class,
-			Race:        selection.Race,
-			Level:       selection.Level,
-			Faction:     selection.Faction,
-			IsDisplayed: true,
-		}
-
-		// Save to database
-		err := s.repo.CreateCharacter(character)
-		if err != nil {
-			results = append(results, CharacterSyncResult{
-				Success:     false,
-				CharacterID: selection.CharacterID,
-				Message:     fmt.Sprintf("Error creating character: %v", err),
-			})
+	successCount := 0
+	for i := range characters {
+		if err := s.UpdateCharacterDetails(&characters[i]); err != nil {
+			// Log error but continue with other characters
+			fmt.Printf("Error updating character %s: %v\n", characters[i].Name, err)
 			continue
 		}
-
-		// If it's the favorite character, set it as such
-		if selection.IsFavorite {
-			if err := s.repo.SetFavoriteCharacter(userID, character.ID); err != nil {
-				log.Printf("Error setting favorite character %d: %v", character.ID, err)
-			}
-		}
-
-		results = append(results, CharacterSyncResult{
-			Success:     true,
-			CharacterID: selection.CharacterID,
-			Message:     "Character synchronized successfully",
-		})
+		successCount++
 	}
 
-	return results, nil
+	return successCount, nil
 }
 
-// GetUserCharacters retrieves all characters belonging to a user from the database
-func (s *CharacterService) GetUserCharacters(ctx context.Context, userID uint) ([]models.UserCharacter, error) {
-	return s.repo.GetCharactersByUserID(userID)
+// GetCharacterByID retrieves a character by its ID
+func (s *CharacterService) GetCharacterByID(characterID uint) (*models.UserCharacter, error) {
+	return s.repository.GetCharacterByID(characterID)
 }
 
-// GetCharacterDetails retrieves detailed information for a specific character
-func (s *CharacterService) GetCharacterDetails(ctx context.Context, userID uint, characterID uint) (*models.UserCharacter, error) {
-	// First verify ownership
-	isOwner, err := s.IsCharacterOwner(ctx, userID, characterID)
-	if err != nil {
-		return nil, fmt.Errorf("error checking character ownership: %w", err)
-	}
-
-	if !isOwner {
-		return nil, fmt.Errorf("character does not belong to this user")
-	}
-
-	return s.repo.GetCharacterByID(characterID)
+// GetCharactersByUserID retrieves all characters belonging to a user
+func (s *CharacterService) GetCharactersByUserID(userID uint) ([]models.UserCharacter, error) {
+	return s.repository.GetCharactersByUserID(userID)
 }
 
-// RefreshCharacter updates a character's information from the Battle.net API
-func (s *CharacterService) RefreshCharacter(ctx context.Context, userID uint, characterID uint) error {
-	// Get character from database first
-	character, err := s.GetCharacterDetails(ctx, userID, characterID)
-	if err != nil {
-		return fmt.Errorf("error retrieving character: %w", err)
-	}
-
-	// Fetch updated character data
-	// This would involve multiple API calls to different endpoints:
-	// - Character profile summary
-	// - Equipment
-	// - Stats
-	// - Talents
-	// - Mythic+ profile
-	// - Raid progress
-
-	// For now, just update the last API update timestamp
-	character.LastAPIUpdate = time.Now()
-	return s.repo.UpdateCharacter(character)
+// GetFavoriteCharacter gets the user's favorite character
+func (s *CharacterService) GetFavoriteCharacter(userID uint) (*models.UserCharacter, error) {
+	return s.repository.GetFavoriteCharacter(userID)
 }
 
 // SetFavoriteCharacter sets a character as the user's favorite
-func (s *CharacterService) SetFavoriteCharacter(ctx context.Context, userID uint, characterID uint) error {
-	// First check if the character belongs to the user
-	isOwner, err := s.IsCharacterOwner(ctx, userID, characterID)
+func (s *CharacterService) SetFavoriteCharacter(userID uint, characterID uint) error {
+	// Verify the character belongs to the user
+	character, err := s.GetCharacterByID(characterID)
 	if err != nil {
-		return fmt.Errorf("error checking character ownership: %w", err)
+		return err
 	}
 
-	if !isOwner {
+	if character.UserID != userID {
 		return fmt.Errorf("character does not belong to this user")
 	}
 
-	return s.repo.SetFavoriteCharacter(userID, characterID)
+	return s.repository.SetFavoriteCharacter(userID, characterID)
 }
 
-// IsCharacterOwner checks if a character belongs to a user
-func (s *CharacterService) IsCharacterOwner(ctx context.Context, userID uint, characterID uint) (bool, error) {
-	character, err := s.repo.GetCharacterByID(characterID)
+// ToggleCharacterDisplay toggles the visibility of a character
+func (s *CharacterService) ToggleCharacterDisplay(userID uint, characterID uint, display bool) error {
+	// Verify the character belongs to the user
+	character, err := s.GetCharacterByID(characterID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return character.UserID == userID, nil
+	if character.UserID != userID {
+		return fmt.Errorf("character does not belong to this user")
+	}
+
+	return s.repository.ToggleCharacterDisplay(characterID, display)
+}
+
+// CreateCharacter creates a new character in the database
+func (s *CharacterService) CreateCharacter(character *models.UserCharacter) error {
+	return s.repository.CreateCharacter(character)
+}
+
+// CreateOrUpdateCharacter creates or updates a character with all fields
+func (s *CharacterService) CreateOrUpdateCharacter(character *models.UserCharacter) error {
+	return s.repository.CreateOrUpdateCharacter(character)
+}
+
+// GetCharacterByGameID retrieves a character by its game ID, realm and region
+func (s *CharacterService) GetCharacterByGameID(userID uint, characterID int64, realm, region string) (*models.UserCharacter, error) {
+	return s.repository.GetCharacterByGameID(userID, characterID, realm, region)
+}
+
+// DeleteCharacter removes a character from the database
+func (s *CharacterService) DeleteCharacter(characterID uint) error {
+	return s.repository.DeleteCharacter(characterID)
 }
