@@ -40,7 +40,7 @@ func NewPlayerBuildsActivity(repository *playerBuildsRepository.PlayerBuildsRepo
 // ProcessAllBuilds processes player builds in parallel from the provided reports
 func (a *PlayerBuildsActivity) ProcessAllBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*workflows.BuildsProcessingResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflows.BuildsProcessingResult{
+	result := &workflows.BuildsProcessingResult{ // TODO : Use the new model in the workflow : workflowsModels "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 		ProcessedAt: time.Now(),
 	}
 

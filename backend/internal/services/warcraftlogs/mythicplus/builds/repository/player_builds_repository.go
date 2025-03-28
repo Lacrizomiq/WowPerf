@@ -113,3 +113,60 @@ func (r *PlayerBuildsRepository) CountPlayerBuilds(ctx context.Context) (int64, 
 	}
 	return count, nil
 }
+
+// CountPlayerBuildsByFilter count the builds for a specific class, spec and encounter_id
+func (r *PlayerBuildsRepository) CountPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetPlayerBuildsByFilter get the builds for a specific class, spec and encounter_id with pagination
+func (r *PlayerBuildsRepository) GetPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch player builds: %w", err)
+	}
+
+	return builds, nil
+}
