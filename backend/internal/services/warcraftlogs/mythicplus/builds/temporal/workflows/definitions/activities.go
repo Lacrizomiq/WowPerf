@@ -36,9 +36,15 @@ const (
 	ReleaseRateLimitPointsActivity = "ReleasePoints"        // Release rate limit points
 	CheckRemainingPointsActivity   = "CheckRemainingPoints" // Check remaining points
 
+	// Build statistics activities
+	ProcessBuildStatisticsActivity  = "ProcessItemStatistics"   // Analyze equipment
+	ProcessTalentStatisticsActivity = "ProcessTalentStatistics" // Analyze talents
+	ProcessStatStatisticsActivity   = "ProcessStatStatistics"   // Analyze statistics
+
 	// Sub-workflow names
-	ProcessBuildBatchWorkflowName = "ProcessBuildBatch" // Process build batch
-	SyncWorkflowName              = "SyncWorkflow"      // Sync workflow
+	ProcessBuildBatchWorkflowName = "ProcessBuildBatch"     // Process build batch
+	SyncWorkflowName              = "SyncWorkflow"          // Sync workflow
+	AnalyzeBuildsWorkflowName     = "AnalyzeBuildsWorkflow" // Analyze builds workflow
 )
 
 /*
