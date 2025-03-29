@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
@@ -67,6 +68,29 @@ func main() {
 			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
 		} else {
 			logger.Printf("[TEST] Successfully triggered test schedule")
+		}
+	}
+
+	// Create analysis schedule using the priest config for testing
+	analysisCfg, err := definitions.LoadConfig("configs/config_s2_tww.priest.yaml")
+	if err != nil {
+		logger.Printf("[ERROR] Failed to load analysis config: %v", err)
+	} else {
+		if err := scheduleManager.CreateAnalyzeSchedule(context.Background(), analysisCfg, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create analysis schedule: %v", err)
+		} else {
+			logger.Printf("[INFO] Successfully created analysis schedule")
+
+			// Wait 50 minutes before triggering analysis workflow to ensure the test schedule has time to collect data
+			logger.Printf("[INFO] Waiting 50 minutes before triggering analysis workflow...")
+			time.Sleep(50 * time.Minute)
+
+			// Trigger analysis schedule
+			if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
+				logger.Printf("[ERROR] Failed to trigger analysis schedule: %v", err)
+			} else {
+				logger.Printf("[INFO] Successfully triggered analysis schedule")
+			}
 		}
 	}
 
