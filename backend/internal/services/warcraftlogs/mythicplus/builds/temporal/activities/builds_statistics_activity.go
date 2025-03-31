@@ -91,13 +91,13 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 		}
 
 		// Process the batch
-		buildStats, err := a.processBuildsBatch(builds)
+		buildStats, err := a.ProcessBuildsBatch(builds)
 		if err != nil {
 			return nil, err
 		}
 
 		// Calculate the usage percentages
-		a.calculateUsagePercentages(buildStats)
+		a.CalculateUsagePercentages(buildStats)
 
 		// Persist the statistics
 		if len(buildStats) > 0 {
@@ -174,9 +174,9 @@ func (a *BuildsStatisticsActivity) getPlayerBuildsBatch(
 	return a.playerBuildsRepository.GetPlayerBuildsByFilter(ctx, class, spec, encounterID, limit, offset)
 }
 
-// processBuildsBatch process a batch of builds to extract the equipment statistics
+// ProcessBuildsBatch process a batch of builds to extract the equipment statistics
 // with parallel processing
-func (a *BuildsStatisticsActivity) processBuildsBatch(
+func (a *BuildsStatisticsActivity) ProcessBuildsBatch(
 	builds []*warcraftlogsBuilds.PlayerBuild,
 ) ([]*warcraftlogsBuilds.BuildStatistic, error) {
 	if len(builds) == 0 {
@@ -354,8 +354,8 @@ func (a *BuildsStatisticsActivity) processBuildsBatch(
 	return result, nil
 }
 
-// calculateUsagePercentages calculates the usage percentages
-func (a *BuildsStatisticsActivity) calculateUsagePercentages(
+// CalculateUsagePercentages calculates the usage percentages
+func (a *BuildsStatisticsActivity) CalculateUsagePercentages(
 	stats []*warcraftlogsBuilds.BuildStatistic,
 ) {
 	// Group by slot
