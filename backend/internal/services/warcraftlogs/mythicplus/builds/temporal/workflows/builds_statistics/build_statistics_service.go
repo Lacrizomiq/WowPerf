@@ -90,10 +90,6 @@ func ProcessBuildStatistics(
 				"buildsProcessed", activityResult.BuildsProcessed,
 				"itemsProcessed", activityResult.ItemsProcessed)
 
-			// Save a checkpoint after each combination
-			if saveErr := workflow.ExecuteLocalActivity(ctx, saveCheckpoint, state).Get(ctx, nil); saveErr != nil {
-				logger.Warn("Failed to save checkpoint", "error", saveErr)
-			}
 		}
 
 		// Increment the specs counter
@@ -103,11 +99,5 @@ func ProcessBuildStatistics(
 	state.Results.DungeonsProcessed = int32(len(config.Dungeons))
 
 	logger.Info("Completed all build statistics processing")
-	return nil
-}
-
-// saveCheckpoint helper local activity
-func saveCheckpoint(ctx workflow.Context, state *state.AnalysisWorkflowState) error {
-	state.LastCheckpoint = workflow.Now(ctx)
 	return nil
 }

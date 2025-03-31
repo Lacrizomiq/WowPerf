@@ -64,11 +64,11 @@ func main() {
 		logger.Printf("[TEST] Successfully created test schedule")
 
 		// Trigger test schedule immediately
-		if err := scheduleManager.TriggerTestNow(context.Background()); err != nil {
+		/* if err := scheduleManager.TriggerTestNow(context.Background()); err != nil {
 			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
 		} else {
 			logger.Printf("[TEST] Successfully triggered test schedule")
-		}
+		} */
 	}
 
 	// Create analysis schedule using the priest config for testing
@@ -86,11 +86,11 @@ func main() {
 			time.Sleep(50 * time.Minute)
 
 			// Trigger analysis schedule
-			if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
+			/* if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
 				logger.Printf("[ERROR] Failed to trigger analysis schedule: %v", err)
 			} else {
 				logger.Printf("[INFO] Successfully triggered analysis schedule")
-			}
+			} */
 		}
 	}
 

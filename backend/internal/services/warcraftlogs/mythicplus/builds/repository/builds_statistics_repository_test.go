@@ -15,27 +15,27 @@ func createTestBuildStatistics() *warcraftlogsBuilds.BuildStatistic {
 	return &warcraftlogsBuilds.BuildStatistic{
 		Class:            "Priest",
 		Spec:             "Discipline",
-		EncounterID:      62286,
-		ItemSlot:         1, // Neck slot
-		ItemID:           215136,
-		ItemName:         "Amulet of Earthen Craftsmanship",
-		ItemIcon:         "inv_11_0_earthen_earthennecklace02_color1.jpg",
-		ItemQuality:      4,
-		ItemLevel:        636,
+		EncounterID:      12661, // Corresponding to Cinderbrew Meadery
+		ItemSlot:         1,     // Neck slot
+		ItemID:           221060,
+		ItemName:         "Strapped Rescue-Keg",
+		ItemIcon:         "inv_11_0_earthen_earthennecklace01_color2.jpg",
+		ItemQuality:      3,
+		ItemLevel:        658,
 		HasGems:          true,
 		GemsCount:        2,
-		GemIDs:           []int64{213479, 213470},
-		GemIcons:         []string{"inv_jewelcrafting_cut-standart-gem-hybrid_color1_2.jpg", "inv_jewelcrafting_cut-standart-gem-hybrid_color5_3.jpg"},
+		GemIDs:           []int64{213494, 213746},
+		GemIcons:         []string{"inv_jewelcrafting_cut-standart-gem-hybrid_color2_3.jpg", "inv_misc_gem_x4_metagem_cut.jpg"},
 		GemLevels:        []float64{610, 610},
-		BonusIDs:         []int64{10421, 9633, 8902, 10879, 10396, 9627, 10222, 8792, 11144},
+		BonusIDs:         []int64{10390, 6652, 10383, 10879, 10396, 11988, 3150, 10255},
 		UsageCount:       1,
 		UsagePercentage:  100,
-		AvgItemLevel:     636,
-		MinItemLevel:     636,
-		MaxItemLevel:     636,
-		AvgKeystoneLevel: 16,
-		MinKeystoneLevel: 16,
-		MaxKeystoneLevel: 16,
+		AvgItemLevel:     658,
+		MinItemLevel:     658,
+		MaxItemLevel:     658,
+		AvgKeystoneLevel: 14,
+		MinKeystoneLevel: 14,
+		MaxKeystoneLevel: 14,
 	}
 }
 

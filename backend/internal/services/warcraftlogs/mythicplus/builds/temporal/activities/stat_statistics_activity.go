@@ -90,7 +90,7 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 	totalProcessed := 0
 
 	// Structures to store the aggregated statistics
-	statData := make(map[string]*statAggregation)
+	statData := make(map[string]*StatAggregation)
 
 	for offset < int(count) {
 		// Record heartbeat
@@ -114,7 +114,7 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 		}
 
 		// Process the batch
-		err = a.processStatsBatch(builds, statData)
+		err = a.ProcessStatsBatch(builds, statData)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 	}
 
 	// Convert the aggregated data to final statistics
-	statStats := a.convertToStatStatistics(statData, class, spec, encounterID)
+	statStats := a.ConvertToStatStatistics(statData, class, spec, encounterID)
 
 	// Persist the statistics
 	if len(statStats) > 0 {
@@ -154,7 +154,7 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 }
 
 // Structure to aggregate statistics
-type statAggregation struct {
+type StatAggregation struct {
 	Category   string
 	TotalValue float64
 	MinValue   float64
@@ -189,10 +189,10 @@ func (a *StatStatisticsActivity) getPlayerBuildsBatch(
 	return a.playerBuildsRepository.GetPlayerBuildsByFilter(ctx, class, spec, encounterID, limit, offset)
 }
 
-// processBuildsBatch process a batch of builds to extract the stat statistics and aggregate them
-func (a *StatStatisticsActivity) processStatsBatch(
+// ProcessStatsBatch process a batch of builds to extract the stat statistics and aggregate them
+func (a *StatStatisticsActivity) ProcessStatsBatch(
 	builds []*warcraftlogsBuilds.PlayerBuild,
-	statData map[string]*statAggregation,
+	statData map[string]*StatAggregation,
 ) error {
 	if len(builds) == 0 {
 		return nil
@@ -242,7 +242,7 @@ func (a *StatStatisticsActivity) processStatsBatch(
 				// Create or update the aggregation
 				agg, exists := statData[statName]
 				if !exists {
-					agg = &statAggregation{
+					agg = &StatAggregation{
 						Category:         category,
 						MinValue:         value,
 						MaxValue:         value,
@@ -299,9 +299,9 @@ func (a *StatStatisticsActivity) processStatsBatch(
 	return nil
 }
 
-// convertToStatStatistics convert the aggregated data to StatStatistic objects
-func (a *StatStatisticsActivity) convertToStatStatistics(
-	statData map[string]*statAggregation,
+// ConvertToStatStatistics convert the aggregated data to StatStatistic objects
+func (a *StatStatisticsActivity) ConvertToStatStatistics(
+	statData map[string]*StatAggregation,
 	class, spec string,
 	encounterID uint,
 ) []*warcraftlogsBuilds.StatStatistic {

@@ -89,13 +89,13 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 		}
 
 		// Process the batch
-		talentStats, err := a.processTalentsBatch(builds)
+		talentStats, err := a.ProcessTalentsBatch(builds)
 		if err != nil {
 			return nil, err
 		}
 
 		// Calculate the usage percentages
-		a.calculateUsagePercentages(talentStats, len(builds))
+		a.CalculateUsagePercentages(talentStats, len(builds))
 
 		// Store the statistics
 		if len(talentStats) > 0 {
@@ -149,9 +149,9 @@ func (a *TalentStatisticActivity) getPlayerBuildsBatch(
 	return a.playerBuildsRepository.GetPlayerBuildsByFilter(ctx, class, spec, encounterID, limit, offset)
 }
 
-// processTalentsBatch process a batch of builds to extract the talent statistics
+// ProcessTalentsBatch process a batch of builds to extract the talent statistics
 // with parallel processing
-func (a *TalentStatisticActivity) processTalentsBatch(
+func (a *TalentStatisticActivity) ProcessTalentsBatch(
 	builds []*warcraftlogsBuilds.PlayerBuild,
 ) ([]*warcraftlogsBuilds.TalentStatistic, error) {
 	if len(builds) == 0 {
@@ -267,7 +267,7 @@ func (a *TalentStatisticActivity) processTalentsBatch(
 }
 
 // calculateUsagePercentages calculate the usage percentages
-func (a *TalentStatisticActivity) calculateUsagePercentages(
+func (a *TalentStatisticActivity) CalculateUsagePercentages(
 	stats []*warcraftlogsBuilds.TalentStatistic,
 	totalBuilds int,
 ) {

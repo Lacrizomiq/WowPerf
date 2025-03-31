@@ -90,10 +90,6 @@ func ProcessStatStatistics(
 				"buildsProcessed", activityResult.BuildsProcessed,
 				"statsProcessed", activityResult.ItemsProcessed)
 
-			// Save a checkpoint after each combination
-			if saveErr := workflow.ExecuteLocalActivity(ctx, saveCheckpoint, state).Get(ctx, nil); saveErr != nil {
-				logger.Warn("Failed to save checkpoint", "error", saveErr)
-			}
 		}
 	}
 
