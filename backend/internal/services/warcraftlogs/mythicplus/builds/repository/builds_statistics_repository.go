@@ -38,6 +38,7 @@ func NewBuildsStatisticsRepository(db *gorm.DB) *BuildsStatisticsRepository {
 // DeleteBuildStatistics removes build statistics for a class and spec.
 func (r *BuildsStatisticsRepository) DeleteBuildStatistics(ctx context.Context, class, spec string, encounterID uint) error {
 	query := r.db.WithContext(ctx).
+		Unscoped().
 		Where("class = ? AND spec = ?", class, spec)
 
 	if encounterID > 0 {

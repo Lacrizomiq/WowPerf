@@ -123,6 +123,9 @@ func (r *PlayerBuildsRepository) CountPlayerBuildsByFilter(
 	var count int64
 	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
 
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d",
+		class, spec, encounterID)
+
 	if class != "" {
 		query = query.Where("class = ?", class)
 	}
@@ -133,12 +136,21 @@ func (r *PlayerBuildsRepository) CountPlayerBuildsByFilter(
 
 	if encounterID > 0 {
 		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
 	}
 
+	sql := query.Statement.SQL.String()
+	vars := query.Statement.Vars
+	log.Printf("[DEBUG] Generated SQL: %s, Variables: %v", sql, vars)
+
 	if err := query.Count(&count).Error; err != nil {
+		log.Printf("[ERROR] Count query failed: %v", err)
 		return 0, fmt.Errorf("failed to count player builds: %w", err)
 	}
 
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - Found %d builds", count)
 	return count, nil
 }
 
@@ -152,6 +164,9 @@ func (r *PlayerBuildsRepository) GetPlayerBuildsByFilter(
 	var builds []*warcraftlogsBuilds.PlayerBuild
 	query := r.db.WithContext(ctx)
 
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d, limit=%d, offset=%d",
+		class, spec, encounterID, limit, offset)
+
 	if class != "" {
 		query = query.Where("class = ?", class)
 	}
@@ -162,11 +177,17 @@ func (r *PlayerBuildsRepository) GetPlayerBuildsByFilter(
 
 	if encounterID > 0 {
 		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
 	}
 
 	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		log.Printf("[ERROR] Fetch query failed: %v", err)
 		return nil, fmt.Errorf("failed to fetch player builds: %w", err)
 	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - Found %d builds", len(builds))
 
 	return builds, nil
 }
