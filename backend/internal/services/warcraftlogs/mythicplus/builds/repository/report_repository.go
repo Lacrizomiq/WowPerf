@@ -64,11 +64,25 @@ func (r *ReportRepository) StoreReports(ctx context.Context, reports []*warcraft
 
 // processBatchBulk handles bulk insertion of reports
 func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcraftlogsBuilds.Report) error {
+	// Deduplicate reports before processing
+	uniqueReports := make(map[string]*warcraftlogsBuilds.Report)
+	for _, report := range batch {
+		key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
+		uniqueReports[key] = report
+	}
+
+	// Convert map to slice for processing
+	deduplicatedBatch := make([]*warcraftlogsBuilds.Report, 0, len(uniqueReports))
+	for _, report := range uniqueReports {
+		deduplicatedBatch = append(deduplicatedBatch, report)
+	}
+
+	// Continue with processing on deduplicated reports
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
 		// Set timestamps for all reports in batch
-		for _, report := range batch {
+		for _, report := range deduplicatedBatch {
 			report.CreatedAt = now
 			report.UpdatedAt = now
 		}
@@ -92,7 +106,7 @@ func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcra
 				"affixes",
 				"updated_at",
 			}),
-		}).Create(&batch)
+		}).Create(&deduplicatedBatch)
 
 		if result.Error != nil {
 			return fmt.Errorf("failed to bulk store reports: %w", result.Error)

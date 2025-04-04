@@ -23,20 +23,6 @@ func ProcessAllReports(
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting reports processing")
 
-	// Validate state contains the necessary information
-	if state.CurrentSpec == nil || state.CurrentDungeon == nil {
-		return &common.WorkflowError{
-			Type:      common.ErrorTypeConfiguration,
-			Message:   "current spec and dungeon must be set before processing reports",
-			Retryable: false,
-		}
-	}
-
-	logger.Info("Processing reports for spec and dungeon",
-		"class", state.CurrentSpec.ClassName,
-		"spec", state.CurrentSpec.SpecName,
-		"dungeon", state.CurrentDungeon.Name)
-
 	// Configure activity options
 	activityOpts := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Hour * 24,
@@ -49,59 +35,78 @@ func ProcessAllReports(
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Get rankings to process (appel direct à l'activité)
-	var rankings []*warcraftlogsBuilds.ClassRanking
-	err := workflow.ExecuteActivity(activityCtx,
-		definitions.GetStoredRankingsActivity,
-		state.CurrentSpec.ClassName,
-		state.CurrentSpec.SpecName,
-		state.CurrentDungeon.EncounterID).Get(ctx, &rankings)
+	// Process each spec
+	for _, spec := range params.Specs {
+		// Process each dungeon for this spec
+		for _, dungeon := range params.Dungeons {
+			logger.Info("Processing reports for spec and dungeon",
+				"class", spec.ClassName,
+				"spec", spec.SpecName,
+				"dungeon", dungeon.Name)
 
-	if err != nil {
-		logger.Error("Failed to get stored rankings",
-			"spec", state.CurrentSpec.SpecName,
-			"dungeon", state.CurrentDungeon.Name,
-			"error", err)
-		return err
-	}
+			// Get rankings to process
+			var rankings []*warcraftlogsBuilds.ClassRanking
+			err := workflow.ExecuteActivity(activityCtx,
+				definitions.GetStoredRankingsActivity,
+				spec.ClassName,
+				spec.SpecName,
+				dungeon.EncounterID).Get(ctx, &rankings)
 
-	if len(rankings) == 0 {
-		logger.Info("No rankings found to process",
-			"spec", state.CurrentSpec.SpecName,
-			"dungeon", state.CurrentDungeon.Name)
-		return nil
-	}
+			if err != nil {
+				logger.Error("Failed to get stored rankings",
+					"spec", spec.SpecName,
+					"dungeon", dungeon.Name,
+					"error", err)
+				continue
+			}
 
-	logger.Info("Processing reports for rankings",
-		"count", len(rankings),
-		"spec", state.CurrentSpec.SpecName,
-		"dungeon", state.CurrentDungeon.Name)
+			if len(rankings) == 0 {
+				logger.Info("No rankings found to process",
+					"spec", spec.SpecName,
+					"dungeon", dungeon.Name)
+				continue
+			}
 
-	// Process reports based on the rankings (appel direct à l'activité)
-	var batchResult models.BatchResult
-	err = workflow.ExecuteActivity(activityCtx,
-		definitions.ProcessReportsActivity,
-		rankings).Get(ctx, &batchResult)
+			// Update state information for potential resume
+			state.CurrentSpec = &spec
+			state.CurrentDungeon = &dungeon
 
-	if err != nil {
-		if common.IsRateLimitError(err) {
-			// Rate limit reached, bail out and let main workflow handle continuation
-			logger.Info("Rate limit reached during reports processing")
-			return err
+			logger.Info("Processing reports for rankings",
+				"count", len(rankings),
+				"spec", spec.SpecName,
+				"dungeon", dungeon.Name)
+
+			// Process reports based on the rankings
+			var batchResult models.BatchResult
+			err = workflow.ExecuteActivity(activityCtx,
+				definitions.ProcessReportsActivity,
+				rankings).Get(ctx, &batchResult)
+
+			if err != nil {
+				if common.IsRateLimitError(err) {
+					// No need to update state as we already did above
+					return err
+				}
+				logger.Error("Failed to process reports",
+					"spec", spec.SpecName,
+					"dungeon", dungeon.Name,
+					"error", err)
+				continue
+			}
+
+			// Update state with results
+			state.PartialResults.ReportsProcessed += batchResult.ProcessedItems
+
+			logger.Info("Completed processing reports for spec/dungeon",
+				"class", spec.ClassName,
+				"spec", spec.SpecName,
+				"dungeon", dungeon.Name,
+				"processedCount", batchResult.ProcessedItems,
+				"totalProcessed", state.PartialResults.ReportsProcessed)
 		}
-		logger.Error("Failed to process reports",
-			"spec", state.CurrentSpec.SpecName,
-			"dungeon", state.CurrentDungeon.Name,
-			"error", err)
-		return err
 	}
 
-	// Update state with results
-	state.PartialResults.ReportsProcessed += batchResult.ProcessedItems
-
-	logger.Info("Completed processing reports",
-		"processedCount", batchResult.ProcessedItems,
+	logger.Info("All reports processed successfully",
 		"totalProcessed", state.PartialResults.ReportsProcessed)
-
 	return nil
 }

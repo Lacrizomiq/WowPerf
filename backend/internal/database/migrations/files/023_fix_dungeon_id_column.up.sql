@@ -85,3 +85,17 @@ SELECT
 FROM RankedPlayers
 WHERE rank <= 10
 ORDER BY class, spec, total_score DESC; 
+
+-- Recreate spec_dungeon_max_key_levels view 
+CREATE VIEW spec_dungeon_max_key_levels AS
+SELECT 
+    pr.class,
+    pr.spec,
+    d.name AS dungeon_name,
+    d.slug AS dungeon_slug,
+    MAX(pr.hard_mode_level) AS max_key_level
+FROM player_rankings pr
+JOIN dungeons d ON pr.dungeon_id = d.encounter_id
+WHERE pr.deleted_at IS NULL
+GROUP BY pr.class, pr.spec, d.name, d.slug
+ORDER BY pr.class, pr.spec, max_key_level DESC;

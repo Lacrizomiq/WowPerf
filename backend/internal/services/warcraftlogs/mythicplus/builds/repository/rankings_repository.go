@@ -43,21 +43,31 @@ func (r *RankingsRepository) GetLastRankingForEncounter(ctx context.Context, enc
 
 // StoreRankings saves a list of class rankings to the database on a transaction
 func (r *RankingsRepository) StoreRankings(ctx context.Context, encounterID uint, newRankings []*warcraftlogsBuilds.ClassRanking) error {
+	if len(newRankings) == 0 || newRankings[0] == nil {
+		return nil
+	}
+
+	// Extract class and spec information from the first ranking
+	className := newRankings[0].Class
+	specName := newRankings[0].Spec
+
 	if len(newRankings) > 150 {
 		return fmt.Errorf("too many rankings provided: got %d, maximum allowed is 150", len(newRankings))
 	}
 
-	log.Printf("[INFO] Storing rankings for encounter %d: %d new rankings to process", encounterID, len(newRankings))
+	log.Printf("[INFO] Storing rankings for encounter %d, class %s, spec %s: %d new rankings to process",
+		encounterID, className, specName, len(newRankings))
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var existingRankings []*warcraftlogsBuilds.ClassRanking
 		if err := tx.WithContext(ctx).
-			Where("encounter_id = ?", encounterID).
+			Where("encounter_id = ? AND class = ? AND spec = ?", encounterID, className, specName).
 			Find(&existingRankings).Error; err != nil {
 			return fmt.Errorf("failed to fetch existing rankings: %w", err)
 		}
 
-		log.Printf("[DEBUG] Found %d existing rankings for encounter %d", len(existingRankings), encounterID)
+		log.Printf("[DEBUG] Found %d existing rankings for encounter %d, class %s, spec %s",
+			len(existingRankings), encounterID, className, specName)
 
 		existingMap := make(map[string]*warcraftlogsBuilds.ClassRanking, len(existingRankings))
 		for _, rank := range existingRankings {
