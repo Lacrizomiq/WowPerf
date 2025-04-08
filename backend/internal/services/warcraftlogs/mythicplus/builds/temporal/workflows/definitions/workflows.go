@@ -29,3 +29,8 @@ import (
 type SyncWorkflow interface {
 	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
 }
+
+// AnalyzeWorkflow defines the interface for the main analysis workflow
+type AnalyzeWorkflow interface {
+	Execute(ctx workflow.Context, config models.AnalysisWorkflowConfig) (*models.AnalysisWorkflowResult, error)
+}

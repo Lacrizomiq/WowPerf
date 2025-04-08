@@ -23,9 +23,10 @@ const (
 	GetStoredRankingsActivity = "GetStoredRankings" // Get stored rankings
 
 	// Reports activities
-	ProcessReportsActivity  = "ProcessReports"  // Process reports
-	GetReportsBatchActivity = "GetReportsBatch" // Get reports batch
-	CountAllReportsActivity = "CountAllReports" // Count all reports
+	ProcessReportsActivity            = "ProcessReports"            // Process reports
+	GetReportsBatchActivity           = "GetReportsBatch"           // Get reports batch
+	CountAllReportsActivity           = "CountAllReports"           // Count all reports
+	GetUniqueReportReferencesActivity = "GetUniqueReportReferences" // Get unique report references
 
 	// Player builds activities
 	ProcessBuildsActivity     = "ProcessAllBuilds"  // Process all builds
@@ -36,9 +37,15 @@ const (
 	ReleaseRateLimitPointsActivity = "ReleasePoints"        // Release rate limit points
 	CheckRemainingPointsActivity   = "CheckRemainingPoints" // Check remaining points
 
+	// Build statistics activities
+	ProcessBuildStatisticsActivity  = "ProcessItemStatistics"   // Analyze equipment
+	ProcessTalentStatisticsActivity = "ProcessTalentStatistics" // Analyze talents
+	ProcessStatStatisticsActivity   = "ProcessStatStatistics"   // Analyze statistics
+
 	// Sub-workflow names
-	ProcessBuildBatchWorkflowName = "ProcessBuildBatch" // Process build batch
-	SyncWorkflowName              = "SyncWorkflow"      // Sync workflow
+	ProcessBuildBatchWorkflowName = "ProcessBuildBatch"     // Process build batch
+	SyncWorkflowName              = "SyncWorkflow"          // Sync workflow
+	AnalyzeBuildsWorkflowName     = "AnalyzeBuildsWorkflow" // Analyze builds workflow
 )
 
 /*
@@ -57,6 +64,7 @@ type ReportsActivity interface {
 	ProcessReports(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) (*models.BatchResult, error)
 	GetReportsBatch(ctx context.Context, batchSize int32, offset int32) ([]*warcraftlogsBuilds.Report, error)
 	CountAllReports(ctx context.Context) (int64, error)
+	GetUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error)
 }
 
 // PlayerBuildsActivity defines the interface for player build-related activities

@@ -113,3 +113,81 @@ func (r *PlayerBuildsRepository) CountPlayerBuilds(ctx context.Context) (int64, 
 	}
 	return count, nil
 }
+
+// CountPlayerBuildsByFilter count the builds for a specific class, spec and encounter_id
+func (r *PlayerBuildsRepository) CountPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d",
+		class, spec, encounterID)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
+	}
+
+	sql := query.Statement.SQL.String()
+	vars := query.Statement.Vars
+	log.Printf("[DEBUG] Generated SQL: %s, Variables: %v", sql, vars)
+
+	if err := query.Count(&count).Error; err != nil {
+		log.Printf("[ERROR] Count query failed: %v", err)
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - Found %d builds", count)
+	return count, nil
+}
+
+// GetPlayerBuildsByFilter get the builds for a specific class, spec and encounter_id with pagination
+func (r *PlayerBuildsRepository) GetPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d, limit=%d, offset=%d",
+		class, spec, encounterID, limit, offset)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
+	}
+
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		log.Printf("[ERROR] Fetch query failed: %v", err)
+		return nil, fmt.Errorf("failed to fetch player builds: %w", err)
+	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - Found %d builds", len(builds))
+
+	return builds, nil
+}

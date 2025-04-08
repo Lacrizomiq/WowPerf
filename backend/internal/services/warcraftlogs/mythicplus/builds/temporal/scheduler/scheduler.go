@@ -16,16 +16,18 @@ import (
 
 // Constants for schedule IDs
 const (
-	prodScheduleID = "warcraft-logs-weekly-sync"
-	testScheduleID = "warcraft-logs-priest-test"
+	prodScheduleID    = "warcraft-logs-weekly-sync"
+	testScheduleID    = "warcraft-logs-priest-test"
+	analyzeScheduleID = "warcraft-logs-analyze"
 )
 
 // ScheduleManager handles Temporal schedule for WarcraftLogs sync
 type ScheduleManager struct {
-	client       client.Client
-	prodSchedule client.ScheduleHandle
-	testSchedule client.ScheduleHandle
-	logger       *log.Logger
+	client          client.Client
+	prodSchedule    client.ScheduleHandle
+	testSchedule    client.ScheduleHandle
+	analyzeSchedule client.ScheduleHandle
+	logger          *log.Logger
 }
 
 // NewScheduleManager creates a new ScheduleManager instance
@@ -116,6 +118,48 @@ func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *models.W
 	return nil
 }
 
+// CreateAnalyzeSchedule creates the schedule for the analyze workflow
+func (sm *ScheduleManager) CreateAnalyzeSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
+	if opts == nil {
+		opts = DefaultScheduleOptions()
+	}
+
+	scheduleID := analyzeScheduleID
+	workflowID := fmt.Sprintf("warcraft-logs-analyze-%s", time.Now().UTC().Format("2006-01-02"))
+
+	analyzeDay := 3 // Wednesday
+
+	scheduleOptions := client.ScheduleOptions{
+		ID: scheduleID,
+		Spec: client.ScheduleSpec{
+			CronExpressions: []string{fmt.Sprintf("0 %d * * %d", DefaultScheduleConfig.Hour, analyzeDay)},
+			Jitter:          time.Minute,
+		},
+		Action: &client.ScheduleWorkflowAction{
+			ID:        workflowID,
+			Workflow:  "AnalyzeBuildsWorkflow",
+			TaskQueue: DefaultScheduleConfig.TaskQueue,
+			Args:      []interface{}{*cfg},
+			RetryPolicy: &temporal.RetryPolicy{
+				InitialInterval:    opts.Retry.InitialInterval,
+				BackoffCoefficient: opts.Retry.BackoffCoefficient,
+				MaximumInterval:    opts.Retry.MaximumInterval,
+				MaximumAttempts:    int32(opts.Retry.MaximumAttempts),
+			},
+			WorkflowRunTimeout: opts.Timeout,
+		},
+	}
+
+	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
+	if err != nil {
+		return fmt.Errorf("failed to create analyze schedule: %w", err)
+	}
+
+	sm.analyzeSchedule = handle
+	sm.logger.Printf("[INFO] Created weekly analysis schedule %s for Wednesday %d AM UTC", scheduleID, DefaultScheduleConfig.Hour)
+	return nil
+}
+
 // TriggerSyncNow triggers the immediate execution of the production schedule
 func (sm *ScheduleManager) TriggerSyncNow(ctx context.Context) error {
 	if sm.prodSchedule == nil {
@@ -130,6 +174,14 @@ func (sm *ScheduleManager) TriggerTestNow(ctx context.Context) error {
 		return fmt.Errorf("no test schedule has been created")
 	}
 	return sm.testSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+}
+
+// TriggerAnalyzeNow triggers the immediate execution of the analyze schedule
+func (sm *ScheduleManager) TriggerAnalyzeNow(ctx context.Context) error {
+	if sm.analyzeSchedule == nil {
+		return fmt.Errorf("no analyze schedule has been created")
+	}
+	return sm.analyzeSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
 // PauseSchedule pauses the production schedule
@@ -148,6 +200,14 @@ func (sm *ScheduleManager) PauseTestSchedule(ctx context.Context) error {
 	return sm.testSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
+// PauseAnalyzeSchedule pauses the analyze schedule
+func (sm *ScheduleManager) PauseAnalyzeSchedule(ctx context.Context) error {
+	if sm.analyzeSchedule == nil {
+		return fmt.Errorf("no analyze schedule has been created")
+	}
+	return sm.analyzeSchedule.Pause(ctx, client.SchedulePauseOptions{})
+}
+
 // UnpauseSchedule reactivates the production schedule
 func (sm *ScheduleManager) UnpauseSchedule(ctx context.Context) error {
 	if sm.prodSchedule == nil {
@@ -164,6 +224,14 @@ func (sm *ScheduleManager) UnpauseTestSchedule(ctx context.Context) error {
 	return sm.testSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
+// UnpauseAnalyzeSchedule reactivates the analyze schedule
+func (sm *ScheduleManager) UnpauseAnalyzeSchedule(ctx context.Context) error {
+	if sm.analyzeSchedule == nil {
+		return fmt.Errorf("no analyze schedule has been created")
+	}
+	return sm.analyzeSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+}
+
 // DeleteSchedule deletes a schedule by its ID
 func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, scheduleID string) error {
 	handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
@@ -173,7 +241,7 @@ func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, scheduleID string
 // CleanupExistingSchedules deletes existing schedules
 func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 	// List and delete existing schedules
-	schedules := []string{prodScheduleID, testScheduleID}
+	schedules := []string{prodScheduleID, testScheduleID, analyzeScheduleID}
 	for _, id := range schedules {
 		if err := sm.DeleteSchedule(ctx, id); err != nil {
 			sm.logger.Printf("[WARN] Failed to delete schedule %s: %v", id, err)
@@ -185,41 +253,66 @@ func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 	// Reset references
 	sm.prodSchedule = nil
 	sm.testSchedule = nil
+	sm.analyzeSchedule = nil
 
 	return nil
 }
 
 // CleanupOldWorkflows terminates running workflows
 func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
-	// Get all workflows with SyncWorkflow type
-	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
-		Namespace: models.DefaultNamespace,
-		Query:     "WorkflowType='SyncWorkflow' OR WorkflowType='ProcessBuildBatchWorkflow'",
-	})
+	var terminatedCount int
 
-	if err != nil {
-		return fmt.Errorf("failed to list workflows: %w", err)
+	// Define the workflow types to clean
+	workflowTypes := []string{
+		"SyncWorkflow",
+		"ProcessBuildBatchWorkflow",
+		"AnalyzeBuildsWorkflow",
 	}
 
-	for _, execution := range resp.Executions {
-		workflowID := execution.Execution.WorkflowId
-		runID := execution.Execution.RunId
+	// Process each workflow type separately
+	for _, workflowType := range workflowTypes {
+		// Build a query for a single workflow type
+		query := fmt.Sprintf("WorkflowType='%s'", workflowType)
 
-		// Only terminate if it's running
-		if execution.Status != enums.WORKFLOW_EXECUTION_STATUS_RUNNING {
-			sm.logger.Printf("[INFO] Skipping non-running workflow: %s (status: %s)",
-				workflowID, execution.Status.String())
-			continue
-		}
+		sm.logger.Printf("[INFO] Listing workflows of type: %s", workflowType)
 
-		err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+		// Retrieve the workflows of this type
+		resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
+			Namespace: models.DefaultNamespace,
+			Query:     query,
+		})
+
 		if err != nil {
-			sm.logger.Printf("[WARN] Failed to terminate workflow %s: %v", workflowID, err)
+			sm.logger.Printf("[WARN] Failed to list workflows of type %s: %v", workflowType, err)
 			continue
 		}
-		sm.logger.Printf("[INFO] Terminated workflow: %s", workflowID)
+
+		// Process each retrieved workflow
+		for _, execution := range resp.Executions {
+			workflowID := execution.Execution.WorkflowId
+			runID := execution.Execution.RunId
+
+			// Only terminate running workflows
+			if execution.Status != enums.WORKFLOW_EXECUTION_STATUS_RUNNING {
+				sm.logger.Printf("[INFO] Skipping non-running workflow: %s (type: %s, status: %s)",
+					workflowID, workflowType, execution.Status.String())
+				continue
+			}
+
+			// Terminate the workflow
+			err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+			if err != nil {
+				sm.logger.Printf("[WARN] Failed to terminate workflow %s (type: %s): %v",
+					workflowID, workflowType, err)
+				continue
+			}
+
+			sm.logger.Printf("[INFO] Terminated workflow: %s (type: %s)", workflowID, workflowType)
+			terminatedCount++
+		}
 	}
 
+	sm.logger.Printf("[INFO] Cleanup completed - terminated %d workflows", terminatedCount)
 	return nil
 }
 

@@ -1,12 +1,16 @@
 -- +migrate Up
 
--- 1. First modify warcraft_logs_reports primary key
+-- 1. First drop all dependent foreign keys
+-- Ensure we drop all possible constraints that might exist
 ALTER TABLE player_builds
-    DROP CONSTRAINT IF EXISTS fk_player_builds_report;
+    DROP CONSTRAINT IF EXISTS fk_player_builds_report,
+    DROP CONSTRAINT IF EXISTS player_builds_report_code_fkey;
 
 ALTER TABLE group_compositions
-    DROP CONSTRAINT IF EXISTS group_compositions_report_code_fkey;
+    DROP CONSTRAINT IF EXISTS group_compositions_report_code_fkey,
+    DROP CONSTRAINT IF EXISTS fk_group_compositions_report;
 
+-- Now it's safe to modify the primary key
 ALTER TABLE warcraft_logs_reports 
     DROP CONSTRAINT IF EXISTS warcraft_logs_reports_pkey;
 
@@ -37,6 +41,21 @@ ALTER TABLE player_builds
     UNIQUE (report_code, fight_id, actor_id);
 
 -- 5. Finally, add all foreign key constraints
+-- Check if dungeons table has the necessary unique constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'uk_dungeons_encounter_id' 
+        AND conrelid = 'dungeons'::regclass
+    ) THEN
+        ALTER TABLE dungeons 
+        ADD CONSTRAINT uk_dungeons_encounter_id UNIQUE (encounter_id);
+    END IF;
+END $$;
+
+-- Now add the foreign keys
 ALTER TABLE player_builds
     ADD CONSTRAINT fk_player_builds_report 
     FOREIGN KEY (report_code, fight_id) 

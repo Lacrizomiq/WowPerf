@@ -11,3 +11,10 @@ type WorkflowResult struct {
 	StartedAt         time.Time `json:"started_at"`
 	CompletedAt       time.Time `json:"completed_at"`
 }
+
+// BuildsAnalysisResult represents the result of the builds analysis workflow
+type BuildsAnalysisResult struct {
+	BuildsProcessed int32     `json:"builds_processed"`
+	ItemsProcessed  int32     `json:"items_processed"`
+	ProcessedAt     time.Time `json:"processed_at"`
+}

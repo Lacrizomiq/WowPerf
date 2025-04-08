@@ -64,11 +64,25 @@ func (r *ReportRepository) StoreReports(ctx context.Context, reports []*warcraft
 
 // processBatchBulk handles bulk insertion of reports
 func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcraftlogsBuilds.Report) error {
+	// Deduplicate reports before processing
+	uniqueReports := make(map[string]*warcraftlogsBuilds.Report)
+	for _, report := range batch {
+		key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
+		uniqueReports[key] = report
+	}
+
+	// Convert map to slice for processing
+	deduplicatedBatch := make([]*warcraftlogsBuilds.Report, 0, len(uniqueReports))
+	for _, report := range uniqueReports {
+		deduplicatedBatch = append(deduplicatedBatch, report)
+	}
+
+	// Continue with processing on deduplicated reports
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
 		// Set timestamps for all reports in batch
-		for _, report := range batch {
+		for _, report := range deduplicatedBatch {
 			report.CreatedAt = now
 			report.UpdatedAt = now
 		}
@@ -92,7 +106,7 @@ func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcra
 				"affixes",
 				"updated_at",
 			}),
-		}).Create(&batch)
+		}).Create(&deduplicatedBatch)
 
 		if result.Error != nil {
 			return fmt.Errorf("failed to bulk store reports: %w", result.Error)
@@ -103,61 +117,15 @@ func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcra
 }
 
 // SyncReportsWithRankings synchronizes reports with the provided rankings
-// It deletes reports that no longer have associated rankings
 func (r *ReportRepository) SyncReportsWithRankings(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) error {
 	if len(rankings) == 0 {
 		return nil
 	}
 
-	// Create a map of active report identifiers from rankings
-	activeReports := make(map[string]bool)
-	for _, ranking := range rankings {
-		key := fmt.Sprintf("%s-%d", ranking.ReportCode, ranking.ReportFightID)
-		activeReports[key] = true
-	}
+	log.Printf("[INFO] SyncReportsWithRankings - Processing %d rankings without deleting any reports", len(rankings))
 
-	// Delete reports that are no longer referenced by any ranking
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var reportsToDelete []ReportIdentifier
-
-		// Find all reports for these rankings
-		rows, err := tx.Model(&warcraftlogsBuilds.Report{}).
-			Select("code, fight_id").
-			Where("encounter_id = ?", rankings[0].EncounterID).
-			Rows()
-
-		if err != nil {
-			return fmt.Errorf("failed to fetch reports: %w", err)
-		}
-		defer rows.Close()
-
-		// Check each report against active rankings
-		for rows.Next() {
-			var report ReportIdentifier
-			if err := rows.Scan(&report.Code, &report.FightID); err != nil {
-				return fmt.Errorf("failed to scan report: %w", err)
-			}
-
-			key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
-			if !activeReports[key] {
-				reportsToDelete = append(reportsToDelete, report)
-			}
-		}
-
-		// Delete obsolete reports
-		if len(reportsToDelete) > 0 {
-			for _, report := range reportsToDelete {
-				if err := tx.Unscoped().Where("code = ? AND fight_id = ?",
-					report.Code, report.FightID).Delete(&warcraftlogsBuilds.Report{}).Error; err != nil {
-					return fmt.Errorf("failed to delete report %s-%d: %w",
-						report.Code, report.FightID, err)
-				}
-			}
-			log.Printf("[INFO] Deleted %d obsolete reports", len(reportsToDelete))
-		}
-
-		return nil
-	})
+	// Deletion temporarily disabled to test the solution
+	return nil
 }
 
 // GetReportsByRankings retrieves reports corresponding to the provided rankings
@@ -250,4 +218,23 @@ func (r *ReportRepository) CountAllReports(ctx context.Context) (int64, error) {
 	}
 
 	return count, nil
+}
+
+// GetAllUniqueReportReferences retrieves all unique report references from rankings
+func (r *ReportRepository) GetAllUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	var rankings []*warcraftlogsBuilds.ClassRanking
+
+	// Get all unique report_code + report_fight_id combinations
+	// Even though we're using rankings table, this is a report functionality
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.ClassRanking{}).
+		Distinct("report_code", "report_fight_id", "encounter_id").
+		Find(&rankings)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get unique report references: %w", result.Error)
+	}
+
+	log.Printf("[INFO] Retrieved %d unique report references", len(rankings))
+	return rankings, nil
 }

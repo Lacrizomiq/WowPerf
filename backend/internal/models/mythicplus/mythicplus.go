@@ -49,7 +49,7 @@ type Dungeon struct {
 	ShortName        string
 	MediaURL         string
 	Icon             *string
-	EncounterID      uint
+	EncounterID      *uint             // Changed to pointer type to allow NULL values
 	Seasons          []Season          `gorm:"many2many:season_dungeons;"`
 	KeyStoneUpgrades []KeyStoneUpgrade `gorm:"foreignKey:ChallengeModeID;references:ChallengeModeID"`
 }

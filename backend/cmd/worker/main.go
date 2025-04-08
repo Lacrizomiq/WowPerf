@@ -12,14 +12,25 @@ import (
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
 
+	// Ranking, report and player builds repository
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+
+	// package
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
+
+	// workflow
+	analyzeWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/analyze"
 	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
+
+	// build analysis repository
+	buildsStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	statStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	talentStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -48,8 +59,20 @@ func main() {
 	reportsRepo := reportsRepository.NewReportRepository(db)
 	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
-	activitiesService := initializeActivities(warcraftLogsClient, reportsRepo, rankingsRepo, playerBuildsRepo)
+	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
+	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)
+	statStatsRepo := statStatisticsRepository.NewStatStatisticsRepository(db)
 
+	// Initialize activities with all services
+	activitiesService := initializeActivities(
+		warcraftLogsClient,
+		reportsRepo,
+		rankingsRepo,
+		playerBuildsRepo,
+		buildsStatsRepo,
+		talentStatsRepo,
+		statStatsRepo,
+	)
 	// Create a single worker that will handle both production and test schedules
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
 	w := worker.New(temporalClient, taskQueue, worker.Options{
@@ -115,26 +138,59 @@ func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsCl
 	return temporalClient, db, warcraftLogsClient, nil
 }
 
+// Initialize activities with all services
 func initializeActivities(
 	warcraftLogsClient *warcraftlogs.WarcraftLogsClientService,
 	reportsRepo *reportsRepository.ReportRepository,
 	rankingsRepo *rankingsRepository.RankingsRepository,
 	playerBuildsRepo *playerBuildsRepository.PlayerBuildsRepository,
+	buildsStatisticsRepo *buildsStatisticsRepository.BuildsStatisticsRepository,
+	talentStatisticsRepo *talentStatisticsRepository.TalentStatisticsRepository,
+	statStatisticsRepo *statStatisticsRepository.StatStatisticsRepository,
 ) *activities.Activities {
-	return activities.NewActivities(
-		activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo),
-		activities.NewReportsActivity(warcraftLogsClient, reportsRepo),
-		activities.NewPlayerBuildsActivity(playerBuildsRepo),
-		activities.NewRateLimitActivity(warcraftLogsClient),
+	// Create the existing activities
+	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
+	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
+	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
+	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
+
+	// Create the new analysis activities
+	buildsStatisticsActivity := activities.NewBuildsStatisticsActivity(
+		playerBuildsRepo,
+		buildsStatisticsRepo,
 	)
+	talentStatisticActivity := activities.NewTalentStatisticActivity(
+		playerBuildsRepo,
+		talentStatisticsRepo,
+	)
+	statStatisticsActivity := activities.NewStatStatisticsActivity(
+		playerBuildsRepo,
+		statStatisticsRepo,
+	)
+
+	// Return the complete Activities structure
+	return &activities.Activities{
+		Rankings:         rankingsActivity,
+		Reports:          reportsActivity,
+		PlayerBuilds:     playerBuildsActivity,
+		RateLimit:        rateLimitActivity,
+		BuildStatistics:  buildsStatisticsActivity,
+		TalentStatistics: talentStatisticActivity,
+		StatStatistics:   statStatisticsActivity,
+	}
 }
 
 func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
 	// Register workflows
 	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
+	analyzeWorkflowImpl := analyzeWorkflow.NewAnalyzeWorkflow()
 
 	w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.SyncWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(analyzeWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.AnalyzeBuildsWorkflowName,
 	})
 
 	// Register activities
@@ -143,11 +199,17 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	w.RegisterActivity(activitiesService.Reports.ProcessReports)
 	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
 	w.RegisterActivity(activitiesService.Reports.CountAllReports)
+	w.RegisterActivity(activitiesService.Reports.GetUniqueReportReferences)
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
 	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
 	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+
+	// Register new analysis activities
+	w.RegisterActivity(activitiesService.BuildStatistics.ProcessItemStatistics)
+	w.RegisterActivity(activitiesService.TalentStatistics.ProcessTalentStatistics)
+	w.RegisterActivity(activitiesService.StatStatistics.ProcessStatStatistics)
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {
