@@ -287,3 +287,11 @@ func (a *ReportsActivity) GetReportsBatch(
 func (a *ReportsActivity) CountAllReports(ctx context.Context) (int64, error) {
 	return a.repository.CountAllReports(ctx)
 }
+
+// GetUniqueReportReferences retrieves all unique report references from rankings
+func (a *ReportsActivity) GetUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Getting unique report references")
+
+	return a.repository.GetAllUniqueReportReferences(ctx)
+}

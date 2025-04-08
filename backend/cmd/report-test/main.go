@@ -40,17 +40,20 @@ func main() {
 	logger.Printf("[INFO] Cleanup completed successfully")
 
 	// Load production configuration
-	cfg, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
+	/* cfg, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
 	if err != nil {
 		log.Fatalf("[FATAL] Failed to load production config: %v", err)
-	}
+	} */
 
 	// Create production schedule
 	opts := scheduler.DefaultScheduleOptions()
-	if err := scheduleManager.CreateSchedule(context.Background(), cfg, opts); err != nil {
-		logger.Fatalf("[FATAL] Failed to create production schedule: %v", err)
-	}
-	logger.Printf("[INFO] Successfully created production schedule")
+
+	/*
+		if err := scheduleManager.CreateSchedule(context.Background(), cfg, opts); err != nil {
+			logger.Fatalf("[FATAL] Failed to create production schedule: %v", err)
+		}
+		logger.Printf("[INFO] Successfully created production schedule")
+	*/
 
 	// Create and trigger test schedule for Priest
 	testCfg, err := definitions.LoadConfig("configs/config_s2_tww.priest.yaml")

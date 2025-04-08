@@ -260,35 +260,59 @@ func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
 
 // CleanupOldWorkflows terminates running workflows
 func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
-	// Get all workflows with SyncWorkflow type
-	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
-		Namespace: models.DefaultNamespace,
-		Query:     "WorkflowType='SyncWorkflow' OR WorkflowType='ProcessBuildBatchWorkflow' OR WorkflowType='AnalyzeBuildsWorkflow'",
-	})
+	var terminatedCount int
 
-	if err != nil {
-		return fmt.Errorf("failed to list workflows: %w", err)
+	// Define the workflow types to clean
+	workflowTypes := []string{
+		"SyncWorkflow",
+		"ProcessBuildBatchWorkflow",
+		"AnalyzeBuildsWorkflow",
 	}
 
-	for _, execution := range resp.Executions {
-		workflowID := execution.Execution.WorkflowId
-		runID := execution.Execution.RunId
+	// Process each workflow type separately
+	for _, workflowType := range workflowTypes {
+		// Build a query for a single workflow type
+		query := fmt.Sprintf("WorkflowType='%s'", workflowType)
 
-		// Only terminate if it's running
-		if execution.Status != enums.WORKFLOW_EXECUTION_STATUS_RUNNING {
-			sm.logger.Printf("[INFO] Skipping non-running workflow: %s (status: %s)",
-				workflowID, execution.Status.String())
-			continue
-		}
+		sm.logger.Printf("[INFO] Listing workflows of type: %s", workflowType)
 
-		err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+		// Retrieve the workflows of this type
+		resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
+			Namespace: models.DefaultNamespace,
+			Query:     query,
+		})
+
 		if err != nil {
-			sm.logger.Printf("[WARN] Failed to terminate workflow %s: %v", workflowID, err)
+			sm.logger.Printf("[WARN] Failed to list workflows of type %s: %v", workflowType, err)
 			continue
 		}
-		sm.logger.Printf("[INFO] Terminated workflow: %s", workflowID)
+
+		// Process each retrieved workflow
+		for _, execution := range resp.Executions {
+			workflowID := execution.Execution.WorkflowId
+			runID := execution.Execution.RunId
+
+			// Only terminate running workflows
+			if execution.Status != enums.WORKFLOW_EXECUTION_STATUS_RUNNING {
+				sm.logger.Printf("[INFO] Skipping non-running workflow: %s (type: %s, status: %s)",
+					workflowID, workflowType, execution.Status.String())
+				continue
+			}
+
+			// Terminate the workflow
+			err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+			if err != nil {
+				sm.logger.Printf("[WARN] Failed to terminate workflow %s (type: %s): %v",
+					workflowID, workflowType, err)
+				continue
+			}
+
+			sm.logger.Printf("[INFO] Terminated workflow: %s (type: %s)", workflowID, workflowType)
+			terminatedCount++
+		}
 	}
 
+	sm.logger.Printf("[INFO] Cleanup completed - terminated %d workflows", terminatedCount)
 	return nil
 }
 

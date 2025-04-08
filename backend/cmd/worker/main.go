@@ -199,6 +199,7 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	w.RegisterActivity(activitiesService.Reports.ProcessReports)
 	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
 	w.RegisterActivity(activitiesService.Reports.CountAllReports)
+	w.RegisterActivity(activitiesService.Reports.GetUniqueReportReferences)
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
