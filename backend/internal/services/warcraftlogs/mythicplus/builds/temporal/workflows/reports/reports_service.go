@@ -54,7 +54,7 @@ func ProcessAllReports(
 	}
 
 	// Process reports in batches to avoid memory overload
-	const batchSize = 40
+	const batchSize = 10
 	totalProcessed := 0
 
 	for i := 0; i < len(reportRefs); i += batchSize {
