@@ -14,18 +14,24 @@ import (
 
 */
 
-// RankingsWorkflow defines the interface for rankings synchronization workflow
-/* type RankingsWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
+// RankingsWorkflow définit l'interface pour le workflow de récupération des rankings
+type RankingsWorkflow interface {
+	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.RankingsWorkflowResult, error)
 }
-*/
 
-// ProcessBuildBatchWorkflow defines the interface for build batch processing workflow
-/* type ProcessBuildBatchWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
-} */
+// ReportsWorkflow définit l'interface pour le workflow de traitement des reports
+type ReportsWorkflow interface {
+	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.ReportsWorkflowResult, error)
+}
+
+// BuildsWorkflow définit l'interface pour le workflow d'extraction des builds
+type BuildsWorkflow interface {
+	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.BuildsWorkflowResult, error)
+}
 
 // SyncWorkflow defines the interface for the main synchronization workflow
+// This workflow is used to synchronize the rankings, reports and builds from WarcraftLogs
+// Legacy workflow, not used anymore, will be removed in the future.
 type SyncWorkflow interface {
 	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
 }
