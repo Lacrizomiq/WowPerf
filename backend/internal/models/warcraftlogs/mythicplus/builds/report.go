@@ -49,6 +49,11 @@ type Report struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *gorm.DeletedAt `gorm:"index"`
+
+	// Processing status tracking
+	BuildExtractionStatus string     `gorm:"column:build_extraction_status;default:pending"`
+	BuildExtractionAt     *time.Time `gorm:"column:build_extraction_at"`
+	ProcessingBatchID     string     `gorm:"column:processing_batch_id"`
 }
 
 func (Report) TableName() string {
