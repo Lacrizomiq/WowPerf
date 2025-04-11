@@ -58,7 +58,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 	stateCtx := workflow.WithActivityOptions(ctx, stateOpts)
 
 	// Create the initial workflow state - Using string for the activity name
-	err := workflow.ExecuteActivity(stateCtx, "CreateWorkflowState", &warcraftlogsBuilds.WorkflowState{
+	err := workflow.ExecuteActivity(stateCtx, definitions.CreateWorkflowStateActivity, &warcraftlogsBuilds.WorkflowState{
 		ID:           workflowStateID,
 		WorkflowType: "builds",
 		StartedAt:    finalResult.StartedAt,
@@ -93,7 +93,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 	if err != nil {
 		logger.Error("Failed to get reports needing build extraction", "error", err)
 		finalWorkflowState := &warcraftlogsBuilds.WorkflowState{ID: workflowStateID, Status: "failed", ErrorMessage: fmt.Sprintf("GetReportsNeeding... failed: %v", err), UpdatedAt: workflow.Now(ctx)}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", finalWorkflowState).Get(ctx, nil)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
 		finalResult.CompletedAt = workflow.Now(ctx)
 		return finalResult, err
 	}
@@ -103,7 +103,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 	if len(reportsToProcess) == 0 {
 		logger.Info("No reports need build extraction.")
 		finalWorkflowState := &warcraftlogsBuilds.WorkflowState{ID: workflowStateID, Status: "completed", CompletedAt: workflow.Now(ctx), ItemsProcessed: 0, UpdatedAt: workflow.Now(ctx)}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", finalWorkflowState).Get(ctx, nil)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
 		finalResult.CompletedAt = workflow.Now(ctx)
 		return finalResult, nil
 	}
@@ -138,7 +138,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 			UpdatedAt:       workflow.Now(ctx),
 			Status:          "running", // Ensure the status remains 'running' during processing
 		}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowStateUpdate)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowStateUpdate)
 
 		// Execute the activity that processes builds and marks reports
 		var activityResult models.BuildsActivityResult
@@ -190,7 +190,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 		ItemsProcessed: int(totalReportsProcessedSuccess),
 		UpdatedAt:      finalResult.CompletedAt,
 	}
-	err = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", finalWorkflowState).Get(ctx, nil)
+	err = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
 	if err != nil {
 		logger.Error("Failed to update final workflow state", "error", err)
 	}

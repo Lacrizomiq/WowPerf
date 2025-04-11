@@ -61,7 +61,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 	stateCtx := workflow.WithActivityOptions(ctx, stateOpts)
 
 	// Create workflow state
-	err := workflow.ExecuteActivity(stateCtx, "CreateWorkflowState", &warcraftlogsBuilds.WorkflowState{
+	err := workflow.ExecuteActivity(stateCtx, definitions.CreateWorkflowStateActivity, &warcraftlogsBuilds.WorkflowState{
 		ID:              workflowStateID,
 		WorkflowType:    "rankings",
 		StartedAt:       workflow.Now(ctx),
@@ -109,7 +109,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 			"spec", spec.SpecName)
 
 		// Update workflow state with current spec
-		err = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", &warcraftlogsBuilds.WorkflowState{
+		err = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, &warcraftlogsBuilds.WorkflowState{
 			ID:              workflowStateID,
 			Status:          "running",
 			LastProcessedID: specKey,
@@ -157,7 +157,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 						ErrorMessage: fmt.Sprintf("Rate limit reached: %v", err),
 						UpdatedAt:    workflow.Now(ctx),
 					}
-					_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+					_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 					logger.Info("Rate limit reached during rankings processing",
 						"class", spec.ClassName,
@@ -180,7 +180,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 					ErrorMessage: fmt.Sprintf("Error processing %s: %v", dungeonKey, err),
 					UpdatedAt:    workflow.Now(ctx),
 				}
-				_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+				_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 				// Continue with next dungeon on error
 				continue
@@ -219,7 +219,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 				ItemsProcessed: int(result.RankingsProcessed),
 				UpdatedAt:      workflow.Now(ctx),
 			}
-			_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+			_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 			// Small delay between dungeons to avoid overwhelming the API
 			workflow.Sleep(ctx, time.Second*2)
@@ -246,7 +246,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 		ItemsProcessed: int(result.RankingsProcessed),
 		UpdatedAt:      workflow.Now(ctx),
 	}
-	_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+	_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 	logger.Info("Rankings workflow completed",
 		"totalProcessed", result.RankingsProcessed,

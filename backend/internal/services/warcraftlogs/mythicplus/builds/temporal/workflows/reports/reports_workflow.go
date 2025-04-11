@@ -52,7 +52,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 	stateCtx := workflow.WithActivityOptions(ctx, stateOpts)
 
 	// Create workflow state
-	err := workflow.ExecuteActivity(stateCtx, "CreateWorkflowState", &warcraftlogsBuilds.WorkflowState{
+	err := workflow.ExecuteActivity(stateCtx, definitions.CreateWorkflowStateActivity, &warcraftlogsBuilds.WorkflowState{
 		ID:              workflowStateID,
 		WorkflowType:    "reports",
 		StartedAt:       workflow.Now(ctx),
@@ -97,7 +97,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 			ErrorMessage: fmt.Sprintf("Failed to get rankings: %v", err),
 			UpdatedAt:    workflow.Now(ctx),
 		}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 		return result, err
 	}
@@ -115,7 +115,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 			ItemsProcessed: 0,
 			UpdatedAt:      workflow.Now(ctx),
 		}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 		result.CompletedAt = workflow.Now(ctx)
 		return result, nil
@@ -146,7 +146,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 			ItemsProcessed:  i,
 			UpdatedAt:       workflow.Now(ctx),
 		}
-		_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 		// Process the batch through the API to fetch and store reports
 		var batchResult models.BatchResult
@@ -163,7 +163,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 					ErrorMessage: fmt.Sprintf("Rate limit reached: %v", err),
 					UpdatedAt:    workflow.Now(ctx),
 				}
-				_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+				_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 				logger.Info("Rate limit reached during reports processing")
 
@@ -225,7 +225,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 		ItemsProcessed: totalReportsProcessed,
 		UpdatedAt:      workflow.Now(ctx),
 	}
-	_ = workflow.ExecuteActivity(stateCtx, "UpdateWorkflowState", workflowState).Get(ctx, nil)
+	_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 	logger.Info("Reports workflow completed",
 		"rankingsProcessed", totalRankingsProcessed,

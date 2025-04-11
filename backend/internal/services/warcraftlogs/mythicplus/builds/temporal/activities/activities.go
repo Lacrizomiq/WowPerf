@@ -9,6 +9,7 @@ type Activities struct {
 	BuildStatistics  *BuildsStatisticsActivity
 	TalentStatistics *TalentStatisticActivity
 	StatStatistics   *StatStatisticsActivity
+	WorkflowState    *WorkflowStateActivity
 }
 
 // NewActivities creates a new instance of Activities
@@ -20,6 +21,7 @@ func NewActivities(
 	buildStatisticsActivity *BuildsStatisticsActivity,
 	statStatisticsActivity *StatStatisticsActivity,
 	talentStatisticsActivity *TalentStatisticActivity,
+	workflowStateActivity *WorkflowStateActivity,
 ) *Activities {
 	return &Activities{
 		Rankings:         rankingsActivity,
@@ -29,5 +31,6 @@ func NewActivities(
 		BuildStatistics:  buildStatisticsActivity,
 		StatStatistics:   statStatisticsActivity,
 		TalentStatistics: talentStatisticsActivity,
+		WorkflowState:    workflowStateActivity,
 	}
 }

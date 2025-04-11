@@ -43,6 +43,14 @@ const (
 	ReleaseRateLimitPointsActivity = "ReleasePoints"        // Release rate limit points
 	CheckRemainingPointsActivity   = "CheckRemainingPoints" // Check remaining points
 
+	// WorkflowState activities
+	CreateWorkflowStateActivity     = "CreateWorkflowState"
+	UpdateWorkflowStateActivity     = "UpdateWorkflowState"
+	GetLastWorkflowRunActivity      = "GetLastWorkflowRun"
+	GetWorkflowStatisticsActivity   = "GetWorkflowStatistics"
+	GetWorkflowStateByIDActivity    = "GetWorkflowStateByID"
+	DeleteOldWorkflowStatesActivity = "DeleteOldWorkflowStates"
+
 	// Build statistics activities
 	ProcessBuildStatisticsActivity  = "ProcessItemStatistics"   // Analyze equipment
 	ProcessTalentStatisticsActivity = "ProcessTalentStatistics" // Analyze talents
