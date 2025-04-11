@@ -325,10 +325,19 @@ func (a *ReportsActivity) GetRankingsNeedingReportProcessing(ctx context.Context
 }
 
 // MarkReportsForBuildProcessing marks reports for build processing
-func (a *ReportsActivity) MarkReportsForBuildProcessing(ctx context.Context, reportCodes []string, batchID string) error {
+func (a *ReportsActivity) MarkReportsForBuildProcessing(ctx context.Context, reports []*warcraftlogsBuilds.Report, batchID string) error {
 	logger := activity.GetLogger(ctx)
+
+	identifiers := make([]reportsRepository.ReportIdentifier, 0, len(reports))
+	for _, report := range reports {
+		identifiers = append(identifiers, reportsRepository.ReportIdentifier{
+			Code:    report.Code,
+			FightID: report.FightID,
+		})
+	}
+
 	logger.Info("Marking reports for build processing",
-		"count", len(reportCodes),
+		"count", len(identifiers),
 		"batchID", batchID,
 	)
 
@@ -337,11 +346,11 @@ func (a *ReportsActivity) MarkReportsForBuildProcessing(ctx context.Context, rep
 		return fmt.Errorf("internal error: reportRepository not injected")
 	}
 
-	if err := a.repository.MarkReportsForBuildProcessing(ctx, reportCodes, batchID); err != nil {
-		logger.Error("Failed to mark reports for build processing in repository", "error", err)
-		return err // return the error to the caller
+	if err := a.repository.MarkReportsForBuildProcessing(ctx, identifiers, batchID); err != nil {
+		logger.Error("Failed to mark reports for build processing", "error", err)
+		return err
 	}
 
-	logger.Info("Successfully marked reports for build processing", "count", len(reportCodes))
+	logger.Info("Successfully marked reports for build processing", "count", len(identifiers))
 	return nil
 }

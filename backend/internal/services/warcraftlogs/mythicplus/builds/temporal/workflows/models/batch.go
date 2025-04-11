@@ -16,11 +16,12 @@ type BatchConfig struct {
 
 // BatchResult represents the outcome of a batch processing operation
 type BatchResult struct {
-	ClassName        string                       `json:"class_name"`        // Class name
-	SpecName         string                       `json:"spec_name"`         // Spec name
-	EncounterID      uint32                       `json:"encounter_id"`      // Encounter ID
-	ProcessedItems   int32                        `json:"processed_items"`   // Processed items
-	RankingsCount    int32                        `json:"rankings_count"`    // Rankings count
-	ProcessedAt      time.Time                    `json:"processed_at"`      // Processed at
-	ProcessedReports []*warcraftlogsBuilds.Report `json:"processed_reports"` // Reports processed in this batch
+	ClassName         string                       `json:"class_name"`           // Class name
+	SpecName          string                       `json:"spec_name"`            // Spec name
+	EncounterID       uint32                       `json:"encounter_id"`         // Encounter ID
+	ProcessedItems    int32                        `json:"processed_items"`      // Processed items
+	RankingsCount     int32                        `json:"rankings_count"`       // Rankings count
+	ProcessedAt       time.Time                    `json:"processed_at"`         // Processed at
+	ProcessedReports  []*warcraftlogsBuilds.Report `json:"processed_reports"`    // Reports processed in this batch
+	BuildsByClassSpec map[string]int32             `json:"builds_by_class_spec"` // Number of builds by class+spec
 }

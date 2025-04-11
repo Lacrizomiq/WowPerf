@@ -32,12 +32,21 @@ type ReportsWorkflowResult struct {
 
 // BuildsWorkflowResult holds the results of the builds workflow
 type BuildsWorkflowResult struct {
-	BuildsProcessed  int32            `json:"builds_processed"`  // Number of builds processed
-	ReportsProcessed int32            `json:"reports_processed"` // Number of reports processed
-	BuildsByClass    map[string]int32 `json:"builds_by_class"`   // Number of builds by class
-	BatchID          string           `json:"batch_id"`          // Batch ID for tracking
-	StartedAt        time.Time        `json:"started_at"`        // Timestamp when the workflow started
-	CompletedAt      time.Time        `json:"completed_at"`      // Timestamp when the workflow completed
+	BuildsProcessed   int32            `json:"builds_processed"`     // Number of builds processed
+	ReportsProcessed  int32            `json:"reports_processed"`    // Number of reports processed
+	BuildsByClassSpec map[string]int32 `json:"builds_by_class_spec"` // Number of builds by class+spec
+	BatchID           string           `json:"batch_id"`             // Batch ID for tracking
+	StartedAt         time.Time        `json:"started_at"`           // Timestamp when the workflow started
+	CompletedAt       time.Time        `json:"completed_at"`         // Timestamp when the workflow completed
+}
+
+// BuildsActivityResult holds the results of processing a batch of reports for builds
+type BuildsActivityResult struct {
+	ProcessedBuildsCount int32            `json:"processed_builds_count"` // Builds successfully stored in this batch
+	SuccessCount         int32            `json:"success_count"`          // Reports successfully processed in this batch
+	FailureCount         int32            `json:"failure_count"`          // Reports that failed processing in this batch
+	BuildsByClassSpec    map[string]int32 `json:"builds_by_class_spec"`   // Builds counted by class+spec FOR THIS BATCH
+	ProcessedAt          time.Time        `json:"processed_at"`           // Timestamp for this batch activity completion
 }
 
 // WorkflowResult represents the final outcome of a workflow execution
