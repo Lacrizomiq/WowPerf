@@ -1,7 +1,11 @@
 // batch.go
 package warcraftlogsBuildsTemporalWorkflowsModels
 
-import "time"
+import (
+	"time"
+
+	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
+)
 
 // BatchConfig defines parameters for batch processing
 type BatchConfig struct {
@@ -12,11 +16,11 @@ type BatchConfig struct {
 
 // BatchResult represents the outcome of a batch processing operation
 type BatchResult struct {
-	// D'après rankings_workflow.go
-	ClassName      string    `json:"class_name"`
-	SpecName       string    `json:"spec_name"`
-	EncounterID    uint32    `json:"encounter_id"`
-	ProcessedItems int32     `json:"processed_items"`
-	RankingsCount  int32     `json:"rankings_count"`
-	ProcessedAt    time.Time `json:"processed_at"`
+	ClassName        string                       `json:"class_name"`        // Class name
+	SpecName         string                       `json:"spec_name"`         // Spec name
+	EncounterID      uint32                       `json:"encounter_id"`      // Encounter ID
+	ProcessedItems   int32                        `json:"processed_items"`   // Processed items
+	RankingsCount    int32                        `json:"rankings_count"`    // Rankings count
+	ProcessedAt      time.Time                    `json:"processed_at"`      // Processed at
+	ProcessedReports []*warcraftlogsBuilds.Report `json:"processed_reports"` // Reports processed in this batch
 }

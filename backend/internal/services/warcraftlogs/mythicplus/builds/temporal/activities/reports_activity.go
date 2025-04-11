@@ -12,7 +12,9 @@ import (
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 	"wowperf/internal/services/warcraftlogs"
 	reportsQueries "wowperf/internal/services/warcraftlogs/mythicplus/builds/queries"
+	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+
 	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
 )
 
@@ -31,18 +33,21 @@ type reportWorkResult struct {
 
 // ReportsActivity handles all report-related operations
 type ReportsActivity struct {
-	client     *warcraftlogs.WarcraftLogsClientService
-	repository *reportsRepository.ReportRepository
+	client             *warcraftlogs.WarcraftLogsClientService
+	repository         *reportsRepository.ReportRepository
+	rankingsRepository *rankingsRepository.RankingsRepository
 }
 
 // NewReportsActivity creates a new instance of ReportsActivity
 func NewReportsActivity(
 	client *warcraftlogs.WarcraftLogsClientService,
 	repository *reportsRepository.ReportRepository,
+	rankingsRepository *rankingsRepository.RankingsRepository,
 ) *ReportsActivity {
 	return &ReportsActivity{
-		client:     client,
-		repository: repository,
+		client:             client,
+		repository:         repository,
+		rankingsRepository: rankingsRepository,
 	}
 }
 
@@ -294,4 +299,49 @@ func (a *ReportsActivity) GetUniqueReportReferences(ctx context.Context) ([]*war
 	logger.Info("Getting unique report references")
 
 	return a.repository.GetAllUniqueReportReferences(ctx)
+}
+
+// GetRankingsNeedingReportProcessing retrieves the rankings that need report processing
+func (a *ReportsActivity) GetRankingsNeedingReportProcessing(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Getting rankings needing report processing",
+		"limit", limit,
+		"maxAge", maxAgeDuration)
+
+	if a.rankingsRepository == nil {
+		logger.Error("RankingsRepository is not initialized in ReportsActivity")
+		return nil, fmt.Errorf("internal error: rankingsRepository not injected")
+	}
+
+	rankings, err := a.rankingsRepository.GetRankingsNeedingReportProcessing(ctx, int(limit), maxAgeDuration)
+
+	if err != nil {
+		logger.Error("Failed to get rankings needing report processing from repository", "error", err)
+		return nil, err // return the error to the caller
+	}
+
+	logger.Info("Retrieved rankings needing report processing", "count", len(rankings))
+	return rankings, nil
+}
+
+// MarkReportsForBuildProcessing marks reports for build processing
+func (a *ReportsActivity) MarkReportsForBuildProcessing(ctx context.Context, reportCodes []string, batchID string) error {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Marking reports for build processing",
+		"count", len(reportCodes),
+		"batchID", batchID,
+	)
+
+	if a.repository == nil {
+		logger.Error("ReportRepository is not initialized in ReportsActivity")
+		return fmt.Errorf("internal error: reportRepository not injected")
+	}
+
+	if err := a.repository.MarkReportsForBuildProcessing(ctx, reportCodes, batchID); err != nil {
+		logger.Error("Failed to mark reports for build processing in repository", "error", err)
+		return err // return the error to the caller
+	}
+
+	logger.Info("Successfully marked reports for build processing", "count", len(reportCodes))
+	return nil
 }

@@ -238,3 +238,34 @@ func (r *ReportRepository) GetAllUniqueReportReferences(ctx context.Context) ([]
 	log.Printf("[INFO] Retrieved %d unique report references", len(rankings))
 	return rankings, nil
 }
+
+// MarkReportsForBuildProcessing marque les reports comme prêts pour le traitement de builds
+func (r *ReportRepository) MarkReportsForBuildProcessing(ctx context.Context, reportCodes []string, batchID string) error {
+	if len(reportCodes) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.Report{}).
+		Where("code IN (?)", reportCodes).
+		Updates(map[string]interface{}{
+			"build_extraction_status": "pending", // flag to indicate that the report is ready for build extraction
+			"processing_batch_id":     batchID,   // batch id to identify the batch of reports that are being processed
+			"build_extraction_at":     nil,       // reset because it's now pending
+		})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark reports as pending for build processing: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		// This is unexpected because the reports should exist after ProcessReportsActivity
+		errMsg := fmt.Sprintf("MarkReportsForBuildProcessing: 0 rows affected for report codes %v (BatchID: %s). Expected reports not found.", reportCodes, batchID)
+		log.Printf("[ERROR] %s", errMsg)
+		return fmt.Errorf(errMsg) // return an error
+	} else {
+		log.Printf("[DEBUG] Marked %d reports for build processing with BatchID: %s", result.RowsAffected, batchID)
+	}
+
+	return nil
+}

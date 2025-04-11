@@ -14,19 +14,19 @@ import (
 
 */
 
-// RankingsWorkflow définit l'interface pour le workflow de récupération des rankings
+// RankingsWorkflow defines the interface for the rankings retrieval workflow
 type RankingsWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.RankingsWorkflowResult, error)
+	Execute(ctx workflow.Context, params models.RankingsWorkflowParams) (*models.RankingsWorkflowResult, error)
 }
 
-// ReportsWorkflow définit l'interface pour le workflow de traitement des reports
+// ReportsWorkflow defines the interface for the reports processing workflow
 type ReportsWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.ReportsWorkflowResult, error)
+	Execute(ctx workflow.Context, params models.ReportsWorkflowParams) (*models.ReportsWorkflowResult, error)
 }
 
-// BuildsWorkflow définit l'interface pour le workflow d'extraction des builds
+// BuildsWorkflow defines the interface for the builds extraction workflow
 type BuildsWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.BuildsWorkflowResult, error)
+	Execute(ctx workflow.Context, params models.BuildsWorkflowParams) (*models.BuildsWorkflowResult, error)
 }
 
 // SyncWorkflow defines the interface for the main synchronization workflow

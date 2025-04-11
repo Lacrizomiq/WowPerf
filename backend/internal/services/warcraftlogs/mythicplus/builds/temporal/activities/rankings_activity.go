@@ -171,3 +171,44 @@ func (a *RankingsActivity) GetStoredRankings(ctx context.Context, className, spe
 
 	return rankings, nil
 }
+
+// MarkRankingsForReportProcessing updates the status of rankings to prepare them for report processing
+func (a *RankingsActivity) MarkRankingsForReportProcessing(ctx context.Context, className, specName string, encounterID uint32, batchID string) error {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Marking rankings for report processing",
+		"class", className,
+		"spec", specName,
+		"encounterID", encounterID,
+		"batchID", batchID)
+
+	// Get the rankings concerned for this class/spec/encounter
+	rankings, err := a.repository.GetRankingsForSpec(ctx, className, specName, uint(encounterID))
+	if err != nil {
+		logger.Error("Failed to get rankings for marking", "error", err)
+		return err
+	}
+
+	if len(rankings) == 0 {
+		logger.Info("No rankings found to mark for processing")
+		return nil
+	}
+
+	// Extract the IDs for update
+	rankingIDs := make([]uint, 0, len(rankings))
+	for _, ranking := range rankings {
+		rankingIDs = append(rankingIDs, ranking.ID)
+	}
+
+	// Call the repository method to update the rankings
+	err = a.repository.MarkRankingsAsProcessedForReports(ctx, rankingIDs, batchID)
+	if err != nil {
+		logger.Error("Failed to mark rankings for report processing", "error", err)
+		return err
+	}
+
+	logger.Info("Successfully marked rankings for report processing",
+		"count", len(rankingIDs),
+		"batchID", batchID)
+
+	return nil
+}
