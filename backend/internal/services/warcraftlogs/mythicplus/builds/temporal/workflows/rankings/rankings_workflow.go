@@ -189,7 +189,7 @@ func (w *RankingsWorkflow) Execute(ctx workflow.Context, params models.RankingsW
 			// Mark rankings with batch ID and status
 			if batchResult.RankingsCount > 0 {
 				// This activity would be a new one created to support the workflow
-				err = workflow.ExecuteActivity(activityCtx, "MarkRankingsForReportProcessing",
+				err = workflow.ExecuteActivity(activityCtx, definitions.MarkRankingsForReportActivity,
 					batchResult.ClassName, batchResult.SpecName, batchResult.EncounterID, params.BatchID).Get(ctx, nil)
 
 				if err != nil {
