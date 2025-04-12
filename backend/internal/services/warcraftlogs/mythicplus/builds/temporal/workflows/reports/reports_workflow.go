@@ -149,7 +149,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
 		// Process the batch through the API to fetch and store reports
-		var batchResult models.BatchResult
+		var batchResult models.ReportProcessingResult
 		err := workflow.ExecuteActivity(activityCtx,
 			definitions.ProcessReportsActivity,
 			batch).Get(ctx, &batchResult)
@@ -191,7 +191,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 			// Mark reports for build processing
 			err = workflow.ExecuteActivity(activityCtx,
 				definitions.MarkReportsForBuildProcessingActivity,
-				reportCodes, params.BatchID).Get(ctx, nil)
+				batchResult.ProcessedReports, params.BatchID).Get(ctx, nil)
 
 			if err != nil {
 				logger.Error("Failed to mark reports for build processing", "error", err)
@@ -199,8 +199,8 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 			}
 		}
 
-		totalReportsProcessed += len(batchResult.ProcessedReports)
-		apiRequestsCount += len(batch) * 2 // Approximately 2 API calls per ranking
+		totalReportsProcessed += int(batchResult.ProcessedCount)
+		apiRequestsCount += int(len(batch) * 2) // Approximately 2 API calls per ranking
 
 		logger.Info("Completed processing reports batch",
 			"batchProcessed", len(batchResult.ProcessedReports),

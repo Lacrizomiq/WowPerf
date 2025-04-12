@@ -1,7 +1,11 @@
 // result.go
 package warcraftlogsBuildsTemporalWorkflowsModels
 
-import "time"
+import (
+	"time"
+
+	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
+)
 
 /*
 
@@ -38,6 +42,15 @@ type BuildsWorkflowResult struct {
 	BatchID           string           `json:"batch_id"`             // Batch ID for tracking
 	StartedAt         time.Time        `json:"started_at"`           // Timestamp when the workflow started
 	CompletedAt       time.Time        `json:"completed_at"`         // Timestamp when the workflow completed
+}
+
+// ReportProcessingResult holds the results of processing a batch of rankings for reports
+type ReportProcessingResult struct {
+	ProcessedCount   int32                        `json:"processed_count"`   // Number of reports processed in this batch
+	SuccessCount     int32                        `json:"success_count"`     // Number of successful report processing
+	FailureCount     int32                        `json:"failure_count"`     // Number of failed report processing
+	ProcessedReports []*warcraftlogsBuilds.Report `json:"processed_reports"` // Reports processed in this batch
+	ProcessedAt      time.Time                    `json:"processed_at"`      // Timestamp for this batch activity completion
 }
 
 // BuildsActivityResult holds the results of processing a batch of reports for builds

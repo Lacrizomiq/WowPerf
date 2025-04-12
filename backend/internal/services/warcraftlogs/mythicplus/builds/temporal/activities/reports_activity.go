@@ -15,7 +15,7 @@ import (
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 )
 
 // reportWorkItem represents a single unit of work to be processed by workers
@@ -56,9 +56,9 @@ func NewReportsActivity(
 func (a *ReportsActivity) ProcessReports(
 	ctx context.Context,
 	rankings []*warcraftlogsBuilds.ClassRanking,
-) (*workflows.ReportProcessingResult, error) {
+) (*models.ReportProcessingResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflows.ReportProcessingResult{
+	result := &models.ReportProcessingResult{
 		ProcessedAt: time.Now(),
 	}
 
@@ -94,12 +94,27 @@ func (a *ReportsActivity) ProcessReports(
 	}
 
 	result.ProcessedReports = reports
-	result.ProcessedCount = len(reports)
+	result.ProcessedCount = int32(len(reports))
 	result.SuccessCount = 1
 
 	logger.Info("Completed report processing",
 		"totalProcessed", len(reports),
 		"duration", time.Since(result.ProcessedAt))
+
+	// Mark rankings as processed
+	var rankingIDs []uint
+	for _, ranking := range rankings {
+		rankingIDs = append(rankingIDs, ranking.ID)
+	}
+
+	if len(rankingIDs) > 0 {
+		if err := a.rankingsRepository.MarkRankingsAsProcessedForReports(ctx, rankingIDs, "processed"); err != nil {
+			logger.Error("Failed to mark rankings as processed", "error", err)
+			// Continue even if marking fails
+		} else {
+			logger.Info("Successfully marked rankings as processed", "count", len(rankingIDs))
+		}
+	}
 
 	return result, nil
 }
