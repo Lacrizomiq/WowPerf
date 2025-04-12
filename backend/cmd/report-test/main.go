@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
@@ -14,9 +13,6 @@ import (
 
 	"go.temporal.io/sdk/client"
 )
-
-// No longer need this constant as we'll use the one from models
-// const defaultNamespace = "default"
 
 func main() {
 	logger := log.New(os.Stdout, "[SCHEDULER] ", log.LstdFlags)
@@ -39,63 +35,91 @@ func main() {
 	}
 	logger.Printf("[INFO] Cleanup completed successfully")
 
-	// Load production configuration
-	/* cfg, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
-	if err != nil {
-		log.Fatalf("[FATAL] Failed to load production config: %v", err)
-	} */
-
-	// Create production schedule
+	// Default options for all schedules
 	opts := scheduler.DefaultScheduleOptions()
 
-	/*
-		if err := scheduleManager.CreateSchedule(context.Background(), cfg, opts); err != nil {
-			logger.Fatalf("[FATAL] Failed to create production schedule: %v", err)
-		}
-		logger.Printf("[INFO] Successfully created production schedule")
-	*/
+	// Configuration file path
+	configPath := "configs/config_s2_tww.priest.yaml"
 
-	// Create and trigger test schedule for Priest
-	testCfg, err := definitions.LoadConfig("configs/config_s2_tww.priest.yaml")
+	// ===== Creation of schedules for new decoupled workflows =====
+
+	// 1. Schedule for RankingsWorkflow
+	rankingsParams, err := definitions.LoadRankingsParams(configPath)
 	if err != nil {
-		log.Fatalf("[FATAL] Failed to load test config: %v", err)
-	}
-
-	if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
-		logger.Printf("[ERROR] Failed to create test schedule: %v", err)
+		logger.Printf("[ERROR] Failed to load rankings params: %v", err)
 	} else {
-		logger.Printf("[TEST] Successfully created test schedule")
-
-		// Trigger test schedule immediately
-		/* if err := scheduleManager.TriggerTestNow(context.Background()); err != nil {
-			logger.Printf("[ERROR] Failed to trigger test schedule: %v", err)
+		if err := scheduleManager.CreateRankingsSchedule(context.Background(), *rankingsParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create rankings schedule: %v", err)
 		} else {
-			logger.Printf("[TEST] Successfully triggered test schedule")
-		} */
+			logger.Printf("[INFO] Successfully created rankings schedule with batch ID: %s", rankingsParams.BatchID)
+		}
 	}
 
-	// Create analysis schedule using the priest config for testing
-	analysisCfg, err := definitions.LoadConfig("configs/config_s2_tww.priest.yaml")
+	// 2. Schedule for ReportsWorkflow
+	reportsParams, err := definitions.LoadReportsParams(configPath)
 	if err != nil {
-		logger.Printf("[ERROR] Failed to load analysis config: %v", err)
+		logger.Printf("[ERROR] Failed to load reports params: %v", err)
 	} else {
-		if err := scheduleManager.CreateAnalyzeSchedule(context.Background(), analysisCfg, opts); err != nil {
+		if err := scheduleManager.CreateReportsSchedule(context.Background(), reportsParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create reports schedule: %v", err)
+		} else {
+			logger.Printf("[INFO] Successfully created reports schedule with batch ID: %s", reportsParams.BatchID)
+		}
+	}
+
+	// 3. Schedule for BuildsWorkflow
+	buildsParams, err := definitions.LoadBuildsParams(configPath)
+	if err != nil {
+		logger.Printf("[ERROR] Failed to load builds params: %v", err)
+	} else {
+		if err := scheduleManager.CreateBuildsSchedule(context.Background(), buildsParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create builds schedule: %v", err)
+		} else {
+			logger.Printf("[INFO] Successfully created builds schedule with batch ID: %s", buildsParams.BatchID)
+		}
+	}
+
+	// ===== Creation of old schedules (for compatibility) =====
+
+	// Loading the configuration for old workflows
+	testCfg, err := definitions.LoadConfig(configPath)
+	if err != nil {
+		logger.Printf("[ERROR] Failed to load test config: %v", err)
+	} else {
+		// Create the test schedule (for Priest only)
+		if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create test schedule: %v", err)
+		} else {
+			logger.Printf("[TEST] Successfully created test schedule")
+		}
+
+		// Create the analysis schedule
+		if err := scheduleManager.CreateAnalyzeSchedule(context.Background(), testCfg, opts); err != nil {
 			logger.Printf("[ERROR] Failed to create analysis schedule: %v", err)
 		} else {
 			logger.Printf("[INFO] Successfully created analysis schedule")
-
-			// Wait 50 minutes before triggering analysis workflow to ensure the test schedule has time to collect data
-			logger.Printf("[INFO] Waiting 50 minutes before triggering analysis workflow...")
-			time.Sleep(50 * time.Minute)
-
-			// Trigger analysis schedule
-			/* if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
-				logger.Printf("[ERROR] Failed to trigger analysis schedule: %v", err)
-			} else {
-				logger.Printf("[INFO] Successfully triggered analysis schedule")
-			} */
 		}
 	}
+
+	// Information on how to trigger workflows manually
+	logger.Printf("[INFO] All schedules created. Workflows can now be triggered manually from Temporal UI.")
+	logger.Printf("[INFO] To trigger workflows manually via code, you can use:")
+	logger.Printf("[INFO] - Rankings: scheduleManager.TriggerRankingsNow(ctx)")
+	logger.Printf("[INFO] - Reports: scheduleManager.TriggerReportsNow(ctx)")
+	logger.Printf("[INFO] - Builds: scheduleManager.TriggerBuildsNow(ctx)")
+
+	// Waiting for 50 minutes before triggering the analysis workflow (if necessary)
+	// Uncomment to activate the automatic triggering of the analysis after 50 minutes
+	/*
+		logger.Printf("[INFO] Waiting 50 minutes before triggering analysis workflow...")
+		time.Sleep(50 * time.Minute)
+
+		if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
+			logger.Printf("[ERROR] Failed to trigger analysis schedule: %v", err)
+		} else {
+			logger.Printf("[INFO] Successfully triggered analysis schedule")
+		}
+	*/
 
 	// Handle graceful shutdown
 	handleGracefulShutdown(scheduleManager, logger)
@@ -110,7 +134,7 @@ func initTemporalClient() (client.Client, error) {
 	// Use the shared namespace constant from models
 	return client.Dial(client.Options{
 		HostPort:  temporalAddress,
-		Namespace: models.DefaultNamespace, // Updated to use models
+		Namespace: models.DefaultNamespace,
 	})
 }
 
@@ -121,11 +145,6 @@ func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *
 	sig := <-sigCh
 	logger.Printf("Received signal %v, initiating shutdown", sig)
 
-	// We now have deletion logic implemented but typically don't need to run it on shutdown
-	// If you want to clean up on shutdown, you could add:
-	// if err := scheduleManager.CleanupAll(context.Background()); err != nil {
-	//     logger.Printf("[WARN] Cleanup on shutdown failed: %v", err)
-	// }
-
+	// We keep the schedules when shutting down to allow scheduled executions
 	logger.Printf("Scheduler service shutdown complete")
 }

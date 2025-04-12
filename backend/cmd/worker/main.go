@@ -16,6 +16,7 @@ import (
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	workflowStatesRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 
 	// package
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
@@ -25,6 +26,9 @@ import (
 
 	// workflow
 	analyzeWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/analyze"
+	buildsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds"
+	rankingsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/rankings"
+	reportsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/reports"
 	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
 
 	// build analysis repository
@@ -62,7 +66,7 @@ func main() {
 	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
 	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)
 	statStatsRepo := statStatisticsRepository.NewStatStatisticsRepository(db)
-
+	workflowStatesRepo := workflowStatesRepository.NewWorkflowStateRepository(db)
 	// Initialize activities with all services
 	activitiesService := initializeActivities(
 		warcraftLogsClient,
@@ -72,6 +76,7 @@ func main() {
 		buildsStatsRepo,
 		talentStatsRepo,
 		statStatsRepo,
+		workflowStatesRepo,
 	)
 	// Create a single worker that will handle both production and test schedules
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
@@ -147,12 +152,14 @@ func initializeActivities(
 	buildsStatisticsRepo *buildsStatisticsRepository.BuildsStatisticsRepository,
 	talentStatisticsRepo *talentStatisticsRepository.TalentStatisticsRepository,
 	statStatisticsRepo *statStatisticsRepository.StatStatisticsRepository,
+	workflowStatesRepo *workflowStatesRepository.WorkflowStateRepository,
 ) *activities.Activities {
 	// Create the existing activities
 	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
-	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
-	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
+	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo, rankingsRepo)
+	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo, reportsRepo)
 	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
+	workflowStatesActivity := activities.NewWorkflowStateActivity(workflowStatesRepo)
 
 	// Create the new analysis activities
 	buildsStatisticsActivity := activities.NewBuildsStatisticsActivity(
@@ -177,11 +184,29 @@ func initializeActivities(
 		BuildStatistics:  buildsStatisticsActivity,
 		TalentStatistics: talentStatisticActivity,
 		StatStatistics:   statStatisticsActivity,
+		WorkflowState:    workflowStatesActivity,
 	}
 }
 
 func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
-	// Register workflows
+	// Register workflows (New workflows, will be used soon)
+	rankingsWorkflowImpl := rankingsWorkflow.NewRankingsWorkflow()
+	reportsWorkflowImpl := reportsWorkflow.NewReportsWorkflow()
+	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
+
+	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: "RankingsWorkflow", // Doit correspondre exactement au nom utilisé dans le scheduler
+	})
+
+	w.RegisterWorkflowWithOptions(reportsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: "ReportsWorkflow",
+	})
+
+	w.RegisterWorkflowWithOptions(buildsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: "BuildsWorkflow",
+	})
+
+	// Register workflows (Old workflows, will be removed soon)
 	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
 	analyzeWorkflowImpl := analyzeWorkflow.NewAnalyzeWorkflow()
 
@@ -193,15 +218,26 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 		Name: definitions.AnalyzeBuildsWorkflowName,
 	})
 
-	// Register activities
+	// Register rankingsactivities
 	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
 	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
+	w.RegisterActivity(activitiesService.Rankings.MarkRankingsForReportProcessing)
+
+	// Register reports activities
 	w.RegisterActivity(activitiesService.Reports.ProcessReports)
 	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
 	w.RegisterActivity(activitiesService.Reports.CountAllReports)
 	w.RegisterActivity(activitiesService.Reports.GetUniqueReportReferences)
+	w.RegisterActivity(activitiesService.Reports.GetRankingsNeedingReportProcessing)
+	w.RegisterActivity(activitiesService.Reports.MarkReportsForBuildProcessing)
+
+	// Register player builds activities
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.GetReportsNeedingBuildExtraction)
+	w.RegisterActivity(activitiesService.PlayerBuilds.MarkReportsAsProcessedForBuilds)
+
+	// Register rate limit activities
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
 	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
 	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
@@ -210,6 +246,14 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	w.RegisterActivity(activitiesService.BuildStatistics.ProcessItemStatistics)
 	w.RegisterActivity(activitiesService.TalentStatistics.ProcessTalentStatistics)
 	w.RegisterActivity(activitiesService.StatStatistics.ProcessStatStatistics)
+
+	// Workflow state activities
+	w.RegisterActivity(activitiesService.WorkflowState.CreateWorkflowState)
+	w.RegisterActivity(activitiesService.WorkflowState.UpdateWorkflowState)
+	w.RegisterActivity(activitiesService.WorkflowState.GetLastWorkflowRun)
+	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStatistics)
+	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStateByID)
+	w.RegisterActivity(activitiesService.WorkflowState.DeleteOldWorkflowStates)
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {
