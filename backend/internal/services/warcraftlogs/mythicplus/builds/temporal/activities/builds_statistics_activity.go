@@ -39,10 +39,10 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 	class, spec string,
 	encounterID uint,
 	batchSize int,
-) (*workflowsModels.BuildsAnalysisResult, error) {
+) (*workflowsModels.EquipmentAnalysisWorkflowResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflowsModels.BuildsAnalysisResult{
-		ProcessedAt: time.Now(),
+	result := &workflowsModels.EquipmentAnalysisWorkflowResult{
+		StartedAt: time.Now(),
 	}
 
 	// 1. Delete existing build statistics
@@ -118,8 +118,8 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 			"progress", fmt.Sprintf("%d/%d", totalProcessed, count))
 	}
 
-	result.BuildsProcessed = int32(totalProcessed)
-	result.ItemsProcessed = int32(totalItems)
+	result.TotalBuilds = int32(totalProcessed)
+	result.ItemsAnalyzed = int32(totalItems)
 
 	logger.Info("Completed build statistics processing",
 		"class", class,

@@ -75,6 +75,57 @@ func LoadBuildsParams(configPath string) (*models.BuildsWorkflowParams, error) {
 	}, nil
 }
 
+// LoadEquipmentAnalysisParams loads the parameters for the equipment analysis workflow
+func LoadEquipmentAnalysisParams(configPath string) (*models.EquipmentAnalysisWorkflowParams, error) {
+	config, err := LoadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.EquipmentAnalysisWorkflowParams{
+		Spec:          config.Specs,    // Specs to analyze
+		Dungeon:       config.Dungeons, // Dungeons to analyze
+		BatchSize:     10,              // Batch size for the analysis
+		Concurrency:   4,               // Number of concurrent workers
+		RetryAttempts: 3,               // Number of retry attempts
+		RetryDelay:    5 * time.Second, // Retry delay
+	}, nil
+}
+
+// LoadStatAnalysisParams loads the parameters for the stat analysis workflow
+func LoadStatAnalysisParams(configPath string) (*models.StatAnalysisWorkflowParams, error) {
+	config, err := LoadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.StatAnalysisWorkflowParams{
+		Spec:          config.Specs,    // Specs to analyze
+		Dungeon:       config.Dungeons, // Dungeons to analyze
+		BatchSize:     10,              // Batch size for the analysis
+		Concurrency:   4,               // Number of concurrent workers
+		RetryAttempts: 3,               // Number of retry attempts
+		RetryDelay:    5 * time.Second, // Retry delay
+	}, nil
+}
+
+// LoadTalentAnalysisParams loads the parameters for the talent analysis workflow
+func LoadTalentAnalysisParams(configPath string) (*models.TalentAnalysisWorkflowParams, error) {
+	config, err := LoadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.TalentAnalysisWorkflowParams{
+		Spec:          config.Specs,    // Specs to analyze
+		Dungeon:       config.Dungeons, // Dungeons to analyze
+		BatchSize:     10,              // Batch size for the analysis
+		Concurrency:   4,               // Number of concurrent workers
+		RetryAttempts: 3,               // Number of retry attempts
+		RetryDelay:    5 * time.Second, // Retry delay
+	}, nil
+}
+
 // === LEGACY FUNCTIONS ===
 
 // LoadConfig loads configuration from file or returns default values
