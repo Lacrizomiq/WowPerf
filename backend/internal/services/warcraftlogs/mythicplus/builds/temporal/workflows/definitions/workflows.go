@@ -29,14 +29,14 @@ type BuildsWorkflow interface {
 	Execute(ctx workflow.Context, params models.BuildsWorkflowParams) (*models.BuildsWorkflowResult, error)
 }
 
+// AnalyzeWorkflow defines the interface for the main analysis workflow
+type AnalyzeWorkflow interface {
+	Execute(ctx workflow.Context, config models.AnalysisWorkflowConfig) (*models.AnalysisWorkflowResult, error)
+}
+
 // SyncWorkflow defines the interface for the main synchronization workflow
 // This workflow is used to synchronize the rankings, reports and builds from WarcraftLogs
 // Legacy workflow, not used anymore, will be removed in the future.
 type SyncWorkflow interface {
 	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
-}
-
-// AnalyzeWorkflow defines the interface for the main analysis workflow
-type AnalyzeWorkflow interface {
-	Execute(ctx workflow.Context, config models.AnalysisWorkflowConfig) (*models.AnalysisWorkflowResult, error)
 }

@@ -11,6 +11,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+/*
+	This file is not used anymore.
+	All the logic is now in the models package.
+	Some type might still be used in other files, but they should be removed
+	or migrated to the models package.
+*/
+
 // ProcessState tracks the detailed progress of spec and dungeon processing
 type ProcessState struct {
 	CurrentSpec    ClassSpec
