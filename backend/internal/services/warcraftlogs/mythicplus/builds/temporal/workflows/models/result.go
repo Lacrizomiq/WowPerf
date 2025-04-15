@@ -11,7 +11,10 @@ import (
 
 This file contains the models for the results of the workflows.
 
+The models are used to store the results of the workflows in the database.
 */
+
+// Workflows Results Models
 
 // RankingsWorkflowResult holds the results of the rankings workflow
 type RankingsWorkflowResult struct {
@@ -44,7 +47,10 @@ type BuildsWorkflowResult struct {
 	CompletedAt       time.Time        `json:"completed_at"`         // Timestamp when the workflow completed
 }
 
+// Activities Results Models
+
 // ReportProcessingResult holds the results of processing a batch of rankings for reports
+// This is the result of the reports activity, which is the processing of the rankings for reports
 type ReportProcessingResult struct {
 	ProcessedCount   int32                        `json:"processed_count"`   // Number of reports processed in this batch
 	SuccessCount     int32                        `json:"success_count"`     // Number of successful report processing
@@ -54,6 +60,7 @@ type ReportProcessingResult struct {
 }
 
 // BuildsActivityResult holds the results of processing a batch of reports for builds
+// This is the result of the builds activity, which is the processing of the reports for builds
 type BuildsActivityResult struct {
 	ProcessedBuildsCount int32            `json:"processed_builds_count"` // Builds successfully stored in this batch
 	SuccessCount         int32            `json:"success_count"`          // Reports successfully processed in this batch
@@ -61,6 +68,8 @@ type BuildsActivityResult struct {
 	BuildsByClassSpec    map[string]int32 `json:"builds_by_class_spec"`   // Builds counted by class+spec FOR THIS BATCH
 	ProcessedAt          time.Time        `json:"processed_at"`           // Timestamp for this batch activity completion
 }
+
+// Legacy Workflow Result Model, not used anymore, will be removed in the future.
 
 // WorkflowResult represents the final outcome of a workflow execution
 // This is the result of the main workflow, which is the synchronization of the rankings, reports and builds
@@ -75,9 +84,12 @@ type WorkflowResult struct {
 	CompletedAt       time.Time `json:"completed_at"`       // Timestamp when the workflow completed
 }
 
+// Analysis Results Models, Should be refactored in the future
+// The analysis workflows will be decoupled
+
 // BuildsAnalysisResult represents the result of the builds analysis workflow
 // It is used to analyze the builds and extract the best builds for each class and spec
-// Should refacto the analysis activities cuz they should use the one in analysis_result.go
+// Should refactor the analysis activities cuz they should use the one in analysis_result.go
 type BuildsAnalysisResult struct {
 	BuildsProcessed int32     `json:"builds_processed"` // Number of builds processed
 	ItemsProcessed  int32     `json:"items_processed"`  // Number of items processed

@@ -182,9 +182,9 @@ func (r *RankingsRepository) MarkRankingsAsProcessedForReports(ctx context.Conte
 		Model(&warcraftlogsBuilds.ClassRanking{}).
 		Where("id IN ?", ids).
 		Updates(map[string]interface{}{
-			"report_processing_status": "pending",
+			"report_processing_status": "processed",
 			"processing_batch_id":      batchID,
-			"report_processing_at":     nil, // Reset because it's now pending
+			"report_processing_at":     time.Now(),
 		})
 
 	if result.Error != nil {

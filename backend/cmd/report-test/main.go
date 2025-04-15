@@ -87,11 +87,11 @@ func main() {
 		logger.Printf("[ERROR] Failed to load test config: %v", err)
 	} else {
 		// Create the test schedule (for Priest only)
-		if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
+		/* if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
 			logger.Printf("[ERROR] Failed to create test schedule: %v", err)
 		} else {
 			logger.Printf("[TEST] Successfully created test schedule")
-		}
+		} */
 
 		// Create the analysis schedule
 		if err := scheduleManager.CreateAnalyzeSchedule(context.Background(), testCfg, opts); err != nil {

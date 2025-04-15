@@ -81,133 +81,152 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Get rankings needing report processing
-	var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
-	err = workflow.ExecuteActivity(activityCtx,
-		definitions.GetRankingsNeedingReportProcessingActivity,
-		params.BatchSize, params.ProcessingWindow).Get(ctx, &rankingsToProcess)
-
-	if err != nil {
-		logger.Error("Failed to get rankings needing report processing", "error", err)
-
-		// Update workflow state with error
-		workflowState := &warcraftlogsBuilds.WorkflowState{
-			ID:           workflowStateID,
-			Status:       "failed",
-			ErrorMessage: fmt.Sprintf("Failed to get rankings: %v", err),
-			UpdatedAt:    workflow.Now(ctx),
-		}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
-
-		return result, err
-	}
-
-	logger.Info("Retrieved rankings needing report processing", "count", len(rankingsToProcess))
-
-	if len(rankingsToProcess) == 0 {
-		logger.Info("No rankings need report processing")
-
-		// Complete workflow state with no work done
-		workflowState := &warcraftlogsBuilds.WorkflowState{
-			ID:             workflowStateID,
-			Status:         "completed",
-			CompletedAt:    workflow.Now(ctx),
-			ItemsProcessed: 0,
-			UpdatedAt:      workflow.Now(ctx),
-		}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
-
-		result.CompletedAt = workflow.Now(ctx)
-		return result, nil
-	}
-
 	// Process reports in batches
-	const batchSize = 10
 	totalReportsProcessed := 0
-	totalRankingsProcessed := len(rankingsToProcess)
+	totalRankingsProcessed := 0
 	apiRequestsCount := 0
 	failedReports := 0
+	batchNumber := 0
 
-	for i := 0; i < len(rankingsToProcess); i += batchSize {
-		end := i + batchSize
-		if end > len(rankingsToProcess) {
-			end = len(rankingsToProcess)
-		}
+	// Add a log to indicate the start of batch processing
+	logger.Info("Starting to process all rankings in batches",
+		"batchSize", params.BatchSize)
 
-		batch := rankingsToProcess[i:end]
-		logger.Info("Processing rankings batch",
-			"batchSize", len(batch),
-			"progress", fmt.Sprintf("%d/%d", i+len(batch), len(rankingsToProcess)))
+	// External loop to retrieve all rankings until exhaustion
+	for {
+		batchNumber++
 
-		// Update workflow state with current batch
-		workflowState := &warcraftlogsBuilds.WorkflowState{
-			ID:              workflowStateID,
-			LastProcessedID: fmt.Sprintf("batch-%d", i/batchSize),
-			ItemsProcessed:  i,
-			UpdatedAt:       workflow.Now(ctx),
-		}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
-
-		// Process the batch through the API to fetch and store reports
-		var batchResult models.ReportProcessingResult
-		err := workflow.ExecuteActivity(activityCtx,
-			definitions.ProcessReportsActivity,
-			batch).Get(ctx, &batchResult)
+		// Get rankings needing report processing
+		var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
+		err = workflow.ExecuteActivity(activityCtx,
+			definitions.GetRankingsNeedingReportProcessingActivity,
+			params.BatchSize, params.ProcessingWindow).Get(ctx, &rankingsToProcess)
 
 		if err != nil {
-			if common.IsRateLimitError(err) {
-				// Update workflow state for rate limit
-				workflowState := &warcraftlogsBuilds.WorkflowState{
-					ID:           workflowStateID,
-					Status:       "rate_limited",
-					ErrorMessage: fmt.Sprintf("Rate limit reached: %v", err),
-					UpdatedAt:    workflow.Now(ctx),
-				}
-				_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
+			logger.Error("Failed to get rankings needing report processing", "error", err)
 
-				logger.Info("Rate limit reached during reports processing")
+			// Update workflow state with error
+			workflowState := &warcraftlogsBuilds.WorkflowState{
+				ID:           workflowStateID,
+				Status:       "failed",
+				ErrorMessage: fmt.Sprintf("Failed to get rankings: %v", err),
+				UpdatedAt:    workflow.Now(ctx),
+			}
+			_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
-				result.CompletedAt = workflow.Now(ctx)
-				result.ReportsProcessed = int32(totalReportsProcessed)
-				result.RankingsProcessed = int32(totalRankingsProcessed)
-				result.FailedReports = int32(failedReports)
-				result.APIRequestsCount = int32(apiRequestsCount)
+			return result, err
+		}
 
-				return result, err
+		if len(rankingsToProcess) == 0 {
+			logger.Info("No more rankings need report processing")
+			break
+		}
+
+		// Improvement of the general progress log
+		logger.Info("Processing batch of rankings",
+			"batchNumber", batchNumber,
+			"batchSize", len(rankingsToProcess),
+			"totalProcessedSoFar", totalRankingsProcessed,
+			"remainingToProcess", len(rankingsToProcess))
+
+		// Processing retrieved batches
+		const batchSize = 10
+		batchRankingsProcessed := len(rankingsToProcess)
+
+		for i := 0; i < len(rankingsToProcess); i += batchSize {
+			end := i + batchSize
+			if end > len(rankingsToProcess) {
+				end = len(rankingsToProcess)
 			}
 
-			logger.Error("Failed to process reports batch", "error", err)
-			failedReports += len(batch)
-			continue
-		}
+			batch := rankingsToProcess[i:end]
+			// Reduce detailed logs for each sub-batch
+			if i == 0 || i+batchSize >= len(rankingsToProcess) {
+				logger.Info("Processing rankings sub-batch",
+					"batchSize", len(batch),
+					"progress", fmt.Sprintf("%d/%d", i+len(batch), len(rankingsToProcess)))
+			}
 
-		// Extract report codes for marking
-		var reportCodes []string
-		for _, report := range batchResult.ProcessedReports {
-			reportCodes = append(reportCodes, report.Code)
-		}
+			// Update workflow state with current batch
+			workflowState := &warcraftlogsBuilds.WorkflowState{
+				ID:              workflowStateID,
+				LastProcessedID: fmt.Sprintf("batch-%d-%d", batchNumber, i/batchSize),
+				ItemsProcessed:  totalRankingsProcessed + i,
+				UpdatedAt:       workflow.Now(ctx),
+			}
+			_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
-		if len(reportCodes) > 0 {
-			// Mark reports for build processing
-			err = workflow.ExecuteActivity(activityCtx,
-				definitions.MarkReportsForBuildProcessingActivity,
-				batchResult.ProcessedReports, params.BatchID).Get(ctx, nil)
+			// Process the batch through the API to fetch and store reports
+			var batchResult models.ReportProcessingResult
+			err := workflow.ExecuteActivity(activityCtx,
+				definitions.ProcessReportsActivity,
+				batch).Get(ctx, &batchResult)
 
 			if err != nil {
-				logger.Error("Failed to mark reports for build processing", "error", err)
-				// Continue even if marking fails
+				if common.IsRateLimitError(err) {
+					// Update workflow state for rate limit
+					workflowState := &warcraftlogsBuilds.WorkflowState{
+						ID:           workflowStateID,
+						Status:       "rate_limited",
+						ErrorMessage: fmt.Sprintf("Rate limit reached: %v", err),
+						UpdatedAt:    workflow.Now(ctx),
+					}
+					_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
+
+					logger.Info("Rate limit reached during reports processing")
+
+					result.CompletedAt = workflow.Now(ctx)
+					result.ReportsProcessed = int32(totalReportsProcessed)
+					result.RankingsProcessed = int32(totalRankingsProcessed)
+					result.FailedReports = int32(failedReports)
+					result.APIRequestsCount = int32(apiRequestsCount)
+
+					return result, err
+				}
+
+				logger.Error("Failed to process reports batch", "error", err)
+				failedReports += len(batch)
+				continue
 			}
+
+			// Extract report codes for marking
+			if len(batchResult.ProcessedReports) > 0 {
+				// Mark reports for build processing
+				err = workflow.ExecuteActivity(activityCtx,
+					definitions.MarkReportsForBuildProcessingActivity,
+					batchResult.ProcessedReports, params.BatchID).Get(ctx, nil)
+
+				if err != nil {
+					logger.Error("Failed to mark reports for build processing", "error", err)
+					// Continue even if marking fails
+				}
+			}
+
+			totalReportsProcessed += int(batchResult.ProcessedCount)
+			apiRequestsCount += int(len(batch) * 2) // Approximately 2 API calls per ranking
+
+			// Log only for the last sub-batch to reduce verbosity
+			if i+batchSize >= len(rankingsToProcess) {
+				logger.Info("Completed processing reports batch",
+					"batchProcessed", len(batchResult.ProcessedReports),
+					"totalProcessed", totalReportsProcessed)
+			}
+
+			// Small delay between batches
+			workflow.Sleep(ctx, time.Second*2)
 		}
 
-		totalReportsProcessed += int(batchResult.ProcessedCount)
-		apiRequestsCount += int(len(batch) * 2) // Approximately 2 API calls per ranking
+		// Update the total count of processed rankings after each main batch
+		totalRankingsProcessed += batchRankingsProcessed
 
-		logger.Info("Completed processing reports batch",
-			"batchProcessed", len(batchResult.ProcessedReports),
-			"totalProcessed", totalReportsProcessed)
+		logger.Info("Batch complete",
+			"batchNumber", batchNumber,
+			"processedInBatch", batchRankingsProcessed,
+			"totalProcessed", totalRankingsProcessed,
+			"progress", fmt.Sprintf("Processed %d rankings so far", totalRankingsProcessed))
 
-		// Small delay between batches
-		workflow.Sleep(ctx, time.Second*2)
+		// Small delay between large data retrievals
+		workflow.Sleep(ctx, time.Second*5)
 	}
 
 	// Set final results
@@ -227,6 +246,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 	}
 	_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowState).Get(ctx, nil)
 
+	// Keep this final log exactly as you requested
 	logger.Info("Reports workflow completed",
 		"rankingsProcessed", totalRankingsProcessed,
 		"reportsProcessed", totalReportsProcessed,

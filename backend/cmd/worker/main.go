@@ -29,7 +29,6 @@ import (
 	buildsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds"
 	rankingsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/rankings"
 	reportsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/reports"
-	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
 
 	// build analysis repository
 	buildsStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
@@ -207,12 +206,12 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	})
 
 	// Register workflows (Old workflows, will be removed soon)
-	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
+	// syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
 	analyzeWorkflowImpl := analyzeWorkflow.NewAnalyzeWorkflow()
 
-	w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.SyncWorkflowName,
-	})
+	// w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
+	// 	Name: definitions.SyncWorkflowName,
+	// })
 
 	w.RegisterWorkflowWithOptions(analyzeWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeBuildsWorkflowName,
