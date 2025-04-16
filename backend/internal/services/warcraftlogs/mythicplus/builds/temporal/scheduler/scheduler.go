@@ -482,17 +482,24 @@ func (sm *ScheduleManager) CleanupDecoupledSchedules(ctx context.Context) error 
 	return nil
 }
 
-// CleanupOldWorkflows terminates running workflows
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
+// CleanupAllWorkflows terminates all running workflows of our application types
+func (sm *ScheduleManager) CleanupAllWorkflows(ctx context.Context) error {
 	var terminatedCount int
 
-	// Define the workflow types to clean
+	// Définir TOUS les types de workflows à nettoyer, y compris les nouveaux
 	workflowTypes := []string{
+		// Legacy workflows
 		"SyncWorkflow",
 		"ProcessBuildBatchWorkflow",
 		"AnalyzeBuildsWorkflow",
+
+		// Nouveaux workflows découplés
+		definitions.RankingsWorkflowName,
+		definitions.ReportsWorkflowName,
+		definitions.BuildsWorkflowName,
+		definitions.AnalyzeBuildsWorkflowName,
+		definitions.AnalyzeTalentsWorkflowName,
+		definitions.AnalyzeStatStatisticsWorkflowName,
 	}
 
 	// Process each workflow type separately
@@ -526,7 +533,7 @@ func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 			}
 
 			// Terminate the workflow
-			err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of old workflows")
+			err := sm.client.TerminateWorkflow(ctx, workflowID, runID, "Cleanup of workflows during service restart")
 			if err != nil {
 				sm.logger.Printf("[WARN] Failed to terminate workflow %s (type: %s): %v",
 					workflowID, workflowType, err)
@@ -538,14 +545,20 @@ func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 		}
 	}
 
-	sm.logger.Printf("[INFO] Cleanup completed - terminated %d workflows", terminatedCount)
+	sm.logger.Printf("[INFO] Workflow cleanup completed - terminated %d workflows", terminatedCount)
 	return nil
 }
 
 // CleanupAll do a complete cleanup
 func (sm *ScheduleManager) CleanupAll(ctx context.Context) error {
+	// Cleanup schedules first
+	if err := sm.CleanupDecoupledSchedules(ctx); err != nil {
+		sm.logger.Printf("[WARN] Failed to cleanup schedules: %v", err)
+		// Continue despite errors
+	}
 
-	if err := sm.CleanupOldWorkflows(ctx); err != nil {
+	// Then cleanup workflows
+	if err := sm.CleanupAllWorkflows(ctx); err != nil {
 		return fmt.Errorf("failed to cleanup workflows: %w", err)
 	}
 

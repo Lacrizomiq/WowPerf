@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
@@ -149,6 +150,21 @@ func handleGracefulShutdown(scheduleManager *scheduler.ScheduleManager, logger *
 	sig := <-sigCh
 	logger.Printf("Received signal %v, initiating shutdown", sig)
 
-	// We keep the schedules when shutting down to allow scheduled executions
-	logger.Printf("Scheduler service shutdown complete")
+	// Context with timeout for cleaning
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	// Clean all the workflow before shutdown
+	logger.Printf("Cleaning up all workflows before shutdown...")
+	if err := scheduleManager.CleanupAllWorkflows(ctx); err != nil {
+		logger.Printf("Warning: Error during workflows cleanup: %v", err)
+	}
+
+	//Clean up all the schedules
+	logger.Printf("Cleaning up all schedules before shutdown...")
+	if err := scheduleManager.CleanupDecoupledSchedules(ctx); err != nil {
+		logger.Printf("Warning: Error during schedules cleanup: %v", err)
+	}
+
+	logger.Printf("Cleanup completed, scheduler service shutting down")
 }
