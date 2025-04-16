@@ -79,25 +79,39 @@ func main() {
 		}
 	}
 
-	// ===== Creation of old schedules (for compatibility) =====
-
-	// Loading the configuration for old workflows
-	testCfg, err := definitions.LoadConfig(configPath)
+	// 4. Schedule for EquipmentAnalysisWorkflow
+	equipmentAnalysisParams, err := definitions.LoadEquipmentAnalysisParams(configPath)
 	if err != nil {
-		logger.Printf("[ERROR] Failed to load test config: %v", err)
+		logger.Printf("[ERROR] Failed to load equipment analysis params: %v", err)
 	} else {
-		// Create the test schedule (for Priest only)
-		/* if err := scheduleManager.CreateTestSchedule(context.Background(), testCfg, opts); err != nil {
-			logger.Printf("[ERROR] Failed to create test schedule: %v", err)
+		if err := scheduleManager.CreateEquipmentAnalysisSchedule(context.Background(), equipmentAnalysisParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create equipment analysis schedule: %v", err)
 		} else {
-			logger.Printf("[TEST] Successfully created test schedule")
-		} */
+			logger.Printf("[INFO] Successfully created equipment analysis schedule with batch ID: %s", equipmentAnalysisParams.BatchID)
+		}
+	}
 
-		// Create the analysis schedule
-		if err := scheduleManager.CreateAnalyzeSchedule(context.Background(), testCfg, opts); err != nil {
-			logger.Printf("[ERROR] Failed to create analysis schedule: %v", err)
+	// 5. Schedule for TalentAnalysisWorkflow
+	talentAnalysisParams, err := definitions.LoadTalentAnalysisParams(configPath)
+	if err != nil {
+		logger.Printf("[ERROR] Failed to load talent analysis params: %v", err)
+	} else {
+		if err := scheduleManager.CreateTalentAnalysisSchedule(context.Background(), talentAnalysisParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create talent analysis schedule: %v", err)
 		} else {
-			logger.Printf("[INFO] Successfully created analysis schedule")
+			logger.Printf("[INFO] Successfully created talent analysis schedule with batch ID: %s", talentAnalysisParams.BatchID)
+		}
+	}
+
+	// 6. Schedule for StatAnalysisWorkflow
+	statAnalysisParams, err := definitions.LoadStatAnalysisParams(configPath)
+	if err != nil {
+		logger.Printf("[ERROR] Failed to load stat analysis params: %v", err)
+	} else {
+		if err := scheduleManager.CreateStatAnalysisSchedule(context.Background(), statAnalysisParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create stat analysis schedule: %v", err)
+		} else {
+			logger.Printf("[INFO] Successfully created stat analysis schedule with batch ID: %s", statAnalysisParams.BatchID)
 		}
 	}
 
@@ -107,19 +121,9 @@ func main() {
 	logger.Printf("[INFO] - Rankings: scheduleManager.TriggerRankingsNow(ctx)")
 	logger.Printf("[INFO] - Reports: scheduleManager.TriggerReportsNow(ctx)")
 	logger.Printf("[INFO] - Builds: scheduleManager.TriggerBuildsNow(ctx)")
-
-	// Waiting for 50 minutes before triggering the analysis workflow (if necessary)
-	// Uncomment to activate the automatic triggering of the analysis after 50 minutes
-	/*
-		logger.Printf("[INFO] Waiting 50 minutes before triggering analysis workflow...")
-		time.Sleep(50 * time.Minute)
-
-		if err := scheduleManager.TriggerAnalyzeNow(context.Background()); err != nil {
-			logger.Printf("[ERROR] Failed to trigger analysis schedule: %v", err)
-		} else {
-			logger.Printf("[INFO] Successfully triggered analysis schedule")
-		}
-	*/
+	logger.Printf("[INFO] - Equipment Analysis: scheduleManager.TriggerEquipmentAnalysisNow(ctx)")
+	logger.Printf("[INFO] - Talent Analysis: scheduleManager.TriggerTalentAnalysisNow(ctx)")
+	logger.Printf("[INFO] - Stat Analysis: scheduleManager.TriggerStatAnalysisNow(ctx)")
 
 	// Handle graceful shutdown
 	handleGracefulShutdown(scheduleManager, logger)

@@ -51,19 +51,3 @@ type TalentAnalysisWorkflow interface {
 type StatAnalysisWorkflow interface {
 	Execute(ctx workflow.Context, config models.StatAnalysisWorkflowParams) (*models.StatAnalysisWorkflowResult, error)
 }
-
-// == Legacy workflows ==
-
-// AnalyzeWorkflow defines the interface for the main analysis workflow
-// Note: This will not be used anymore.
-// It is kept here for reference and in case we need to use it again.
-type AnalyzeWorkflow interface {
-	Execute(ctx workflow.Context, config models.AnalysisWorkflowConfig) (*models.AnalysisWorkflowResult, error)
-}
-
-// SyncWorkflow defines the interface for the main synchronization workflow
-// Note: This workflow is used to synchronize the rankings, reports and builds from WarcraftLogs
-// Legacy workflow, not used anymore, will be removed in the future.
-type SyncWorkflow interface {
-	Execute(ctx workflow.Context, params models.WorkflowConfig) (*models.WorkflowResult, error)
-}

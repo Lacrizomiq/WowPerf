@@ -13,6 +13,7 @@ type EquipmentAnalysisWorkflowParams struct {
 	Concurrency   int32         `json:"concurrency"`    // Number of parallel processes
 	RetryAttempts int32         `json:"retry_attempts"` // Number of retries in case of failure
 	RetryDelay    time.Duration `json:"retry_delay"`    // Delay between retries
+	BatchID       string        `json:"batch_id"`       // Batch ID for the workflow
 }
 
 // TalentAnalysisWorkflowParams contains the parameters for the talent analysis workflow
@@ -25,6 +26,7 @@ type TalentAnalysisWorkflowParams struct {
 	Concurrency   int32         `json:"concurrency"`    // Number of parallel processes
 	RetryAttempts int32         `json:"retry_attempts"` // Number of retries in case of failure
 	RetryDelay    time.Duration `json:"retry_delay"`    // Delay between retries
+	BatchID       string        `json:"batch_id"`       // Batch ID for the workflow
 }
 
 // StatAnalysisWorkflowParams contains the parameters for the stats analysis workflow
@@ -36,6 +38,7 @@ type StatAnalysisWorkflowParams struct {
 	Concurrency   int32         `json:"concurrency"`    // Number of parallel processes
 	RetryAttempts int32         `json:"retry_attempts"` // Number of retries in case of failure
 	RetryDelay    time.Duration `json:"retry_delay"`    // Delay between retries
+	BatchID       string        `json:"batch_id"`       // Batch ID for the workflow
 }
 
 // == Legacy workflows ==

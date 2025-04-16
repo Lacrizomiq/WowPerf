@@ -25,7 +25,6 @@ import (
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	// workflow
-	analyzeWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/analyze"
 	buildsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds"
 	rankingsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/rankings"
 	reportsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/reports"
@@ -34,6 +33,11 @@ import (
 	buildsStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	statStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	talentStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+
+	// build analysis workflows
+	equipmentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/equipment_statistics"
+	statAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/stats_statistics"
+	talentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/talent_statistics"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -192,6 +196,9 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	rankingsWorkflowImpl := rankingsWorkflow.NewRankingsWorkflow()
 	reportsWorkflowImpl := reportsWorkflow.NewReportsWorkflow()
 	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
+	equipmentAnalysisWorkflowImpl := equipmentAnalysisWorkflow.NewEquipmentAnalysisWorkflow()
+	talentAnalysisWorkflowImpl := talentAnalysisWorkflow.NewTalentAnalysisWorkflow()
+	statAnalysisWorkflowImpl := statAnalysisWorkflow.NewStatAnalysisWorkflow()
 
 	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.RankingsWorkflowName, // Doit correspondre exactement au nom utilisé dans le scheduler
@@ -205,18 +212,16 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 		Name: definitions.BuildsWorkflowName,
 	})
 
-	// Register workflows (Old workflows, will be removed soon)
-	// syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
-	analyzeWorkflowImpl := analyzeWorkflow.NewAnalyzeWorkflow()
-
-	// w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
-	// 	Name: definitions.SyncWorkflowName,
-	// })
-
-	// Register analyze workflows
-	// TODO: Remove this, will be replaced by the new decoupled analyze workflows
-	w.RegisterWorkflowWithOptions(analyzeWorkflowImpl.Execute, workflow.RegisterOptions{
+	w.RegisterWorkflowWithOptions(equipmentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeBuildsWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(talentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.AnalyzeTalentsWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(statAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.AnalyzeStatStatisticsWorkflowName,
 	})
 
 	// Register rankingsactivities

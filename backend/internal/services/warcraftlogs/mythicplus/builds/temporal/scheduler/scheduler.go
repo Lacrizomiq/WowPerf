@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	"github.com/google/uuid"
@@ -17,15 +18,14 @@ import (
 
 // Constants for schedule IDs
 const (
-	// Existing schedules (keep them for now but will be removed soon)
-	prodScheduleID    = "warcraft-logs-weekly-sync"
-	testScheduleID    = "warcraft-logs-priest-test"
-	analyzeScheduleID = "warcraft-logs-analyze"
 
 	// New schedules for decoupled workflows
-	rankingsScheduleID = "warcraft-logs-rankings"
-	reportsScheduleID  = "warcraft-logs-reports"
-	buildsScheduleID   = "warcraft-logs-builds"
+	rankingsScheduleID          = "warcraft-logs-rankings"
+	reportsScheduleID           = "warcraft-logs-reports"
+	buildsScheduleID            = "warcraft-logs-builds"
+	equipmentAnalysisScheduleID = "warcraft-logs-equipment-analysis"
+	talentAnalysisScheduleID    = "warcraft-logs-talent-analysis"
+	statAnalysisScheduleID      = "warcraft-logs-stat-analysis"
 )
 
 // ScheduleManager manages Temporal schedules for WarcraftLogs workflows
@@ -33,15 +33,13 @@ type ScheduleManager struct {
 	client client.Client
 	logger *log.Logger
 
-	// Existing handles (keep them for now but will be removed soon)
-	prodSchedule    client.ScheduleHandle
-	testSchedule    client.ScheduleHandle
-	analyzeSchedule client.ScheduleHandle
-
 	// New handles (decoupled workflows, will be used instead of the existing ones)
-	rankingsSchedule client.ScheduleHandle
-	reportsSchedule  client.ScheduleHandle
-	buildsSchedule   client.ScheduleHandle
+	rankingsSchedule          client.ScheduleHandle
+	reportsSchedule           client.ScheduleHandle
+	buildsSchedule            client.ScheduleHandle
+	equipmentAnalysisSchedule client.ScheduleHandle
+	talentAnalysisSchedule    client.ScheduleHandle
+	statAnalysisSchedule      client.ScheduleHandle
 }
 
 // NewScheduleManager creates a new ScheduleManager instance
@@ -51,6 +49,8 @@ func NewScheduleManager(temporalClient client.Client, logger *log.Logger) *Sched
 		logger: logger,
 	}
 }
+
+// == Creation of schedules ==
 
 // CreateRankingsSchedule creates the rankings schedule for the RankingsWorkflow
 func (sm *ScheduleManager) CreateRankingsSchedule(ctx context.Context, params models.RankingsWorkflowParams, opts *ScheduleOptions) error {
@@ -73,7 +73,7 @@ func (sm *ScheduleManager) CreateRankingsSchedule(ctx context.Context, params mo
 		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "RankingsWorkflow",
+			Workflow:  definitions.RankingsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
 			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
@@ -118,7 +118,7 @@ func (sm *ScheduleManager) CreateReportsSchedule(ctx context.Context, params *mo
 		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "ReportsWorkflow",
+			Workflow:  definitions.ReportsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
 			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
@@ -163,7 +163,7 @@ func (sm *ScheduleManager) CreateBuildsSchedule(ctx context.Context, params *mod
 		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "BuildsWorkflow",
+			Workflow:  definitions.BuildsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
 			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
@@ -187,26 +187,24 @@ func (sm *ScheduleManager) CreateBuildsSchedule(ctx context.Context, params *mod
 	return nil
 }
 
-// CreateSchedule creates the main weekly synchronization schedule
-func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
+// CreateEquipmentAnalysisSchedule creates the equipment analysis workflow schedule
+func (sm *ScheduleManager) CreateEquipmentAnalysisSchedule(ctx context.Context, params *models.EquipmentAnalysisWorkflowParams, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
 	}
 
-	scheduleID := prodScheduleID
-	workflowID := fmt.Sprintf("warcraft-logs-workflow-%s", time.Now().UTC().Format("2006-01-02"))
+	scheduleID := equipmentAnalysisScheduleID
+	workflowID := fmt.Sprintf("warcraft-logs-equipment-analysis-%s", time.Now().UTC().Format("2006-01-02"))
 
+	// Create the schedule without automatic triggering (No CRON expressions)
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
-		Spec: client.ScheduleSpec{
-			CronExpressions: []string{fmt.Sprintf("0 %d * * %d", DefaultScheduleConfig.Hour, DefaultScheduleConfig.Day)},
-			Jitter:          time.Minute,
-		},
+		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "SyncWorkflow",
+			Workflow:  definitions.AnalyzeBuildsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
-			Args:      []interface{}{*cfg},
+			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    opts.Retry.InitialInterval,
 				BackoffCoefficient: opts.Retry.BackoffCoefficient,
@@ -215,38 +213,37 @@ func (sm *ScheduleManager) CreateSchedule(ctx context.Context, cfg *models.Workf
 			},
 			WorkflowRunTimeout: opts.Timeout,
 		},
+		Paused: opts.Paused, // Paused by default if specified in options
 	}
 
 	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
 	if err != nil {
-		return fmt.Errorf("failed to create production schedule: %w", err)
+		return fmt.Errorf("failed to create equipment analysis schedule: %w", err)
 	}
 
-	sm.prodSchedule = handle
-	sm.logger.Printf("[INFO] Created weekly sync schedule %s for Tuesday 2 AM UTC", scheduleID)
+	sm.equipmentAnalysisSchedule = handle
+	sm.logger.Printf("[INFO] Created equipment analysis workflow schedule: %s", scheduleID)
 	return nil
 }
 
-// CreateTestSchedule creates a separate test schedule for Priest class only
-func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
+// CreateTalentAnalysisSchedule creates the talent analysis workflow schedule
+func (sm *ScheduleManager) CreateTalentAnalysisSchedule(ctx context.Context, params *models.TalentAnalysisWorkflowParams, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
 	}
 
-	scheduleID := testScheduleID
-	workflowID := fmt.Sprintf("warcraft-logs-priest-test-%s", time.Now().UTC().Format("2006-01-02"))
+	scheduleID := talentAnalysisScheduleID
+	workflowID := fmt.Sprintf("warcraft-logs-talent-analysis-%s", time.Now().UTC().Format("2006-01-02"))
 
+	// Create the schedule without automatic triggering (No CRON expressions)
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
-		Spec: client.ScheduleSpec{
-			CronExpressions: []string{fmt.Sprintf("0 %d * * %d", DefaultScheduleConfig.Hour, DefaultScheduleConfig.Day)},
-			Jitter:          time.Minute,
-		},
+		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "SyncWorkflow",
+			Workflow:  definitions.AnalyzeTalentsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
-			Args:      []interface{}{*cfg},
+			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    opts.Retry.InitialInterval,
 				BackoffCoefficient: opts.Retry.BackoffCoefficient,
@@ -255,40 +252,37 @@ func (sm *ScheduleManager) CreateTestSchedule(ctx context.Context, cfg *models.W
 			},
 			WorkflowRunTimeout: opts.Timeout,
 		},
+		Paused: opts.Paused, // Paused by default if specified in options
 	}
 
 	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
 	if err != nil {
-		return fmt.Errorf("failed to create test schedule: %w", err)
+		return fmt.Errorf("failed to create talent analysis schedule: %w", err)
 	}
 
-	sm.testSchedule = handle
-	sm.logger.Printf("[TEST] Created Priest test schedule %s", scheduleID)
+	sm.talentAnalysisSchedule = handle
+	sm.logger.Printf("[INFO] Created talent analysis workflow schedule: %s", scheduleID)
 	return nil
 }
 
-// CreateAnalyzeSchedule creates the schedule for the analyze workflow
-func (sm *ScheduleManager) CreateAnalyzeSchedule(ctx context.Context, cfg *models.WorkflowConfig, opts *ScheduleOptions) error {
+// CreateStatAnalysisSchedule creates the stat analysis workflow schedule
+func (sm *ScheduleManager) CreateStatAnalysisSchedule(ctx context.Context, params *models.StatAnalysisWorkflowParams, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
 	}
 
-	scheduleID := analyzeScheduleID
-	workflowID := fmt.Sprintf("warcraft-logs-analyze-%s", time.Now().UTC().Format("2006-01-02"))
+	scheduleID := statAnalysisScheduleID
+	workflowID := fmt.Sprintf("warcraft-logs-stat-analysis-%s", time.Now().UTC().Format("2006-01-02"))
 
-	analyzeDay := 3 // Wednesday
-
+	// Create the schedule without automatic triggering (No CRON expressions)
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
-		Spec: client.ScheduleSpec{
-			CronExpressions: []string{fmt.Sprintf("0 %d * * %d", DefaultScheduleConfig.Hour, analyzeDay)},
-			Jitter:          time.Minute,
-		},
+		// No CronExpressions to avoid automatic triggering
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
-			Workflow:  "AnalyzeBuildsWorkflow",
+			Workflow:  definitions.AnalyzeStatStatisticsWorkflowName,
 			TaskQueue: DefaultScheduleConfig.TaskQueue,
-			Args:      []interface{}{*cfg},
+			Args:      []interface{}{params},
 			RetryPolicy: &temporal.RetryPolicy{
 				InitialInterval:    opts.Retry.InitialInterval,
 				BackoffCoefficient: opts.Retry.BackoffCoefficient,
@@ -297,17 +291,20 @@ func (sm *ScheduleManager) CreateAnalyzeSchedule(ctx context.Context, cfg *model
 			},
 			WorkflowRunTimeout: opts.Timeout,
 		},
+		Paused: opts.Paused, // Paused by default if specified in options
 	}
 
 	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
 	if err != nil {
-		return fmt.Errorf("failed to create analyze schedule: %w", err)
+		return fmt.Errorf("failed to create stat analysis schedule: %w", err)
 	}
 
-	sm.analyzeSchedule = handle
-	sm.logger.Printf("[INFO] Created weekly analysis schedule %s for Wednesday %d AM UTC", scheduleID, DefaultScheduleConfig.Hour)
+	sm.statAnalysisSchedule = handle
+	sm.logger.Printf("[INFO] Created stat analysis workflow schedule: %s", scheduleID)
 	return nil
 }
+
+// == Triggering of schedules ==
 
 // TriggerRankingsNow triggers the immediate execution of the rankings schedule
 func (sm *ScheduleManager) TriggerRankingsNow(ctx context.Context) error {
@@ -333,33 +330,31 @@ func (sm *ScheduleManager) TriggerBuildsNow(ctx context.Context) error {
 	return sm.buildsSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
-// TriggerSyncNow triggers the immediate execution of the production schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) TriggerSyncNow(ctx context.Context) error {
-	if sm.prodSchedule == nil {
-		return fmt.Errorf("no production schedule has been created")
+// TriggerEquipmentAnalysisNow triggers the immediate execution of the equipment analysis schedule
+func (sm *ScheduleManager) TriggerEquipmentAnalysisNow(ctx context.Context) error {
+	if sm.equipmentAnalysisSchedule == nil {
+		return fmt.Errorf("no equipment analysis schedule has been created")
 	}
-	return sm.prodSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+	return sm.equipmentAnalysisSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
-// TriggerTestNow triggers the immediate execution of the test schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) TriggerTestNow(ctx context.Context) error {
-	if sm.testSchedule == nil {
-		return fmt.Errorf("no test schedule has been created")
+// TriggerTalentAnalysisNow triggers the immediate execution of the talent analysis schedule
+func (sm *ScheduleManager) TriggerTalentAnalysisNow(ctx context.Context) error {
+	if sm.talentAnalysisSchedule == nil {
+		return fmt.Errorf("no talent analysis schedule has been created")
 	}
-	return sm.testSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+	return sm.talentAnalysisSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
-// TriggerAnalyzeNow triggers the immediate execution of the analyze schedule
-func (sm *ScheduleManager) TriggerAnalyzeNow(ctx context.Context) error {
-	if sm.analyzeSchedule == nil {
-		return fmt.Errorf("no analyze schedule has been created")
+// TriggerStatAnalysisNow triggers the immediate execution of the stat analysis schedule
+func (sm *ScheduleManager) TriggerStatAnalysisNow(ctx context.Context) error {
+	if sm.statAnalysisSchedule == nil {
+		return fmt.Errorf("no stat analysis schedule has been created")
 	}
-	return sm.analyzeSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+	return sm.statAnalysisSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
+
+// == Pausing and unpausing of schedules ==
 
 // PauseRankingsSchedule pauses the rankings schedule
 func (sm *ScheduleManager) PauseRankingsSchedule(ctx context.Context) error {
@@ -385,32 +380,28 @@ func (sm *ScheduleManager) PauseBuildsSchedule(ctx context.Context) error {
 	return sm.buildsSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
-// PauseSchedule pauses the production schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) PauseSchedule(ctx context.Context) error {
-	if sm.prodSchedule == nil {
-		return fmt.Errorf("no production schedule has been created")
+// PauseEquipmentAnalysisSchedule pauses the equipment analysis schedule
+func (sm *ScheduleManager) PauseEquipmentAnalysisSchedule(ctx context.Context) error {
+	if sm.equipmentAnalysisSchedule == nil {
+		return fmt.Errorf("no equipment analysis schedule has been created")
 	}
-	return sm.prodSchedule.Pause(ctx, client.SchedulePauseOptions{})
+	return sm.equipmentAnalysisSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
-// PauseTestSchedule pauses the test schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) PauseTestSchedule(ctx context.Context) error {
-	if sm.testSchedule == nil {
-		return fmt.Errorf("no test schedule has been created")
+// PauseTalentAnalysisSchedule pauses the talent analysis schedule
+func (sm *ScheduleManager) PauseTalentAnalysisSchedule(ctx context.Context) error {
+	if sm.talentAnalysisSchedule == nil {
+		return fmt.Errorf("no talent analysis schedule has been created")
 	}
-	return sm.testSchedule.Pause(ctx, client.SchedulePauseOptions{})
+	return sm.talentAnalysisSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
-// PauseAnalyzeSchedule pauses the analyze schedule
-func (sm *ScheduleManager) PauseAnalyzeSchedule(ctx context.Context) error {
-	if sm.analyzeSchedule == nil {
-		return fmt.Errorf("no analyze schedule has been created")
+// PauseStatAnalysisSchedule pauses the stat analysis schedule
+func (sm *ScheduleManager) PauseStatAnalysisSchedule(ctx context.Context) error {
+	if sm.statAnalysisSchedule == nil {
+		return fmt.Errorf("no stat analysis schedule has been created")
 	}
-	return sm.analyzeSchedule.Pause(ctx, client.SchedulePauseOptions{})
+	return sm.statAnalysisSchedule.Pause(ctx, client.SchedulePauseOptions{})
 }
 
 // UnpauseRankingsSchedule reactivates the rankings schedule
@@ -437,32 +428,28 @@ func (sm *ScheduleManager) UnpauseBuildsSchedule(ctx context.Context) error {
 	return sm.buildsSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
-// UnpauseSchedule reactivates the production schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) UnpauseSchedule(ctx context.Context) error {
-	if sm.prodSchedule == nil {
-		return fmt.Errorf("no production schedule has been created")
+// UnpauseEquipmentAnalysisSchedule reactivates the equipment analysis schedule
+func (sm *ScheduleManager) UnpauseEquipmentAnalysisSchedule(ctx context.Context) error {
+	if sm.equipmentAnalysisSchedule == nil {
+		return fmt.Errorf("no equipment analysis schedule has been created")
 	}
-	return sm.prodSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+	return sm.equipmentAnalysisSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
-// UnpauseTestSchedule reactivates the test schedule
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) UnpauseTestSchedule(ctx context.Context) error {
-	if sm.testSchedule == nil {
-		return fmt.Errorf("no test schedule has been created")
+// UnpauseTalentAnalysisSchedule reactivates the talent analysis schedule
+func (sm *ScheduleManager) UnpauseTalentAnalysisSchedule(ctx context.Context) error {
+	if sm.talentAnalysisSchedule == nil {
+		return fmt.Errorf("no talent analysis schedule has been created")
 	}
-	return sm.testSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+	return sm.talentAnalysisSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
-// UnpauseAnalyzeSchedule reactivates the analyze schedule
-func (sm *ScheduleManager) UnpauseAnalyzeSchedule(ctx context.Context) error {
-	if sm.analyzeSchedule == nil {
-		return fmt.Errorf("no analyze schedule has been created")
+// UnpauseStatAnalysisSchedule reactivates the stat analysis schedule
+func (sm *ScheduleManager) UnpauseStatAnalysisSchedule(ctx context.Context) error {
+	if sm.statAnalysisSchedule == nil {
+		return fmt.Errorf("no stat analysis schedule has been created")
 	}
-	return sm.analyzeSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+	return sm.statAnalysisSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
 // DeleteSchedule deletes a schedule by its ID
@@ -474,7 +461,7 @@ func (sm *ScheduleManager) DeleteSchedule(ctx context.Context, scheduleID string
 // CleanupDecoupledSchedules cleans up the decoupled schedules
 func (sm *ScheduleManager) CleanupDecoupledSchedules(ctx context.Context) error {
 	// List and delete decoupled schedules
-	schedules := []string{rankingsScheduleID, reportsScheduleID, buildsScheduleID}
+	schedules := []string{rankingsScheduleID, reportsScheduleID, buildsScheduleID, equipmentAnalysisScheduleID, talentAnalysisScheduleID, statAnalysisScheduleID}
 	for _, id := range schedules {
 		handle := sm.client.ScheduleClient().GetHandle(ctx, id)
 		if err := handle.Delete(ctx); err != nil {
@@ -488,28 +475,9 @@ func (sm *ScheduleManager) CleanupDecoupledSchedules(ctx context.Context) error 
 	sm.rankingsSchedule = nil
 	sm.reportsSchedule = nil
 	sm.buildsSchedule = nil
-
-	return nil
-}
-
-// CleanupExistingSchedules deletes existing schedules
-// Legacy, will be removed soon
-// Not used anymore
-func (sm *ScheduleManager) CleanupExistingSchedules(ctx context.Context) error {
-	// List and delete existing schedules
-	schedules := []string{prodScheduleID, testScheduleID, analyzeScheduleID}
-	for _, id := range schedules {
-		if err := sm.DeleteSchedule(ctx, id); err != nil {
-			sm.logger.Printf("[WARN] Failed to delete schedule %s: %v", id, err)
-			continue
-		}
-		sm.logger.Printf("[INFO] Deleted schedule: %s", id)
-	}
-
-	// Reset references
-	sm.prodSchedule = nil
-	sm.testSchedule = nil
-	sm.analyzeSchedule = nil
+	sm.equipmentAnalysisSchedule = nil
+	sm.talentAnalysisSchedule = nil
+	sm.statAnalysisSchedule = nil
 
 	return nil
 }
@@ -576,9 +544,6 @@ func (sm *ScheduleManager) CleanupOldWorkflows(ctx context.Context) error {
 
 // CleanupAll do a complete cleanup
 func (sm *ScheduleManager) CleanupAll(ctx context.Context) error {
-	if err := sm.CleanupExistingSchedules(ctx); err != nil {
-		return fmt.Errorf("failed to cleanup schedules: %w", err)
-	}
 
 	if err := sm.CleanupOldWorkflows(ctx); err != nil {
 		return fmt.Errorf("failed to cleanup workflows: %w", err)

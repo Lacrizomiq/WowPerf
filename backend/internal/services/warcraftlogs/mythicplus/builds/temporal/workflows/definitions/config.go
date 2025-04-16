@@ -89,6 +89,7 @@ func LoadEquipmentAnalysisParams(configPath string) (*models.EquipmentAnalysisWo
 		Concurrency:   4,               // Number of concurrent workers
 		RetryAttempts: 3,               // Number of retry attempts
 		RetryDelay:    5 * time.Second, // Retry delay
+		BatchID:       fmt.Sprintf("equipment-analysis-%s", uuid.New().String()),
 	}, nil
 }
 
@@ -106,6 +107,7 @@ func LoadStatAnalysisParams(configPath string) (*models.StatAnalysisWorkflowPara
 		Concurrency:   4,               // Number of concurrent workers
 		RetryAttempts: 3,               // Number of retry attempts
 		RetryDelay:    5 * time.Second, // Retry delay
+		BatchID:       fmt.Sprintf("stat-analysis-%s", uuid.New().String()),
 	}, nil
 }
 
@@ -123,6 +125,7 @@ func LoadTalentAnalysisParams(configPath string) (*models.TalentAnalysisWorkflow
 		Concurrency:   4,               // Number of concurrent workers
 		RetryAttempts: 3,               // Number of retry attempts
 		RetryDelay:    5 * time.Second, // Retry delay
+		BatchID:       fmt.Sprintf("talent-analysis-%s", uuid.New().String()),
 	}, nil
 }
 

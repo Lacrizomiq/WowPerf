@@ -1,4 +1,4 @@
-package warcraftlogsBuildsTemporalWorkflowsBuildsstatistics
+package warcraftlogsBuildsTemporalWorkflowsBuildsStatisticsStatsStatistics
 
 import (
 	"fmt"
@@ -32,6 +32,7 @@ func (w *StatAnalysisWorkflow) Execute(ctx workflow.Context, params models.StatA
 	// Initialize the result
 	result := &models.StatAnalysisWorkflowResult{
 		StartedAt: workflow.Now(ctx),
+		BatchID:   params.BatchID,
 	}
 
 	// Validate the parameters
