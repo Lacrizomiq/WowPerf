@@ -57,9 +57,15 @@ const (
 	ProcessStatStatisticsActivity   = "ProcessStatStatistics"   // Analyze statistics
 
 	// Sub-workflow names
-	ProcessBuildBatchWorkflowName = "ProcessBuildBatch"     // Process build batch
-	SyncWorkflowName              = "SyncWorkflow"          // Sync workflow
-	AnalyzeBuildsWorkflowName     = "AnalyzeBuildsWorkflow" // Analyze builds workflow
+	RankingsWorkflowName              = "RankingsWorkflow"              // Rankings workflow
+	ReportsWorkflowName               = "ReportsWorkflow"               // Reports workflow
+	BuildsWorkflowName                = "BuildsWorkflow"                // Builds workflow
+	AnalyzeBuildsWorkflowName         = "AnalyzeBuildsWorkflow"         // Analyze builds workflow
+	AnalyzeTalentsWorkflowName        = "AnalyzeTalentsWorkflow"        // Analyze talents workflow
+	AnalyzeStatStatisticsWorkflowName = "AnalyzeStatStatisticsWorkflow" // Analyze statistics workflow
+
+	// == Legacy workflows ==
+	SyncWorkflowName = "SyncWorkflow" // Sync workflow
 )
 
 /*

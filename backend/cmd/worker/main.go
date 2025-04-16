@@ -194,15 +194,15 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
 
 	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: "RankingsWorkflow", // Doit correspondre exactement au nom utilisé dans le scheduler
+		Name: definitions.RankingsWorkflowName, // Doit correspondre exactement au nom utilisé dans le scheduler
 	})
 
 	w.RegisterWorkflowWithOptions(reportsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: "ReportsWorkflow",
+		Name: definitions.ReportsWorkflowName,
 	})
 
 	w.RegisterWorkflowWithOptions(buildsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: "BuildsWorkflow",
+		Name: definitions.BuildsWorkflowName,
 	})
 
 	// Register workflows (Old workflows, will be removed soon)
@@ -213,6 +213,8 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	// 	Name: definitions.SyncWorkflowName,
 	// })
 
+	// Register analyze workflows
+	// TODO: Remove this, will be replaced by the new decoupled analyze workflows
 	w.RegisterWorkflowWithOptions(analyzeWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeBuildsWorkflowName,
 	})
