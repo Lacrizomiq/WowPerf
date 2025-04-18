@@ -31,16 +31,16 @@ func NewTalentStatisticActivity(
 	}
 }
 
-// ProcessTalentStatistics analyze the talent configurations for a class/spec/dungeon
+// ProcessTalentStatistics analyzes talent configurations for a specific class, spec and dungeon
 func (a *TalentStatisticActivity) ProcessTalentStatistics(
 	ctx context.Context,
 	class, spec string,
 	encounterID uint,
 	batchSize int,
-) (*workflowsModels.BuildsAnalysisResult, error) {
+) (*workflowsModels.TalentAnalysisWorkflowResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflowsModels.BuildsAnalysisResult{
-		ProcessedAt: time.Now(),
+	result := &workflowsModels.TalentAnalysisWorkflowResult{
+		StartedAt: time.Now(),
 	}
 
 	// 1. Delete existing statistics
@@ -49,13 +49,13 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 	}
 
 	// 2. Get the total number of builds to process
-	count, err := a.countBuilds(ctx, class, spec, encounterID)
+	count, err := a.playerBuildsRepository.CountPlayerBuildsNeedingTalentAnalysis(ctx, class, spec, encounterID)
 	if err != nil {
 		return nil, err
 	}
 
 	if count == 0 {
-		logger.Info("No builds found to analyze talents",
+		logger.Info("No builds found to analyze for talents",
 			"class", class,
 			"spec", spec,
 			"encounterID", encounterID)
@@ -66,6 +66,9 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 	offset := 0
 	totalProcessed := 0
 	totalTalentConfigs := 0
+
+	// For storing the IDs of successfully processed builds
+	processedBuildIDs := make([]uint, 0)
 
 	for offset < int(count) {
 		// Record heartbeat
@@ -79,7 +82,8 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 		})
 
 		// Get a batch of builds
-		builds, err := a.getPlayerBuildsBatch(ctx, class, spec, encounterID, batchSize, offset)
+		builds, err := a.playerBuildsRepository.GetPlayerBuildsNeedingTalentAnalysis(
+			ctx, class, spec, encounterID, batchSize, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -88,21 +92,40 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 			break
 		}
 
+		// Collect the IDs of the builds to mark them later
+		batchBuildIDs := make([]uint, 0, len(builds))
+		for _, build := range builds {
+			batchBuildIDs = append(batchBuildIDs, build.ID)
+		}
+
 		// Process the batch
 		talentStats, err := a.ProcessTalentsBatch(builds)
 		if err != nil {
+			// In case of error, mark these builds as failed
+			if len(batchBuildIDs) > 0 {
+				_ = a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForTalent(
+					ctx, batchBuildIDs, "failed")
+			}
 			return nil, err
 		}
 
 		// Calculate the usage percentages
 		a.CalculateUsagePercentages(talentStats, len(builds))
 
-		// Store the statistics
+		// Persist the statistics
 		if len(talentStats) > 0 {
 			if err := a.talentStatisticsRepository.StoreManyTalentStatistics(ctx, talentStats); err != nil {
+				// In case of error, mark these builds as failed
+				if len(batchBuildIDs) > 0 {
+					_ = a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForTalent(
+						ctx, batchBuildIDs, "failed")
+				}
 				return nil, fmt.Errorf("failed to store talent statistics: %w", err)
 			}
 			totalTalentConfigs += len(talentStats)
+
+			// Add the IDs of successfully processed builds
+			processedBuildIDs = append(processedBuildIDs, batchBuildIDs...)
 		}
 
 		totalProcessed += len(builds)
@@ -117,15 +140,28 @@ func (a *TalentStatisticActivity) ProcessTalentStatistics(
 			"progress", fmt.Sprintf("%d/%d", totalProcessed, count))
 	}
 
-	result.BuildsProcessed = int32(totalProcessed)
-	result.ItemsProcessed = int32(totalTalentConfigs) // In this case, "items" are the talent configurations
+	// Mark all successfully processed builds
+	if len(processedBuildIDs) > 0 {
+		if err := a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForTalent(
+			ctx, processedBuildIDs, "processed"); err != nil {
+			logger.Error("Failed to mark builds as processed for talents",
+				"error", err,
+				"buildsCount", len(processedBuildIDs))
+			// Continue despite the error
+		}
+	}
 
-	logger.Info("Completed talent statistics processing",
+	result.TotalBuilds = int32(totalProcessed)
+	result.TalentsAnalyzed = int32(totalTalentConfigs)
+	result.CompletedAt = time.Now()
+
+	logger.Info("Completed talent analysis",
 		"class", class,
 		"spec", spec,
 		"encounter", encounterID,
 		"buildsProcessed", totalProcessed,
-		"talentConfigsProcessed", totalTalentConfigs)
+		"talentConfigsProcessed", totalTalentConfigs,
+		"duration", result.CompletedAt.Sub(result.StartedAt))
 
 	return result, nil
 }

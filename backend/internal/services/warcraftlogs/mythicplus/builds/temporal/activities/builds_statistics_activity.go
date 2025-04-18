@@ -33,16 +33,17 @@ func NewBuildsStatisticsActivity(
 	}
 }
 
-// ProcessItemStatistics processes item statistics for a specific class, spec and encounter_id
+// ProcessItemStatistics processes equipment analysis for a specific class, spec and encounter_id
+// It is called by the workflow to process the equipment analysis for a specific class, spec and encounter_id
 func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 	ctx context.Context,
 	class, spec string,
 	encounterID uint,
 	batchSize int,
-) (*workflowsModels.BuildsAnalysisResult, error) {
+) (*workflowsModels.EquipmentAnalysisWorkflowResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflowsModels.BuildsAnalysisResult{
-		ProcessedAt: time.Now(),
+	result := &workflowsModels.EquipmentAnalysisWorkflowResult{
+		StartedAt: time.Now(),
 	}
 
 	// 1. Delete existing build statistics
@@ -51,13 +52,13 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 	}
 
 	// 2. Get the total number of builds to process
-	count, err := a.countBuilds(ctx, class, spec, encounterID)
+	count, err := a.playerBuildsRepository.CountPlayerBuildsNeedingEquipmentAnalysis(ctx, class, spec, encounterID)
 	if err != nil {
 		return nil, err
 	}
 
 	if count == 0 {
-		logger.Info("No builds found to analyze",
+		logger.Info("No builds found to analyze for equipment",
 			"class", class,
 			"spec", spec,
 			"encounterID", encounterID)
@@ -69,10 +70,13 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 	totalProcessed := 0
 	totalItems := 0
 
+	// For storing the IDs of successfully processed builds
+	processedBuildIDs := make([]uint, 0)
+
 	for offset < int(count) {
 		// Record heartbeat
 		activity.RecordHeartbeat(ctx, map[string]interface{}{
-			"status":     "processing",
+			"status":     "processing_equipment",
 			"class":      class,
 			"spec":       spec,
 			"encounter":  encounterID,
@@ -81,7 +85,8 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 		})
 
 		// Get a batch of builds
-		builds, err := a.getPlayerBuildsBatch(ctx, class, spec, encounterID, batchSize, offset)
+		builds, err := a.playerBuildsRepository.GetPlayerBuildsNeedingEquipmentAnalysis(
+			ctx, class, spec, encounterID, batchSize, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -90,9 +95,20 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 			break
 		}
 
+		// Collect the IDs of the builds to mark them later
+		batchBuildIDs := make([]uint, 0, len(builds))
+		for _, build := range builds {
+			batchBuildIDs = append(batchBuildIDs, build.ID)
+		}
+
 		// Process the batch
 		buildStats, err := a.ProcessBuildsBatch(builds)
 		if err != nil {
+			// In case of error, mark these builds as failed
+			if len(batchBuildIDs) > 0 {
+				_ = a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForEquipment(
+					ctx, batchBuildIDs, "failed")
+			}
 			return nil, err
 		}
 
@@ -102,15 +118,23 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 		// Persist the statistics
 		if len(buildStats) > 0 {
 			if err := a.buildsStatisticsRepository.StoreManyBuildStatistics(ctx, buildStats); err != nil {
+				// In case of error, mark these builds as failed
+				if len(batchBuildIDs) > 0 {
+					_ = a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForEquipment(
+						ctx, batchBuildIDs, "failed")
+				}
 				return nil, fmt.Errorf("failed to store build statistics: %w", err)
 			}
 			totalItems += len(buildStats)
+
+			// Add the IDs of successfully processed builds
+			processedBuildIDs = append(processedBuildIDs, batchBuildIDs...)
 		}
 
 		totalProcessed += len(builds)
 		offset += batchSize
 
-		logger.Info("Processed builds batch",
+		logger.Info("Processed equipment batch",
 			"class", class,
 			"spec", spec,
 			"encounter", encounterID,
@@ -118,15 +142,28 @@ func (a *BuildsStatisticsActivity) ProcessItemStatistics(
 			"progress", fmt.Sprintf("%d/%d", totalProcessed, count))
 	}
 
-	result.BuildsProcessed = int32(totalProcessed)
-	result.ItemsProcessed = int32(totalItems)
+	// Mark all successfully processed builds
+	if len(processedBuildIDs) > 0 {
+		if err := a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForEquipment(
+			ctx, processedBuildIDs, "processed"); err != nil {
+			logger.Error("Failed to mark builds as processed for equipment",
+				"error", err,
+				"buildsCount", len(processedBuildIDs))
+			// Continue despite the error
+		}
+	}
 
-	logger.Info("Completed build statistics processing",
+	result.TotalBuilds = int32(totalProcessed)
+	result.ItemsAnalyzed = int32(totalItems)
+	result.CompletedAt = time.Now()
+
+	logger.Info("Completed equipment analysis",
 		"class", class,
 		"spec", spec,
 		"encounter", encounterID,
 		"buildsProcessed", totalProcessed,
-		"itemsProcessed", totalItems)
+		"itemsProcessed", totalItems,
+		"duration", result.CompletedAt.Sub(result.StartedAt))
 
 	return result, nil
 }

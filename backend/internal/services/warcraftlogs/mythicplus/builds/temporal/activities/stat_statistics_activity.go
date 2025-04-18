@@ -54,16 +54,16 @@ type Stat struct {
 	Max float64 `json:"max"`
 }
 
-// ProcessStatStatistics analyze the stats for a class/spec/dungeon
+// ProcessStatStatistics analyzes the stats for a class/spec/dungeon
 func (a *StatStatisticsActivity) ProcessStatStatistics(
 	ctx context.Context,
 	class, spec string,
 	encounterID uint,
 	batchSize int,
-) (*workflowsModels.BuildsAnalysisResult, error) {
+) (*workflowsModels.StatAnalysisWorkflowResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflowsModels.BuildsAnalysisResult{
-		ProcessedAt: time.Now(),
+	result := &workflowsModels.StatAnalysisWorkflowResult{
+		StartedAt: time.Now(),
 	}
 
 	// 1. Delete existing statistics
@@ -72,13 +72,13 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 	}
 
 	// 2. Get the total number of builds to process
-	count, err := a.countBuilds(ctx, class, spec, encounterID)
+	count, err := a.playerBuildsRepository.CountPlayerBuildsNeedingStatAnalysis(ctx, class, spec, encounterID)
 	if err != nil {
 		return nil, err
 	}
 
 	if count == 0 {
-		logger.Info("No builds found to analyze stats",
+		logger.Info("No builds found to analyze for stats",
 			"class", class,
 			"spec", spec,
 			"encounterID", encounterID)
@@ -92,6 +92,9 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 	// Structures to store the aggregated statistics
 	statData := make(map[string]*StatAggregation)
 
+	// For storing the IDs of successfully processed builds
+	processedBuildIDs := make([]uint, 0)
+
 	for offset < int(count) {
 		// Record heartbeat
 		activity.RecordHeartbeat(ctx, map[string]interface{}{
@@ -104,7 +107,8 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 		})
 
 		// Get a batch of builds
-		builds, err := a.getPlayerBuildsBatch(ctx, class, spec, encounterID, batchSize, offset)
+		builds, err := a.playerBuildsRepository.GetPlayerBuildsNeedingStatAnalysis(
+			ctx, class, spec, encounterID, batchSize, offset)
 		if err != nil {
 			return nil, err
 		}
@@ -113,11 +117,25 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 			break
 		}
 
+		// Collect the IDs of the builds to mark them later
+		batchBuildIDs := make([]uint, 0, len(builds))
+		for _, build := range builds {
+			batchBuildIDs = append(batchBuildIDs, build.ID)
+		}
+
 		// Process the batch
 		err = a.ProcessStatsBatch(builds, statData)
 		if err != nil {
+			// In case of error, mark these builds as failed
+			if len(batchBuildIDs) > 0 {
+				_ = a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForStat(
+					ctx, batchBuildIDs, "failed")
+			}
 			return nil, err
 		}
+
+		// Add the IDs of successfully processed builds
+		processedBuildIDs = append(processedBuildIDs, batchBuildIDs...)
 
 		totalProcessed += len(builds)
 		offset += batchSize
@@ -140,15 +158,28 @@ func (a *StatStatisticsActivity) ProcessStatStatistics(
 		}
 	}
 
-	result.BuildsProcessed = int32(totalProcessed)
-	result.ItemsProcessed = int32(len(statStats))
+	// Mark all successfully processed builds
+	if len(processedBuildIDs) > 0 {
+		if err := a.playerBuildsRepository.MarkPlayerBuildsAsProcessedForStat(
+			ctx, processedBuildIDs, "processed"); err != nil {
+			logger.Error("Failed to mark builds as processed for stats",
+				"error", err,
+				"buildsCount", len(processedBuildIDs))
+			// Continue despite the error
+		}
+	}
 
-	logger.Info("Completed stat statistics processing",
+	result.TotalBuilds = int32(totalProcessed)
+	result.StatsAnalyzed = int32(len(statStats))
+	result.CompletedAt = time.Now()
+
+	logger.Info("Completed stat analysis",
 		"class", class,
 		"spec", spec,
 		"encounter", encounterID,
 		"buildsProcessed", totalProcessed,
-		"statsProcessed", len(statStats))
+		"statsProcessed", len(statStats),
+		"duration", result.CompletedAt.Sub(result.StartedAt))
 
 	return result, nil
 }

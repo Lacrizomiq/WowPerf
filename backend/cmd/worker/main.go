@@ -16,6 +16,7 @@ import (
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	workflowStatesRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 
 	// package
 	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
@@ -24,13 +25,19 @@ import (
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
 	// workflow
-	analyzeWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/analyze"
-	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
+	buildsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds"
+	rankingsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/rankings"
+	reportsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/reports"
 
 	// build analysis repository
 	buildsStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	statStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
 	talentStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+
+	// build analysis workflows
+	equipmentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/equipment_statistics"
+	statAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/stats_statistics"
+	talentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/talent_statistics"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -62,7 +69,7 @@ func main() {
 	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
 	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)
 	statStatsRepo := statStatisticsRepository.NewStatStatisticsRepository(db)
-
+	workflowStatesRepo := workflowStatesRepository.NewWorkflowStateRepository(db)
 	// Initialize activities with all services
 	activitiesService := initializeActivities(
 		warcraftLogsClient,
@@ -72,6 +79,7 @@ func main() {
 		buildsStatsRepo,
 		talentStatsRepo,
 		statStatsRepo,
+		workflowStatesRepo,
 	)
 	// Create a single worker that will handle both production and test schedules
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
@@ -147,12 +155,14 @@ func initializeActivities(
 	buildsStatisticsRepo *buildsStatisticsRepository.BuildsStatisticsRepository,
 	talentStatisticsRepo *talentStatisticsRepository.TalentStatisticsRepository,
 	statStatisticsRepo *statStatisticsRepository.StatStatisticsRepository,
+	workflowStatesRepo *workflowStatesRepository.WorkflowStateRepository,
 ) *activities.Activities {
 	// Create the existing activities
 	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
-	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo)
-	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo)
+	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo, rankingsRepo)
+	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo, reportsRepo)
 	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
+	workflowStatesActivity := activities.NewWorkflowStateActivity(workflowStatesRepo)
 
 	// Create the new analysis activities
 	buildsStatisticsActivity := activities.NewBuildsStatisticsActivity(
@@ -177,31 +187,63 @@ func initializeActivities(
 		BuildStatistics:  buildsStatisticsActivity,
 		TalentStatistics: talentStatisticActivity,
 		StatStatistics:   statStatisticsActivity,
+		WorkflowState:    workflowStatesActivity,
 	}
 }
 
 func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
-	// Register workflows
-	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
-	analyzeWorkflowImpl := analyzeWorkflow.NewAnalyzeWorkflow()
+	// Register workflows (New workflows, will be used soon)
+	rankingsWorkflowImpl := rankingsWorkflow.NewRankingsWorkflow()
+	reportsWorkflowImpl := reportsWorkflow.NewReportsWorkflow()
+	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
+	equipmentAnalysisWorkflowImpl := equipmentAnalysisWorkflow.NewEquipmentAnalysisWorkflow()
+	talentAnalysisWorkflowImpl := talentAnalysisWorkflow.NewTalentAnalysisWorkflow()
+	statAnalysisWorkflowImpl := statAnalysisWorkflow.NewStatAnalysisWorkflow()
 
-	w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.SyncWorkflowName,
+	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.RankingsWorkflowName, // Doit correspondre exactement au nom utilisé dans le scheduler
 	})
 
-	w.RegisterWorkflowWithOptions(analyzeWorkflowImpl.Execute, workflow.RegisterOptions{
+	w.RegisterWorkflowWithOptions(reportsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.ReportsWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(buildsWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.BuildsWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(equipmentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeBuildsWorkflowName,
 	})
 
-	// Register activities
+	w.RegisterWorkflowWithOptions(talentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.AnalyzeTalentsWorkflowName,
+	})
+
+	w.RegisterWorkflowWithOptions(statAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.AnalyzeStatStatisticsWorkflowName,
+	})
+
+	// Register rankingsactivities
 	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
 	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
+	w.RegisterActivity(activitiesService.Rankings.MarkRankingsForReportProcessing)
+
+	// Register reports activities
 	w.RegisterActivity(activitiesService.Reports.ProcessReports)
 	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
 	w.RegisterActivity(activitiesService.Reports.CountAllReports)
 	w.RegisterActivity(activitiesService.Reports.GetUniqueReportReferences)
+	w.RegisterActivity(activitiesService.Reports.GetRankingsNeedingReportProcessing)
+	w.RegisterActivity(activitiesService.Reports.MarkReportsForBuildProcessing)
+
+	// Register player builds activities
 	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.GetReportsNeedingBuildExtraction)
+	w.RegisterActivity(activitiesService.PlayerBuilds.MarkReportsAsProcessedForBuilds)
+
+	// Register rate limit activities
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
 	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
 	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
@@ -210,6 +252,14 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	w.RegisterActivity(activitiesService.BuildStatistics.ProcessItemStatistics)
 	w.RegisterActivity(activitiesService.TalentStatistics.ProcessTalentStatistics)
 	w.RegisterActivity(activitiesService.StatStatistics.ProcessStatStatistics)
+
+	// Workflow state activities
+	w.RegisterActivity(activitiesService.WorkflowState.CreateWorkflowState)
+	w.RegisterActivity(activitiesService.WorkflowState.UpdateWorkflowState)
+	w.RegisterActivity(activitiesService.WorkflowState.GetLastWorkflowRun)
+	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStatistics)
+	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStateByID)
+	w.RegisterActivity(activitiesService.WorkflowState.DeleteOldWorkflowStates)
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {

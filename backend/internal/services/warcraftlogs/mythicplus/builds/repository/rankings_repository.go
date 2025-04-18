@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -166,6 +167,50 @@ func (r *RankingsRepository) GetRankingsForSpec(ctx context.Context, className, 
 
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to get rankings: %w", result.Error)
+	}
+
+	return rankings, nil
+}
+
+// MarkRankingsAsProcessedForReports marks the rankings as ready for report processing
+func (r *RankingsRepository) MarkRankingsAsProcessedForReports(ctx context.Context, ids []uint, batchID string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.ClassRanking{}).
+		Where("id IN ?", ids).
+		Updates(map[string]interface{}{
+			"report_processing_status": "processed",
+			"processing_batch_id":      batchID,
+			"report_processing_at":     time.Now(),
+		})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark rankings as pending for reports: %w", result.Error)
+	}
+
+	return nil
+}
+
+// GetRankingsNeedingReportProcessing retrieves the rankings that need report processing
+func (r *RankingsRepository) GetRankingsNeedingReportProcessing(ctx context.Context, limit int, maxAge time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	var rankings []*warcraftlogsBuilds.ClassRanking
+	minDate := time.Now().Add(-maxAge)
+
+	result := r.db.WithContext(ctx).
+		Where("(report_processing_status = ? OR (report_processing_status = ? AND report_processing_at < ?)) AND created_at > ?",
+			"pending", "failed", minDate, minDate).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&rankings)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return []*warcraftlogsBuilds.ClassRanking{}, nil
+		}
+		return nil, fmt.Errorf("failed to get rankings needing report processing: %w", result.Error)
 	}
 
 	return rankings, nil

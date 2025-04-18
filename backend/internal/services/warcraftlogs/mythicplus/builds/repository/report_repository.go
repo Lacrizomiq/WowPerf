@@ -2,6 +2,7 @@ package warcraftlogsBuildsRepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -237,4 +238,84 @@ func (r *ReportRepository) GetAllUniqueReportReferences(ctx context.Context) ([]
 
 	log.Printf("[INFO] Retrieved %d unique report references", len(rankings))
 	return rankings, nil
+}
+
+// MarkReportsForBuildProcessing marks reports as ready for build processing
+func (r *ReportRepository) MarkReportsForBuildProcessing(ctx context.Context, identifiers []ReportIdentifier, batchID string) error {
+	if len(identifiers) == 0 {
+		return nil
+	}
+
+	// Use a transaction for this operation
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, id := range identifiers {
+			result := tx.Model(&warcraftlogsBuilds.Report{}).
+				Where("code = ? AND fight_id = ?", id.Code, id.FightID).
+				Updates(map[string]interface{}{
+					"build_extraction_status": "pending",
+					"processing_batch_id":     batchID,
+					"build_extraction_at":     nil,
+				})
+
+			if result.Error != nil {
+				return fmt.Errorf("failed to mark report %s-#%d: %w", id.Code, id.FightID, result.Error)
+			}
+
+			if result.RowsAffected == 0 {
+				log.Printf("[WARN] No report found for %s-#%d when marking for build processing", id.Code, id.FightID)
+			}
+		}
+		return nil
+	})
+}
+
+// GetReportsNeedingBuildExtraction retrieves reports that need build extraction
+func (r *ReportRepository) GetReportsNeedingBuildExtraction(ctx context.Context, limit int, maxAge time.Duration) ([]*warcraftlogsBuilds.Report, error) {
+	var reports []*warcraftlogsBuilds.Report
+	minDate := time.Now().Add(-maxAge)
+
+	result := r.db.WithContext(ctx).
+		Where("(build_extraction_status = ? OR (build_extraction_status = ? AND build_extraction_at < ?)) AND created_at > ?",
+			"pending", "failed", minDate, minDate).
+		Order("created_at ASC").
+		Limit(limit).
+		Find(&reports)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return []*warcraftlogsBuilds.Report{}, nil
+		}
+		return nil, fmt.Errorf("failed to get reports needing build extraction: %w", result.Error)
+	}
+	return reports, nil
+}
+
+// MarkReportsAsProcessedForBuilds updates the processing status of reports (for builds)
+func (r *ReportRepository) MarkReportsAsProcessedForBuilds(ctx context.Context, identifiers []ReportIdentifier, batchID string) error {
+	if len(identifiers) == 0 {
+		return nil
+	}
+
+	// Use a transaction for this operation
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, id := range identifiers {
+			result := tx.Model(&warcraftlogsBuilds.Report{}).
+				Where("code = ? AND fight_id = ?", id.Code, id.FightID).
+				Updates(map[string]interface{}{
+					"build_extraction_status": "processed",
+					"build_extraction_at":     time.Now(),
+					"processing_batch_id":     batchID,
+				})
+
+			if result.Error != nil {
+				return fmt.Errorf("failed to mark report %s-#%d as processed: %w", id.Code, id.FightID, result.Error)
+			}
+
+			if result.RowsAffected == 0 {
+				log.Printf("[ERROR] No report found for %s-#%d when marking as processed for builds", id.Code, id.FightID)
+				// This situation is probably an error, because the report should exist
+			}
+		}
+		return nil
+	})
 }

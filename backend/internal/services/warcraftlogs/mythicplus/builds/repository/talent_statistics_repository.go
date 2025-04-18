@@ -38,6 +38,7 @@ func NewTalentStatisticsRepository(db *gorm.DB) *TalentStatisticsRepository {
 // DeleteTalentStatistics removes talent statistics for a class and spec.
 func (r *TalentStatisticsRepository) DeleteTalentStatistics(ctx context.Context, class, spec string, encounterID uint) error {
 	query := r.db.WithContext(ctx).
+		Unscoped().
 		Where("class = ? AND spec = ?", class, spec)
 
 	if encounterID > 0 {
@@ -51,6 +52,31 @@ func (r *TalentStatisticsRepository) DeleteTalentStatistics(ctx context.Context,
 
 	log.Printf("[INFO] Deleted %d existing talent statistics for %s-%s (encounterID: %d)",
 		result.RowsAffected, class, spec, encounterID)
+
+	// Reset the builds status to 'pending'
+	resetQuery := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("class = ? AND spec = ?", class, spec)
+
+	if encounterID > 0 {
+		resetQuery = resetQuery.Where("encounter_id = ?", encounterID)
+	}
+
+	resetResult := resetQuery.
+		Where("talent_status = 'processed'").
+		Updates(map[string]interface{}{
+			"talent_status":       "pending",
+			"talent_processed_at": nil,
+			"updated_at":          time.Now(),
+		})
+
+	if resetResult.Error != nil {
+		return fmt.Errorf("failed to reset talent status for builds %s-%s: %w", class, spec, resetResult.Error)
+	}
+
+	log.Printf("[INFO] Reset talent status to 'pending' for %d builds of %s-%s (encounterID: %d)",
+		resetResult.RowsAffected, class, spec, encounterID)
+
 	return nil
 }
 
@@ -98,7 +124,6 @@ func (r *TalentStatisticsRepository) StoreManyTalentStatistics(ctx context.Conte
 				stat.CreatedAt = now
 				stat.UpdatedAt = now
 
-				// Create/update statistic with UPSERT
 				result := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{
 						{Name: "class"},
@@ -106,16 +131,22 @@ func (r *TalentStatisticsRepository) StoreManyTalentStatistics(ctx context.Conte
 						{Name: "encounter_id"},
 						{Name: "talent_import"},
 					},
-					DoUpdates: clause.AssignmentColumns([]string{
-						"usage_count",
-						"usage_percentage",
-						"avg_keystone_level",
-						"min_keystone_level",
-						"max_keystone_level",
-						"avg_item_level",
-						"min_item_level",
-						"max_item_level",
-						"updated_at",
+					DoUpdates: clause.Assignments(map[string]interface{}{
+						"usage_count":      gorm.Expr("talent_statistics.usage_count + ?", stat.UsageCount),
+						"usage_percentage": stat.UsagePercentage,
+						// Utiliser des CAST explicites pour éviter l'ambiguïté
+						"avg_keystone_level": gorm.Expr(
+							"(CAST(talent_statistics.avg_keystone_level AS numeric) * CAST(talent_statistics.usage_count AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((talent_statistics.usage_count + ?) AS numeric)",
+							stat.AvgKeystoneLevel, stat.UsageCount, stat.UsageCount),
+						"avg_item_level": gorm.Expr(
+							"(CAST(talent_statistics.avg_item_level AS numeric) * CAST(talent_statistics.usage_count AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((talent_statistics.usage_count + ?) AS numeric)",
+							stat.AvgItemLevel, stat.UsageCount, stat.UsageCount),
+						// Les fonctions LEAST et GREATEST sont déjà typées
+						"min_keystone_level": gorm.Expr("LEAST(talent_statistics.min_keystone_level, ?)", stat.MinKeystoneLevel),
+						"max_keystone_level": gorm.Expr("GREATEST(talent_statistics.max_keystone_level, ?)", stat.MaxKeystoneLevel),
+						"min_item_level":     gorm.Expr("LEAST(talent_statistics.min_item_level, ?)", stat.MinItemLevel),
+						"max_item_level":     gorm.Expr("GREATEST(talent_statistics.max_item_level, ?)", stat.MaxItemLevel),
+						"updated_at":         time.Now(),
 					}),
 				}).Create(stat)
 
