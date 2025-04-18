@@ -395,6 +395,12 @@ func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Cont
 	logger := activity.GetLogger(ctx)
 	logger.Info("Getting reports needing build extraction", "limit", limit)
 
+	// If maxAgeDuration is 0, set a default (e.g., 10 days)
+	if maxAgeDuration == 0 {
+		maxAgeDuration = 10 * 24 * time.Hour // 10 days
+		logger.Info("Using default maxAge", "maxAge", maxAgeDuration)
+	}
+
 	if a.reportsRepository == nil {
 		logger.Error("ReportRepository is not initialized in PlayerBuildsActivity")
 		return nil, fmt.Errorf("internal error: reportRepository not injected")

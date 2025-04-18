@@ -87,7 +87,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 	var reportsToProcess []*warcraftlogsBuilds.Report
 	err = workflow.ExecuteActivity(activityCtx,
 		definitions.GetReportsNeedingBuildExtractionActivity,
-		params.BatchSize,
+		params.BatchSize, 10*24*time.Hour,
 	).Get(ctx, &reportsToProcess)
 
 	if err != nil {
