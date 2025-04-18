@@ -6,11 +6,13 @@ import (
 
 	// Services
 	service "wowperf/internal/services/warcraftlogs"
+	leaderboard "wowperf/internal/services/warcraftlogs/dungeons"
+	mythicplusanalytics "wowperf/internal/services/warcraftlogs/mythicplus/analytics"
 
 	// API
 	mythicplus "wowperf/internal/api/warcraftlogs/mythicplus"
+	mythicplusbuildsAnalysis "wowperf/internal/api/warcraftlogs/mythicplus/builds"
 	character "wowperf/internal/api/warcraftlogs/mythicplus/character"
-	leaderboard "wowperf/internal/services/warcraftlogs/dungeons"
 
 	middleware "wowperf/middleware/cache"
 	"wowperf/pkg/cache"
@@ -29,6 +31,7 @@ type Handler struct {
 		Global      *mythicplus.GlobalLeaderboardHandler
 		Leaderboard *mythicplus.DungeonLeaderboardHandler
 		Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
+		Builds      *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
 	}
 	cache        cache.CacheService
 	cacheManager *middleware.CacheManager
@@ -37,6 +40,7 @@ type Handler struct {
 func NewHandler(
 	globalService *leaderboard.GlobalLeaderboardService,
 	analysisService *leaderboard.GlobalLeaderboardAnalysisService,
+	buildsAnalysisService *mythicplusanalytics.BuildAnalysisService,
 	warcraftLogsService *service.WarcraftLogsClientService,
 	db *gorm.DB,
 	cache cache.CacheService,
@@ -53,11 +57,13 @@ func NewHandler(
 			Global      *mythicplus.GlobalLeaderboardHandler
 			Leaderboard *mythicplus.DungeonLeaderboardHandler
 			Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
+			Builds      *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
 		}{
 			Dungeon:     mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
 			Global:      mythicplus.NewGlobalLeaderboardHandler(globalService),
 			Leaderboard: mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
 			Analysis:    mythicplus.NewGlobalLeaderboardAnalysisHandler(analysisService),
+			Builds:      mythicplusbuildsAnalysis.NewMythicPlusBuildsAnalysisHandler(buildsAnalysisService),
 		},
 		cache:        cache,
 		cacheManager: cacheManager,
@@ -85,6 +91,35 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 		{
 			// Get all the rankings for all dungeons to seed the database
 			// mythicplus.GET("/rankings", h.MythicPlus.GetRankings)
+
+			// Builds analysis for Mythic+
+			builds := mythicplus.Group("/builds/analysis")
+			{
+				// Popular items by slot
+				builds.GET("/items", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetPopularItemsBySlot)
+
+				// Enchant usage
+				builds.GET("/enchants", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetEnchantUsage)
+
+				// Gem usage
+				builds.GET("/gems", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetGemUsage)
+
+				// Talent builds
+				builds.GET("/talents/top", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetTopTalentBuilds)
+				builds.GET("/talents/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetTalentBuildsByDungeon)
+
+				// Stats
+				builds.GET("/stats", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetStatPriorities)
+
+				// Optimal build
+				builds.GET("/optimal", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetOptimalBuild)
+
+				// Spec comparison
+				builds.GET("/specs/comparison", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetSpecComparison)
+
+				// Class spec summary
+				builds.GET("/summary", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetClassSpecSummary)
+			}
 
 			// Get the leaderboard for a specific dungeon by team
 			mythicplus.GET("/rankings/dungeon/team", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Dungeon.GetDungeonLeaderboardByTeam)

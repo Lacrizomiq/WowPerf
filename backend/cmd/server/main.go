@@ -33,6 +33,7 @@ import (
 	userService "wowperf/internal/services/user"
 	warcraftlogs "wowperf/internal/services/warcraftlogs"
 	warcraftLogsLeaderboard "wowperf/internal/services/warcraftlogs/dungeons"
+	warcraftLogsMythicPlusBuildAnalysis "wowperf/internal/services/warcraftlogs/mythicplus/analytics"
 
 	// Internal Packages - Database
 	"wowperf/internal/database"
@@ -48,15 +49,16 @@ import (
 
 // Struct to group Services
 type AppServices struct {
-	Auth                *auth.AuthService
-	BattleNet           *bnetAuth.BattleNetAuthService
-	User                *userService.UserService
-	Blizzard            *serviceBlizzard.Service
-	RaiderIO            *serviceRaiderio.RaiderIOService
-	WarcraftLogs        *warcraftlogs.WarcraftLogsClientService
-	LeaderBoard         *warcraftLogsLeaderboard.GlobalLeaderboardService
-	LeaderboardAnalysis *warcraftLogsLeaderboard.GlobalLeaderboardAnalysisService
-	RankingsUpdater     *warcraftLogsLeaderboard.RankingsUpdater
+	Auth                     *auth.AuthService
+	BattleNet                *bnetAuth.BattleNetAuthService
+	User                     *userService.UserService
+	Blizzard                 *serviceBlizzard.Service
+	RaiderIO                 *serviceRaiderio.RaiderIOService
+	WarcraftLogs             *warcraftlogs.WarcraftLogsClientService
+	LeaderBoard              *warcraftLogsLeaderboard.GlobalLeaderboardService
+	LeaderboardAnalysis      *warcraftLogsLeaderboard.GlobalLeaderboardAnalysisService
+	RankingsUpdater          *warcraftLogsLeaderboard.RankingsUpdater
+	MythicPlusBuildsAnalysis *warcraftLogsMythicPlusBuildAnalysis.BuildAnalysisService
 }
 
 // Struct to group Handlers
@@ -136,7 +138,8 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	}
 
 	globalLeaderboardService := warcraftLogsLeaderboard.NewGlobalLeaderboardService(db)
-	globalLeaderboardAnalysisService := warcraftLogsLeaderboard.NewGlobalLeaderboardAnalysisService(db) // Add analysis service
+	globalLeaderboardAnalysisService := warcraftLogsLeaderboard.NewGlobalLeaderboardAnalysisService(db)
+	mythicPlusBuildsAnalysisService := warcraftLogsMythicPlusBuildAnalysis.NewBuildAnalysisService(db)
 	rankingsUpdater := warcraftLogsLeaderboard.NewRankingsUpdater(
 		db,
 		warcraftLogsService,
@@ -145,15 +148,16 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	)
 
 	return &AppServices{
-		Auth:                authService,
-		BattleNet:           battleNetService,
-		User:                userSvc,
-		Blizzard:            blizzardService,
-		RaiderIO:            rioService,
-		WarcraftLogs:        warcraftLogsService,
-		LeaderBoard:         globalLeaderboardService,
-		LeaderboardAnalysis: globalLeaderboardAnalysisService, // Add analysis service to AppServices
-		RankingsUpdater:     rankingsUpdater,
+		Auth:                     authService,
+		BattleNet:                battleNetService,
+		User:                     userSvc,
+		Blizzard:                 blizzardService,
+		RaiderIO:                 rioService,
+		WarcraftLogs:             warcraftLogsService,
+		LeaderBoard:              globalLeaderboardService,
+		LeaderboardAnalysis:      globalLeaderboardAnalysisService, // Add analysis service to AppServices
+		RankingsUpdater:          rankingsUpdater,
+		MythicPlusBuildsAnalysis: mythicPlusBuildsAnalysisService,
 	}, nil
 }
 
@@ -167,7 +171,8 @@ func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.C
 		Blizzard:  apiBlizzard.NewHandler(services.Blizzard, db, cacheService, cacheManagers.Blizzard),
 		WarcraftLogs: apiWarcraftlogs.NewHandler(
 			services.LeaderBoard,
-			services.LeaderboardAnalysis, // Use analysis service instead of WarcraftLogsClientService
+			services.LeaderboardAnalysis,
+			services.MythicPlusBuildsAnalysis,
 			services.WarcraftLogs,
 			db,
 			cacheService,
@@ -254,19 +259,19 @@ func initializeCacheManagers(cacheService cache.CacheService) CacheManagers {
 	return CacheManagers{
 		RaiderIO: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
 			Cache:      cacheService,
-			Expiration: 24 * time.Hour,
+			Expiration: 8 * time.Hour,
 			KeyPrefix:  "raiderio",
 			Metrics:    true,
 		}),
 		Blizzard: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
 			Cache:      cacheService,
-			Expiration: 24 * time.Hour,
+			Expiration: 8 * time.Hour,
 			KeyPrefix:  "blizzard",
 			Metrics:    true,
 		}),
 		WarcraftLogs: cacheMiddleware.NewCacheManager(cacheMiddleware.CacheConfig{
 			Cache:      cacheService,
-			Expiration: 2 * time.Hour,
+			Expiration: 8 * time.Hour,
 			KeyPrefix:  "warcraftlogs",
 			Tags:       []string{"rankings", "leaderboard"},
 			Metrics:    true,
