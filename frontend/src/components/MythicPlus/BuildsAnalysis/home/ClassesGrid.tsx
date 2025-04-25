@@ -5,9 +5,9 @@ import { WowClassParam } from "@/types/warcraftlogs/builds/classSpec";
 export default function ClassesGrid() {
   // Organized classes by row by alphabetical order
   const classRows: WowClassParam[][] = [
-    ["deathknight", "demonhunter", "druid", "evoker"],
+    ["priest", "demonhunter", "druid", "evoker"],
     ["hunter", "mage", "monk", "paladin"],
-    ["priest", "rogue", "shaman", "warlock"],
+    ["priest", "deathknight", "rogue", "shaman", "warlock"],
     ["warrior"],
   ];
 
