@@ -6,8 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  formatDisplayClassName,
+  classNameToPascalCase,
+  getClassIcon,
+} from "@/utils/classandspecicons";
 import { WowClassParam } from "@/types/warcraftlogs/builds/classSpec";
-import { getClassIcon } from "@/utils/classandspecicons";
+import { useRouter } from "next/navigation";
 
 // Mapping of classes to their available specs
 const CLASS_SPECS: Record<WowClassParam, string[]> = {
@@ -26,20 +31,6 @@ const CLASS_SPECS: Record<WowClassParam, string[]> = {
   evoker: ["devastation", "preservation", "augmentation"],
 };
 
-// Format the display name of the class
-function formatDisplayName(className: WowClassParam): string {
-  if (className === "deathknight") return "Death Knight";
-  if (className === "demonhunter") return "Demon Hunter";
-  return className.charAt(0).toUpperCase() + className.slice(1);
-}
-
-// Convert the class name to PascalCase for icons
-function toPascalCaseForIcon(name: string): string {
-  if (name === "deathknight") return "DeathKnight";
-  if (name === "demonhunter") return "DemonHunter";
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
 interface ClassSelectorProps {
   selectedClass: WowClassParam;
   onClassChange: (className: WowClassParam) => void;
@@ -49,26 +40,38 @@ export default function ClassSelector({
   selectedClass,
   onClassChange,
 }: ClassSelectorProps) {
+  const router = useRouter();
   const classes = Object.keys(CLASS_SPECS) as WowClassParam[];
 
+  const handleClassChange = (value: string) => {
+    const newClass = value as WowClassParam;
+
+    // if onClassChange is provided, call it
+    if (onClassChange) {
+      onClassChange(newClass);
+    }
+
+    // Get the first spec of the selected class
+    const firstSpec = CLASS_SPECS[newClass][0];
+
+    router.push(`/mythic-plus/builds/${newClass}/${firstSpec}`);
+  };
+
   return (
-    <Select
-      value={selectedClass}
-      onValueChange={(value) => onClassChange(value as WowClassParam)}
-    >
+    <Select value={selectedClass} onValueChange={handleClassChange}>
       <SelectTrigger className="w-[180px] bg-slate-800 text-white border-slate-700">
         {selectedClass && (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full overflow-hidden">
               <Image
-                src={getClassIcon(toPascalCaseForIcon(selectedClass))}
-                alt={formatDisplayName(selectedClass)}
+                src={getClassIcon(classNameToPascalCase(selectedClass))}
+                alt={formatDisplayClassName(selectedClass)}
                 width={20}
                 height={20}
                 className="object-cover"
               />
             </div>
-            <span>{formatDisplayName(selectedClass)}</span>
+            <span>{formatDisplayClassName(selectedClass)}</span>
           </div>
         )}
         {!selectedClass && <SelectValue placeholder="Select Class" />}
@@ -84,14 +87,14 @@ export default function ClassSelector({
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full overflow-hidden">
                 <Image
-                  src={getClassIcon(toPascalCaseForIcon(className))}
-                  alt={formatDisplayName(className)}
+                  src={getClassIcon(classNameToPascalCase(className))}
+                  alt={formatDisplayClassName(className)}
                   width={20}
                   height={20}
                   className="object-cover"
                 />
               </div>
-              <span>{formatDisplayName(className)}</span>
+              <span>{formatDisplayClassName(className)}</span>
             </div>
           </SelectItem>
         ))}

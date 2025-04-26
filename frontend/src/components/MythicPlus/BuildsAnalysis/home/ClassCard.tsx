@@ -4,7 +4,11 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import { getClassIcon, normalizeWowName } from "@/utils/classandspecicons";
+import {
+  getClassIcon,
+  formatDisplayClassName,
+  classNameToPascalCase,
+} from "@/utils/classandspecicons";
 import Image from "next/image";
 
 // Mapping of classes to available specs
@@ -24,21 +28,6 @@ const CLASS_SPECS: Record<WowClassParam, WowSpecParam[]> = {
   evoker: ["devastation", "preservation", "augmentation"],
 };
 
-// Function to format the display name of the class
-function formatDisplayName(className: WowClassParam): string {
-  if (className === "deathknight") return "Death Knight";
-  if (className === "demonhunter") return "Demon Hunter";
-
-  return className.charAt(0).toUpperCase() + className.slice(1);
-}
-
-// Function to convert the class name to PascalCase for icons
-function toPascalCaseForIcon(name: string): string {
-  if (name === "deathknight") return "DeathKnight";
-  if (name === "demonhunter") return "DemonHunter";
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
 interface ClassCardProps {
   className: WowClassParam;
 }
@@ -48,14 +37,14 @@ export default function ClassCard({ className }: ClassCardProps) {
   const specs = CLASS_SPECS[className];
 
   // Get the formatted display name of the class
-  const displayName = formatDisplayName(className);
+  const displayName = formatDisplayClassName(className);
 
   // Style for the class color
   const classColorStyle = { color: `var(--color-${className})` };
   const classBorderStyle = { borderColor: `var(--color-${className})` };
 
   // Get the URL of the class icon
-  const classIconName = toPascalCaseForIcon(className);
+  const classIconName = classNameToPascalCase(className);
   const classIconUrl = getClassIcon(classIconName);
 
   return (

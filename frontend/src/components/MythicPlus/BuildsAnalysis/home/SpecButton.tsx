@@ -3,7 +3,12 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
+import {
+  getSpecIcon,
+  formatDisplaySpecName,
+  classNameToPascalCase,
+  specNameToPascalCase,
+} from "@/utils/classandspecicons";
 import Image from "next/image";
 
 interface SpecButtonProps {
@@ -11,41 +16,18 @@ interface SpecButtonProps {
   spec: WowSpecParam;
 }
 
-// Function to format the name of a spec for display
-function formatSpecName(spec: WowSpecParam): string {
-  // Special cases
-  if (spec === "beastmastery") return "Beast Mastery";
-
-  // For other specs, capitalize the first letter
-  return spec.charAt(0).toUpperCase() + spec.slice(1);
-}
-
-// Function to convert the class name to PascalCase for icons
-function toPascalCaseForIcon(name: string): string {
-  if (name === "deathknight") return "DeathKnight";
-  if (name === "demonhunter") return "DemonHunter";
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// Function to convert the spec name to PascalCase for icons
-function specToPascalCaseForIcon(spec: string): string {
-  if (spec === "beastmastery") return "BeastMastery";
-
-  return spec.charAt(0).toUpperCase() + spec.slice(1);
-}
-
 export default function SpecButton({ className, spec }: SpecButtonProps) {
   // Format the name of the spec for display
-  const displayName = formatSpecName(spec);
+  const displayName = formatDisplaySpecName(spec);
 
   // Get the URL of the spec icon
-  const classIconName = toPascalCaseForIcon(className);
-  const specIconName = specToPascalCaseForIcon(spec);
+  const classIconName = classNameToPascalCase(className);
+  const specIconName = specNameToPascalCase(spec);
   const specIconUrl = getSpecIcon(classIconName, specIconName);
 
   return (
     <Link
-      href={`/builds/${className}/${spec}`}
+      href={`/mythic-plus/builds/${className}/${spec}`}
       className="flex items-center gap-3 py-2 px-3 rounded-md bg-slate-700/50 hover:bg-slate-600 transition-colors w-full group relative overflow-hidden"
     >
       {/* Effet de soulignement au hover */}

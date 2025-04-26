@@ -7,8 +7,8 @@ export default function ClassesGrid() {
   const classRows: WowClassParam[][] = [
     ["priest", "demonhunter", "druid", "evoker"],
     ["hunter", "mage", "monk", "paladin"],
-    ["priest", "deathknight", "rogue", "shaman", "warlock"],
-    ["warrior"],
+    ["priest", "deathknight", "rogue", "shaman"],
+    ["warlock", "warrior"],
   ];
 
   return (

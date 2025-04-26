@@ -10,7 +10,12 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import { getSpecIcon } from "@/utils/classandspecicons";
+import {
+  formatDisplaySpecName,
+  classNameToPascalCase,
+  specNameToPascalCase,
+  getSpecIcon,
+} from "@/utils/classandspecicons";
 
 // Mapping of classes to their available specs
 const CLASS_SPECS: Record<WowClassParam, WowSpecParam[]> = {
@@ -29,28 +34,6 @@ const CLASS_SPECS: Record<WowClassParam, WowSpecParam[]> = {
   evoker: ["devastation", "preservation", "augmentation"],
 };
 
-// Format the display name of a spec
-function formatSpecName(spec: WowSpecParam): string {
-  // Special cases
-  if (spec === "beastmastery") return "Beast Mastery";
-
-  // For other specs, capitalize the first letter
-  return spec.charAt(0).toUpperCase() + spec.slice(1);
-}
-
-// Convert class and spec names to PascalCase for icons
-function toPascalCaseForIcon(name: string): string {
-  if (name === "deathknight") return "DeathKnight";
-  if (name === "demonhunter") return "DemonHunter";
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// Convert spec name to PascalCase for icons
-function specToPascalCaseForIcon(spec: string): string {
-  if (spec === "beastmastery") return "BeastMastery";
-  return spec.charAt(0).toUpperCase() + spec.slice(1);
-}
-
 interface SpecSelectorProps {
   selectedClass: WowClassParam;
   selectedSpec: WowSpecParam;
@@ -64,7 +47,7 @@ export default function SpecSelector({
 }: SpecSelectorProps) {
   const specs = CLASS_SPECS[selectedClass] || [];
 
-  const classIconName = toPascalCaseForIcon(selectedClass);
+  const classIconName = classNameToPascalCase(selectedClass);
 
   return (
     <Select
@@ -78,15 +61,15 @@ export default function SpecSelector({
               <Image
                 src={getSpecIcon(
                   classIconName,
-                  specToPascalCaseForIcon(selectedSpec)
+                  specNameToPascalCase(selectedSpec)
                 )}
-                alt={formatSpecName(selectedSpec)}
+                alt={formatDisplaySpecName(selectedSpec)}
                 width={20}
                 height={20}
                 className="object-cover"
               />
             </div>
-            <span>{formatSpecName(selectedSpec)}</span>
+            <span>{formatDisplaySpecName(selectedSpec)}</span>
           </div>
         )}
         {!selectedSpec && <SelectValue placeholder="Select Spec" />}
@@ -98,17 +81,14 @@ export default function SpecSelector({
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full overflow-hidden">
                 <Image
-                  src={getSpecIcon(
-                    classIconName,
-                    specToPascalCaseForIcon(spec)
-                  )}
-                  alt={formatSpecName(spec)}
+                  src={getSpecIcon(classIconName, specNameToPascalCase(spec))}
+                  alt={formatDisplaySpecName(spec)}
                   width={20}
                   height={20}
                   className="object-cover"
                 />
               </div>
-              <span>{formatSpecName(spec)}</span>
+              <span>{formatDisplaySpecName(spec)}</span>
             </div>
           </SelectItem>
         ))}

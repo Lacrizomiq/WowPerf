@@ -14,14 +14,14 @@ interface BuildFiltersProps {
   className: WowClassParam;
   spec: WowSpecParam;
   onDungeonChange?: (dungeon: string) => void;
-  onAffixChange?: (affix: string) => void;
+  showDungeonSelector?: boolean;
 }
 
 export default function BuildFilters({
   className,
   spec,
   onDungeonChange,
-  onAffixChange,
+  showDungeonSelector = true,
 }: BuildFiltersProps) {
   const season = "season-tww-2";
   const [selectedDungeon, setSelectedDungeon] = useState("all");
@@ -44,9 +44,9 @@ export default function BuildFilters({
 
   return (
     <div className="flex flex-wrap gap-2 mb-6">
-      <button className="px-4 py-2 bg-slate-800 rounded flex items-center gap-2 hover:bg-slate-700">
+      <div className="px-4 py-2 bg-slate-800 rounded flex items-center gap-2">
         <span className="text-indigo-400">Filters</span>
-      </button>
+      </div>
 
       <ClassSelector
         selectedClass={className}
@@ -63,11 +63,13 @@ export default function BuildFilters({
         <span>Mythic+</span>
       </div>
 
-      <DungeonSelector
-        dungeons={dungeons}
-        onDungeonChange={handleDungeonChange}
-        selectedDungeon={selectedDungeon}
-      />
+      {showDungeonSelector && (
+        <DungeonSelector
+          dungeons={dungeons}
+          onDungeonChange={handleDungeonChange}
+          selectedDungeon={selectedDungeon}
+        />
+      )}
     </div>
   );
 }

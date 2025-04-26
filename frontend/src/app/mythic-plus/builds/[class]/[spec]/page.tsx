@@ -1,12 +1,16 @@
-// # Page d'accueil/overview de la spec
+import {
+  WowClassParam,
+  WowSpecParam,
+} from "@/types/warcraftlogs/builds/classSpec";
+import BuildsContent from "@/components/MythicPlus/BuildsAnalysis/builds/BuildsContent";
+
 export default function BuildPage({
   params,
 }: {
   params: { class: string; spec: string };
 }) {
-  return (
-    <div>
-      Salut ! Ceci est la page pour {params.class}/{params.spec}
-    </div>
-  );
+  const className = params.class as WowClassParam;
+  const spec = params.spec as WowSpecParam;
+
+  return <BuildsContent className={className} spec={spec} />;
 }

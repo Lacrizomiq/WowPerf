@@ -75,53 +75,6 @@ export default function BuildHeader({ className, spec }: BuildHeaderProps) {
           </p>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Select value={selectedClass} onValueChange={handleClassChange}>
-          <SelectTrigger className="w-36 bg-slate-800 border-slate-700">
-            <SelectValue placeholder="Class" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700 text-white">
-            <SelectItem value="priest">Priest</SelectItem>
-            <SelectItem value="mage">Mage</SelectItem>
-            <SelectItem value="warrior">Warrior</SelectItem>
-            <SelectItem value="paladin">Paladin</SelectItem>
-            <SelectItem value="hunter">Hunter</SelectItem>
-            <SelectItem value="rogue">Rogue</SelectItem>
-            <SelectItem value="deathknight">Death Knight</SelectItem>
-            <SelectItem value="shaman">Shaman</SelectItem>
-            <SelectItem value="warlock">Warlock</SelectItem>
-            <SelectItem value="monk">Monk</SelectItem>
-            <SelectItem value="druid">Druid</SelectItem>
-            <SelectItem value="demonhunter">Demon Hunter</SelectItem>
-            <SelectItem value="evoker">Evoker</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedSpec} onValueChange={handleSpecChange}>
-          <SelectTrigger className="w-36 bg-slate-800 border-slate-700">
-            <SelectValue placeholder="Spec" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700 text-white">
-            {className === "priest" && (
-              <>
-                <SelectItem value="discipline">Discipline</SelectItem>
-                <SelectItem value="holy">Holy</SelectItem>
-                <SelectItem value="shadow">Shadow</SelectItem>
-              </>
-            )}
-          </SelectContent>
-        </Select>
-
-        <Select defaultValue="mythicplus" disabled>
-          <SelectTrigger className="w-36 bg-slate-800 border-slate-700">
-            <SelectValue placeholder="Content" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700 text-white">
-            <SelectItem value="mythicplus">Mythic+</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
   );
 }

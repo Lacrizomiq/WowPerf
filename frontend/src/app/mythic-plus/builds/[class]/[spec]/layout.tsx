@@ -8,6 +8,7 @@ import BuildHeader from "@/components/MythicPlus/BuildsAnalysis/layout/BuildHead
 import BuildNav from "@/components/MythicPlus/BuildsAnalysis/layout/BuildNav";
 import BuildFilters from "@/components/MythicPlus/BuildsAnalysis/layout/BuildFilters";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function BuildLayout({
   children,
@@ -18,26 +19,36 @@ export default function BuildLayout({
 }) {
   const className = params.class as WowClassParam;
   const spec = params.spec as WowSpecParam;
+  const pathname = usePathname();
+
+  // Determine if the active tab is "builds"
+  const isBuildsTab =
+    !pathname.includes("talents") &&
+    !pathname.includes("gear") &&
+    !pathname.includes("enchants-gems");
 
   const [dungeonId, setDungeonId] = useState<string>("all");
 
   return (
-    <div className="container mx-auto p-4 bg-slate-900 text-slate-100 min-h-screen">
-      {/* Header Section */}
-      <BuildHeader className={className} spec={spec} />
+    <div className="w-full bg-black text-slate-100 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        {/* Header Section */}
+        <BuildHeader className={className} spec={spec} />
 
-      {/* Main Navigation */}
-      <BuildNav defaultTab="builds">
-        {/* Filters Section */}
-        <BuildFilters
-          className={className}
-          spec={spec}
-          onDungeonChange={(value) => setDungeonId(value)}
-        />
+        {/* Main Navigation */}
+        <BuildNav defaultTab="builds" className={className} spec={spec}>
+          {/* Filters Section */}
+          <BuildFilters
+            className={className}
+            spec={spec}
+            onDungeonChange={(value) => setDungeonId(value)}
+            showDungeonSelector={!isBuildsTab}
+          />
 
-        {/* Content will be injected here */}
-        {children}
-      </BuildNav>
+          {/* Content will be injected here */}
+          {children}
+        </BuildNav>
+      </div>
     </div>
   );
 }
