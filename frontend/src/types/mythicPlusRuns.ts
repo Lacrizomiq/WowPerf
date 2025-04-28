@@ -9,6 +9,7 @@ export interface Season {
 export interface Dungeon {
   ID: number;
   ChallengeModeID: number;
+  EncounterID: number;
   Slug: string;
   Name: string;
   ShortName: string;

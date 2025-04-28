@@ -14,17 +14,22 @@ interface BuildFiltersProps {
   className: WowClassParam;
   spec: WowSpecParam;
   onDungeonChange?: (dungeon: string) => void;
+  onClassChange?: (className: WowClassParam) => void;
+  onSpecChange?: (spec: WowSpecParam) => void;
   showDungeonSelector?: boolean;
+  selectedDungeon?: string;
 }
 
 export default function BuildFilters({
   className,
   spec,
   onDungeonChange,
+  onClassChange,
+  onSpecChange,
   showDungeonSelector = true,
+  selectedDungeon = "all",
 }: BuildFiltersProps) {
   const season = "season-tww-2";
-  const [selectedDungeon, setSelectedDungeon] = useState("all");
   const [dungeons, setDungeons] = useState<Dungeon[]>([]);
 
   // Fetch dungeons data
@@ -38,7 +43,6 @@ export default function BuildFilters({
 
   // Handle changes
   const handleDungeonChange = (value: string) => {
-    setSelectedDungeon(value);
     if (onDungeonChange) onDungeonChange(value);
   };
 
@@ -50,13 +54,13 @@ export default function BuildFilters({
 
       <ClassSelector
         selectedClass={className}
-        onClassChange={() => {}} // Disabled in display mode
+        onClassChange={onClassChange || (() => {})}
       />
 
       <SpecSelector
         selectedClass={className}
         selectedSpec={spec}
-        onSpecChange={() => {}} // Disabled in display mode
+        onSpecChange={onSpecChange || (() => {})}
       />
 
       <div className="px-4 py-2 bg-indigo-600 rounded flex items-center">
