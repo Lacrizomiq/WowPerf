@@ -37,7 +37,9 @@ func NewBuildsStatisticsRepository(db *gorm.DB) *BuildsStatisticsRepository {
 
 // DeleteBuildStatistics removes build statistics for a class and spec.
 func (r *BuildsStatisticsRepository) DeleteBuildStatistics(ctx context.Context, class, spec string, encounterID uint) error {
+	// Unscoped() for the hard delete
 	query := r.db.WithContext(ctx).
+		Unscoped().
 		Where("class = ? AND spec = ?", class, spec)
 
 	if encounterID > 0 {
@@ -51,6 +53,31 @@ func (r *BuildsStatisticsRepository) DeleteBuildStatistics(ctx context.Context, 
 
 	log.Printf("[INFO] Deleted %d existing build statistics for %s-%s (encounterID: %d)",
 		result.RowsAffected, class, spec, encounterID)
+
+	// reset of the status in the player_builds table
+	resetQuery := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("class = ? AND spec = ?", class, spec)
+
+	if encounterID > 0 {
+		resetQuery = resetQuery.Where("encounter_id = ?", encounterID)
+	}
+
+	resetResult := resetQuery.
+		Where("equipment_status = 'processed'").
+		Updates(map[string]interface{}{
+			"equipment_status":       "pending",
+			"equipment_processed_at": nil,
+			"updated_at":             time.Now(),
+		})
+
+	if resetResult.Error != nil {
+		return fmt.Errorf("failed to reset equipment status for builds %s-%s: %w", class, spec, resetResult.Error)
+	}
+
+	log.Printf("[INFO] Reset equipment status to 'pending' for %d builds of %s-%s (encounterID: %d)",
+		resetResult.RowsAffected, class, spec, encounterID)
+
 	return nil
 }
 
@@ -98,7 +125,7 @@ func (r *BuildsStatisticsRepository) StoreManyBuildStatistics(ctx context.Contex
 				stat.CreatedAt = now
 				stat.UpdatedAt = now
 
-				// Create/update statistic with UPSERT
+				// Create/update statistic
 				result := tx.Clauses(clause.OnConflict{
 					Columns: []clause.Column{
 						{Name: "class"},
@@ -107,16 +134,38 @@ func (r *BuildsStatisticsRepository) StoreManyBuildStatistics(ctx context.Contex
 						{Name: "item_slot"},
 						{Name: "item_id"},
 					},
-					DoUpdates: clause.AssignmentColumns([]string{
-						"item_name", "item_icon", "item_quality", "item_level",
-						"has_set_bonus", "set_id", "bonus_ids",
-						"has_gems", "gems_count", "gem_ids", "gem_icons", "gem_levels",
-						"has_permanent_enchant", "permanent_enchant_id", "permanent_enchant_name",
-						"has_temporary_enchant", "temporary_enchant_id", "temporary_enchant_name",
-						"usage_count", "usage_percentage",
-						"avg_item_level", "min_item_level", "max_item_level",
-						"avg_keystone_level", "min_keystone_level", "max_keystone_level",
-						"updated_at",
+					DoUpdates: clause.Assignments(map[string]interface{}{
+						"item_name":              stat.ItemName,
+						"item_icon":              stat.ItemIcon,
+						"item_quality":           stat.ItemQuality,
+						"item_level":             stat.ItemLevel,
+						"has_set_bonus":          stat.HasSetBonus,
+						"set_id":                 stat.SetID,
+						"bonus_ids":              stat.BonusIDs,
+						"has_gems":               stat.HasGems,
+						"gems_count":             stat.GemsCount,
+						"gem_ids":                stat.GemIDs,
+						"gem_icons":              stat.GemIcons,
+						"gem_levels":             stat.GemLevels,
+						"has_permanent_enchant":  stat.HasPermanentEnchant,
+						"permanent_enchant_id":   stat.PermanentEnchantID,
+						"permanent_enchant_name": stat.PermanentEnchantName,
+						"has_temporary_enchant":  stat.HasTemporaryEnchant,
+						"temporary_enchant_id":   stat.TemporaryEnchantID,
+						"temporary_enchant_name": stat.TemporaryEnchantName,
+						"usage_count":            gorm.Expr("build_statistics.usage_count + ?", stat.UsageCount),
+						"usage_percentage":       stat.UsagePercentage,
+						"avg_item_level": gorm.Expr(
+							"(CAST(build_statistics.avg_item_level AS numeric) * CAST(build_statistics.usage_count AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((build_statistics.usage_count + ?) AS numeric)",
+							stat.AvgItemLevel, stat.UsageCount, stat.UsageCount),
+						"min_item_level": gorm.Expr("LEAST(build_statistics.min_item_level, ?)", stat.MinItemLevel),
+						"max_item_level": gorm.Expr("GREATEST(build_statistics.max_item_level, ?)", stat.MaxItemLevel),
+						"avg_keystone_level": gorm.Expr(
+							"(CAST(build_statistics.avg_keystone_level AS numeric) * CAST(build_statistics.usage_count AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((build_statistics.usage_count + ?) AS numeric)",
+							stat.AvgKeystoneLevel, stat.UsageCount, stat.UsageCount),
+						"min_keystone_level": gorm.Expr("LEAST(build_statistics.min_keystone_level, ?)", stat.MinKeystoneLevel),
+						"max_keystone_level": gorm.Expr("GREATEST(build_statistics.max_keystone_level, ?)", stat.MaxKeystoneLevel),
+						"updated_at":         time.Now(),
 					}),
 				}).Create(stat)
 

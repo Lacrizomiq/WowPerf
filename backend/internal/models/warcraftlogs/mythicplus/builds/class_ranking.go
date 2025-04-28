@@ -51,6 +51,11 @@ type ClassRanking struct {
 	// Other
 	Faction int
 	Affixes pq.Int64Array `gorm:"type:integer[]"`
+
+	// Tracking fields for workflow processing
+	ReportProcessingStatus string     `gorm:"column:report_processing_status;default:pending"`
+	ReportProcessingAt     *time.Time `gorm:"column:report_processing_at"`
+	ProcessingBatchID      string     `gorm:"column:processing_batch_id"`
 }
 
 // TableName specifies the table name for GORM

@@ -113,3 +113,364 @@ func (r *PlayerBuildsRepository) CountPlayerBuilds(ctx context.Context) (int64, 
 	}
 	return count, nil
 }
+
+// CountPlayerBuildsByFilter count the builds for a specific class, spec and encounter_id
+func (r *PlayerBuildsRepository) CountPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d",
+		class, spec, encounterID)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
+	}
+
+	sql := query.Statement.SQL.String()
+	vars := query.Statement.Vars
+	log.Printf("[DEBUG] Generated SQL: %s, Variables: %v", sql, vars)
+
+	if err := query.Count(&count).Error; err != nil {
+		log.Printf("[ERROR] Count query failed: %v", err)
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+
+	log.Printf("[DEBUG] CountPlayerBuildsByFilter - Found %d builds", count)
+	return count, nil
+}
+
+// GetPlayerBuildsByFilter get the builds for a specific class, spec and encounter_id with pagination
+func (r *PlayerBuildsRepository) GetPlayerBuildsByFilter(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - parameters: class=%s, spec=%s, encounterID=%d, limit=%d, offset=%d",
+		class, spec, encounterID, limit, offset)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+		log.Printf("[DEBUG] Adding encounter_id filter: %d", encounterID)
+	} else {
+		log.Printf("[DEBUG] Not adding encounter_id filter (encounterID=%d)", encounterID)
+	}
+
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		log.Printf("[ERROR] Fetch query failed: %v", err)
+		return nil, fmt.Errorf("failed to fetch player builds: %w", err)
+	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsByFilter - Found %d builds", len(builds))
+
+	return builds, nil
+}
+
+// == Equipement methods ==
+
+// GetPlayerBuildsNeedingEquipmentAnalysis returns the builds that need to be analyzed for equipment
+// The builds are those where equipment_status is NULL or 'pending' or 'failed'
+func (r *PlayerBuildsRepository) GetPlayerBuildsNeedingEquipmentAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	// Filter by class, spec and encounter_id if provided
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	// Condition on equipment_status
+	query = query.Where("equipment_status IS NULL OR equipment_status = 'pending' OR equipment_status = 'failed'")
+
+	// Pagination
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch player builds: %w", err)
+	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsNeedingEquipmentAnalysis - Found %d builds", len(builds))
+
+	return builds, nil
+}
+
+// CountPlayerBuildsNeedingEquipmentAnalysis counts the builds that need to be analyzed for equipment
+func (r *PlayerBuildsRepository) CountPlayerBuildsNeedingEquipmentAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	// Filter by class, spec and encounter_id if provided
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	query = query.Where("equipment_status IS NULL OR equipment_status = 'pending' OR equipment_status = 'failed'")
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count player builds: %w", err)
+	}
+
+	return count, nil
+}
+
+// MarkPlayerBuildsAsProcessedForEquipment marks the builds as processed for equipment
+func (r *PlayerBuildsRepository) MarkPlayerBuildsAsProcessedForEquipment(
+	ctx context.Context,
+	buildIDs []uint,
+	status string,
+) error {
+	if len(buildIDs) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("id IN ?", buildIDs).
+		Updates(map[string]interface{}{
+			"equipment_status":       status,
+			"equipment_processed_at": time.Now(),
+			"updated_at":             time.Now(),
+		})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark builds as processed for equipment: %w", result.Error)
+	}
+
+	log.Printf("[INFO] Marked %d builds as '%s' for equipment analysis", result.RowsAffected, status)
+	return nil
+}
+
+// == Talent methods ==
+
+// GetPlayerBuildsNeedingTalentAnalysis returns the builds that need to be analyzed for talents
+// The builds are those where talent_status is NULL or 'pending' or 'failed'
+func (r *PlayerBuildsRepository) GetPlayerBuildsNeedingTalentAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	query = query.Where("talent_status IS NULL OR talent_status = 'pending' OR talent_status = 'failed'")
+
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch player builds for talent analysis: %w", err)
+	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsNeedingTalentAnalysis - Found %d builds", len(builds))
+
+	return builds, nil
+}
+
+// CountPlayerBuildsNeedingTalentAnalysis counts the builds that need to be analyzed for talents
+func (r *PlayerBuildsRepository) CountPlayerBuildsNeedingTalentAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	query = query.Where("talent_status IS NULL OR talent_status = 'pending' OR talent_status = 'failed'")
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count player builds for talent analysis: %w", err)
+	}
+
+	return count, nil
+}
+
+// MarkPlayerBuildsAsProcessedForTalent marks the builds as processed for talents
+func (r *PlayerBuildsRepository) MarkPlayerBuildsAsProcessedForTalent(
+	ctx context.Context,
+	buildIDs []uint,
+	status string,
+) error {
+	if len(buildIDs) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("id IN ?", buildIDs).
+		Updates(map[string]interface{}{
+			"talent_status":       status,
+			"talent_processed_at": time.Now(),
+			"updated_at":          time.Now(),
+		})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark builds as processed for talent: %w", result.Error)
+	}
+
+	log.Printf("[INFO] Marked %d builds as '%s' for talent analysis", result.RowsAffected, status)
+	return nil
+}
+
+// == Stat methods ==
+
+// GetPlayerBuildsNeedingStatAnalysis returns the builds that need to be analyzed for stats
+// The builds are those where stat_status is NULL or 'pending' or 'failed'
+func (r *PlayerBuildsRepository) GetPlayerBuildsNeedingStatAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+	limit, offset int,
+) ([]*warcraftlogsBuilds.PlayerBuild, error) {
+	var builds []*warcraftlogsBuilds.PlayerBuild
+	query := r.db.WithContext(ctx)
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	query = query.Where("stat_status IS NULL OR stat_status = 'pending' OR stat_status = 'failed'")
+
+	if err := query.Limit(limit).Offset(offset).Find(&builds).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch player builds for stat analysis: %w", err)
+	}
+
+	log.Printf("[DEBUG] GetPlayerBuildsNeedingStatAnalysis - Found %d builds", len(builds))
+
+	return builds, nil
+}
+
+// CountPlayerBuildsNeedingStatAnalysis counts the builds that need to be analyzed for stats
+func (r *PlayerBuildsRepository) CountPlayerBuildsNeedingStatAnalysis(
+	ctx context.Context,
+	class, spec string,
+	encounterID uint,
+) (int64, error) {
+	var count int64
+	query := r.db.Model(&warcraftlogsBuilds.PlayerBuild{})
+
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
+	if spec != "" {
+		query = query.Where("spec = ?", spec)
+	}
+
+	if encounterID > 0 {
+		query = query.Where("encounter_id = ?", encounterID)
+	}
+
+	query = query.Where("stat_status IS NULL OR stat_status = 'pending' OR stat_status = 'failed'")
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count player builds for stat analysis: %w", err)
+	}
+
+	return count, nil
+}
+
+// MarkPlayerBuildsAsProcessedForStat marks the builds as processed for stats
+func (r *PlayerBuildsRepository) MarkPlayerBuildsAsProcessedForStat(
+	ctx context.Context,
+	buildIDs []uint,
+	status string,
+) error {
+	if len(buildIDs) == 0 {
+		return nil
+	}
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("id IN ?", buildIDs).
+		Updates(map[string]interface{}{
+			"stat_status":       status,
+			"stat_processed_at": time.Now(),
+			"updated_at":        time.Now(),
+		})
+
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark builds as processed for stat: %w", result.Error)
+	}
+
+	log.Printf("[INFO] Marked %d builds as '%s' for stat analysis", result.RowsAffected, status)
+	return nil
+}

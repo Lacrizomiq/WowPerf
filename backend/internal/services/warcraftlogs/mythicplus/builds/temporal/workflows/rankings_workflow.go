@@ -13,6 +13,13 @@ import (
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 )
 
+/*
+	This file is not used anymore.
+	All the logic is now in the models package.
+	Some type might still be used in other files, but they should be removed
+	or migrated to the models package.
+*/
+
 // ClassSpec represents a WoW class specialization
 type ClassSpec struct {
 	ClassName string `json:"class_name" yaml:"class_name"`

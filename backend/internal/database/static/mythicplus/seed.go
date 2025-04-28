@@ -61,7 +61,6 @@ type AffixData struct {
 }
 
 // SeedSeasons seeds the Mythic+ seasons from a JSON file
-// This is the original function which is now complemented by UpdateSeasons
 func SeedSeasons(db *gorm.DB, filePath string) error {
 	var seasonData SeasonData
 	seasonFile, err := os.ReadFile(filePath)
@@ -72,6 +71,75 @@ func SeedSeasons(db *gorm.DB, filePath string) error {
 		return fmt.Errorf("error unmarshaling file %s: %v", filePath, err)
 	}
 
+	// First, create all dungeons
+	for _, s := range seasonData.Seasons {
+		for _, d := range s.Dungeons {
+			dungeon := mythicplus.Dungeon{
+				ID:              d.ID,
+				ChallengeModeID: d.ChallengeModeID,
+				Slug:            d.Slug,
+				Name:            d.Name,
+				ShortName:       d.ShortName,
+				MediaURL:        d.MediaURL,
+				Icon:            &d.Icon,
+				// EncounterID is a pointer, will be nil by default
+			}
+
+			// Only set EncounterID if it's greater than 0
+			if d.EncounterID > 0 {
+				encounterID := d.EncounterID
+				dungeon.EncounterID = &encounterID
+			}
+
+			// First try to find existing dungeon
+			var existingDungeon mythicplus.Dungeon
+			result := db.First(&existingDungeon, d.ID)
+
+			if result.Error != nil {
+				// Dungeon doesn't exist, create it
+				if err := db.Create(&dungeon).Error; err != nil {
+					return fmt.Errorf("error creating dungeon %s: %v", d.Name, err)
+				}
+			} else {
+				// Dungeon exists, update it
+				existingDungeon.ChallengeModeID = d.ChallengeModeID
+				existingDungeon.Slug = d.Slug
+				existingDungeon.Name = d.Name
+				existingDungeon.ShortName = d.ShortName
+				existingDungeon.MediaURL = d.MediaURL
+				existingDungeon.Icon = &d.Icon
+
+				// Only update EncounterID if the new value is greater than 0
+				if d.EncounterID > 0 {
+					encounterID := d.EncounterID
+					existingDungeon.EncounterID = &encounterID
+				}
+
+				if err := db.Save(&existingDungeon).Error; err != nil {
+					return fmt.Errorf("error updating dungeon %s: %v", d.Name, err)
+				}
+			}
+
+			// Handle KeyStoneUpgrades
+			if err := db.Where("challenge_mode_id = ?", d.ChallengeModeID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
+				return fmt.Errorf("error deleting old keystone upgrades for dungeon %s: %v", d.Name, err)
+			}
+
+			for _, ku := range d.KeystoneUpgrades {
+				keyStoneUpgrade := mythicplus.KeyStoneUpgrade{
+					ChallengeModeID:    d.ChallengeModeID,
+					QualifyingDuration: int64(ku.QualifyingDuration),
+					UpgradeLevel:       ku.UpgradeLevel,
+				}
+
+				if err := db.Create(&keyStoneUpgrade).Error; err != nil {
+					return fmt.Errorf("error creating keystone upgrade for dungeon %s: %v", d.Name, err)
+				}
+			}
+		}
+	}
+
+	// Then create seasons and associations
 	for _, s := range seasonData.Seasons {
 		season := mythicplus.Season{
 			Slug:      s.Slug,
@@ -89,47 +157,18 @@ func SeedSeasons(db *gorm.DB, filePath string) error {
 			EndsCN:    parseTime(s.Ends.CN),
 		}
 
-		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&season).Error; err != nil {
-			return fmt.Errorf("error creating season %s: %v", s.Name, err)
+		// Create or update season
+		if err := db.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&season).Error; err != nil {
+			return fmt.Errorf("error creating/updating season %s: %v", s.Name, err)
 		}
 
+		// Create associations
 		for _, d := range s.Dungeons {
-			dungeon := mythicplus.Dungeon{
-				ID:              d.ID,
-				ChallengeModeID: d.ChallengeModeID,
-				Slug:            d.Slug,
-				Name:            d.Name,
-				ShortName:       d.ShortName,
-				MediaURL:        d.MediaURL,
-				Icon:            &d.Icon,
-			}
-
-			// Only set EncounterID if it's greater than 0 to avoid unique constraint violations
-			// The database has a conditional unique index on encounter_id WHERE encounter_id > 0
-			if d.EncounterID > 0 {
-				dungeon.EncounterID = d.EncounterID
-			}
-
-			if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&dungeon).Error; err != nil {
-				return fmt.Errorf("error creating dungeon %s: %v", d.Name, err)
-			}
-
-			// Delete existing KeyStoneUpgrades for this dungeon
-			if err := db.Where("challenge_mode_id = ?", d.ChallengeModeID).Delete(&mythicplus.KeyStoneUpgrade{}).Error; err != nil {
-				return fmt.Errorf("error deleting old keystone upgrades for dungeon %s: %v", d.Name, err)
-			}
-
-			// Create new KeyStoneUpgrades
-			for _, ku := range d.KeystoneUpgrades {
-				keyStoneUpgrade := mythicplus.KeyStoneUpgrade{
-					ChallengeModeID:    d.ChallengeModeID,
-					QualifyingDuration: int64(ku.QualifyingDuration),
-					UpgradeLevel:       ku.UpgradeLevel,
-				}
-
-				if err := db.Create(&keyStoneUpgrade).Error; err != nil {
-					return fmt.Errorf("error creating keystone upgrade for dungeon %s: %v", d.Name, err)
-				}
+			var dungeon mythicplus.Dungeon
+			if err := db.First(&dungeon, d.ID).Error; err != nil {
+				return fmt.Errorf("error finding dungeon %d: %v", d.ID, err)
 			}
 
 			if err := db.Model(&season).Association("Dungeons").Append(&dungeon); err != nil {
@@ -222,7 +261,8 @@ func UpdateSeasons(db *gorm.DB, filePath string) error {
 
 			// Only set EncounterID if it's greater than 0
 			if d.EncounterID > 0 {
-				dungeon.EncounterID = d.EncounterID
+				encounterID := d.EncounterID
+				dungeon.EncounterID = &encounterID
 			}
 
 			if result.Error != nil {
@@ -245,7 +285,8 @@ func UpdateSeasons(db *gorm.DB, filePath string) error {
 				// Only update EncounterID if the new value is greater than 0
 				// This prevents overwriting existing valid IDs with zeros
 				if d.EncounterID > 0 {
-					existingDungeon.EncounterID = d.EncounterID
+					encounterID := d.EncounterID
+					existingDungeon.EncounterID = &encounterID
 				}
 
 				if err := db.Save(&existingDungeon).Error; err != nil {

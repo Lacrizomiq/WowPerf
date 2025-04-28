@@ -37,7 +37,9 @@ func NewStatStatisticsRepository(db *gorm.DB) *StatStatisticsRepository {
 
 // DeleteStatStatistics removes stat statistics for a class and spec.
 func (r *StatStatisticsRepository) DeleteStatStatistics(ctx context.Context, class, spec string, encounterID uint) error {
+	// Unscoped() for the hard delete
 	query := r.db.WithContext(ctx).
+		Unscoped().
 		Where("class = ? AND spec = ?", class, spec)
 
 	if encounterID > 0 {
@@ -51,6 +53,31 @@ func (r *StatStatisticsRepository) DeleteStatStatistics(ctx context.Context, cla
 
 	log.Printf("[INFO] Deleted %d existing stat statistics for %s-%s (encounterID: %d)",
 		result.RowsAffected, class, spec, encounterID)
+
+	// reset of the status in the player_builds table
+	resetQuery := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.PlayerBuild{}).
+		Where("class = ? AND spec = ?", class, spec)
+
+	if encounterID > 0 {
+		resetQuery = resetQuery.Where("encounter_id = ?", encounterID)
+	}
+
+	resetResult := resetQuery.
+		Where("stat_status = 'processed'").
+		Updates(map[string]interface{}{
+			"stat_status":       "pending",
+			"stat_processed_at": nil,
+			"updated_at":        time.Now(),
+		})
+
+	if resetResult.Error != nil {
+		return fmt.Errorf("failed to reset stats status for builds %s-%s: %w", class, spec, resetResult.Error)
+	}
+
+	log.Printf("[INFO] Reset stats status to 'pending' for %d builds of %s-%s (encounterID: %d)",
+		resetResult.RowsAffected, class, spec, encounterID)
+
 	return nil
 }
 
@@ -125,20 +152,25 @@ func (r *StatStatisticsRepository) StoreManyStatStatistics(ctx context.Context, 
 						{Name: "spec"},
 						{Name: "encounter_id"},
 						{Name: "stat_name"},
-						{Name: "stat_category"},
 					},
-					DoUpdates: clause.AssignmentColumns([]string{
-						"avg_value",
-						"min_value",
-						"max_value",
-						"sample_size",
-						"avg_keystone_level",
-						"min_keystone_level",
-						"max_keystone_level",
-						"avg_item_level",
-						"min_item_level",
-						"max_item_level",
-						"updated_at",
+					DoUpdates: clause.Assignments(map[string]interface{}{
+						"avg_value": gorm.Expr(
+							"(CAST(stat_statistics.avg_value AS numeric) * CAST(stat_statistics.sample_size AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((stat_statistics.sample_size + ?) AS numeric)",
+							stat.AvgValue, stat.SampleSize, stat.SampleSize),
+						"min_value":   gorm.Expr("LEAST(stat_statistics.min_value, ?)", stat.MinValue),
+						"max_value":   gorm.Expr("GREATEST(stat_statistics.max_value, ?)", stat.MaxValue),
+						"sample_size": gorm.Expr("stat_statistics.sample_size + ?", stat.SampleSize),
+						"avg_keystone_level": gorm.Expr(
+							"(CAST(stat_statistics.avg_keystone_level AS numeric) * CAST(stat_statistics.sample_size AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((stat_statistics.sample_size + ?) AS numeric)",
+							stat.AvgKeystoneLevel, stat.SampleSize, stat.SampleSize),
+						"min_keystone_level": gorm.Expr("LEAST(stat_statistics.min_keystone_level, ?)", stat.MinKeystoneLevel),
+						"max_keystone_level": gorm.Expr("GREATEST(stat_statistics.max_keystone_level, ?)", stat.MaxKeystoneLevel),
+						"avg_item_level": gorm.Expr(
+							"(CAST(stat_statistics.avg_item_level AS numeric) * CAST(stat_statistics.sample_size AS numeric) + CAST(? AS numeric) * CAST(? AS numeric)) / CAST((stat_statistics.sample_size + ?) AS numeric)",
+							stat.AvgItemLevel, stat.SampleSize, stat.SampleSize),
+						"min_item_level": gorm.Expr("LEAST(stat_statistics.min_item_level, ?)", stat.MinItemLevel),
+						"max_item_level": gorm.Expr("GREATEST(stat_statistics.max_item_level, ?)", stat.MaxItemLevel),
+						"updated_at":     time.Now(),
 					}),
 				}).Create(stat)
 

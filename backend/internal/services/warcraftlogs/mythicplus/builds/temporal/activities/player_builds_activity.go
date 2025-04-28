@@ -8,12 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"go.temporal.io/sdk/activity"
 	"gorm.io/datatypes"
 
 	warcraftlogsBuilds "wowperf/internal/models/warcraftlogs/mythicplus/builds"
 	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	workflows "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows"
+	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 )
 
 // PlayerDetails represents detailed player information from WarcraftLogs
@@ -28,173 +30,237 @@ type PlayerDetails struct {
 
 // PlayerBuildsActivity manages all operations related to player builds
 type PlayerBuildsActivity struct {
-	repository *playerBuildsRepository.PlayerBuildsRepository
+	repository        *playerBuildsRepository.PlayerBuildsRepository
+	reportsRepository *reportsRepository.ReportRepository
 }
 
-func NewPlayerBuildsActivity(repository *playerBuildsRepository.PlayerBuildsRepository) *PlayerBuildsActivity {
+func NewPlayerBuildsActivity(repository *playerBuildsRepository.PlayerBuildsRepository, reportsRepository *reportsRepository.ReportRepository) *PlayerBuildsActivity {
 	return &PlayerBuildsActivity{
-		repository: repository,
+		repository:        repository,
+		reportsRepository: reportsRepository,
 	}
 }
 
-// ProcessAllBuilds processes player builds in parallel from the provided reports
-func (a *PlayerBuildsActivity) ProcessAllBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*workflows.BuildsProcessingResult, error) {
+// ProcessAllBuilds processes player builds AND marks corresponding reports as processed using ReportIdentifier.
+// This activity is designed to be called by the BuildsWorkflow.
+func (a *PlayerBuildsActivity) ProcessAllBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*models.BuildsActivityResult, error) {
 	logger := activity.GetLogger(ctx)
-	result := &workflows.BuildsProcessingResult{
-		ProcessedAt: time.Now(),
+	activityStart := time.Now() // Keep track of the start time for duration
+	result := &models.BuildsActivityResult{
+		ProcessedAt:       activityStart, // Initial timestamp
+		BuildsByClassSpec: make(map[string]int32),
 	}
 
 	if len(reports) == 0 {
-		logger.Info("No reports to process")
+		logger.Info("No reports received in ProcessAllBuilds")
+		result.ProcessedAt = time.Now()
 		return result, nil
 	}
 
-	// Parallel processing configuration
+	// Generate a unique batchID for this specific activity execution
+	// This batchID will be used to mark the reports.
+	batchID := fmt.Sprintf("builds-activity-%s", uuid.New().String())
+
+	logger.Info("Starting ProcessAllBuilds activity", "reportCount", len(reports), "activityBatchID", batchID)
+
+	// Parallel processing logic (workers, channels)
 	const (
-		numWorkers      = 4  // Number of parallel workers
-		reportBatchSize = 10 // Size of report batches
+		numWorkers = 4
+		// Note: reportBatchSize here controls the distribution to workers,
+		// it is NOT the size of the 'reports' parameter received.
+		reportBatchSizeInternal = 10
 	)
-
-	// Channels for communication
-	reportChan := make(chan *warcraftlogsBuilds.Report)
+	reportChan := make(chan *warcraftlogsBuilds.Report, len(reports))
+	// The result channel now contains the entire report for identification
 	resultChan := make(chan struct {
-		builds int
+		report *warcraftlogsBuilds.Report // <- Keep the entire report
+		builds []*warcraftlogsBuilds.PlayerBuild
 		err    error
-	})
+	}, len(reports))
 
-	// Start workers
 	var wg sync.WaitGroup
-	ctx, cancel := context.WithCancel(ctx)
+	processingCtx, cancel := context.WithCancel(ctx) // Context to cancel workers
 	defer cancel()
 
+	// Launch workers
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-
 			for report := range reportChan {
-				// Record heartbeat for each report being processed
-				activity.RecordHeartbeat(ctx, map[string]interface{}{
-					"workerID":   workerID,
-					"reportCode": report.Code,
-					"fightID":    report.FightID,
-					"status":     "processing",
-				})
+				select {
+				case <-processingCtx.Done():
+					logger.Warn("Worker cancelled", "workerID", workerID)
+					return
+				default:
+					activity.RecordHeartbeat(processingCtx, map[string]interface{}{"workerID": workerID, "reportCode": report.Code, "status": "processing"})
+					logger.Info("Processing report", "workerID", workerID, "reportCode", report.Code, "fightID", report.FightID)
 
-				logger.Info("Processing report",
-					"workerID", workerID,
-					"reportCode", report.Code,
-					"fightID", report.FightID)
-
-				builds, err := a.extractPlayerBuilds(report)
-				if err != nil {
-					logger.Error("Failed to extract builds",
-						"reportCode", report.Code,
-						"error", err)
-					resultChan <- struct {
-						builds int
-						err    error
-					}{0, err}
-					continue
-				}
-
-				// Store extracted builds
-				if len(builds) > 0 {
-					if err := a.repository.StoreManyPlayerBuilds(ctx, builds); err != nil {
-						logger.Error("Failed to store builds",
-							"reportCode", report.Code,
-							"buildsCount", len(builds),
-							"error", err)
+					builds, errExtract := a.extractPlayerBuilds(report)
+					if errExtract != nil {
+						logger.Error("Failed to extract builds", "reportCode", report.Code, "error", errExtract)
 						resultChan <- struct {
-							builds int
+							report *warcraftlogsBuilds.Report
+							builds []*warcraftlogsBuilds.PlayerBuild
 							err    error
-						}{0, err}
+						}{report, nil, errExtract}
 						continue
 					}
 
-					// Record heartbeat after successful build storage
-					activity.RecordHeartbeat(ctx, map[string]interface{}{
-						"workerID":     workerID,
-						"reportCode":   report.Code,
-						"fightID":      report.FightID,
-						"status":       "completed",
-						"buildsStored": len(builds),
-						"completedAt":  time.Now(),
-					})
+					if len(builds) == 0 {
+						logger.Info("No builds extracted (but no error)", "reportCode", report.Code)
+						resultChan <- struct {
+							report *warcraftlogsBuilds.Report
+							builds []*warcraftlogsBuilds.PlayerBuild
+							err    error
+						}{report, builds, nil}
+						continue
+					}
 
-					logger.Info("Successfully processed report",
-						"reportCode", report.Code,
-						"buildsProcessed", len(builds))
+					errStore := a.repository.StoreManyPlayerBuilds(processingCtx, builds)
+					if errStore != nil {
+						logger.Error("Failed to store builds", "reportCode", report.Code, "buildsCount", len(builds), "error", errStore)
+						resultChan <- struct {
+							report *warcraftlogsBuilds.Report
+							builds []*warcraftlogsBuilds.PlayerBuild
+							err    error
+						}{report, nil, errStore}
+						continue
+					}
+
+					activity.RecordHeartbeat(processingCtx, map[string]interface{}{"workerID": workerID, "reportCode": report.Code, "status": "completed", "buildsStored": len(builds)})
+					logger.Info("Successfully stored builds for report", "reportCode", report.Code, "buildsProcessed", len(builds))
+
+					resultChan <- struct {
+						report *warcraftlogsBuilds.Report
+						builds []*warcraftlogsBuilds.PlayerBuild
+						err    error
+					}{report, builds, nil} // Succès
 				}
-
-				resultChan <- struct {
-					builds int
-					err    error
-				}{len(builds), nil}
 			}
 		}(i)
 	}
 
-	// Send reports to workers
+	// Distribute the work
 	go func() {
+		defer close(reportChan)
 		totalReports := len(reports)
-		for i := 0; i < len(reports); i += reportBatchSize {
-			// Record heartbeat for batch progress
-			activity.RecordHeartbeat(ctx, map[string]interface{}{
-				"status":         "batch_processing",
-				"processedCount": i,
-				"totalReports":   totalReports,
-				"progress":       fmt.Sprintf("%d/%d", i, totalReports),
-			})
-
-			end := i + reportBatchSize
-			if end > len(reports) {
-				end = len(reports)
+		for i := 0; i < totalReports; i += reportBatchSizeInternal {
+			// No need for heartbeat here, already done in the collection
+			end := i + reportBatchSizeInternal
+			if end > totalReports {
+				end = totalReports
 			}
-
 			for _, report := range reports[i:end] {
 				select {
-				case <-ctx.Done():
+				case <-processingCtx.Done():
 					return
 				case reportChan <- report:
 				}
 			}
-			// Delay between batches
-			time.Sleep(100 * time.Millisecond)
+			// Optional: time.Sleep(50 * time.Millisecond) if distribution too fast
 		}
-		close(reportChan)
 	}()
 
-	// Collect results
+	// Wait for workers to finish and close the result channel
 	go func() {
 		wg.Wait()
 		close(resultChan)
 	}()
 
-	// Process results
+	// Processing results and aggregation
+	buildsByClassSpec := make(map[string]int32)
+	successfulReportIdentifiers := make([]reportsRepository.ReportIdentifier, 0, len(reports)) // <- Slice for identifiers
+	var firstProcessingError error                                                             // To store the first extraction/storage error
+
+	processedReportCount := 0
+	totalReportCount := len(reports)
+
 	for res := range resultChan {
+		processedReportCount++
 		if res.err != nil {
 			result.FailureCount++
+			if firstProcessingError == nil {
+				firstProcessingError = res.err // Register the first internal error
+			}
+			logger.Warn("Processing failed for report", "reportCode", res.report.Code, "fightID", res.report.FightID, "error", res.err)
 		} else {
+			// Successful extraction/storage for this report
 			result.SuccessCount++
-			result.ProcessedBuilds += res.builds
+			result.ProcessedBuildsCount += int32(len(res.builds))
+
+			// ADDITION: Add the identifier (Code+FightID) for marking
+			successfulReportIdentifiers = append(successfulReportIdentifiers, reportsRepository.ReportIdentifier{
+				Code:    res.report.Code,
+				FightID: res.report.FightID,
+			})
+
+			// AGGREGATION by class/spec
+			for _, build := range res.builds {
+				classSpecKey := fmt.Sprintf("%s-%s", build.Class, build.Spec)
+				buildsByClassSpec[classSpecKey]++
+			}
 		}
 
-		// Record heartbeat for overall progress
+		// Global progress heartbeat
 		activity.RecordHeartbeat(ctx, map[string]interface{}{
-			"status":       "progress",
-			"totalBuilds":  result.ProcessedBuilds,
-			"successCount": result.SuccessCount,
-			"failureCount": result.FailureCount,
+			"status":           "progress_collection",
+			"reportsCollected": processedReportCount,
+			"totalReports":     totalReportCount,
+			"currentSuccess":   result.SuccessCount,
+			"currentFailure":   result.FailureCount,
+			"totalBuildsSoFar": result.ProcessedBuildsCount,
 		})
 	}
+	result.BuildsByClassSpec = buildsByClassSpec
 
-	logger.Info("Completed processing all reports",
-		"totalBuilds", result.ProcessedBuilds,
-		"successCount", result.SuccessCount,
-		"failureCount", result.FailureCount)
+	logger.Info("Completed collecting results from workers",
+		"totalBuilds", result.ProcessedBuildsCount,
+		"successReports", result.SuccessCount,
+		"failedReports", result.FailureCount)
 
-	return result, nil
+	//  Marking successfully processed reports
+	var markingErr error // To store the marking error
+	if len(successfulReportIdentifiers) > 0 {
+		logger.Info("Marking successfully processed reports as completed for builds",
+			"count", len(successfulReportIdentifiers),
+			"activityBatchID", batchID)
+
+		if a.reportsRepository == nil {
+			errMsg := "internal error: reportsRepository not injected in PlayerBuildsActivity"
+			logger.Error(errMsg)
+			markingErr = fmt.Errorf(errMsg) // Critical error
+		} else {
+			// Use the activity's main context (ctx)
+			// CORRECT CALL: Pass the slice of ReportIdentifier and the activity's batchID
+			err := a.reportsRepository.MarkReportsAsProcessedForBuilds(ctx, successfulReportIdentifiers, batchID)
+			if err != nil {
+				logger.Error("Failed to mark reports as processed for builds", "error", err, "activityBatchID", batchID)
+				markingErr = err // Store the marking error
+				// Optional: Adjust counters if marking fails
+				result.FailureCount += result.SuccessCount
+				result.SuccessCount = 0
+			} else {
+				logger.Info("Successfully marked reports as processed for builds", "count", len(successfulReportIdentifiers), "activityBatchID", batchID)
+			}
+		}
+	} else {
+		logger.Info("No reports were successfully processed to be marked.")
+	}
+
+	// Finalization and Return
+	result.ProcessedAt = time.Now() // Final timestamp of the activity
+	logger.Info("Finished activity ProcessAllBuilds",
+		"duration", result.ProcessedAt.Sub(activityStart),
+		"buildsStored", result.ProcessedBuildsCount,
+		"successReports", result.SuccessCount,
+		"failedReports", result.FailureCount)
+
+	if markingErr != nil {
+		return result, markingErr
+	}
+
+	return result, nil // The activity has finished its cycle, returns nil as main error
 }
 
 // extractPlayerBuilds extracts all player builds from a report
@@ -298,22 +364,25 @@ func (a *PlayerBuildsActivity) createPlayerBuild(report *warcraftlogsBuilds.Repo
 	}
 
 	build := &warcraftlogsBuilds.PlayerBuild{
-		PlayerName:    player.Name,
-		Class:         player.Type,
-		Spec:          activeSpec,
-		ReportCode:    report.Code,
-		FightID:       report.FightID,
-		ActorID:       player.ID,
-		ItemLevel:     player.MaxItemLevel,
-		TalentImport:  talentCode,
-		TalentTree:    datatypes.JSON(combatInfo.TalentTree),
-		Gear:          datatypes.JSON(combatInfo.Gear),
-		Stats:         datatypes.JSON(combatInfo.Stats),
-		EncounterID:   report.EncounterID,
-		KeystoneLevel: report.KeystoneLevel,
-		Affixes:       report.Affixes,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		PlayerName:      player.Name,
+		Class:           player.Type,
+		Spec:            activeSpec,
+		ReportCode:      report.Code,
+		FightID:         report.FightID,
+		ActorID:         player.ID,
+		ItemLevel:       player.MaxItemLevel,
+		TalentImport:    talentCode,
+		TalentTree:      datatypes.JSON(combatInfo.TalentTree),
+		Gear:            datatypes.JSON(combatInfo.Gear),
+		Stats:           datatypes.JSON(combatInfo.Stats),
+		EncounterID:     report.EncounterID,
+		KeystoneLevel:   report.KeystoneLevel,
+		Affixes:         report.Affixes,
+		EquipmentStatus: "pending",
+		TalentStatus:    "pending",
+		StatStatus:      "pending",
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 
 	return build, nil
@@ -322,4 +391,60 @@ func (a *PlayerBuildsActivity) createPlayerBuild(report *warcraftlogsBuilds.Repo
 // CountPlayerBuilds returns the total number of player builds in the database
 func (a *PlayerBuildsActivity) CountPlayerBuilds(ctx context.Context) (int64, error) {
 	return a.repository.CountPlayerBuilds(ctx)
+}
+
+// GetReportsNeedingBuildExtraction retrieves reports that need build extraction
+func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Getting reports needing build extraction", "limit", limit)
+
+	// If maxAgeDuration is 0, set a default (e.g., 10 days)
+	if maxAgeDuration == 0 {
+		maxAgeDuration = 10 * 24 * time.Hour // 10 days
+		logger.Info("Using default maxAge", "maxAge", maxAgeDuration)
+	}
+
+	if a.reportsRepository == nil {
+		logger.Error("ReportRepository is not initialized in PlayerBuildsActivity")
+		return nil, fmt.Errorf("internal error: reportRepository not injected")
+	}
+
+	reports, err := a.reportsRepository.GetReportsNeedingBuildExtraction(ctx, int(limit), maxAgeDuration)
+	if err != nil {
+		logger.Error("Failed to get reports needing build extraction from repository", "error", err)
+		return nil, err
+	}
+
+	logger.Info("Retrieved reports needing build extraction", "count", len(reports))
+	return reports, nil
+}
+
+// MarkReportsAsProcessedForBuilds updates the status of reports after build extraction
+func (a *PlayerBuildsActivity) MarkReportsAsProcessedForBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report, batchID string) error {
+	logger := activity.GetLogger(ctx)
+
+	identifiers := make([]reportsRepository.ReportIdentifier, 0, len(reports))
+	for _, report := range reports {
+		identifiers = append(identifiers, reportsRepository.ReportIdentifier{
+			Code:    report.Code,
+			FightID: report.FightID,
+		})
+	}
+
+	logger.Info("Marking reports as processed for builds",
+		"count", len(identifiers),
+		"batchID", batchID)
+
+	if a.reportsRepository == nil {
+		logger.Error("ReportRepository is not initialized in PlayerBuildsActivity")
+		return fmt.Errorf("internal error: reportRepository not injected")
+	}
+
+	if err := a.reportsRepository.MarkReportsAsProcessedForBuilds(ctx, identifiers, batchID); err != nil {
+		logger.Error("Failed to mark reports as processed for builds", "error", err)
+		return err
+	}
+
+	logger.Info("Successfully marked reports as processed for builds", "count", len(identifiers))
+	return nil
 }

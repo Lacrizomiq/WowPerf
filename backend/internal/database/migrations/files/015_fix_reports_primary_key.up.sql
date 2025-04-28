@@ -18,7 +18,8 @@ DROP INDEX IF EXISTS warcraft_logs_reports_code_fight_id_key;
 ALTER TABLE warcraft_logs_reports
     ADD PRIMARY KEY (code, fight_id);
 
--- Add index on code alone for performance
+-- Add index on code alone for performance (only if it doesn't exist)
+DROP INDEX IF EXISTS idx_warcraft_logs_reports_code;
 CREATE INDEX idx_warcraft_logs_reports_code 
     ON warcraft_logs_reports(code);
 
