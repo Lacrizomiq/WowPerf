@@ -2,6 +2,7 @@ package WarcraftLogsMythicPlusBuildsAnalysis
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,7 @@ func NewMythicPlusBuildsAnalysisHandler(analysisService *service.BuildAnalysisSe
 // @Produce json
 // @Param class query string true "Class name"
 // @Param spec query string true "Specialization name"
+// @Param encounter_id query int false "Encounter ID to filter results"
 // @Success 200 {array} service.ItemPopularity
 // @Failure 400 {object} string "Bad request"
 // @Failure 500 {object} string "Internal server error"
@@ -42,7 +44,47 @@ func (h *MythicPlusBuildsAnalysisHandler) GetPopularItemsBySlot(c *gin.Context) 
 		return
 	}
 
-	items, err := h.MythicPlusBuildsAnalysisService.GetPopularItemsBySlot(c.Request.Context(), class, spec)
+	var encounterID *int
+	if encIDStr := c.Query("encounter_id"); encIDStr != "" {
+		encID, err := strconv.Atoi(encIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid encounter_id format"})
+			return
+		}
+		encounterID = &encID
+	}
+
+	items, err := h.MythicPlusBuildsAnalysisService.GetPopularItemsBySlot(c.Request.Context(), class, spec, encounterID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, items)
+}
+
+// GetGlobalPopularItemsBySlot returns the most popular items for each slot across all encounters
+// @Summary Get global popular items by slot
+// @Description Returns the most popular items for each slot across all encounters
+// @Tags builds, analysis
+// @Accept json
+// @Produce json
+// @Param class query string true "Class name"
+// @Param spec query string true "Specialization name"
+// @Success 200 {array} service.GlobalItemPopularity
+// @Failure 400 {object} string "Bad request"
+// @Failure 500 {object} string "Internal server error"
+// @Router /warcraftlogs/mythicplus/builds/analysis/items/global [get]
+func (h *MythicPlusBuildsAnalysisHandler) GetGlobalPopularItemsBySlot(c *gin.Context) {
+	class := normalizeWoWTerms(c.Query("class"))
+	spec := normalizeWoWTerms(c.Query("spec"))
+
+	if class == "" || spec == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
+		return
+	}
+
+	items, err := h.MythicPlusBuildsAnalysisService.GetGlobalPopularItemsBySlot(c.Request.Context(), class, spec)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -297,7 +339,10 @@ func normalizeWoWTerms(term string) string {
 /*
 
 Popular items by slot
-/warcraftlogs/mythicplus/builds/analysis/items?class=priest&spec=discipline
+/warcraftlogs/mythicplus/builds/analysis/items?class=priest&spec=discipline&encounter_id=12648
+
+Popular items by slot across all encounters
+/warcraftlogs/mythicplus/builds/analysis/items/global?class=priest&spec=discipline
 
 Enchant usage
 /warcraftlogs/mythicplus/builds/analysis/enchants?class=priest&spec=discipline

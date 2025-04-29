@@ -98,6 +98,9 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 				// Popular items by slot
 				builds.GET("/items", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetPopularItemsBySlot)
 
+				// Popular items by slot across all encounters
+				builds.GET("/items/global", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetGlobalPopularItemsBySlot)
+
 				// Enchant usage
 				builds.GET("/enchants", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetEnchantUsage)
 
