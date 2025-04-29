@@ -33,12 +33,43 @@ type ItemPopularity struct {
 	Rank             int64   `json:"rank"`
 }
 
-// GetPopularItemsBySlot retrieves the most popular items for each slot for a specific class and spec
-func (s *BuildAnalysisService) GetPopularItemsBySlot(ctx context.Context, class, spec string) ([]ItemPopularity, error) {
+// GetPopularItemsBySlot retrieves the most popular items for each slot for a specific class, spec and encounter
+func (s *BuildAnalysisService) GetPopularItemsBySlot(ctx context.Context, class, spec string, encounterID *int) ([]ItemPopularity, error) {
 	var items []ItemPopularity
-	err := s.db.WithContext(ctx).Raw("SELECT * FROM get_popular_items_by_slot(?, ?)", class, spec).Scan(&items).Error
+	var err error
+
+	if encounterID != nil {
+		err = s.db.WithContext(ctx).Raw("SELECT * FROM get_popular_items_by_slot(?, ?, ?)", class, spec, encounterID).Scan(&items).Error
+	} else {
+		err = s.db.WithContext(ctx).Raw("SELECT * FROM get_popular_items_by_slot(?, ?, NULL)", class, spec).Scan(&items).Error
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get popular items: %w", err)
+	}
+	return items, nil
+}
+
+// GlobalItemPopularity represents global statistics about item popularity per slot
+type GlobalItemPopularity struct {
+	ItemSlot         int     `json:"item_slot"`
+	ItemID           int     `json:"item_id"`
+	ItemName         string  `json:"item_name"`
+	ItemIcon         string  `json:"item_icon"`
+	ItemQuality      int     `json:"item_quality"`
+	ItemLevel        float64 `json:"item_level"`
+	UsageCount       int     `json:"usage_count"`
+	UsagePercentage  float64 `json:"usage_percentage"`
+	AvgKeystoneLevel float64 `json:"avg_keystone_level"`
+	Rank             int64   `json:"rank"`
+}
+
+// GetGlobalPopularItemsBySlot retrieves the most popular items for each slot across all encounters
+func (s *BuildAnalysisService) GetGlobalPopularItemsBySlot(ctx context.Context, class, spec string) ([]GlobalItemPopularity, error) {
+	var items []GlobalItemPopularity
+	err := s.db.WithContext(ctx).Raw("SELECT * FROM get_global_popular_items_by_slot(?, ?)", class, spec).Scan(&items).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get global popular items: %w", err)
 	}
 	return items, nil
 }

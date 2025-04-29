@@ -1,8 +1,22 @@
 // Types for builds analysis
 
-// Popular items analysis
+// Popular items analysis by encounter for a specific class and spec
 export interface PopularItem {
   encounter_id: number;
+  item_slot: number;
+  item_id: number;
+  item_name: string;
+  item_icon: string;
+  item_quality: number; // 2: Common, 3: Rare, 4: Epic
+  item_level: number;
+  usage_count: number;
+  usage_percentage: number;
+  avg_keystone_level: number;
+  rank: number;
+}
+
+// Popular items analysis across all encounters for a specific class and spec
+export interface GlobalPopularItem {
   item_slot: number;
   item_id: number;
   item_name: string;
@@ -111,6 +125,7 @@ export interface SpecComparison {
 
 // Response types
 export type PopularItemsResponse = PopularItem[];
+export type GlobalPopularItemsResponse = GlobalPopularItem[];
 export type EnchantUsageResponse = EnchantUsage[];
 export type GemUsageResponse = GemUsage[];
 export type TopTalentBuildsResponse = TopTalentBuild[];
