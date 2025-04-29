@@ -32,6 +32,7 @@ export default function BuildLayout({
     !pathname.includes("enchants-gems");
 
   const isTalentsTab = pathname.includes("talents");
+  const isGearTab = pathname.includes("gear"); // Ajout: vérification pour l'onglet gear
 
   // Fetch dungeons data for mapping slugs to encounter IDs
   const season = "season-tww-2";
@@ -62,8 +63,8 @@ export default function BuildLayout({
   const handleDungeonChange = (value: string) => {
     setDungeonId(value);
 
-    // Only update URL with encounter_id if we're in the talents tab
-    if (isTalentsTab) {
+    // Mise à jour: appliquer pour talents ET gear
+    if (isTalentsTab || isGearTab) {
       const params = new URLSearchParams(searchParams.toString());
 
       if (value === "all") {
@@ -97,7 +98,7 @@ export default function BuildLayout({
 
       // Keep the URL parameters for talents if necessary
       if (
-        isTalentsTab &&
+        (isTalentsTab || isGearTab) && // Mise à jour: inclure gear pour la conservation des paramètres
         dungeonId !== "all" &&
         searchParams.has("encounter_id")
       ) {
@@ -105,6 +106,15 @@ export default function BuildLayout({
       }
     } else if (pathname.includes("/gear")) {
       newPath += `/${spec}/gear`;
+
+      // Ajout: Conservation des paramètres pour gear
+      if (
+        isGearTab &&
+        dungeonId !== "all" &&
+        searchParams.has("encounter_id")
+      ) {
+        newPath += `?${searchParams.toString()}`;
+      }
     } else if (pathname.includes("/enchants-gems")) {
       newPath += `/${spec}/enchants-gems`;
     }
@@ -121,13 +131,21 @@ export default function BuildLayout({
       newPath += "/talents";
 
       // Keep the URL parameters for talents if necessary
-      if (isTalentsTab && dungeonId !== "all") {
+      if ((isTalentsTab || isGearTab) && dungeonId !== "all") {
+        // Mise à jour: inclure gear
         const params = new URLSearchParams(searchParams.toString());
         router.push(`${newPath}?${params.toString()}`);
         return;
       }
     } else if (pathname.includes("/gear")) {
       newPath += "/gear";
+
+      // Ajout: Conservation des paramètres pour gear
+      if (isGearTab && dungeonId !== "all") {
+        const params = new URLSearchParams(searchParams.toString());
+        router.push(`${newPath}?${params.toString()}`);
+        return;
+      }
     } else if (pathname.includes("/enchants-gems")) {
       newPath += "/enchants-gems";
     }

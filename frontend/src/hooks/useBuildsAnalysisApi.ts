@@ -6,6 +6,7 @@ import {
 } from "../types/warcraftlogs/builds/classSpec";
 import {
   PopularItemsResponse,
+  GlobalPopularItemsResponse,
   EnchantUsageResponse,
   GemUsageResponse,
   TopTalentBuildsResponse,
@@ -23,15 +24,38 @@ const defaultQueryConfig = {
   retry: 2,
 };
 
-// Hook to get popular items by class and spec
+// Hook to get popular items by class and spec for a specific encounter (Or all if null)
 export const useGetPopularItems = (
   className: WowClassParam,
   spec: WowSpecParam,
+  encounterId?: number | string,
   options?: UseQueryOptions<PopularItemsResponse, Error>
 ) => {
   return useQuery<PopularItemsResponse, Error>({
-    queryKey: ["warcraftlogs-builds-popular-items", className, spec],
-    queryFn: () => buildsAnalysisApiService.getPopularItems(className, spec),
+    queryKey: [
+      "warcraftlogs-builds-popular-items",
+      className,
+      spec,
+      encounterId,
+    ],
+    queryFn: () =>
+      buildsAnalysisApiService.getPopularItems(className, spec, encounterId),
+    enabled: !!(className && spec),
+    ...defaultQueryConfig,
+    ...options,
+  });
+};
+
+// Hook to get global popular items by class and spec
+export const useGetGlobalPopularItems = (
+  className: WowClassParam,
+  spec: WowSpecParam,
+  options?: UseQueryOptions<GlobalPopularItemsResponse, Error>
+) => {
+  return useQuery<GlobalPopularItemsResponse, Error>({
+    queryKey: ["warcraftlogs-builds-global-popular-items", className, spec],
+    queryFn: () =>
+      buildsAnalysisApiService.getGlobalPopularItems(className, spec),
     enabled: !!(className && spec),
     ...defaultQueryConfig,
     ...options,
