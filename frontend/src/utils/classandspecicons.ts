@@ -278,3 +278,29 @@ export const getSpecData = (
     name: specName,
   };
 };
+
+// Function to format the display name of a class
+export const formatDisplayClassName = (className: string): string => {
+  if (className === "deathknight") return "Death Knight";
+  if (className === "demonhunter") return "Demon Hunter";
+  return className.charAt(0).toUpperCase() + className.slice(1);
+};
+
+// Function to format the display name of a spec
+export const formatDisplaySpecName = (spec: string): string => {
+  if (spec === "beastmastery") return "Beast Mastery";
+  return spec.charAt(0).toUpperCase() + spec.slice(1);
+};
+
+// Function to convert a class name to PascalCase for icons
+export const classNameToPascalCase = (name: string): string => {
+  if (name === "deathknight") return "DeathKnight";
+  if (name === "demonhunter") return "DemonHunter";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+};
+
+// Function to convert a spec name to PascalCase for icons
+export const specNameToPascalCase = (spec: string): string => {
+  if (spec === "beastmastery") return "BeastMastery";
+  return spec.charAt(0).toUpperCase() + spec.slice(1);
+};

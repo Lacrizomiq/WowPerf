@@ -364,22 +364,25 @@ func (a *PlayerBuildsActivity) createPlayerBuild(report *warcraftlogsBuilds.Repo
 	}
 
 	build := &warcraftlogsBuilds.PlayerBuild{
-		PlayerName:    player.Name,
-		Class:         player.Type,
-		Spec:          activeSpec,
-		ReportCode:    report.Code,
-		FightID:       report.FightID,
-		ActorID:       player.ID,
-		ItemLevel:     player.MaxItemLevel,
-		TalentImport:  talentCode,
-		TalentTree:    datatypes.JSON(combatInfo.TalentTree),
-		Gear:          datatypes.JSON(combatInfo.Gear),
-		Stats:         datatypes.JSON(combatInfo.Stats),
-		EncounterID:   report.EncounterID,
-		KeystoneLevel: report.KeystoneLevel,
-		Affixes:       report.Affixes,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		PlayerName:      player.Name,
+		Class:           player.Type,
+		Spec:            activeSpec,
+		ReportCode:      report.Code,
+		FightID:         report.FightID,
+		ActorID:         player.ID,
+		ItemLevel:       player.MaxItemLevel,
+		TalentImport:    talentCode,
+		TalentTree:      datatypes.JSON(combatInfo.TalentTree),
+		Gear:            datatypes.JSON(combatInfo.Gear),
+		Stats:           datatypes.JSON(combatInfo.Stats),
+		EncounterID:     report.EncounterID,
+		KeystoneLevel:   report.KeystoneLevel,
+		Affixes:         report.Affixes,
+		EquipmentStatus: "pending",
+		TalentStatus:    "pending",
+		StatStatus:      "pending",
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 
 	return build, nil
@@ -394,6 +397,12 @@ func (a *PlayerBuildsActivity) CountPlayerBuilds(ctx context.Context) (int64, er
 func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Getting reports needing build extraction", "limit", limit)
+
+	// If maxAgeDuration is 0, set a default (e.g., 10 days)
+	if maxAgeDuration == 0 {
+		maxAgeDuration = 10 * 24 * time.Hour // 10 days
+		logger.Info("Using default maxAge", "maxAge", maxAgeDuration)
+	}
 
 	if a.reportsRepository == nil {
 		logger.Error("ReportRepository is not initialized in PlayerBuildsActivity")

@@ -70,7 +70,7 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 		logger.Error("Failed to create workflow state", "error", err)
 	}
 
-	// Configuration des Activités Principales
+	// Configuration of Main Activities
 	activityOpts := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Hour * 12,
 		HeartbeatTimeout:    time.Minute * 15,
@@ -83,89 +83,105 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 	}
 	activityCtx := workflow.WithActivityOptions(ctx, activityOpts)
 
-	// Récupération des rapports à traiter
-	var reportsToProcess []*warcraftlogsBuilds.Report
-	err = workflow.ExecuteActivity(activityCtx,
-		definitions.GetReportsNeedingBuildExtractionActivity,
-		params.BatchSize,
-	).Get(ctx, &reportsToProcess)
+	// Initialization of counters for global processing
+	totalBuildsProcessed := int32(0)
+	totalReportsProcessedSuccess := int32(0)
+	totalReportsFailedProcessing := int32(0)
+	buildsByClassSpecAggregated := make(map[string]int32)
 
-	if err != nil {
-		logger.Error("Failed to get reports needing build extraction", "error", err)
-		finalWorkflowState := &warcraftlogsBuilds.WorkflowState{ID: workflowStateID, Status: "failed", ErrorMessage: fmt.Sprintf("GetReportsNeeding... failed: %v", err), UpdatedAt: workflow.Now(ctx)}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
-		finalResult.CompletedAt = workflow.Now(ctx)
-		return finalResult, err
-	}
-
-	logger.Info("Retrieved reports for build extraction", "count", len(reportsToProcess))
-
-	if len(reportsToProcess) == 0 {
-		logger.Info("No reports need build extraction.")
-		finalWorkflowState := &warcraftlogsBuilds.WorkflowState{ID: workflowStateID, Status: "completed", CompletedAt: workflow.Now(ctx), ItemsProcessed: 0, UpdatedAt: workflow.Now(ctx)}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
-		finalResult.CompletedAt = workflow.Now(ctx)
-		return finalResult, nil
-	}
-
-	// Traitement des rapports par lots
+	// Processing of reports by batches
 	batchProcessingSize := 5 // Default value
 	if params.ReportBatchSize > 0 {
 		batchProcessingSize = int(params.ReportBatchSize)
 	}
 
-	totalBuildsProcessed := int32(0)
-	totalReportsProcessedSuccess := int32(0)
-	totalReportsFailedProcessing := int32(0)
-	buildsByClassSpecAggregated := make(map[string]int32)
-	numReportsToProcess := len(reportsToProcess)
+	// Main loop: will continue to process batches until there are no more
+	globalBatchNum := 0
 
-	for i := 0; i < numReportsToProcess; i += batchProcessingSize {
-		end := i + batchProcessingSize
-		if end > numReportsToProcess {
-			end = numReportsToProcess
-		}
-		batch := reportsToProcess[i:end]
+	for {
+		// Retrieving reports to process
+		var reportsToProcess []*warcraftlogsBuilds.Report
+		err = workflow.ExecuteActivity(activityCtx,
+			definitions.GetReportsNeedingBuildExtractionActivity,
+			params.BatchSize, 10*24*time.Hour,
+		).Get(ctx, &reportsToProcess)
 
-		batchNum := (i / batchProcessingSize) + 1
-		logger.Info("Processing builds extraction batch")
-
-		// Update the progress state
-		workflowStateUpdate := &warcraftlogsBuilds.WorkflowState{
-			ID:              workflowStateID,
-			LastProcessedID: fmt.Sprintf("report_batch_start_index_%d", i),
-			ItemsProcessed:  int(totalReportsProcessedSuccess),
-			UpdatedAt:       workflow.Now(ctx),
-			Status:          "running", // Ensure the status remains 'running' during processing
-		}
-		_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowStateUpdate)
-
-		// Execute the activity that processes builds and marks reports
-		var activityResult models.BuildsActivityResult
-		activityName := definitions.ProcessBuildsActivity
-
-		activityErr := workflow.ExecuteActivity(activityCtx,
-			activityName,
-			batch,
-		).Get(ctx, &activityResult)
-
-		if activityErr != nil {
-			logger.Error("Build processing activity failed fatally for batch", "batchNum", batchNum, "error", activityErr)
-			totalReportsFailedProcessing += int32(len(batch))
-			continue
+		if err != nil {
+			logger.Error("Failed to get reports needing build extraction", "error", err)
+			finalWorkflowState := &warcraftlogsBuilds.WorkflowState{ID: workflowStateID, Status: "failed", ErrorMessage: fmt.Sprintf("GetReportsNeeding... failed: %v", err), UpdatedAt: workflow.Now(ctx)}
+			_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, finalWorkflowState).Get(ctx, nil)
+			finalResult.CompletedAt = workflow.Now(ctx)
+			return finalResult, err
 		}
 
-		// The activity has finished, aggregate its results
-		totalBuildsProcessed += activityResult.ProcessedBuildsCount
-		totalReportsProcessedSuccess += activityResult.SuccessCount
-		totalReportsFailedProcessing += activityResult.FailureCount
+		logger.Info("Retrieved reports for build extraction", "batchNum", globalBatchNum+1, "count", len(reportsToProcess))
 
-		for classSpec, count := range activityResult.BuildsByClassSpec {
-			buildsByClassSpecAggregated[classSpec] += count
+		// If no reports are available, exit the loop
+		if len(reportsToProcess) == 0 {
+			logger.Info("No more reports need build extraction.")
+			break
 		}
 
-		logger.Info("Completed processing builds for reports batch")
+		globalBatchNum++
 
+		numReportsToProcess := len(reportsToProcess)
+
+		for i := 0; i < numReportsToProcess; i += batchProcessingSize {
+			end := i + batchProcessingSize
+			if end > numReportsToProcess {
+				end = numReportsToProcess
+			}
+			batch := reportsToProcess[i:end]
+
+			batchNum := (i / batchProcessingSize) + 1
+			logger.Info("Processing builds extraction batch", "globalBatch", globalBatchNum, "subBatch", batchNum)
+
+			// Update the progress state
+			workflowStateUpdate := &warcraftlogsBuilds.WorkflowState{
+				ID:              workflowStateID,
+				LastProcessedID: fmt.Sprintf("batch_%d_index_%d", globalBatchNum, i),
+				ItemsProcessed:  int(totalReportsProcessedSuccess),
+				UpdatedAt:       workflow.Now(ctx),
+				Status:          "running", // Ensure the status remains 'running' during processing
+			}
+			_ = workflow.ExecuteActivity(stateCtx, definitions.UpdateWorkflowStateActivity, workflowStateUpdate).Get(ctx, nil)
+
+			// Execute the activity that processes builds and marks reports
+			var activityResult models.BuildsActivityResult
+			activityName := definitions.ProcessBuildsActivity
+
+			activityErr := workflow.ExecuteActivity(activityCtx,
+				activityName,
+				batch,
+			).Get(ctx, &activityResult)
+
+			if activityErr != nil {
+				logger.Error("Build processing activity failed fatally for batch",
+					"globalBatch", globalBatchNum,
+					"subBatch", batchNum,
+					"error", activityErr)
+				totalReportsFailedProcessing += int32(len(batch))
+				continue
+			}
+
+			// The activity has finished, aggregate its results
+			totalBuildsProcessed += activityResult.ProcessedBuildsCount
+			totalReportsProcessedSuccess += activityResult.SuccessCount
+			totalReportsFailedProcessing += activityResult.FailureCount
+
+			for classSpec, count := range activityResult.BuildsByClassSpec {
+				buildsByClassSpecAggregated[classSpec] += count
+			}
+
+			logger.Info("Completed processing builds for reports batch",
+				"globalBatch", globalBatchNum,
+				"subBatch", batchNum,
+				"totalProcessed", totalReportsProcessedSuccess)
+
+			workflow.Sleep(ctx, time.Second*1)
+		}
+
+		// Small pause between main batches to avoid overloading the system
 		workflow.Sleep(ctx, time.Second*1)
 	}
 
@@ -195,7 +211,10 @@ func (w *BuildsWorkflow) Execute(ctx workflow.Context, params models.BuildsWorkf
 		logger.Error("Failed to update final workflow state", "error", err)
 	}
 
-	logger.Info("Builds workflow completed")
+	logger.Info("Builds workflow completed",
+		"totalBatches", globalBatchNum,
+		"totalBuildsProcessed", totalBuildsProcessed,
+		"totalReportsProcessed", totalReportsProcessedSuccess)
 
 	return finalResult, nil
 }

@@ -26,6 +26,7 @@ import {
   BicepsFlexed,
   ChartColumnDecreasing,
   Rows4,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import UserMenuOverlay from "./UserMenuOverlay";
@@ -116,6 +117,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 </SidebarMenuButton>
                 {isExpanded && mythicPlusExpanded && (
                   <SidebarMenuSub>
+                    <SidebarMenuSubItem className="pt-4">
+                      <SidebarMenuSubButton
+                        onClick={() => router.push("/mythic-plus/builds")}
+                      >
+                        <Building2 />
+                        <span className="cursor-pointer">Builds</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                     <SidebarMenuSubItem className="pt-4">
                       <SidebarMenuSubButton
                         onClick={() => router.push("/mythic-plus/analysis")}
