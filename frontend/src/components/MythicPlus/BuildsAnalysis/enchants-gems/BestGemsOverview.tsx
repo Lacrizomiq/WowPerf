@@ -75,68 +75,79 @@ export default function BestGemsOverview({ gemsData }: BestGemsOverviewProps) {
   // Take the top 8 combinations
   const topCombinations = sortedCombinations.slice(0, 8);
 
+  // Calculate total usage for percentage calculation
+  const totalUsageAll = topCombinations.reduce(
+    (acc, comb) => acc + comb.totalUsage,
+    0
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {topCombinations.map((combination) => (
-        <div
-          key={combination.key}
-          className="bg-slate-900 rounded-lg overflow-hidden"
-        >
-          {/* Card Header */}
-          <div className="bg-slate-800 px-4 py-2 flex justify-between items-center">
-            <h3 className="text-white font-semibold text-base">
-              {combination.gemsCount}{" "}
-              {combination.gemsCount === 1 ? "Gem" : "Gems"}
-            </h3>
-            <span className="text-xs text-slate-300">
-              Used in {combination.slots.size}{" "}
-              {combination.slots.size === 1 ? "slot" : "slots"}
-            </span>
-          </div>
+      {topCombinations.map((combination) => {
+        // Calculate usage percentage for consistency with enchants display
+        const usagePercentage = (combination.totalUsage / totalUsageAll) * 100;
 
-          {/* Card Content */}
-          <div className="p-4">
-            {/* Gem Icons - using our utility function */}
-            <div className="flex justify-center gap-2 mb-3">
-              {combination.gemIds.map((gemId, idx) => (
-                <a
-                  key={`${combination.key}-gem-${idx}`}
-                  href={`https://www.wowhead.com/item=${gemId}`}
-                  data-wowhead={`item=${gemId}`}
-                  className="block"
-                >
-                  <div className="border-2 border-slate-700 bg-slate-800 rounded w-10 h-10 overflow-hidden">
-                    <Image
-                      src={getGemIconUrl(gemId)}
-                      alt={`Gem ${gemId}`}
-                      width={40}
-                      height={40}
-                      className="rounded"
-                      unoptimized
-                    />
+        return (
+          <div
+            key={combination.key}
+            className="bg-slate-800/80 rounded-lg overflow-hidden border border-slate-700"
+          >
+            {/* Card Header - Styled like enchants header */}
+            <div className="bg-slate-700/80 px-3 py-2">
+              <h3 className="text-white font-medium text-base">
+                {combination.gemsCount}{" "}
+                {combination.gemsCount === 1 ? "Gem" : "Gems"}
+                <span className="text-xs text-slate-300 ml-2">
+                  Used in {combination.slots.size}{" "}
+                  {combination.slots.size === 1 ? "slot" : "slots"}
+                </span>
+              </h3>
+            </div>
+
+            {/* Card Content */}
+            <div className="p-3">
+              {/* Gem Icons */}
+              <div className="flex mb-2">
+                {combination.gemIds.map((gemId, idx) => (
+                  <a
+                    key={`${combination.key}-gem-${idx}`}
+                    href={`https://www.wowhead.com/item=${gemId}`}
+                    data-wowhead={`item=${gemId}`}
+                    className={`block ${idx > 0 ? "-ml-1" : ""}`}
+                  >
+                    <div className="border border-slate-600 bg-slate-900 rounded-full w-8 h-8 overflow-hidden">
+                      <Image
+                        src={getGemIconUrl(gemId)}
+                        alt={`Gem ${gemId}`}
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                        unoptimized
+                      />
+                    </div>
+                  </a>
+                ))}
+              </div>
+
+              {/* Stats - Styled like enchants stats */}
+              <div className="grid grid-cols-2">
+                <div>
+                  <span className="text-slate-400 text-xs">Avg Key</span>
+                  <div className="text-white font-medium">
+                    +{Math.round(combination.avgKeyLevel * 10) / 10}
                   </div>
-                </a>
-              ))}
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-slate-800 p-2 rounded">
-                <div className="text-slate-400 text-xs">Avg Key</div>
-                <div className="text-white font-medium">
-                  +{Math.round(combination.avgKeyLevel * 10) / 10}
                 </div>
-              </div>
-              <div className="bg-slate-800 p-2 rounded">
-                <div className="text-slate-400 text-xs">Usage</div>
-                <div className="text-white font-medium">
-                  {combination.totalUsage}
+                <div className="text-right">
+                  <span className="text-slate-400 text-xs">Usage</span>
+                  <div className="text-white font-medium">
+                    {Math.round(usagePercentage)}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
