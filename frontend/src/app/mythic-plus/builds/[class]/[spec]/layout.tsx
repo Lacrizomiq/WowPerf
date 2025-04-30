@@ -27,12 +27,10 @@ export default function BuildLayout({
 
   // Determine if the active tab is "builds"
   const isBuildsTab =
-    !pathname.includes("talents") &&
-    !pathname.includes("gear") &&
-    !pathname.includes("enchants-gems");
+    !pathname.includes("talents") && !pathname.includes("gear");
 
   const isTalentsTab = pathname.includes("talents");
-  const isGearTab = pathname.includes("gear"); // Ajout: vérification pour l'onglet gear
+  const isGearTab = pathname.includes("gear");
 
   // Fetch dungeons data for mapping slugs to encounter IDs
   const season = "season-tww-2";
@@ -63,7 +61,7 @@ export default function BuildLayout({
   const handleDungeonChange = (value: string) => {
     setDungeonId(value);
 
-    // Mise à jour: appliquer pour talents ET gear
+    // Update: apply for talents AND gear
     if (isTalentsTab || isGearTab) {
       const params = new URLSearchParams(searchParams.toString());
 
@@ -98,7 +96,7 @@ export default function BuildLayout({
 
       // Keep the URL parameters for talents if necessary
       if (
-        (isTalentsTab || isGearTab) && // Mise à jour: inclure gear pour la conservation des paramètres
+        (isTalentsTab || isGearTab) && // Update: include gear for parameter conservation
         dungeonId !== "all" &&
         searchParams.has("encounter_id")
       ) {
@@ -107,7 +105,7 @@ export default function BuildLayout({
     } else if (pathname.includes("/gear")) {
       newPath += `/${spec}/gear`;
 
-      // Ajout: Conservation des paramètres pour gear
+      // Add: Conservation des paramètres pour gear
       if (
         isGearTab &&
         dungeonId !== "all" &&

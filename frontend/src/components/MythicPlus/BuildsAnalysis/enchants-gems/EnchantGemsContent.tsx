@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   WowClassParam,
   WowSpecParam,
@@ -37,6 +38,21 @@ export default function EnchantGemsContent({
   className,
   spec,
 }: EnchantGemsContentProps) {
+  // Hooks for navigation
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL parameters for filters
+  const enchantSlotParam = searchParams.get("enchant_slot");
+  const gemSlotParam = searchParams.get("gem_slot");
+
+  // Convert slot parameters to numbers if they exist
+  const selectedEnchantSlot = enchantSlotParam
+    ? parseInt(enchantSlotParam)
+    : null;
+  const selectedGemSlot = gemSlotParam ? parseInt(gemSlotParam) : null;
+
   // Fetch enchants and gems data
   const {
     data: enchantsData,
@@ -59,6 +75,35 @@ export default function EnchantGemsContent({
       window.$WowheadPower.refreshLinks();
     }
   }, [gemsData]);
+
+  // Handlers for filter changes
+  const handleEnchantSlotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSlotId = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (newSlotId === "all") {
+      params.delete("enchant_slot");
+    } else {
+      params.set("enchant_slot", newSlotId);
+    }
+
+    // Use the scroll: false option to prevent automatic scrolling
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleGemSlotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSlotId = e.target.value;
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (newSlotId === "all") {
+      params.delete("gem_slot");
+    } else {
+      params.set("gem_slot", newSlotId);
+    }
+
+    // Use the scroll: false option to prevent automatic scrolling
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   // Handle loading states
   if (enchantsLoading || gemsLoading) {
@@ -118,6 +163,17 @@ export default function EnchantGemsContent({
       )
     : [];
 
+  // Slots to display based on filters
+  const displayedEnchantSlots =
+    selectedEnchantSlot !== null
+      ? enchantSlots.filter((slotId) => slotId === selectedEnchantSlot)
+      : enchantSlots;
+
+  const displayedGemSlots =
+    selectedGemSlot !== null
+      ? gemSlots.filter((slotId) => slotId === selectedGemSlot)
+      : gemSlots;
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -156,14 +212,35 @@ export default function EnchantGemsContent({
         </div>
       )}
 
-      {/* Enchants Tables Section */}
+      {/* Enchants Tables Section with Filter */}
       {enchantsData && enchantsData.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Enchants by Slot
-          </h2>
+        <div className="mb-8" id="enchants-section">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-white">Enchants by Slot</h2>
+
+            {/* Enchant Slot Filter */}
+            <div className="mt-2 sm:mt-0">
+              <select
+                className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-slate-700 transition-colors cursor-pointer"
+                value={selectedEnchantSlot?.toString() || "all"}
+                onChange={handleEnchantSlotChange}
+                aria-label="Filter enchantments by slot"
+              >
+                <option value="all">All Slots</option>
+                {enchantSlots.map((slotId) => (
+                  <option
+                    key={`enchant-slot-${slotId}`}
+                    value={slotId.toString()}
+                  >
+                    {ITEM_SLOT_NAMES[slotId]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {enchantSlots.map((slotId) => (
+            {displayedEnchantSlots.map((slotId) => (
               <EnchantTable
                 key={`enchant-${slotId}`}
                 slotName={ITEM_SLOT_NAMES[slotId]}
@@ -174,12 +251,32 @@ export default function EnchantGemsContent({
         </div>
       )}
 
-      {/* Gems Tables Section */}
+      {/* Gems Tables Section with Filter */}
       {gemsData && gemsData.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Gems by Slot</h2>
+        <div className="mb-8" id="gems-section">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-white">Gems by Slot</h2>
+
+            {/* Gem Slot Filter */}
+            <div className="mt-2 sm:mt-0">
+              <select
+                className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-slate-700 transition-colors cursor-pointer"
+                value={selectedGemSlot?.toString() || "all"}
+                onChange={handleGemSlotChange}
+                aria-label="Filter gems by slot"
+              >
+                <option value="all">All Slots</option>
+                {gemSlots.map((slotId) => (
+                  <option key={`gem-slot-${slotId}`} value={slotId.toString()}>
+                    {ITEM_SLOT_NAMES[slotId]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {gemSlots.map((slotId) => (
+            {displayedGemSlots.map((slotId) => (
               <GemTable
                 key={`gem-${slotId}`}
                 slotName={ITEM_SLOT_NAMES[slotId]}

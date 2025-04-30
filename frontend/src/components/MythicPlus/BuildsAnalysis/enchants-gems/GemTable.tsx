@@ -89,9 +89,6 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 mt-0.5">
-                          Item Level: {Math.round(gem.avg_item_level)}
-                        </div>
                       </div>
                     </div>
                   </td>
