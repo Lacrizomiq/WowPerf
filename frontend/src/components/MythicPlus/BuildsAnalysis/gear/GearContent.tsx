@@ -17,7 +17,12 @@ interface GearContentProps {
 
 export default function GearContent({ className, spec }: GearContentProps) {
   const searchParams = useSearchParams();
+
   const encounterId = searchParams.get("encounter_id");
+  const slotId = searchParams.get("slot_id");
+
+  // Convert slotId to number if it exists, otherwise null
+  const selectedSlotId = slotId !== null ? parseInt(slotId) : null;
 
   // Initialize Wowhead tooltips
   useWowheadTooltips();
@@ -27,19 +32,24 @@ export default function GearContent({ className, spec }: GearContentProps) {
     if (typeof window !== "undefined" && window.$WowheadPower) {
       window.$WowheadPower.refreshLinks();
     }
-  }, [encounterId]);
+  }, [encounterId, slotId]);
 
   return (
     <div className="space-y-6">
-      {/* Conditional content exactly like in TalentsContent */}
+      {/* Conditional content based on encounter and slot */}
       {encounterId ? (
         <DungeonGear
           className={className}
           spec={spec}
           encounterId={encounterId}
+          selectedSlotId={selectedSlotId}
         />
       ) : (
-        <AllDungeonsGear className={className} spec={spec} />
+        <AllDungeonsGear
+          className={className}
+          spec={spec}
+          selectedSlotId={selectedSlotId}
+        />
       )}
     </div>
   );
