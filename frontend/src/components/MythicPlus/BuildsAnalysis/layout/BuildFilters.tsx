@@ -48,10 +48,6 @@ export default function BuildFilters({
 
   return (
     <div className="flex flex-wrap gap-2 mb-6">
-      <div className="px-4 py-2 bg-slate-800 rounded flex items-center gap-2">
-        <span className="text-indigo-400">Filters</span>
-      </div>
-
       <ClassSelector
         selectedClass={className}
         onClassChange={onClassChange || (() => {})}

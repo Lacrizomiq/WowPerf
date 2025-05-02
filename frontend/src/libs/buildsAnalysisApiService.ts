@@ -13,21 +13,40 @@ import {
   OptimalBuildResponse,
   ClassSpecSummaryResponse,
   SpecComparisonResponse,
+  GlobalPopularItemsResponse,
 } from "../types/warcraftlogs/builds/buildsAnalysis";
 
-// Get popular items by class and spec
+// Get popular items by class and spec for a specific encounter (Or all if null)
 export const getPopularItems = async (
   className: WowClassParam,
-  spec: WowSpecParam
+  spec: WowSpecParam,
+  encounterId?: number | string
 ) => {
   try {
     const { data } = await api.get<PopularItemsResponse>(
       "warcraftlogs/mythicplus/builds/analysis/items",
-      { params: { class: className, spec } }
+      { params: { class: className, spec, encounter_id: encounterId } }
     );
     return data;
   } catch (error) {
     console.error("Error fetching popular items:", error);
+    throw error;
+  }
+};
+
+// Get global popular items by class and spec
+export const getGlobalPopularItems = async (
+  className: WowClassParam,
+  spec: WowSpecParam
+) => {
+  try {
+    const { data } = await api.get<GlobalPopularItemsResponse>(
+      "warcraftlogs/mythicplus/builds/analysis/items/global",
+      { params: { class: className, spec } }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching global popular items:", error);
     throw error;
   }
 };
