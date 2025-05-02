@@ -1,12 +1,17 @@
-// # Homepage/enchants-gems of the spec
+// app/mythic-plus/builds/[class]/[spec]/enchants-gems/page.tsx
+import {
+  WowClassParam,
+  WowSpecParam,
+} from "@/types/warcraftlogs/builds/classSpec";
+import EnchantGemsContent from "@/components/MythicPlus/BuildsAnalysis/enchants-gems/EnchantGemsContent";
+
 export default function BuildEnchantsGemsPage({
   params,
 }: {
   params: { class: string; spec: string };
 }) {
-  return (
-    <div>
-      Hello ! This is the enchants & gems page for {params.class}/{params.spec}
-    </div>
-  );
+  const className = params.class as WowClassParam;
+  const spec = params.spec as WowSpecParam;
+
+  return <EnchantGemsContent className={className} spec={spec} />;
 }
