@@ -54,6 +54,9 @@ export default function StatPriorities({ stats }: StatPrioritiesProps) {
                     {index + 1}
                   </span>
                   <span>{stat.stat_name}</span>
+                  <span className="ml-2 bg-black bg-opacity-20 px-2 py-1 rounded-md text-xs">
+                    {stat.avg_value.toFixed(0)}
+                  </span>
                 </div>
                 {index < sortedSecondary.length - 1 && (
                   <span className="mx-2 text-gray-500">→</span>
@@ -81,7 +84,10 @@ export default function StatPriorities({ stats }: StatPrioritiesProps) {
                     <span className="mr-1.5 bg-black bg-opacity-20 w-5 h-5 rounded-full flex items-center justify-center font-bold text-sm">
                       {index + 1}
                     </span>
-                    <span>{stat.stat_name}</span>
+                    <span>{stat.stat_name}</span>1
+                    <span className="ml-2 bg-black bg-opacity-20 px-2 py-1 rounded-md text-xs">
+                      {stat.avg_value.toFixed(0)}
+                    </span>
                   </div>
                   {index < sortedMinor.length - 1 && (
                     <span className="mx-2 text-gray-500">→</span>
