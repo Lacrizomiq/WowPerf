@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Monk"
+    spec_name: "Brewmaster"
+  - class_name: "Monk"
+    spec_name: "Mistweaver"
+  - class_name: "Monk"
+    spec_name: "Windwalker"

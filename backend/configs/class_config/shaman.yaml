@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Shaman"
+    spec_name: "Elemental"
+  - class_name: "Shaman"
+    spec_name: "Enhancement"
+  - class_name: "Shaman"
+    spec_name: "Restoration"

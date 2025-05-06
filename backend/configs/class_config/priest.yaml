@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Priest"
+    spec_name: "Discipline"
+  - class_name: "Priest"
+    spec_name: "Holy"
+  - class_name: "Priest"
+    spec_name: "Shadow"

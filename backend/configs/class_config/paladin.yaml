@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Paladin"
+    spec_name: "Holy"
+  - class_name: "Paladin"
+    spec_name: "Protection"
+  - class_name: "Paladin"
+    spec_name: "Retribution"

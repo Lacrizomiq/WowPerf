@@ -62,9 +62,14 @@ func main() {
 	}
 	defer temporalClient.Close()
 
+	config, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
+	if err != nil {
+		logger.Fatalf("Failed to load config: %v", err)
+	}
+
 	// Initialize repositories and activities (no changes needed)
 	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
+	rankingsRepo := rankingsRepository.NewRankingsRepository(db, int(config.Rankings.MaxRankingsPerSpec))
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
 	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
 	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)

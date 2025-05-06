@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Rogue"
+    spec_name: "Assassination"
+  - class_name: "Rogue"
+    spec_name: "Subtlety"
+  - class_name: "Rogue"
+    spec_name: "Outlaw"

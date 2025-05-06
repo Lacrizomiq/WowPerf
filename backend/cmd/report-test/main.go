@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -40,7 +42,7 @@ func main() {
 	opts := scheduler.DefaultScheduleOptions()
 
 	// Configuration file path
-	configPath := "configs/config_s2_tww.priest.yaml"
+	configPath := "configs/config_s2_tww.dev.yaml"
 
 	// ===== Creation of schedules for new decoupled workflows =====
 
@@ -56,16 +58,41 @@ func main() {
 		}
 	}
 
-	// 2. Schedule for ReportsWorkflow
-	reportsParams, err := definitions.LoadReportsParams(configPath)
-	if err != nil {
-		logger.Printf("[ERROR] Failed to load reports params: %v", err)
-	} else {
-		if err := scheduleManager.CreateReportsSchedule(context.Background(), reportsParams, opts); err != nil {
-			logger.Printf("[ERROR] Failed to create reports schedule: %v", err)
-		} else {
-			logger.Printf("[INFO] Successfully created reports schedule with batch ID: %s", reportsParams.BatchID)
+	// 2. Schedules per class for ReportsWorkflow
+	// List of WoW classes
+	classes := []string{"Priest", "Warrior", "Mage", "Rogue", "Paladin", "Hunter",
+		"Druid", "Shaman", "Warlock", "Monk", "DeathKnight",
+		"DemonHunter", "Evoker"}
+
+	// For each class
+	for _, className := range classes {
+		// Path to the specific class config file
+		classConfigPath := fmt.Sprintf("configs/class_config/%s.yaml", strings.ToLower(className))
+
+		// Check if the file exists
+		if _, err := os.Stat(classConfigPath); os.IsNotExist(err) {
+			logger.Printf("[WARN] Config file for class %s does not exist at %s", className, classConfigPath)
+			continue
 		}
+
+		// Load the parameters for this class
+		reportsParams, err := definitions.LoadReportsParamsForClass(classConfigPath)
+		if err != nil {
+			logger.Printf("[ERROR] Failed to load reports params for %s: %v", className, err)
+			continue
+		}
+
+		// Create a specific schedule ID for this class
+		scheduleID := fmt.Sprintf("reports-%s", strings.ToLower(className))
+
+		// Create the schedule for this class
+		if err := scheduleManager.CreateReportsScheduleForClass(context.Background(), scheduleID, reportsParams, opts); err != nil {
+			logger.Printf("[ERROR] Failed to create reports schedule for %s: %v", className, err)
+			continue
+		}
+
+		logger.Printf("[INFO] Successfully created reports schedule for %s with batch ID: %s",
+			className, reportsParams.BatchID)
 	}
 
 	// 3. Schedule for BuildsWorkflow
@@ -120,7 +147,7 @@ func main() {
 	logger.Printf("[INFO] All schedules created. Workflows can now be triggered manually from Temporal UI.")
 	logger.Printf("[INFO] To trigger workflows manually via code, you can use:")
 	logger.Printf("[INFO] - Rankings: scheduleManager.TriggerRankingsNow(ctx)")
-	logger.Printf("[INFO] - Reports: scheduleManager.TriggerReportsNow(ctx)")
+	logger.Printf("[INFO] - Reports for specific class: scheduleManager.TriggerReportsForClassNow(ctx, \"ClassName\")")
 	logger.Printf("[INFO] - Builds: scheduleManager.TriggerBuildsNow(ctx)")
 	logger.Printf("[INFO] - Equipment Analysis: scheduleManager.TriggerEquipmentAnalysisNow(ctx)")
 	logger.Printf("[INFO] - Talent Analysis: scheduleManager.TriggerTalentAnalysisNow(ctx)")

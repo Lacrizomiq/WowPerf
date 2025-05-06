@@ -86,7 +86,7 @@ type ReportsActivity interface {
 	GetReportsBatch(ctx context.Context, batchSize int32, offset int32) ([]*warcraftlogsBuilds.Report, error)
 	CountAllReports(ctx context.Context) (int64, error)
 	GetUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error)
-	GetRankingsNeedingReportProcessing(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error)
+	GetRankingsNeedingReportProcessing(ctx context.Context, className string, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error)
 	MarkReportsForBuildProcessing(ctx context.Context, reportCodes []string, batchID string) error
 }
 

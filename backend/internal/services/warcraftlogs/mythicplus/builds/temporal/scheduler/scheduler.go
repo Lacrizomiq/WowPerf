@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
@@ -21,7 +22,7 @@ const (
 
 	// New schedules for decoupled workflows
 	rankingsScheduleID          = "warcraft-logs-rankings"
-	reportsScheduleID           = "warcraft-logs-reports"
+	reportsScheduleID           = "warcraft-logs-reports" // Legacy schedule, will be replace by a schedule per class
 	buildsScheduleID            = "warcraft-logs-builds"
 	equipmentAnalysisScheduleID = "warcraft-logs-equipment-analysis"
 	talentAnalysisScheduleID    = "warcraft-logs-talent-analysis"
@@ -35,11 +36,14 @@ type ScheduleManager struct {
 
 	// New handles (decoupled workflows, will be used instead of the existing ones)
 	rankingsSchedule          client.ScheduleHandle
-	reportsSchedule           client.ScheduleHandle
+	reportsSchedule           client.ScheduleHandle // Legacy schedule, will be replace by a schedule per class
 	buildsSchedule            client.ScheduleHandle
 	equipmentAnalysisSchedule client.ScheduleHandle
 	talentAnalysisSchedule    client.ScheduleHandle
 	statAnalysisSchedule      client.ScheduleHandle
+
+	// New map for per class reports schedules
+	reportsSchedules map[string]client.ScheduleHandle
 }
 
 // NewScheduleManager creates a new ScheduleManager instance
@@ -98,6 +102,8 @@ func (sm *ScheduleManager) CreateRankingsSchedule(ctx context.Context, params mo
 }
 
 // CreateReportsSchedule creates a schedule for the Reports workflow
+// This schedule is used to trigger the ReportsWorkflow
+// TODO: Legacy schedule, will be replace by a schedule per class
 func (sm *ScheduleManager) CreateReportsSchedule(ctx context.Context, params *models.ReportsWorkflowParams, opts *ScheduleOptions) error {
 	if opts == nil {
 		opts = DefaultScheduleOptions()
@@ -139,6 +145,55 @@ func (sm *ScheduleManager) CreateReportsSchedule(ctx context.Context, params *mo
 
 	sm.reportsSchedule = handle
 	sm.logger.Printf("[INFO] Created reports workflow schedule: %s", scheduleID)
+	return nil
+}
+
+// CreateReportsScheduleForClass crée un scheduler pour une classe spécifique
+func (sm *ScheduleManager) CreateReportsScheduleForClass(ctx context.Context, scheduleID string, params *models.ReportsWorkflowParams, opts *ScheduleOptions) error {
+	if opts == nil {
+		opts = DefaultScheduleOptions()
+	}
+
+	// Generate a unique BatchID if not provided
+	if params.BatchID == "" {
+		params.BatchID = fmt.Sprintf("reports-%s-%s", params.ClassName, uuid.New().String())
+	}
+
+	workflowID := fmt.Sprintf("warcraft-logs-reports-%s-%s", params.ClassName, time.Now().UTC().Format("2006-01-02"))
+
+	// Create schedule without automatic triggering (no CronExpressions)
+	scheduleOptions := client.ScheduleOptions{
+		ID: scheduleID,
+		// No CronExpressions to avoid automatic triggering
+		Action: &client.ScheduleWorkflowAction{
+			ID:        workflowID,
+			Workflow:  definitions.ReportsWorkflowName,
+			TaskQueue: DefaultScheduleConfig.TaskQueue,
+			Args:      []interface{}{params},
+			RetryPolicy: &temporal.RetryPolicy{
+				InitialInterval:    opts.Retry.InitialInterval,
+				BackoffCoefficient: opts.Retry.BackoffCoefficient,
+				MaximumInterval:    opts.Retry.MaximumInterval,
+				MaximumAttempts:    int32(opts.Retry.MaximumAttempts),
+			},
+			WorkflowRunTimeout: opts.Timeout,
+		},
+		Paused: opts.Paused, // Paused by default if specified in options
+	}
+
+	handle, err := sm.client.ScheduleClient().Create(ctx, scheduleOptions)
+	if err != nil {
+		return fmt.Errorf("failed to create reports schedule for %s: %w", params.ClassName, err)
+	}
+
+	// Store the handle in a map instead of a single field
+	// This requires adding a map field to the ScheduleManager struct
+	if sm.reportsSchedules == nil {
+		sm.reportsSchedules = make(map[string]client.ScheduleHandle)
+	}
+	sm.reportsSchedules[params.ClassName] = handle
+
+	sm.logger.Printf("[INFO] Created reports workflow schedule for class %s: %s", params.ClassName, scheduleID)
 	return nil
 }
 
@@ -315,11 +370,26 @@ func (sm *ScheduleManager) TriggerRankingsNow(ctx context.Context) error {
 }
 
 // TriggerReportsNow triggers the immediate execution of the reports schedule
+// TODO: Legacy schedule, will be replace by a schedule per class
 func (sm *ScheduleManager) TriggerReportsNow(ctx context.Context) error {
 	if sm.reportsSchedule == nil {
 		return fmt.Errorf("no reports schedule has been created")
 	}
 	return sm.reportsSchedule.Trigger(ctx, client.ScheduleTriggerOptions{})
+}
+
+// TriggerReportsForClassNow triggers the immediate execution of the reports schedule for a specific class
+func (sm *ScheduleManager) TriggerReportsForClassNow(ctx context.Context, className string) error {
+	// Check if we have the handle in our map first
+	if sm.reportsSchedules != nil && sm.reportsSchedules[className] != nil {
+		return sm.reportsSchedules[className].Trigger(ctx, client.ScheduleTriggerOptions{})
+	}
+
+	// Fall back to getting the handle from Temporal
+	scheduleID := fmt.Sprintf("reports-%s", strings.ToLower(className))
+	handle := sm.client.ScheduleClient().GetHandle(ctx, scheduleID)
+
+	return handle.Trigger(ctx, client.ScheduleTriggerOptions{})
 }
 
 // TriggerBuildsNow triggers the immediate execution of the builds schedule
@@ -365,11 +435,20 @@ func (sm *ScheduleManager) PauseRankingsSchedule(ctx context.Context) error {
 }
 
 // PauseReportsSchedule pauses the reports schedule
+// TODO: Legacy schedule, will be replace by a schedule per class
 func (sm *ScheduleManager) PauseReportsSchedule(ctx context.Context) error {
 	if sm.reportsSchedule == nil {
 		return fmt.Errorf("no reports schedule has been created")
 	}
 	return sm.reportsSchedule.Pause(ctx, client.SchedulePauseOptions{})
+}
+
+// PauseReportsScheduleForClass pauses the reports schedule for a specific class
+func (sm *ScheduleManager) PauseReportsScheduleForClass(ctx context.Context, className string) error {
+	if sm.reportsSchedules == nil || sm.reportsSchedules[className] == nil {
+		return fmt.Errorf("no reports schedule has been created for class %s", className)
+	}
+	return sm.reportsSchedules[className].Pause(ctx, client.SchedulePauseOptions{})
 }
 
 // PauseBuildsSchedule pauses the builds schedule
@@ -413,11 +492,20 @@ func (sm *ScheduleManager) UnpauseRankingsSchedule(ctx context.Context) error {
 }
 
 // UnpauseReportsSchedule reactivates the reports schedule
+// TODO: Legacy schedule, will be replace by a schedule per class
 func (sm *ScheduleManager) UnpauseReportsSchedule(ctx context.Context) error {
 	if sm.reportsSchedule == nil {
 		return fmt.Errorf("no reports schedule has been created")
 	}
 	return sm.reportsSchedule.Unpause(ctx, client.ScheduleUnpauseOptions{})
+}
+
+// UnpauseReportsScheduleForClass reactivates the reports schedule for a specific class
+func (sm *ScheduleManager) UnpauseReportsScheduleForClass(ctx context.Context, className string) error {
+	if sm.reportsSchedules == nil || sm.reportsSchedules[className] == nil {
+		return fmt.Errorf("no reports schedule has been created for class %s", className)
+	}
+	return sm.reportsSchedules[className].Unpause(ctx, client.ScheduleUnpauseOptions{})
 }
 
 // UnpauseBuildsSchedule reactivates the builds schedule
@@ -469,6 +557,19 @@ func (sm *ScheduleManager) CleanupDecoupledSchedules(ctx context.Context) error 
 			continue
 		}
 		sm.logger.Printf("[INFO] Deleted schedule: %s", id)
+	}
+
+	// Delete class-specific reports schedules
+	if sm.reportsSchedules != nil {
+		for className, handle := range sm.reportsSchedules {
+			if err := handle.Delete(ctx); err != nil {
+				sm.logger.Printf("[WARN] Failed to delete class-specific schedule for %s: %v", className, err)
+				continue
+			}
+			sm.logger.Printf("[INFO] Deleted class-specific schedule for class: %s", className)
+		}
+		// Clear the map
+		sm.reportsSchedules = nil
 	}
 
 	// Reset references
@@ -563,4 +664,36 @@ func (sm *ScheduleManager) CleanupAll(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// ListReportsScheduleClasses returns a list of all classes that have a reports schedule
+func (sm *ScheduleManager) ListReportsScheduleClasses() []string {
+	if sm.reportsSchedules == nil {
+		return []string{}
+	}
+
+	classes := make([]string, 0, len(sm.reportsSchedules))
+	for className := range sm.reportsSchedules {
+		classes = append(classes, className)
+	}
+	return classes
+}
+
+// HasReportsScheduleForClass checks if a reports schedule exists for the given class
+func (sm *ScheduleManager) HasReportsScheduleForClass(className string) bool {
+	if sm.reportsSchedules == nil {
+		return false
+	}
+	_, exists := sm.reportsSchedules[className]
+	return exists
+}
+
+// GetReportsScheduleForClass returns the schedule handle for a specific class
+func (sm *ScheduleManager) GetReportsScheduleForClass(ctx context.Context, className string) (client.ScheduleHandle, error) {
+	if sm.reportsSchedules == nil || sm.reportsSchedules[className] == nil {
+		scheduleID := fmt.Sprintf("reports-%s", strings.ToLower(className))
+		// Try to get from Temporal directly in case it exists but isn't in our map
+		return sm.client.ScheduleClient().GetHandle(ctx, scheduleID), nil
+	}
+	return sm.reportsSchedules[className], nil
 }

@@ -25,6 +25,7 @@ func NewReportsWorkflow() definitions.ReportsWorkflow {
 func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWorkflowParams) (*models.ReportsWorkflowResult, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting reports workflow",
+		"class", params.ClassName,
 		"batchID", params.BatchID,
 		"batchSize", params.BatchSize,
 		"processingWindow", params.ProcessingWindow)
@@ -37,7 +38,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 
 	// WorkflowState Tracking
 	workflowID := workflow.GetInfo(ctx).WorkflowExecution.ID
-	workflowStateID := fmt.Sprintf("reports-%s", workflowID)
+	workflowStateID := fmt.Sprintf("reports-%s-%s", params.ClassName, workflowID)
 
 	// Activity options for workflow state
 	stateOpts := workflow.ActivityOptions{
@@ -100,7 +101,7 @@ func (w *ReportsWorkflow) Execute(ctx workflow.Context, params models.ReportsWor
 		var rankingsToProcess []*warcraftlogsBuilds.ClassRanking
 		err = workflow.ExecuteActivity(activityCtx,
 			definitions.GetRankingsNeedingReportProcessingActivity,
-			params.BatchSize, params.ProcessingWindow).Get(ctx, &rankingsToProcess)
+			params.ClassName, params.BatchSize, params.ProcessingWindow).Get(ctx, &rankingsToProcess)
 
 		if err != nil {
 			logger.Error("Failed to get rankings needing report processing", "error", err)

@@ -40,21 +40,43 @@ func LoadRankingsParams(configPath string) (*models.RankingsWorkflowParams, erro
 	}, nil
 }
 
-// LoadReportsParams loads the parameters for the reports workflow
-func LoadReportsParams(configPath string) (*models.ReportsWorkflowParams, error) {
-	// Check if the file exists
-	_, err := LoadConfig(configPath)
+// LoadReportsParamsForClass loads the parameters for the reports workflow for a specific class
+func LoadReportsParamsForClass(classConfigPath string) (*models.ReportsWorkflowParams, error) {
+	// Read the minimal class config file
+	file, err := os.ReadFile(classConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading class config file: %w", err)
 	}
 
-	// Fully independent configuration
+	// Minimal class config structure to load only the specs
+	type ClassSpec struct {
+		ClassName string `yaml:"class_name"`
+		SpecName  string `yaml:"spec_name"`
+	}
+
+	var classConfig struct {
+		Specs []ClassSpec `yaml:"specs"`
+	}
+
+	if err := yaml.Unmarshal(file, &classConfig); err != nil {
+		return nil, fmt.Errorf("error parsing class config file: %w", err)
+	}
+
+	// Specific validation for class config files
+	if len(classConfig.Specs) == 0 {
+		return nil, fmt.Errorf("no specs found in config file: %s", classConfigPath)
+	}
+
+	className := classConfig.Specs[0].ClassName
+
+	// Creation of parameters with hardcoded values
 	return &models.ReportsWorkflowParams{
+		ClassName:        className,
 		BatchSize:        10,                     // Optimized value for reports
 		NumWorkers:       2,                      // Optimized value for reports
 		RequestDelay:     500 * time.Millisecond, // Optimized value for reports
 		ProcessingWindow: 7 * 24 * time.Hour,     // 7 days
-		BatchID:          fmt.Sprintf("reports-%s", uuid.New().String()),
+		BatchID:          fmt.Sprintf("reports-%s-%s", className, uuid.New().String()),
 	}, nil
 }
 
@@ -163,7 +185,7 @@ func LoadConfig(configPath string) (*models.WorkflowConfig, error) {
 func GetDefaultConfig() *models.WorkflowConfig {
 	return &models.WorkflowConfig{
 		Rankings: models.RankingsConfig{
-			MaxRankingsPerSpec: 150,
+			MaxRankingsPerSpec: 1500,
 			Batch: models.BatchConfig{
 				Size:        5,
 				RetryDelay:  5,

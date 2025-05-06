@@ -25,6 +25,7 @@ type RankingsWorkflowParams struct {
 
 // ReportsWorkflowParams contains only the parameters for the reports workflow
 type ReportsWorkflowParams struct {
+	ClassName        string        `json:"class_name"`
 	BatchSize        int32         `json:"batch_size"`
 	NumWorkers       int32         `json:"num_workers"`
 	RequestDelay     time.Duration `json:"request_delay"`
