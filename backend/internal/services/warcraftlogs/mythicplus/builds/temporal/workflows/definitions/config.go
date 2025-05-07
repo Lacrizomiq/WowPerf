@@ -94,6 +94,14 @@ func LoadBuildsParams(configPath string) (*models.BuildsWorkflowParams, error) {
 		NumWorkers:      4,  // Optimized value specific to builds
 		ReportBatchSize: 10, // Optimized value specific to builds
 		BatchID:         fmt.Sprintf("builds-%s", uuid.New().String()),
+		TaskQueue:       models.DefaultTaskQueue,
+
+		// Fields for pagination
+		Offset:            0,  // Start at 0
+		PageSize:          10, // Default page size (adjustable)
+		TotalToProcess:    0,  // Will be determined by the workflow
+		AlreadyProcessed:  0,  // No reports processed initially
+		ContinuationCount: 0,  // Initial continuation counter
 	}, nil
 }
 
