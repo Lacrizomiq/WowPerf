@@ -1,6 +1,7 @@
 package WarcraftLogsMythicPlusBuildsAnalysis
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,6 +45,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetPopularItemsBySlot(c *gin.Context) 
 		return
 	}
 
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
+
 	var encounterID *int
 	if encIDStr := c.Query("encounter_id"); encIDStr != "" {
 		encID, err := strconv.Atoi(encIDStr)
@@ -83,6 +86,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetGlobalPopularItemsBySlot(c *gin.Con
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
 		return
 	}
+
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
 
 	items, err := h.MythicPlusBuildsAnalysisService.GetGlobalPopularItemsBySlot(c.Request.Context(), class, spec)
 	if err != nil {
@@ -169,6 +174,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetTopTalentBuilds(c *gin.Context) {
 	class := normalizeWoWTerms(c.Query("class"))
 	spec := normalizeWoWTerms(c.Query("spec"))
 
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
+
 	if class == "" || spec == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
 		return
@@ -203,6 +210,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetTalentBuildsByDungeon(c *gin.Contex
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
 		return
 	}
+
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
 
 	talents, err := h.MythicPlusBuildsAnalysisService.GetTalentBuildsByDungeon(c.Request.Context(), class, spec)
 	if err != nil {
@@ -332,8 +341,28 @@ func (h *MythicPlusBuildsAnalysisHandler) GetClassSpecSummary(c *gin.Context) {
 }
 
 func normalizeWoWTerms(term string) string {
+	// Special cases for composed names
+	term = strings.ToLower(term)
+
+	// Handle formats with dashes like "death-knight" → "deathknight"
+	term = strings.ReplaceAll(term, "-", "")
+
+	// Special cases for classes
+	if term == "deathknight" {
+		return "DeathKnight"
+	}
+	if term == "demonhunter" {
+		return "DemonHunter"
+	}
+
+	// Special cases for specs
+	if term == "beastmastery" {
+		return "BeastMastery"
+	}
+
+	// For other cases, use the current method
 	caser := cases.Title(language.English)
-	return caser.String(strings.ToLower(term))
+	return caser.String(term)
 }
 
 /*

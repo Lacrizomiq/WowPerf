@@ -105,7 +105,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
         {/* Talents iframe - displayed directly */}
         <div className="bg-black bg-opacity-30 rounded-lg p-2 border border-gray-600 shadow-xl">
           <iframe
-            src={`https://www.raidbots.com/simbot/render/talents/${build.talent_import}?width=900&level=80`}
+            src={`https://www.raidbots.com/simbot/render/talents/${build.talent_import}?width=1000&level=80`}
             width="100%"
             height="600px"
             className="w-full"
