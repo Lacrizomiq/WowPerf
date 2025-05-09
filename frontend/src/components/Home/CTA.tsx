@@ -15,16 +15,14 @@ export default function CTA() {
 
   return (
     <section className="relative py-20 overflow-hidden">
-      {/* Gradient overlay */}
-      <div className="absolute inset-0  z-10"></div>
-
-      {/* Background image */}
+      {/* Background image - objectPosition modifié pour montrer le haut */}
       {isMounted && (
         <Image
           src="/xal.jpg"
           alt="World of Warcraft Background"
           layout="fill"
           objectFit="cover"
+          objectPosition="center top" // Cette propriété assure que le haut de l'image est visible
           quality={100}
           priority
           className="opacity-50 z-0"

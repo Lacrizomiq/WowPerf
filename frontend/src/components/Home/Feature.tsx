@@ -12,9 +12,9 @@ import { useState } from "react";
 export default function Feature() {
   const [activeSpotlight, setActiveSpotlight] = useState(0);
   const spotlightItems = [
-    { name: "Frost Mage", badge: "Spotlight" },
-    { name: "Outlaw Rogue", badge: "Spotlight" },
-    { name: "Augmentation Evoker", badge: "Spotlight" },
+    { name: "Balance Druid", badge: "Spotlight" },
+    { name: "Unholy Death Knight", badge: "Spotlight" },
+    { name: "Arcane Mage", badge: "Spotlight" },
   ];
 
   const nextSpotlight = () => {
