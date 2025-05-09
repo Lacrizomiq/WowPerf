@@ -37,7 +37,7 @@ export default function Statistics() {
 
           <FeatureCard
             icon={<PieChart className="h-10 w-10 text-purple-500" />}
-            title="Uncover Mythic+ Trends & Statistics"
+            title="Uncover Trends & Statistics"
             description="Stay ahead of the meta with weekly trends and statistics."
             link="/statistics"
             linkText="Statistics"
@@ -46,7 +46,7 @@ export default function Statistics() {
           <FeatureCard
             icon={<Trophy className="h-10 w-10 text-purple-500" />}
             title="Study the Anatomy of Top Runs"
-            description="Learn from the best by examining the strategies, routes, and execution of top-ranking players."
+            description="Learn from the best by examining the gear, talents, and composition of top-ranking players."
             link="/best-runs"
             linkText="Best Runs"
           />

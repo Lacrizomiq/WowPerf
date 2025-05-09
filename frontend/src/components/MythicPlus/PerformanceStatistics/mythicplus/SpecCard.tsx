@@ -12,18 +12,18 @@ interface SpecCardProps {
 }
 
 export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
-  // Helper pour formatter le nom de classe pour les classes CSS (DeathKnight -> death-knight)
+  // Helper to format the class name for CSS classes (DeathKnight -> death-knight)
   const formatClassNameForCSS = (className: string): string => {
     return className.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
   };
 
-  // Récupère la classe CSS pour les couleurs de classe
+  // Get the CSS class for the class colors
   const getClassColorClass = (): string => {
     const cssClassName = formatClassNameForCSS(specData.class);
     return `class-color--${cssClassName}`;
   };
 
-  // Récupère l'URL de l'icône de spécialisation
+  // Get the URL of the specialization icon
   const getSpecIconUrl = (): string => {
     try {
       const normalizedSpecName = normalizeWowName(specData.spec);
@@ -37,14 +37,14 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
     }
   };
 
-  // Formate le nom de classe et de spécialisation pour l'affichage
+  // Format the class and specialization name for display
   const formatSpecName = (className: string, specName: string): string => {
-    // Convertit le format camelCase en format normal
+    // Convert camelCase to normal format
     const formattedClass = className.replace(/([a-z])([A-Z])/g, "$1 $2");
     return `${specName} ${formattedClass}`;
   };
 
-  // Détermine quel rang afficher en fonction du rôle sélectionné
+  // Determine which rank to display based on the selected role
   const displayRank =
     selectedRole === "ALL" ? specData.overall_rank : specData.role_rank;
 
@@ -56,17 +56,15 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
       .toLowerCase()
       .replace(/ /g, "-")}`;
 
-  // Données maximum - à conserver
-  const maxScore =
-    Math.round(specData.avg_global_score) + Math.floor(Math.random() * 200);
+  // Maximum data - to implement
 
   return (
     <Link href={`/mythic-plus/analysis/${specSlug}`}>
       <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 hover:border-purple-700/50 transition-all hover:shadow-md cursor-pointer">
         <div className="flex items-start gap-4">
-          {/* Section gauche - Rang et Icône */}
+          {/* Left section - Rank and Icon */}
           <div className="flex flex-col items-center gap-1">
-            {/* Rang avec indicateur de changement vide pour l'instant */}
+            {/* Rank with empty change indicator for now */}
             <div
               className={`text-2xl font-bold ${
                 displayRank <= 3 ? "text-purple-400" : "text-slate-400"
@@ -75,12 +73,12 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
               #{displayRank}
             </div>
 
-            {/* Espace pour futur indicateur de changement de rang */}
+            {/* Space for future rank change indicator */}
             <div className="h-4 w-full flex justify-center">
-              {/* Laissé vide intentionnellement comme demandé */}
+              {/* Left intentionally empty as requested */}
             </div>
 
-            {/* Icône */}
+            {/* Icon */}
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-700 mt-1">
               {specIconUrl ? (
                 <Image
@@ -97,10 +95,10 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
             </div>
           </div>
 
-          {/* Informations sur la spécialisation */}
+          {/* Information about the specialization */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              {/* Nom de spécialisation avec couleur de classe appliquée */}
+              {/* Specialization name with class color applied */}
               <h3 className={`font-bold text-lg ${classColorClass}`}>
                 {formatSpecName(specData.class, specData.spec)}
               </h3>
@@ -112,7 +110,7 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
               </Badge>
             </div>
 
-            {/* Détails du score - Layout modifié */}
+            {/* Score details - Layout modified */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">
@@ -125,24 +123,22 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
 
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">
-                  Weekly Evolution
+                  Weekly Evolution{" "}
+                  <Badge className="ml-2 bg-purple-600 text-[10px]">Soon</Badge>
                 </div>
                 <div className="flex items-center h-7">
-                  {/* Vide pour l'instant comme demandé */}
-                  <MiniSparkline />
+                  {/* Left intentionally empty until we have the data */}
+                  {/* <MiniSparkline /> */}
                 </div>
               </div>
 
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">
-                  Player Max Score
+                  Max Score{" "}
+                  <Badge className="ml-2 bg-purple-600 text-[10px]">Soon</Badge>
                 </div>
-                <div className="text-sm font-medium">
-                  {maxScore.toLocaleString()}
-                </div>
+                <div className="text-sm font-medium"></div>
               </div>
-
-              {/* Suppression de Average Score comme demandé */}
             </div>
           </div>
         </div>
