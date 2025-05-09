@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Statistics() {
   return (
-    <section className="py-16 bg-[#1A1D21]">
+    <section className="py-2 pb-8 bg-[#1A1D21]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4 text-white">
@@ -26,7 +26,7 @@ export default function Statistics() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           <FeatureCard
             icon={<BarChart3 className="h-10 w-10 text-purple-500" />}
             title="Deep Dive into Performance Rankings"

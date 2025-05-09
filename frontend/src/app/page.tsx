@@ -13,7 +13,9 @@ export default function Home() {
         <Feature />
       </div>
       <Statistics />
-      <CTA />
+      <div className="p-4">
+        <CTA />
+      </div>
       <Footer />
     </main>
   );

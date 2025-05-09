@@ -4,6 +4,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function CTA() {
   const [isMounted, setIsMounted] = useState(false);
@@ -38,12 +39,14 @@ export default function CTA() {
           Join thousands of players who are already using WoW Perf to optimize
           their gameplay and climb the ranks.
         </p>
-        <Button
-          size="lg"
-          className="bg-white text-purple-900 hover:bg-purple-100"
-        >
-          Get Started Now
-        </Button>
+        <Link href="/signup">
+          <Button
+            size="lg"
+            className="bg-white text-purple-900 hover:bg-purple-100"
+          >
+            Get Started Now
+          </Button>
+        </Link>
       </div>
     </section>
   );
