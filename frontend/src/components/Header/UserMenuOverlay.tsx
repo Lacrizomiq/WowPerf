@@ -1,3 +1,6 @@
+// components/Header/UserMenuOverlay.tsx
+"use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthContext";
@@ -12,14 +15,9 @@ import {
   LogIn,
   LogOut,
   UserPlus,
-  BadgeCheck,
-  CreditCard,
-  Bell,
-  Sparkles,
+  Settings,
   ChevronsUpDown,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface UserMenuOverlayProps {
   isExpanded: boolean;
@@ -30,94 +28,95 @@ const UserMenuOverlay: React.FC<UserMenuOverlayProps> = ({ isExpanded }) => {
   const { isAuthenticated, logout } = useAuth();
   const { profile } = useUserProfile();
   const [isOpen, setIsOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="absolute bottom-4 left-0 w-full px-4 py-2 flex items-center ">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src="" alt="User" />
-            <AvatarFallback>U</AvatarFallback>
+        <button
+          className={`w-full px-2 py-2 flex items-center rounded-md transition-colors duration-200
+                     text-slate-200 hover:bg-slate-800/80 hover:text-white
+                     focus:outline-none focus:ring-1 focus:ring-purple-600
+                     ${isExpanded ? "justify-start" : "justify-center"}`}
+        >
+          <Avatar className="h-8 w-8 bg-slate-700 flex-shrink-0">
+            <AvatarImage src={""} alt={profile?.username || "User"} />
+            <AvatarFallback className="bg-slate-700 text-white">
+              {profile?.username
+                ? profile.username.charAt(0).toUpperCase()
+                : "U"}
+            </AvatarFallback>
           </Avatar>
           {isExpanded && (
-            <div className="ml-2 text-left flex items-center justify-between w-full">
-              <div className="flex flex-col">
-                <div className="text-sm font-semibold">
-                  {isAuthenticated ? profile?.username : "Guest"}
-                </div>
-                <div className="text-xs">
-                  {isAuthenticated ? profile?.email : "Not logged in"}
-                </div>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </div>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 " align="start" side="right">
-        {isAuthenticated ? (
-          <>
-            <div className="flex flex-col space-y-1 p-2">
-              <p className="text-sm font-medium">
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
                 {isAuthenticated ? profile?.username : "Guest"}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-slate-400 truncate">
                 {isAuthenticated ? profile?.email : "Not logged in"}
               </p>
             </div>
-            <div className="h-px bg-border my-2" />
-            {/* TODO: Add upgrade page 
-            <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
-              <Sparkles className="mr-2 h-4 w-4 inline" />
-              Upgrade to Pro
-            </button>
-            */}
-            <button
-              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
-              onClick={() => router.push("/profile")}
-            >
-              <BadgeCheck className="mr-2 h-4 w-4 inline" />
-              Account
-            </button>
-            {/* TODO: Add billing page 
-            <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
-              <CreditCard className="mr-2 h-4 w-4 inline" />
-              Billing
-            </button>
-            */}
-            {/* TODO: Add notifications page 
-            <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
-              <Bell className="mr-2 h-4 w-4 inline" />
-              Notifications
-            </button>
-            */}
-            <div className="h-px bg-border my-2" />
-            <button
-              onClick={logout}
-              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
-            >
-              <LogOut className="mr-2 h-4 w-4 inline" />
-              Log out
-            </button>
+          )}
+          {isExpanded && (
+            <ChevronsUpDown className="ml-auto size-4 text-slate-400" />
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-60 bg-slate-800 border-slate-700 text-slate-200 p-0 shadow-xl"
+        align={isExpanded ? "start" : "center"}
+        side={isExpanded ? "right" : "bottom"}
+        sideOffset={8}
+      >
+        {isAuthenticated && profile ? (
+          <>
+            <div className="flex flex-col p-3 border-b border-slate-700">
+              <p className="text-sm font-medium">{profile.username}</p>
+              <p className="text-xs text-slate-400">{profile.email}</p>
+            </div>
+            <div className="p-1">
+              <button
+                className="w-full text-left flex items-center px-3 py-2 text-sm hover:bg-slate-700 rounded-sm"
+                onClick={() => router.push("/profile")}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Account
+              </button>
+              <div className="h-px bg-slate-700 my-1" />
+              <button
+                onClick={() => {
+                  logout();
+                  setIsOpen(false);
+                }}
+                className="w-full text-left flex items-center px-3 py-2 text-sm hover:bg-slate-700 rounded-sm text-red-400 hover:text-red-300"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </button>
+            </div>
           </>
         ) : (
-          <>
+          <div className="p-1">
             <button
-              onClick={() => router.push("/login")}
-              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+              onClick={() => {
+                router.push("/login");
+                setIsOpen(false);
+              }}
+              className="w-full text-left flex items-center px-3 py-2 text-sm hover:bg-slate-700 rounded-sm"
             >
-              <LogIn className="mr-2 h-4 w-4 inline" />
+              <LogIn className="mr-2 h-4 w-4" />
               Login
             </button>
             <button
-              onClick={() => router.push("/signup")}
-              className="w-full text-left px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+              onClick={() => {
+                router.push("/signup");
+                setIsOpen(false);
+              }}
+              className="w-full text-left flex items-center px-3 py-2 text-sm hover:bg-slate-700 rounded-sm"
             >
-              <UserPlus className="mr-2 h-4 w-4 inline" />
+              <UserPlus className="mr-2 h-4 w-4" />
               Register
             </button>
-          </>
+          </div>
         )}
       </PopoverContent>
     </Popover>
