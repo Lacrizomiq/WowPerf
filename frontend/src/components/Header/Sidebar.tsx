@@ -424,17 +424,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 className={getMenuItemClasses("/character-progress")}
               >
                 {isExpanded ? (
-                  <TrendingUp className="h-4 w-4 mr-3" />
+                  <>
+                    <TrendingUp className="h-4 w-4 mr-3" />
+                    <div className="flex-1 flex justify-between items-center">
+                      <span>Character Progress</span>
+                      {soonBadge}
+                    </div>
+                  </>
                 ) : (
                   <div className="w-6 h-6 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5" />
                   </div>
-                )}
-                {isExpanded && (
-                  <span className="flex items-center">
-                    Character Progress
-                    {soonBadge}
-                  </span>
                 )}
               </Link>
             </SidebarMenuItem>
@@ -445,17 +445,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 className={getMenuItemClasses("/dashboard")}
               >
                 {isExpanded ? (
-                  <LayoutDashboard className="h-4 w-4 mr-3" />
+                  <>
+                    <LayoutDashboard className="h-4 w-4 mr-3" />
+                    <div className="flex-1 flex justify-between items-center">
+                      <span>Dashboard</span>
+                      {soonBadge}
+                    </div>
+                  </>
                 ) : (
                   <div className="w-6 h-6 flex items-center justify-center">
                     <LayoutDashboard className="w-5 h-5" />
                   </div>
-                )}
-                {isExpanded && (
-                  <span className="flex items-center">
-                    Dashboard
-                    {soonBadge}
-                  </span>
                 )}
               </Link>
             </SidebarMenuItem>

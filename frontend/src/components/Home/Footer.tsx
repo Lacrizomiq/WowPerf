@@ -6,19 +6,8 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="relative">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/tww.png"
-          alt="Background"
-          fill
-          className="object-cover object-top brightness-[0.35]"
-          quality={100}
-        />
-      </div>
-
       {/* Content */}
-      <div className="relative z-10 bg-gradient-to-b from-transparent to-slate-900/90">
+      <div className="relative z-10">
         <div className="container mx-auto px-4 pt-20 pb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             {/* Features Section */}
