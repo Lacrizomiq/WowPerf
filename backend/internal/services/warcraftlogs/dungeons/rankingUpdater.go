@@ -19,13 +19,13 @@ import (
 )
 
 const (
-	MinimumUpdateInterval = 20 * time.Hour
+	MinimumUpdateInterval = 23 * time.Hour
 	DefaultUpdateInterval = 24 * time.Hour
 	updateLockKey         = "warcraftlogs:rankings:update:lock"
 	batchSize             = 100
 )
 
-// RankingsUpdater is responsible for updating rankings in the database
+// RankingsUpdater is responsible for updating rankings in the database and calculating daily spec metric
 type RankingsUpdater struct {
 	db           *gorm.DB
 	service      *service.WarcraftLogsClientService
@@ -319,10 +319,15 @@ func (r *RankingsUpdater) calculateDailySpecMetrics(ctx context.Context) error {
 	processingDate := time.Now().Truncate(24 * time.Hour)
 	log.Printf("Calculating spec metrics for date: %s", processingDate.Format("2006-01-02"))
 
+	// Fixed number of dungeons (always 8)
+	const totalDungeonCount = 8
+	// Number of top players to consider for averages
+	const topPlayersCount = 10
+
 	// Use a transaction to ensure integrity
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		// 1. Delete existing metrics for this date
-		if err := tx.Where("capture_date = ?", processingDate).Delete(&playerRankingModels.DailySpecMetricMythicPlus{}).Error; err != nil {
+		// 1. Delete existing metrics for this date (Hard delete to avoid problems)
+		if err := tx.Exec("DELETE FROM daily_spec_metrics_mythic_plus WHERE capture_date = ?", processingDate).Error; err != nil {
 			return fmt.Errorf("error deleting existing metrics: %w", err)
 		}
 
@@ -382,59 +387,116 @@ func (r *RankingsUpdater) calculateDailySpecMetrics(ctx context.Context) error {
 				AvgKeyLevel: dm.AvgKeyLevel,
 				MaxKeyLevel: dm.MaxKeyLevel,
 				MinKeyLevel: dm.MinKeyLevel,
-				RoleRank:    0, // Will be calculated later with the global rankings
-				OverallRank: 0, // Will be calculated later with the global rankings
+				RoleRank:    0, // Will be calculated later per dungeon
+				OverallRank: 0, // Will be calculated later per dungeon
 			})
 		}
 
-		// 3. Calculate the rankings for the dungeon metrics
-		r.calculateMetricsRankings(&metrics)
+		// 3. Calculate the rankings for the dungeon metrics (groupé par donjon)
+		r.calculateDungeonMetricsRankings(&metrics)
 
-		// 4. Calculate the global metrics
+		// 4. Calculate the global metrics based on TOP player performances
 		var globalMetrics []playerRankingModels.DailySpecMetricMythicPlus
-		specMap := make(map[string][]playerRankingModels.DailySpecMetricMythicPlus)
 
-		for _, metric := range metrics {
-			key := fmt.Sprintf("%s-%s-%s", metric.Spec, metric.Class, metric.Role)
-			specMap[key] = append(specMap[key], metric)
+		// Structure to store global scores by player
+		type PlayerGlobalScore struct {
+			Spec         string
+			Class        string
+			Role         string
+			Name         string
+			ServerName   string
+			TotalScore   float64 `gorm:"column:total_score"`
+			AvgKeyLevel  float64 `gorm:"column:avg_key_level"`
+			MaxKeyLevel  int     `gorm:"column:max_key_level"`
+			MinKeyLevel  int     `gorm:"column:min_key_level"`
+			DungeonCount int     `gorm:"column:dungeon_count"`
 		}
 
-		for key, specMetrics := range specMap {
+		var playerScores []PlayerGlobalScore
+
+		// SQL query to calculate global scores by player
+		// Filter to keep only players who have completed all 8 dungeons
+		if err := tx.Raw(`
+			SELECT 
+				spec, 
+				class, 
+				role, 
+				name,
+				server_name,
+				SUM(score) AS total_score,
+				AVG(hard_mode_level) AS avg_key_level,
+				MAX(hard_mode_level) AS max_key_level,
+				MIN(hard_mode_level) AS min_key_level,
+				COUNT(DISTINCT dungeon_id) AS dungeon_count
+			FROM player_rankings
+			WHERE server_region != 'CN'
+			GROUP BY spec, class, role, name, server_name
+			HAVING COUNT(DISTINCT dungeon_id) = 8
+		`).Scan(&playerScores).Error; err != nil {
+			return fmt.Errorf("error calculating player global scores: %w", err)
+		}
+
+		log.Printf("Calculated global scores for %d players who completed all 8 dungeons", len(playerScores))
+
+		// Group players by spec/class/role
+		specPlayerMap := make(map[string][]PlayerGlobalScore)
+		for _, ps := range playerScores {
+			key := fmt.Sprintf("%s-%s-%s", ps.Spec, ps.Class, ps.Role)
+			specPlayerMap[key] = append(specPlayerMap[key], ps)
+		}
+
+		// Calculate global metrics based on TOP 10 players of each spec
+		for key, players := range specPlayerMap {
 			parts := strings.Split(key, "-")
 			spec, class, role := parts[0], parts[1], parts[2]
 
-			var totalAvgScore, totalMaxScore, totalMinScore float64
+			// Sort players by total score (from highest to lowest)
+			sort.Slice(players, func(i, j int) bool {
+				return players[i].TotalScore > players[j].TotalScore
+			})
+
+			// Take only the top 10 (or less if not enough players)
+			topCount := topPlayersCount
+			if len(players) < topCount {
+				topCount = len(players)
+			}
+			topPlayers := players[:topCount]
+
+			// Calculate metrics based on top players
+			var totalPlayerScores float64
+			var maxPlayerScore float64 = 0
+			var minPlayerScore float64 = math.MaxFloat64
 			var totalAvgKeyLevel float64
-			var totalMaxKeyLevel, totalMinKeyLevel int
+			var maxKeyLevel int = 0
+			var minKeyLevel int = math.MaxInt32
 
-			totalMaxScore = 0
-			totalMinScore = math.MaxFloat64
-			totalMaxKeyLevel = 0
-			totalMinKeyLevel = math.MaxInt32
+			// Iterate through top players of this spec
+			for _, p := range topPlayers {
+				totalPlayerScores += p.TotalScore
+				totalAvgKeyLevel += p.AvgKeyLevel
 
-			for _, m := range specMetrics {
-				totalAvgScore += m.AvgScore
-				totalAvgKeyLevel += m.AvgKeyLevel
-
-				if m.MaxScore > totalMaxScore {
-					totalMaxScore = m.MaxScore
+				// Find the player with the highest score
+				if p.TotalScore > maxPlayerScore {
+					maxPlayerScore = p.TotalScore
 				}
 
-				if m.MinScore < totalMinScore {
-					totalMinScore = m.MinScore
+				// Find the player with the lowest score
+				if p.TotalScore < minPlayerScore {
+					minPlayerScore = p.TotalScore
 				}
 
-				if m.MaxKeyLevel > totalMaxKeyLevel {
-					totalMaxKeyLevel = m.MaxKeyLevel
+				// Find the max key level
+				if p.MaxKeyLevel > maxKeyLevel {
+					maxKeyLevel = p.MaxKeyLevel
 				}
 
-				if m.MinKeyLevel < totalMinKeyLevel {
-					totalMinKeyLevel = m.MinKeyLevel
+				// Find the min key level
+				if p.MinKeyLevel < minKeyLevel {
+					minKeyLevel = p.MinKeyLevel
 				}
 			}
 
-			numDungeons := len(specMetrics)
-			if numDungeons > 0 {
+			if topCount > 0 {
 				globalMetrics = append(globalMetrics, playerRankingModels.DailySpecMetricMythicPlus{
 					CaptureDate: processingDate,
 					Spec:        spec,
@@ -442,22 +504,22 @@ func (r *RankingsUpdater) calculateDailySpecMetrics(ctx context.Context) error {
 					Role:        role,
 					EncounterID: 0, // 0 for global metric
 					IsGlobal:    true,
-					AvgScore:    totalAvgScore / float64(numDungeons),
-					MaxScore:    totalMaxScore,
-					MinScore:    totalMinScore,
-					AvgKeyLevel: totalAvgKeyLevel / float64(numDungeons),
-					MaxKeyLevel: totalMaxKeyLevel,
-					MinKeyLevel: totalMinKeyLevel,
-					RoleRank:    0, // Will be calculated later with the global rankings
-					OverallRank: 0, // Will be calculated later with the global rankings
+					AvgScore:    totalPlayerScores / float64(topCount),
+					MaxScore:    maxPlayerScore,
+					MinScore:    minPlayerScore,
+					AvgKeyLevel: totalAvgKeyLevel / float64(topCount),
+					MaxKeyLevel: maxKeyLevel,
+					MinKeyLevel: minKeyLevel,
+					RoleRank:    0,
+					OverallRank: 0,
 				})
 			}
 		}
 
 		log.Printf("Calculated global metrics for %d specializations", len(globalMetrics))
 
-		// 5. Calculate the rankings for the global metrics
-		r.calculateMetricsRankings(&globalMetrics)
+		// 5. Calculate the rankings for the global metrics (only for global metrics)
+		r.calculateGlobalMetricsRankings(&globalMetrics)
 
 		// 6. Persist all metrics
 		allMetrics := append(metrics, globalMetrics...)
@@ -470,8 +532,52 @@ func (r *RankingsUpdater) calculateDailySpecMetrics(ctx context.Context) error {
 	})
 }
 
-// calculateMetricsRankings calculates the global and role rankings for the metrics
-func (r *RankingsUpdater) calculateMetricsRankings(metrics *[]playerRankingModels.DailySpecMetricMythicPlus) {
+// calculateDungeonMetricsRankings calculates the rankings separately for each dungeon
+func (r *RankingsUpdater) calculateDungeonMetricsRankings(metrics *[]playerRankingModels.DailySpecMetricMythicPlus) {
+	// Group metrics by dungeon
+	dungeonGroups := make(map[int][]int) // map[dungeonID][]metricIndex
+
+	for i, metric := range *metrics {
+		dungeonGroups[metric.EncounterID] = append(dungeonGroups[metric.EncounterID], i)
+	}
+
+	// For each dungeon, calculate independently the rankings
+	for _, indices := range dungeonGroups {
+		// Global ranking based on avgScore (only for this dungeon)
+		sort.Slice(indices, func(i, j int) bool {
+			return (*metrics)[indices[i]].AvgScore > (*metrics)[indices[j]].AvgScore
+		})
+
+		// Assign global rankings for this dungeon
+		for rank, idx := range indices {
+			(*metrics)[idx].OverallRank = rank + 1
+		}
+
+		// Role ranking for this dungeon
+		roleGroups := make(map[string][]int) // map[role][]metricIndex
+
+		for _, idx := range indices {
+			role := (*metrics)[idx].Role
+			roleGroups[role] = append(roleGroups[role], idx)
+		}
+
+		// For each role in this dungeon
+		for _, roleIndices := range roleGroups {
+			// Sort by avgScore
+			sort.Slice(roleIndices, func(i, j int) bool {
+				return (*metrics)[roleIndices[i]].AvgScore > (*metrics)[roleIndices[j]].AvgScore
+			})
+
+			// Assign rankings for this role and dungeon
+			for rank, idx := range roleIndices {
+				(*metrics)[idx].RoleRank = rank + 1
+			}
+		}
+	}
+}
+
+// calculateGlobalMetricsRankings calculates the rankings only for the global metrics
+func (r *RankingsUpdater) calculateGlobalMetricsRankings(metrics *[]playerRankingModels.DailySpecMetricMythicPlus) {
 	// Global ranking based on avgScore
 	sort.Slice(*metrics, func(i, j int) bool {
 		return (*metrics)[i].AvgScore > (*metrics)[j].AvgScore
@@ -489,12 +595,12 @@ func (r *RankingsUpdater) calculateMetricsRankings(metrics *[]playerRankingModel
 	}
 
 	for _, indices := range roleGroups {
-		// Sort the indices by avgScore
+		// Sort indices by avgScore
 		sort.Slice(indices, func(i, j int) bool {
 			return (*metrics)[indices[i]].AvgScore > (*metrics)[indices[j]].AvgScore
 		})
 
-		// Assign the ranks
+		// Assign rankings
 		for rank, idx := range indices {
 			(*metrics)[idx].RoleRank = rank + 1
 		}
