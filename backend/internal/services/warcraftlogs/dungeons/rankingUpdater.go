@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ const (
 	batchSize             = 100
 )
 
-// RankingsUpdater is responsible for updating the rankings in the database
+// RankingsUpdater is responsible for updating rankings in the database
 type RankingsUpdater struct {
 	db           *gorm.DB
 	service      *service.WarcraftLogsClientService
@@ -45,7 +46,7 @@ func NewRankingsUpdater(db *gorm.DB, service *service.WarcraftLogsClientService,
 func (r *RankingsUpdater) StartPeriodicUpdate(ctx context.Context) {
 	log.Println("Starting WarcraftLogs rankings periodic update...")
 
-	// Performing an initial check immediately
+	// Initial immediate check
 	log.Println("Performing initial check...")
 	if err := r.checkAndUpdate(ctx); err != nil {
 		log.Printf("Initial check error: %v", err)
@@ -100,7 +101,7 @@ func (r *RankingsUpdater) updateLastUpdateTime(ctx context.Context) error {
 
 // checkAndUpdate checks and performs the update if necessary
 func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
-	// Checking the distributed lock
+	// Distributed lock check
 	locked, err := r.cache.SetNX(ctx, updateLockKey, time.Now().String(), 1*time.Hour)
 	if err != nil {
 		return fmt.Errorf("failed to check update lock: %w", err)
@@ -110,7 +111,7 @@ func (r *RankingsUpdater) checkAndUpdate(ctx context.Context) error {
 	}
 	defer r.cache.Delete(ctx, updateLockKey)
 
-	// Getting the unique state
+	// Unique state retrieval
 	state, err := playerRankingModels.GetOrCreateRankingsUpdateState(r.db)
 	if err != nil {
 		return fmt.Errorf("failed to get rankings state: %w", err)
@@ -157,13 +158,13 @@ func (r *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		return fmt.Errorf("failed to get global rankings: %w", err)
 	}
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		// Deleting the old data
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		// Delete existing data
 		if err := tx.Exec("DELETE FROM player_rankings").Error; err != nil {
 			return fmt.Errorf("failed to delete existing rankings: %w", err)
 		}
 
-		// Preparing the new data
+		// Prepare new data
 		var newRankings []playerRankingModels.PlayerRanking
 		processRoleRankings := func(players []PlayerScore) {
 			for _, player := range players {
@@ -202,9 +203,26 @@ func (r *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		processRoleRankings(rankings.Healers.Players)
 		processRoleRankings(rankings.DPS.Players)
 
-		// Inserting the new data by batches
+		// Insert new data by batches
 		return r.insertRankingsInBatches(tx, newRankings)
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// After updating the rankings, calculate the daily spec metrics
+	log.Println("Rankings updated successfully, now calculating daily spec metrics...")
+	if err := r.calculateDailySpecMetrics(ctx); err != nil {
+		return fmt.Errorf("failed to calculate daily spec metrics: %w", err)
+	}
+
+	// Invalidate the caches
+	if err := r.invalidateCache(ctx); err != nil {
+		log.Printf("Warning: Failed to invalidate caches: %v", err)
+	}
+
+	return nil
 }
 
 // insertRankingsInBatches inserts the rankings by batches
@@ -290,6 +308,195 @@ func (r *RankingsUpdater) invalidateCache(ctx context.Context) error {
 		"global-rankings",
 		"class-rankings",
 		"spec-rankings",
+		"daily-spec-metrics", // Added to invalidate also the metrics caches
 	}
 	return r.cacheManager.InvalidateByTags(ctx, tags)
+}
+
+// calculateDailySpecMetrics calculates the daily metrics for all specializations
+func (r *RankingsUpdater) calculateDailySpecMetrics(ctx context.Context) error {
+	// Unique date for the entire processing
+	processingDate := time.Now().Truncate(24 * time.Hour)
+	log.Printf("Calculating spec metrics for date: %s", processingDate.Format("2006-01-02"))
+
+	// Use a transaction to ensure integrity
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Delete existing metrics for this date
+		if err := tx.Where("capture_date = ?", processingDate).Delete(&playerRankingModels.DailySpecMetricMythicPlus{}).Error; err != nil {
+			return fmt.Errorf("error deleting existing metrics: %w", err)
+		}
+
+		// 2. Calculate the metrics per dungeon in a single query
+		type DungeonMetric struct {
+			Spec        string
+			Class       string
+			Role        string
+			DungeonID   int     `gorm:"column:dungeon_id"`
+			AvgScore    float64 `gorm:"column:avg_score"`
+			MaxScore    float64 `gorm:"column:max_score"`
+			MinScore    float64 `gorm:"column:min_score"`
+			AvgKeyLevel float64 `gorm:"column:avg_key_level"`
+			MaxKeyLevel int     `gorm:"column:max_key_level"`
+			MinKeyLevel int     `gorm:"column:min_key_level"`
+			Count       int
+		}
+
+		var dungeonMetrics []DungeonMetric
+
+		// Optimized query with GROUP BY
+		if err := tx.Raw(`
+			SELECT 
+				spec, 
+				class, 
+				role, 
+				dungeon_id,
+				COALESCE(AVG(score), 0) AS avg_score,
+				COALESCE(MAX(score), 0) AS max_score,
+				COALESCE(MIN(score), 0) AS min_score,
+				COALESCE(AVG(hard_mode_level), 0) AS avg_key_level,
+				COALESCE(MAX(hard_mode_level), 0) AS max_key_level,
+				COALESCE(MIN(hard_mode_level), 0) AS min_key_level,
+				COUNT(*) AS count
+			FROM player_rankings
+			WHERE server_region != 'CN'
+			GROUP BY spec, class, role, dungeon_id
+		`).Scan(&dungeonMetrics).Error; err != nil {
+			return fmt.Errorf("error calculating dungeon metrics: %w", err)
+		}
+
+		log.Printf("Calculated metrics for %d dungeon+spec combinations", len(dungeonMetrics))
+
+		// Convert to DailySpecMetricMythicPlus
+		var metrics []playerRankingModels.DailySpecMetricMythicPlus
+		for _, dm := range dungeonMetrics {
+			metrics = append(metrics, playerRankingModels.DailySpecMetricMythicPlus{
+				CaptureDate: processingDate,
+				Spec:        dm.Spec,
+				Class:       dm.Class,
+				Role:        dm.Role,
+				EncounterID: dm.DungeonID,
+				IsGlobal:    false,
+				AvgScore:    dm.AvgScore,
+				MaxScore:    dm.MaxScore,
+				MinScore:    dm.MinScore,
+				AvgKeyLevel: dm.AvgKeyLevel,
+				MaxKeyLevel: dm.MaxKeyLevel,
+				MinKeyLevel: dm.MinKeyLevel,
+				RoleRank:    0, // Will be calculated later with the global rankings
+				OverallRank: 0, // Will be calculated later with the global rankings
+			})
+		}
+
+		// 3. Calculate the rankings for the dungeon metrics
+		r.calculateMetricsRankings(&metrics)
+
+		// 4. Calculate the global metrics
+		var globalMetrics []playerRankingModels.DailySpecMetricMythicPlus
+		specMap := make(map[string][]playerRankingModels.DailySpecMetricMythicPlus)
+
+		for _, metric := range metrics {
+			key := fmt.Sprintf("%s-%s-%s", metric.Spec, metric.Class, metric.Role)
+			specMap[key] = append(specMap[key], metric)
+		}
+
+		for key, specMetrics := range specMap {
+			parts := strings.Split(key, "-")
+			spec, class, role := parts[0], parts[1], parts[2]
+
+			var totalAvgScore, totalMaxScore, totalMinScore float64
+			var totalAvgKeyLevel float64
+			var totalMaxKeyLevel, totalMinKeyLevel int
+
+			totalMaxScore = 0
+			totalMinScore = math.MaxFloat64
+			totalMaxKeyLevel = 0
+			totalMinKeyLevel = math.MaxInt32
+
+			for _, m := range specMetrics {
+				totalAvgScore += m.AvgScore
+				totalAvgKeyLevel += m.AvgKeyLevel
+
+				if m.MaxScore > totalMaxScore {
+					totalMaxScore = m.MaxScore
+				}
+
+				if m.MinScore < totalMinScore {
+					totalMinScore = m.MinScore
+				}
+
+				if m.MaxKeyLevel > totalMaxKeyLevel {
+					totalMaxKeyLevel = m.MaxKeyLevel
+				}
+
+				if m.MinKeyLevel < totalMinKeyLevel {
+					totalMinKeyLevel = m.MinKeyLevel
+				}
+			}
+
+			numDungeons := len(specMetrics)
+			if numDungeons > 0 {
+				globalMetrics = append(globalMetrics, playerRankingModels.DailySpecMetricMythicPlus{
+					CaptureDate: processingDate,
+					Spec:        spec,
+					Class:       class,
+					Role:        role,
+					EncounterID: 0, // 0 for global metric
+					IsGlobal:    true,
+					AvgScore:    totalAvgScore / float64(numDungeons),
+					MaxScore:    totalMaxScore,
+					MinScore:    totalMinScore,
+					AvgKeyLevel: totalAvgKeyLevel / float64(numDungeons),
+					MaxKeyLevel: totalMaxKeyLevel,
+					MinKeyLevel: totalMinKeyLevel,
+					RoleRank:    0, // Will be calculated later with the global rankings
+					OverallRank: 0, // Will be calculated later with the global rankings
+				})
+			}
+		}
+
+		log.Printf("Calculated global metrics for %d specializations", len(globalMetrics))
+
+		// 5. Calculate the rankings for the global metrics
+		r.calculateMetricsRankings(&globalMetrics)
+
+		// 6. Persist all metrics
+		allMetrics := append(metrics, globalMetrics...)
+		if err := tx.CreateInBatches(allMetrics, 100).Error; err != nil {
+			return fmt.Errorf("error persisting metrics: %w", err)
+		}
+
+		log.Printf("Successfully stored %d metrics records", len(allMetrics))
+		return nil
+	})
+}
+
+// calculateMetricsRankings calculates the global and role rankings for the metrics
+func (r *RankingsUpdater) calculateMetricsRankings(metrics *[]playerRankingModels.DailySpecMetricMythicPlus) {
+	// Global ranking based on avgScore
+	sort.Slice(*metrics, func(i, j int) bool {
+		return (*metrics)[i].AvgScore > (*metrics)[j].AvgScore
+	})
+
+	for i := range *metrics {
+		(*metrics)[i].OverallRank = i + 1
+	}
+
+	// Role ranking
+	roleGroups := make(map[string][]int)
+
+	for i, metric := range *metrics {
+		roleGroups[metric.Role] = append(roleGroups[metric.Role], i)
+	}
+
+	for _, indices := range roleGroups {
+		// Sort the indices by avgScore
+		sort.Slice(indices, func(i, j int) bool {
+			return (*metrics)[indices[i]].AvgScore > (*metrics)[indices[j]].AvgScore
+		})
+
+		// Assign the ranks
+		for rank, idx := range indices {
+			(*metrics)[idx].RoleRank = rank + 1
+		}
+	}
 }

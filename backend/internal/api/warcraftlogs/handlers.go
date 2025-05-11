@@ -27,11 +27,12 @@ type Handler struct {
 		Ranking *character.CharacterRankingHandler
 	}
 	MythicPlus struct {
-		Dungeon     *mythicplus.DungeonLeaderboardHandler
-		Global      *mythicplus.GlobalLeaderboardHandler
-		Leaderboard *mythicplus.DungeonLeaderboardHandler
-		Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
-		Builds      *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
+		Dungeon       *mythicplus.DungeonLeaderboardHandler
+		Global        *mythicplus.GlobalLeaderboardHandler
+		Leaderboard   *mythicplus.DungeonLeaderboardHandler
+		Analysis      *mythicplus.GlobalLeaderboardAnalysisHandler
+		Builds        *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
+		SpecEvolution *mythicplus.SpecEvolutionMetricsAnalysisHandler
 	}
 	cache        cache.CacheService
 	cacheManager *middleware.CacheManager
@@ -41,6 +42,7 @@ func NewHandler(
 	globalService *leaderboard.GlobalLeaderboardService,
 	analysisService *leaderboard.GlobalLeaderboardAnalysisService,
 	buildsAnalysisService *mythicplusanalytics.BuildAnalysisService,
+	specEvolutionService *leaderboard.SpecEvolutionMetricsAnalysisService,
 	warcraftLogsService *service.WarcraftLogsClientService,
 	db *gorm.DB,
 	cache cache.CacheService,
@@ -53,17 +55,19 @@ func NewHandler(
 			Ranking: character.NewCharacterRankingHandler(warcraftLogsService),
 		},
 		MythicPlus: struct {
-			Dungeon     *mythicplus.DungeonLeaderboardHandler
-			Global      *mythicplus.GlobalLeaderboardHandler
-			Leaderboard *mythicplus.DungeonLeaderboardHandler
-			Analysis    *mythicplus.GlobalLeaderboardAnalysisHandler
-			Builds      *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
+			Dungeon       *mythicplus.DungeonLeaderboardHandler
+			Global        *mythicplus.GlobalLeaderboardHandler
+			Leaderboard   *mythicplus.DungeonLeaderboardHandler
+			Analysis      *mythicplus.GlobalLeaderboardAnalysisHandler
+			Builds        *mythicplusbuildsAnalysis.MythicPlusBuildsAnalysisHandler
+			SpecEvolution *mythicplus.SpecEvolutionMetricsAnalysisHandler
 		}{
-			Dungeon:     mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
-			Global:      mythicplus.NewGlobalLeaderboardHandler(globalService),
-			Leaderboard: mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
-			Analysis:    mythicplus.NewGlobalLeaderboardAnalysisHandler(analysisService),
-			Builds:      mythicplusbuildsAnalysis.NewMythicPlusBuildsAnalysisHandler(buildsAnalysisService),
+			Dungeon:       mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
+			Global:        mythicplus.NewGlobalLeaderboardHandler(globalService),
+			Leaderboard:   mythicplus.NewDungeonLeaderboardHandler(warcraftLogsService),
+			Analysis:      mythicplus.NewGlobalLeaderboardAnalysisHandler(analysisService),
+			Builds:        mythicplusbuildsAnalysis.NewMythicPlusBuildsAnalysisHandler(buildsAnalysisService),
+			SpecEvolution: mythicplus.NewSpecEvolutionMetricsAnalysisHandler(specEvolutionService),
 		},
 		cache:        cache,
 		cacheManager: cacheManager,
@@ -122,6 +126,37 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 				// Class spec summary
 				builds.GET("/summary", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Builds.GetClassSpecSummary)
+			}
+
+			// Evolution metrics routes
+			evolution := mythicplus.Group("/evolution")
+			{
+				// Get spec evolution metrics
+				evolution.GET("/spec", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetSpecEvolution)
+
+				// Get current ranking
+				evolution.GET("/ranking", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetCurrentRanking)
+
+				// Get latest metrics date
+				evolution.GET("/latest-date", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetLatestMetricsDate)
+
+				// Get specs for a class
+				evolution.GET("/class/specs", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetClassSpecs)
+
+				// Get all available classes
+				evolution.GET("/classes", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetAvailableClasses)
+
+				// Get specs for a role
+				evolution.GET("/role/specs", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetRoleSpecs)
+
+				// Get historical data for a spec
+				evolution.GET("/spec/history", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetSpecHistoricalData)
+
+				// Get available dungeons
+				evolution.GET("/dungeons", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetAvailableDungeons)
+
+				// Get top specs for a dungeon
+				evolution.GET("/dungeons/top-specs", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.SpecEvolution.GetTopSpecsForDungeon)
 			}
 
 			// Get the leaderboard for a specific dungeon by team

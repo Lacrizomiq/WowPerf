@@ -49,16 +49,17 @@ import (
 
 // Struct to group Services
 type AppServices struct {
-	Auth                     *auth.AuthService
-	BattleNet                *bnetAuth.BattleNetAuthService
-	User                     *userService.UserService
-	Blizzard                 *serviceBlizzard.Service
-	RaiderIO                 *serviceRaiderio.RaiderIOService
-	WarcraftLogs             *warcraftlogs.WarcraftLogsClientService
-	LeaderBoard              *warcraftLogsLeaderboard.GlobalLeaderboardService
-	LeaderboardAnalysis      *warcraftLogsLeaderboard.GlobalLeaderboardAnalysisService
-	RankingsUpdater          *warcraftLogsLeaderboard.RankingsUpdater
-	MythicPlusBuildsAnalysis *warcraftLogsMythicPlusBuildAnalysis.BuildAnalysisService
+	Auth                         *auth.AuthService
+	BattleNet                    *bnetAuth.BattleNetAuthService
+	User                         *userService.UserService
+	Blizzard                     *serviceBlizzard.Service
+	RaiderIO                     *serviceRaiderio.RaiderIOService
+	WarcraftLogs                 *warcraftlogs.WarcraftLogsClientService
+	LeaderBoard                  *warcraftLogsLeaderboard.GlobalLeaderboardService
+	LeaderboardAnalysis          *warcraftLogsLeaderboard.GlobalLeaderboardAnalysisService
+	RankingsUpdater              *warcraftLogsLeaderboard.RankingsUpdater
+	MythicPlusBuildsAnalysis     *warcraftLogsMythicPlusBuildAnalysis.BuildAnalysisService
+	SpecEvolutionMetricsAnalysis *warcraftLogsLeaderboard.SpecEvolutionMetricsAnalysisService
 }
 
 // Struct to group Handlers
@@ -140,6 +141,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	globalLeaderboardService := warcraftLogsLeaderboard.NewGlobalLeaderboardService(db)
 	globalLeaderboardAnalysisService := warcraftLogsLeaderboard.NewGlobalLeaderboardAnalysisService(db)
 	mythicPlusBuildsAnalysisService := warcraftLogsMythicPlusBuildAnalysis.NewBuildAnalysisService(db)
+	specEvolutionMetricsAnalysisService := warcraftLogsLeaderboard.NewSpecEvolutionMetricsAnalysisService(db)
 	rankingsUpdater := warcraftLogsLeaderboard.NewRankingsUpdater(
 		db,
 		warcraftLogsService,
@@ -148,16 +150,17 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	)
 
 	return &AppServices{
-		Auth:                     authService,
-		BattleNet:                battleNetService,
-		User:                     userSvc,
-		Blizzard:                 blizzardService,
-		RaiderIO:                 rioService,
-		WarcraftLogs:             warcraftLogsService,
-		LeaderBoard:              globalLeaderboardService,
-		LeaderboardAnalysis:      globalLeaderboardAnalysisService, // Add analysis service to AppServices
-		RankingsUpdater:          rankingsUpdater,
-		MythicPlusBuildsAnalysis: mythicPlusBuildsAnalysisService,
+		Auth:                         authService,
+		BattleNet:                    battleNetService,
+		User:                         userSvc,
+		Blizzard:                     blizzardService,
+		RaiderIO:                     rioService,
+		WarcraftLogs:                 warcraftLogsService,
+		LeaderBoard:                  globalLeaderboardService,
+		LeaderboardAnalysis:          globalLeaderboardAnalysisService, // Add analysis service to AppServices
+		RankingsUpdater:              rankingsUpdater,
+		MythicPlusBuildsAnalysis:     mythicPlusBuildsAnalysisService,
+		SpecEvolutionMetricsAnalysis: specEvolutionMetricsAnalysisService,
 	}, nil
 }
 
@@ -173,6 +176,7 @@ func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.C
 			services.LeaderBoard,
 			services.LeaderboardAnalysis,
 			services.MythicPlusBuildsAnalysis,
+			services.SpecEvolutionMetricsAnalysis,
 			services.WarcraftLogs,
 			db,
 			cacheService,
