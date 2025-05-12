@@ -177,9 +177,12 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 			// Get the global leaderboard by spec
 			mythicplus.GET("/global/leaderboard/spec", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Global.GetSpecLeaderboard)
 
-			// Analysis routes (moved under /mythicplus for consistency with M+ ecosystem)
+			// Analysis routes
 			// Get average global scores per spec
 			mythicplus.GET("/analysis/specs/avg-scores", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetSpecGlobalScores)
+
+			// Get average scores per spec and dungeon with optional filters
+			mythicplus.GET("/analysis/specs/dungeons/avg-scores", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetSpecDungeonScoreAverages)
 
 			// Get average global scores per class
 			mythicplus.GET("/analysis/classes/avg-scores", h.cacheManager.CacheMiddleware(routeConfig), h.MythicPlus.Analysis.GetClassGlobalScores)

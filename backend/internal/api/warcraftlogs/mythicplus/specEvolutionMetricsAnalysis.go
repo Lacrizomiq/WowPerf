@@ -266,3 +266,140 @@ func (h *SpecEvolutionMetricsAnalysisHandler) GetTopSpecsForDungeon(c *gin.Conte
 
 	c.JSON(http.StatusOK, results)
 }
+
+/*
+
+List of endpoints:
+
+
+1. GetSpecEvolution
+
+GET /warcraftlogs/mythicplus/evolution/spec
+
+Parameters:
+- spec: string, mandatory, name of the spec
+- class: string, optional, name of the class
+- period: int, optional, 7 or 30
+- dungeon_id: int, optional, id of the dungeon
+- date: string, optional, date in the format YYYY-MM-DD
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/spec?spec=Restoration&class=Druid&period=7&dungeon_id=12648&date=2025-05-11
+
+2. GetCurrentRanking
+
+GET /warcraftlogs/mythicplus/evolution/ranking
+
+Parameters:
+- role: string, optional, name of the role
+- date: string, optional, date in the format YYYY-MM-DD
+- is_global: boolean, optional, true or false
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/ranking?role=dps&date=2025-05-11&is_global=true
+
+3. GetLatestMetricsDate
+
+GET /warcraftlogs/mythicplus/evolution/latest-date
+
+Parameters:
+- None
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/latest-date
+
+4. GetClassSpecs
+
+GET /warcraftlogs/mythicplus/evolution/class/specs
+
+Parameters:
+- class: string, mandatory, name of the class
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/class/specs?class=Druid
+
+5. GetAvailableClasses
+
+GET /warcraftlogs/mythicplus/evolution/classes
+
+Parameters:
+- None
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/classes
+
+6. GetRoleSpecs
+
+GET /warcraftlogs/mythicplus/evolution/role/specs
+
+Parameters:
+- role: string, mandatory, name of the role (dps, tank, healer)
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/role/specs?role=dps
+
+7. GetSpecHistoricalData
+
+GET /warcraftlogs/mythicplus/evolution/spec/history
+
+Parameters:
+- spec: string, mandatory, name of the spec
+- class: string, optional, name of the class
+- days: int, optional, number of days to get data for
+- is_global: boolean, optional, true or false
+- dungeon_id: int, optional, id of the dungeon
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/spec/history?spec=Restoration&class=Druid&days=30&is_global=true&dungeon_id=12648
+
+8. GetAvailableDungeons
+
+GET /warcraftlogs/mythicplus/evolution/dungeons
+
+Parameters:
+- None
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/dungeons
+
+9. GetTopSpecsForDungeon
+
+GET /warcraftlogs/mythicplus/evolution/dungeons/top-specs
+
+Parameters:
+- dungeon_id: int, mandatory, id of the dungeon
+- limit: int, optional, number of specs to get
+
+Example :
+GET /warcraftlogs/mythicplus/evolution/dungeons/top-specs?dungeon_id=12648&limit=10
+
+
+*/
+
+/*
+
+Use cases:
+
+1. Follow the spec evolution for Restoration Druid
+
+# Get the global evolution over 7 days
+GET /warcraftlogs/mythicplus/evolution/spec?spec=Restoration&class=Druid&period=7
+
+# Get the evolution over a specific dungeon
+GET /warcraftlogs/mythicplus/evolution/spec?spec=Restoration&class=Druid&period=7&dungeon_id=12648
+
+# Get the complete history over 30 days
+GET /warcraftlogs/mythicplus/evolution/spec/history?spec=Restoration&class=Druid&days=30
+
+2. Analyse performance over time per role
+
+# Get the DPS ranking
+GET /warcraftlogs/mythicplus/evolution/ranking?role=dps
+
+# List all DPS specs
+GET /warcraftlogs/mythicplus/evolution/role/specs?role=dps
+
+# Get the top specs for a specific dungeon
+GET /warcraftlogs/mythicplus/evolution/dungeons/top-specs?dungeon_id=61594&limit=10
+
+*/
