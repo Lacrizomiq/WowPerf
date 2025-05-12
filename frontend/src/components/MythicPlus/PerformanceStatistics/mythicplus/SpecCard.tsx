@@ -59,7 +59,7 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
   // Maximum data - to implement
 
   return (
-    <Link href={`/mythic-plus/analysis/${specSlug}`}>
+    <Link href={`/performance-analysis/mythic-plus/${specSlug}`}>
       <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 hover:border-purple-700/50 transition-all hover:shadow-md cursor-pointer">
         <div className="flex items-start gap-4">
           {/* Left section - Rank and Icon */}
@@ -133,11 +133,10 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
               </div>
 
               <div>
-                <div className="text-xs text-slate-400 mb-0.5">
-                  Max Score{" "}
-                  <Badge className="ml-2 bg-purple-600 text-[10px]">Soon</Badge>
+                <div className="text-xs text-slate-400 mb-0.5">Max Score </div>
+                <div className="text-sm font-medium">
+                  {specData.max_global_score}
                 </div>
-                <div className="text-sm font-medium"></div>
               </div>
             </div>
           </div>

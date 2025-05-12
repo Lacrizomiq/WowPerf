@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	MinimumUpdateInterval = 23 * time.Hour
+	MinimumUpdateInterval = 20 * time.Hour
 	DefaultUpdateInterval = 24 * time.Hour
 	updateLockKey         = "warcraftlogs:rankings:update:lock"
 	batchSize             = 100
