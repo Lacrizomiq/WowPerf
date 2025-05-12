@@ -2,6 +2,7 @@
 
 -- View 1 : spec_dungeon_max_key_levels (Updated)
 -- This view calculates the maximum key level for each spec, excluding CN players
+DROP VIEW IF EXISTS spec_dungeon_max_key_levels;
 CREATE OR REPLACE VIEW spec_dungeon_max_key_levels AS
 SELECT 
     pr.class,
@@ -19,6 +20,7 @@ ORDER BY pr.class, pr.spec, max(pr.hard_mode_level) DESC;
 
 -- View 2 : spec_global_score_averages (Updated)
 -- This view calculates the average, max, min, and total score for each spec, excluding CN players
+DROP VIEW IF EXISTS spec_global_score_averages;
 CREATE OR REPLACE VIEW spec_global_score_averages AS
 WITH specplayerscores AS (
     SELECT 
@@ -74,6 +76,7 @@ ORDER BY specaverages.avg_global_score DESC;
 
 -- View 3 : spec_dungeon_score_averages (New view)
 -- This view calculates the average, max, min, and total score for each spec for each dungeon, excluding CN players
+DROP VIEW IF EXISTS spec_dungeon_score_averages;
 CREATE OR REPLACE VIEW spec_dungeon_score_averages AS
 WITH dungeon_player_scores AS (
     SELECT 
