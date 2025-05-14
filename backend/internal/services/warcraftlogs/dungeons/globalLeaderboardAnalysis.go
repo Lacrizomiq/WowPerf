@@ -21,7 +21,10 @@ func NewGlobalLeaderboardAnalysisService(db *gorm.DB) *GlobalLeaderboardAnalysis
 type SpecGlobalScore struct {
 	Class          string  `json:"class"`
 	Spec           string  `json:"spec"`
+	Slug           string  `json:"slug"`
 	AvgGlobalScore float64 `json:"avg_global_score"`
+	MaxGlobalScore float64 `json:"max_global_score"`
+	MinGlobalScore float64 `json:"min_global_score"`
 	PlayerCount    int     `json:"player_count"`
 	Role           string  `json:"role"`
 	OverallRank    int     `json:"overall_rank"`
@@ -29,11 +32,54 @@ type SpecGlobalScore struct {
 }
 
 // GetSpecGlobalScores retrieves the average global score per spec from the spec_global_score_averages view
+// It excludes CN players
 func (s *GlobalLeaderboardAnalysisService) GetSpecGlobalScores(ctx context.Context) ([]SpecGlobalScore, error) {
 	var results []SpecGlobalScore
 	err := s.db.WithContext(ctx).Raw("SELECT * FROM spec_global_score_averages").Scan(&results).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get spec global scores: %w", err)
+	}
+	return results, nil
+}
+
+// SpecDungeonScoreAverage represents the average score for a spec per dungeon from the view
+type SpecDungeonScoreAverage struct {
+	Class           string  `json:"class"`
+	Spec            string  `json:"spec"`
+	Slug            string  `json:"slug"`
+	EncounterID     int64   `json:"encounter_id"`
+	AvgDungeonScore float64 `json:"avg_dungeon_score"`
+	MaxScore        float64 `json:"max_score"`
+	MinScore        float64 `json:"min_score"`
+	PlayerCount     int     `json:"player_count"`
+	Role            string  `json:"role"`
+	OverallRank     int     `json:"overall_rank"`
+	RoleRank        int     `json:"role_rank"`
+}
+
+// GetSpecDungeonScoreAverages retrieves the average score for a spec per dungeon from the spec_dungeon_score_averages view
+// It excludes CN players
+func (s *GlobalLeaderboardAnalysisService) GetSpecDungeonScoreAverages(ctx context.Context, class, spec string, encounterID int64) ([]SpecDungeonScoreAverage, error) {
+	var results []SpecDungeonScoreAverage
+	query := "SELECT * FROM spec_dungeon_score_averages WHERE 1=1"
+	args := []interface{}{}
+
+	if class != "" {
+		query += " AND class = ?"
+		args = append(args, class)
+	}
+	if spec != "" {
+		query += " AND spec = ?"
+		args = append(args, spec)
+	}
+	if encounterID > 0 {
+		query += " AND encounter_id = ?"
+		args = append(args, encounterID)
+	}
+
+	err := s.db.WithContext(ctx).Raw(query, args...).Scan(&results).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get spec dungeon score averages: %w", err)
 	}
 	return results, nil
 }
@@ -61,6 +107,7 @@ type SpecDungeonMaxKeyLevel struct {
 	Spec        string `json:"spec"`
 	DungeonName string `json:"dungeon_name"`
 	DungeonSlug string `json:"dungeon_slug"`
+	EncounterID int64  `json:"encounter_id"`
 	MaxKeyLevel int    `json:"max_key_level"`
 }
 

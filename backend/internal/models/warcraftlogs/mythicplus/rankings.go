@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PlayerRanking représente un classement de joueur dans un donjon
+// PlayerRanking represents a player ranking in a dungeon
 type PlayerRanking struct {
 	gorm.Model
 	DungeonID     int     `json:"dungeon_id" gorm:"index"`
@@ -20,22 +20,22 @@ type PlayerRanking struct {
 	Duration      int64   `json:"duration"`
 	StartTime     int64   `json:"start_time"`
 
-	// Informations du rapport
+	// Report information
 	ReportCode      string `json:"report_code"`
 	ReportFightID   int    `json:"report_fight_id"`
 	ReportStartTime int64  `json:"report_start_time"`
 
-	// Informations de la guilde
+	// Guild information
 	GuildID      int    `json:"guild_id"`
 	GuildName    string `json:"guild_name"`
 	GuildFaction int    `json:"guild_faction"`
 
-	// Informations du serveur
+	// Server information
 	ServerID     int    `json:"server_id"`
 	ServerName   string `json:"server_name"`
 	ServerRegion string `json:"server_region"`
 
-	// Autres informations
+	// Other information
 	BracketData int       `json:"bracket_data"`
 	Faction     int       `json:"faction"`
 	Affixes     []int     `json:"affixes" gorm:"type:integer[]"`

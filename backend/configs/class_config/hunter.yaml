@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Hunter"
+    spec_name: "BeastMastery"
+  - class_name: "Hunter"
+    spec_name: "Marksmanship"
+  - class_name: "Hunter"
+    spec_name: "Survival"

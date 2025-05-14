@@ -37,6 +37,25 @@ type ReportsWorkflowResult struct {
 	CompletedAt       time.Time `json:"completed_at"`       // Timestamp when the workflow completed
 }
 
+// BuildsBatchParams contains the parameters for the builds batch child workflow
+type BuildsBatchParams struct {
+	Reports               []*warcraftlogsBuilds.Report `json:"reports"`                  // Reports to process
+	BatchID               string                       `json:"batch_id"`                 // Batch ID for tracking
+	ParentWorkflowStateID string                       `json:"parent_workflow_state_id"` // ID of the parent workflow state
+}
+
+// BuildsBatchResult contains the result of the processing of a batch of builds
+type BuildsBatchResult struct {
+	StartedAt         time.Time        `json:"started_at"`           // Timestamp when the workflow started
+	CompletedAt       time.Time        `json:"completed_at"`         // Timestamp when the workflow completed
+	BatchID           string           `json:"batch_id"`             // Batch ID for tracking
+	ReportsProcessed  int32            `json:"reports_processed"`    // Number of reports processed
+	BuildsProcessed   int32            `json:"builds_processed"`     // Number of builds processed
+	BuildsByClassSpec map[string]int32 `json:"builds_by_class_spec"` // Builds by class+spec
+	Status            string           `json:"status"`               // Status (completed, failed)
+	Error             string           `json:"error"`                // Error message if failure
+}
+
 // BuildsWorkflowResult holds the results of the builds workflow
 type BuildsWorkflowResult struct {
 	BuildsProcessed   int32            `json:"builds_processed"`     // Number of builds processed

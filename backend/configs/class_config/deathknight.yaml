@@ -1,0 +1,7 @@
+specs:
+  - class_name: "DeathKnight"
+    spec_name: "Blood"
+  - class_name: "DeathKnight"
+    spec_name: "Frost"
+  - class_name: "DeathKnight"
+    spec_name: "Unholy"

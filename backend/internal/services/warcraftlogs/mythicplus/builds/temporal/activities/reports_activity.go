@@ -317,9 +317,11 @@ func (a *ReportsActivity) GetUniqueReportReferences(ctx context.Context) ([]*war
 }
 
 // GetRankingsNeedingReportProcessing retrieves the rankings that need report processing
-func (a *ReportsActivity) GetRankingsNeedingReportProcessing(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
+// It also filters by class if a class is provided
+func (a *ReportsActivity) GetRankingsNeedingReportProcessing(ctx context.Context, className string, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Getting rankings needing report processing",
+		"className", className,
 		"limit", limit,
 		"maxAge", maxAgeDuration)
 
@@ -328,7 +330,7 @@ func (a *ReportsActivity) GetRankingsNeedingReportProcessing(ctx context.Context
 		return nil, fmt.Errorf("internal error: rankingsRepository not injected")
 	}
 
-	rankings, err := a.rankingsRepository.GetRankingsNeedingReportProcessing(ctx, int(limit), maxAgeDuration)
+	rankings, err := a.rankingsRepository.GetRankingsNeedingReportProcessing(ctx, className, int(limit), maxAgeDuration)
 
 	if err != nil {
 		logger.Error("Failed to get rankings needing report processing from repository", "error", err)

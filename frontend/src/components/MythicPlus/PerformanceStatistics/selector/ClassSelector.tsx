@@ -57,7 +57,7 @@ const ClassSelector: React.FC<ClassSelectorProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="w-[200px] h-9 px-3 bg-gradient-blue text-left text-white rounded-lg flex items-center justify-between"
+        className="w-[200px] h-9 px-3 bg-slate-800 text-white border border-slate-700 rounded-md flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -83,9 +83,9 @@ const ClassSelector: React.FC<ClassSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-[200px] bg-black border border-gray-700 rounded-lg shadow-lg">
+        <div className="absolute z-50 mt-1 w-[200px] bg-slate-900 border border-slate-700 rounded-md shadow-lg">
           <div
-            className="p-2 hover:bg-gradient-purple cursor-pointer flex items-center gap-2"
+            className="p-2 hover:bg-slate-800 cursor-pointer flex items-center gap-2"
             onClick={() => handleClassClick(null)}
           >
             <span className="w-6"></span>
@@ -95,7 +95,7 @@ const ClassSelector: React.FC<ClassSelectorProps> = ({
           {availableClasses.map((className) => (
             <div
               key={className}
-              className="p-2 hover:bg-gray-800 cursor-pointer flex items-center gap-2"
+              className="p-2 hover:bg-slate-800 cursor-pointer flex items-center gap-2"
               onClick={() => handleClassClick(className)}
             >
               <Image

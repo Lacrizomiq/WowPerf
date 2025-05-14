@@ -33,10 +33,11 @@ const (
 	MarkReportsForBuildProcessingActivity      = "MarkReportsForBuildProcessing"      // Mark reports for build processing
 
 	// Player builds activities
-	ProcessBuildsActivity                    = "ProcessAllBuilds"                 // Process all builds
-	CountPlayerBuildsActivity                = "CountPlayerBuilds"                // Count player builds
-	GetReportsNeedingBuildExtractionActivity = "GetReportsNeedingBuildExtraction" // Get reports needing build extraction
-	MarkReportsAsProcessedForBuildsActivity  = "MarkReportsAsProcessedForBuilds"  // Mark reports as processed for builds
+	ProcessBuildsActivity                      = "ProcessAllBuilds"                   // Process all builds
+	CountPlayerBuildsActivity                  = "CountPlayerBuilds"                  // Count player builds
+	GetReportsNeedingBuildExtractionActivity   = "GetReportsNeedingBuildExtraction"   // Get reports needing build extraction
+	MarkReportsAsProcessedForBuildsActivity    = "MarkReportsAsProcessedForBuilds"    // Mark reports as processed for builds
+	CountReportsNeedingBuildExtractionActivity = "CountReportsNeedingBuildExtraction" // Count reports needing build extraction
 
 	// Rate limit activities
 	ReserveRateLimitPointsActivity = "ReservePoints"        // Reserve rate limit points
@@ -64,6 +65,9 @@ const (
 	AnalyzeTalentsWorkflowName        = "AnalyzeTalentsWorkflow"        // Analyze talents workflow
 	AnalyzeStatStatisticsWorkflowName = "AnalyzeStatStatisticsWorkflow" // Analyze statistics workflow
 
+	// Builds Child Workflow
+	ProcessBuildsBatchWorkflow = "ProcessBuildsBatchWorkflow" // Child workflow for processing a batch of builds
+
 	// == Legacy workflows ==
 	SyncWorkflowName = "SyncWorkflow" // Sync workflow
 )
@@ -86,7 +90,7 @@ type ReportsActivity interface {
 	GetReportsBatch(ctx context.Context, batchSize int32, offset int32) ([]*warcraftlogsBuilds.Report, error)
 	CountAllReports(ctx context.Context) (int64, error)
 	GetUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error)
-	GetRankingsNeedingReportProcessing(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error)
+	GetRankingsNeedingReportProcessing(ctx context.Context, className string, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error)
 	MarkReportsForBuildProcessing(ctx context.Context, reportCodes []string, batchID string) error
 }
 
@@ -94,8 +98,9 @@ type ReportsActivity interface {
 type PlayerBuildsActivity interface {
 	ProcessAllBuilds(ctx context.Context, reports []*warcraftlogsBuilds.Report) (*models.BatchResult, error)
 	CountPlayerBuilds(ctx context.Context) (int64, error)
-	GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error)
+	GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, offset int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error)
 	MarkReportsAsProcessedForBuilds(ctx context.Context, reportCodes []string, batchID string) error
+	CountReportsNeedingBuildExtraction(ctx context.Context, maxAgeDuration time.Duration) (int64, error)
 }
 
 // RateLimitActivity defines the interface for rate limiting operations

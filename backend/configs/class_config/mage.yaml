@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Mage"
+    spec_name: "Arcane"
+  - class_name: "Mage"
+    spec_name: "Fire"
+  - class_name: "Mage"
+    spec_name: "Frost"
