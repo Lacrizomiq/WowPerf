@@ -37,12 +37,12 @@ const DungeonCard: React.FC<DungeonCardProps> = ({
             <div className="text-xl font-bold text-purple-400">+{keyLevel}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-400 mb-1">Avg Score</div>
-            <div className="text-lg font-medium">{score}</div>
-          </div>
-          <div>
             <div className="text-xs text-slate-400 mb-1">Max Score</div>
             <div className="text-lg font-medium">{maxScore}</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Avg Score</div>
+            <div className="text-lg font-medium">{score}</div>
           </div>
         </div>
       </div>

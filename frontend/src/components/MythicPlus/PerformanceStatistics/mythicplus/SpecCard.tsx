@@ -124,7 +124,9 @@ export default function SpecCard({ specData, selectedRole }: SpecCardProps) {
               <div>
                 <div className="text-xs text-slate-400 mb-0.5">
                   Weekly Evolution{" "}
-                  <Badge className="ml-2 bg-purple-600 text-[10px]">Soon</Badge>
+                  <Badge className="ml-2 mt-2 bg-purple-600 text-[10px]">
+                    Soon
+                  </Badge>
                 </div>
                 <div className="flex items-center h-7">
                   {/* Left intentionally empty until we have the data */}

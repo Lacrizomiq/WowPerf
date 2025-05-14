@@ -77,7 +77,7 @@ const SpecHeader: React.FC<SpecHeaderProps> = ({
           {/* Key Summary Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:ml-auto mt-2 md:mt-0">
             <StatCard
-              title="Current Score"
+              title="Average Score"
               value={Math.round(
                 currentSpecData.avg_global_score
               ).toLocaleString()}
