@@ -9,6 +9,7 @@ import {
 } from "../types/warcraftlogs/globalLeaderboard";
 import {
   SpecAverageGlobalScore,
+  SpecDungeonScoreAverage,
   BestTenPlayerPerSpec,
   MaxKeyLevelsPerSpecAndDungeon,
   DungeonMedia,
@@ -157,6 +158,29 @@ export const getSpecAverageGlobalScore = async () => {
     return data;
   } catch (error) {
     console.error("Error fetching the average global score for a spec");
+    throw error;
+  }
+};
+
+// getSpecDungeonScoreAverages get the average scores per spec and dungeon with optional filters
+export const getSpecDungeonScoreAverages = async (
+  className?: string,
+  spec?: string,
+  encounterId?: number
+) => {
+  try {
+    const params: any = {};
+    if (className) params.class = className;
+    if (spec) params.spec = spec;
+    if (encounterId) params.encounter_id = encounterId;
+
+    const { data } = await api.get<SpecDungeonScoreAverage[]>(
+      "/warcraftlogs/mythicplus/analysis/specs/dungeons/avg-scores",
+      { params }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error fetching spec dungeon score averages:", error);
     throw error;
   }
 };

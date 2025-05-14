@@ -1,6 +1,7 @@
 package WarcraftLogsMythicPlusBuildsAnalysis
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,7 +26,7 @@ func NewMythicPlusBuildsAnalysisHandler(analysisService *service.BuildAnalysisSe
 // GetPopularItemsBySlot returns the most popular items for each slot for a specific class and spec
 // @Summary Get popular items by slot
 // @Description Returns the most popular items for each slot for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -43,6 +44,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetPopularItemsBySlot(c *gin.Context) 
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
 		return
 	}
+
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
 
 	var encounterID *int
 	if encIDStr := c.Query("encounter_id"); encIDStr != "" {
@@ -66,7 +69,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetPopularItemsBySlot(c *gin.Context) 
 // GetGlobalPopularItemsBySlot returns the most popular items for each slot across all encounters
 // @Summary Get global popular items by slot
 // @Description Returns the most popular items for each slot across all encounters
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -84,6 +87,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetGlobalPopularItemsBySlot(c *gin.Con
 		return
 	}
 
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
+
 	items, err := h.MythicPlusBuildsAnalysisService.GetGlobalPopularItemsBySlot(c.Request.Context(), class, spec)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -96,7 +101,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetGlobalPopularItemsBySlot(c *gin.Con
 // GetEnchantUsage returns enchant usage statistics for a specific class and spec
 // @Summary Get enchant usage
 // @Description Returns enchant usage statistics for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -126,7 +131,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetEnchantUsage(c *gin.Context) {
 // GetGemUsage returns gem usage statistics for a specific class and spec
 // @Summary Get gem usage
 // @Description Returns gem usage statistics for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -156,7 +161,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetGemUsage(c *gin.Context) {
 // GetTopTalentBuilds returns the top talent builds for a specific class and spec
 // @Summary Get top talent builds
 // @Description Returns the top talent builds for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -168,6 +173,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetGemUsage(c *gin.Context) {
 func (h *MythicPlusBuildsAnalysisHandler) GetTopTalentBuilds(c *gin.Context) {
 	class := normalizeWoWTerms(c.Query("class"))
 	spec := normalizeWoWTerms(c.Query("spec"))
+
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
 
 	if class == "" || spec == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "class and spec parameters are required"})
@@ -186,7 +193,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetTopTalentBuilds(c *gin.Context) {
 // GetTalentBuildsByDungeon returns talent build statistics per dungeon for a specific class and spec
 // @Summary Get talent builds by dungeon
 // @Description Returns talent build statistics per dungeon for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -204,6 +211,8 @@ func (h *MythicPlusBuildsAnalysisHandler) GetTalentBuildsByDungeon(c *gin.Contex
 		return
 	}
 
+	log.Printf("DEBUG: Handler will use class='%s' spec='%s'", class, spec)
+
 	talents, err := h.MythicPlusBuildsAnalysisService.GetTalentBuildsByDungeon(c.Request.Context(), class, spec)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -216,7 +225,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetTalentBuildsByDungeon(c *gin.Contex
 // GetStatPriorities returns stat priority statistics for a specific class and spec
 // @Summary Get stat priorities
 // @Description Returns stat priority statistics for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -246,7 +255,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetStatPriorities(c *gin.Context) {
 // GetOptimalBuild returns the optimal build for a specific class and spec
 // @Summary Get optimal build
 // @Description Returns the optimal build for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -276,7 +285,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetOptimalBuild(c *gin.Context) {
 // GetSpecComparison returns comparison statistics for all specs of a class
 // @Summary Get spec comparison
 // @Description Returns comparison statistics for all specs of a class
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -304,7 +313,7 @@ func (h *MythicPlusBuildsAnalysisHandler) GetSpecComparison(c *gin.Context) {
 // GetClassSpecSummary returns summary statistics for a specific class and spec
 // @Summary Get class spec summary
 // @Description Returns summary statistics for a specific class and spec
-// @Tags builds, analysis
+// @Tags Mythic+ Builds Analysis
 // @Accept json
 // @Produce json
 // @Param class query string true "Class name"
@@ -332,8 +341,28 @@ func (h *MythicPlusBuildsAnalysisHandler) GetClassSpecSummary(c *gin.Context) {
 }
 
 func normalizeWoWTerms(term string) string {
+	// Special cases for composed names
+	term = strings.ToLower(term)
+
+	// Handle formats with dashes like "death-knight" → "deathknight"
+	term = strings.ReplaceAll(term, "-", "")
+
+	// Special cases for classes
+	if term == "deathknight" {
+		return "DeathKnight"
+	}
+	if term == "demonhunter" {
+		return "DemonHunter"
+	}
+
+	// Special cases for specs
+	if term == "beastmastery" {
+		return "BeastMastery"
+	}
+
+	// For other cases, use the current method
 	caser := cases.Title(language.English)
-	return caser.String(strings.ToLower(term))
+	return caser.String(term)
 }
 
 /*

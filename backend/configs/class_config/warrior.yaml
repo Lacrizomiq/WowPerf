@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Warrior"
+    spec_name: "Arms"
+  - class_name: "Warrior"
+    spec_name: "Fury"
+  - class_name: "Warrior"
+    spec_name: "Protection"

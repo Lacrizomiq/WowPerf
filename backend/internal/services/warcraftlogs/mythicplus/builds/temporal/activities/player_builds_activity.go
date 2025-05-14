@@ -394,13 +394,16 @@ func (a *PlayerBuildsActivity) CountPlayerBuilds(ctx context.Context) (int64, er
 }
 
 // GetReportsNeedingBuildExtraction retrieves reports that need build extraction
-func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error) {
+// This function is used to get reports that need build extraction
+// It takes a limit and an offset to paginate through the reports
+// It also takes a maxAge to only get reports that are older than the maxAge
+func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Context, limit int32, offset int32, maxAgeDuration time.Duration) ([]*warcraftlogsBuilds.Report, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Getting reports needing build extraction", "limit", limit)
+	logger.Info("Getting reports needing build extraction", "limit", limit, "offset", offset)
 
 	// If maxAgeDuration is 0, set a default (e.g., 10 days)
 	if maxAgeDuration == 0 {
-		maxAgeDuration = 10 * 24 * time.Hour // 10 days
+		maxAgeDuration = 10 * 24 * time.Hour
 		logger.Info("Using default maxAge", "maxAge", maxAgeDuration)
 	}
 
@@ -409,13 +412,13 @@ func (a *PlayerBuildsActivity) GetReportsNeedingBuildExtraction(ctx context.Cont
 		return nil, fmt.Errorf("internal error: reportRepository not injected")
 	}
 
-	reports, err := a.reportsRepository.GetReportsNeedingBuildExtraction(ctx, int(limit), maxAgeDuration)
+	reports, err := a.reportsRepository.GetReportsNeedingBuildExtraction(ctx, int(limit), int(offset), maxAgeDuration)
 	if err != nil {
 		logger.Error("Failed to get reports needing build extraction from repository", "error", err)
 		return nil, err
 	}
 
-	logger.Info("Retrieved reports needing build extraction", "count", len(reports))
+	logger.Info("Retrieved reports needing build extraction", "count", len(reports), "offset", offset)
 	return reports, nil
 }
 
@@ -447,4 +450,28 @@ func (a *PlayerBuildsActivity) MarkReportsAsProcessedForBuilds(ctx context.Conte
 
 	logger.Info("Successfully marked reports as processed for builds", "count", len(identifiers))
 	return nil
+}
+
+// CountReportsNeedingBuildExtraction counts the total number of reports to process
+func (a *PlayerBuildsActivity) CountReportsNeedingBuildExtraction(ctx context.Context, maxAgeDuration time.Duration) (int64, error) {
+	logger := activity.GetLogger(ctx)
+	logger.Info("Counting reports needing build extraction")
+
+	if maxAgeDuration == 0 {
+		maxAgeDuration = 10 * 24 * time.Hour // 10 days by default
+	}
+
+	if a.reportsRepository == nil {
+		logger.Error("ReportRepository is not initialized in PlayerBuildsActivity")
+		return 0, fmt.Errorf("internal error: reportRepository not injected")
+	}
+
+	count, err := a.reportsRepository.CountReportsNeedingBuildExtraction(ctx, maxAgeDuration)
+	if err != nil {
+		logger.Error("Failed to count reports needing build extraction", "error", err)
+		return 0, err
+	}
+
+	logger.Info("Counted reports needing build extraction", "count", count)
+	return count, nil
 }

@@ -28,6 +28,12 @@ type ReportsWorkflow interface {
 	Execute(ctx workflow.Context, params models.ReportsWorkflowParams) (*models.ReportsWorkflowResult, error)
 }
 
+// BuildsBatchWorkflow defines the interface for the builds batch processing workflow
+// It processes a specific batch of reports to extract player builds
+type BuildsBatchWorkflow interface {
+	Execute(ctx workflow.Context, params models.BuildsBatchParams) (*models.BuildsBatchResult, error)
+}
+
 // BuildsWorkflow defines the interface for the builds extraction workflow
 // It manages the extraction of player builds from combat reports and their storage.
 type BuildsWorkflow interface {

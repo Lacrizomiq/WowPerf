@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Warlock"
+    spec_name: "Affliction"
+  - class_name: "Warlock"
+    spec_name: "Demonology"
+  - class_name: "Warlock"
+    spec_name: "Destruction"

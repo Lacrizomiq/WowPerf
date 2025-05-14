@@ -62,9 +62,14 @@ func main() {
 	}
 	defer temporalClient.Close()
 
+	config, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
+	if err != nil {
+		logger.Fatalf("Failed to load config: %v", err)
+	}
+
 	// Initialize repositories and activities (no changes needed)
 	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
+	rankingsRepo := rankingsRepository.NewRankingsRepository(db, int(config.Rankings.MaxRankingsPerSpec))
 	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
 	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
 	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)
@@ -195,31 +200,43 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	// Register workflows (New workflows, will be used soon)
 	rankingsWorkflowImpl := rankingsWorkflow.NewRankingsWorkflow()
 	reportsWorkflowImpl := reportsWorkflow.NewReportsWorkflow()
+	buildsBatchWorkflowImpl := buildsWorkflow.NewBuildsBatchWorkflow()
 	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
 	equipmentAnalysisWorkflowImpl := equipmentAnalysisWorkflow.NewEquipmentAnalysisWorkflow()
 	talentAnalysisWorkflowImpl := talentAnalysisWorkflow.NewTalentAnalysisWorkflow()
 	statAnalysisWorkflowImpl := statAnalysisWorkflow.NewStatAnalysisWorkflow()
 
+	// Register rankings workflow
 	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.RankingsWorkflowName, // Doit correspondre exactement au nom utilisé dans le scheduler
+		Name: definitions.RankingsWorkflowName,
 	})
 
+	// Register reports workflow
 	w.RegisterWorkflowWithOptions(reportsWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.ReportsWorkflowName,
 	})
 
+	// Register builds batch workflow
+	w.RegisterWorkflowWithOptions(buildsBatchWorkflowImpl.Execute, workflow.RegisterOptions{
+		Name: definitions.ProcessBuildsBatchWorkflow,
+	})
+
+	// Register builds workflow
 	w.RegisterWorkflowWithOptions(buildsWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.BuildsWorkflowName,
 	})
 
+	// Register equipment analysis workflow
 	w.RegisterWorkflowWithOptions(equipmentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeBuildsWorkflowName,
 	})
 
+	// Register talent analysis workflow
 	w.RegisterWorkflowWithOptions(talentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeTalentsWorkflowName,
 	})
 
+	// Register stat analysis workflow
 	w.RegisterWorkflowWithOptions(statAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
 		Name: definitions.AnalyzeStatStatisticsWorkflowName,
 	})
@@ -242,6 +259,7 @@ func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activiti
 	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
 	w.RegisterActivity(activitiesService.PlayerBuilds.GetReportsNeedingBuildExtraction)
 	w.RegisterActivity(activitiesService.PlayerBuilds.MarkReportsAsProcessedForBuilds)
+	w.RegisterActivity(activitiesService.PlayerBuilds.CountReportsNeedingBuildExtraction)
 
 	// Register rate limit activities
 	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)

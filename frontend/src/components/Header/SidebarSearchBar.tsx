@@ -1,10 +1,32 @@
+// components/SidebarSearchBar.tsx
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Search, ChevronDown, ChevronUp, Loader2, CircleX } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // shadcn/ui Alert
+import { Input } from "@/components/ui/input"; // shadcn/ui Input
+import { Button } from "@/components/ui/button"; // shadcn/ui Button
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // shadcn/ui Select
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  AlertCircle,
+} from "lucide-react"; // AlertCircle for the error icon
 import { useSearchBlizzardCharacter } from "@/hooks/useBlizzardApi";
 import { eu, us, tw, kr } from "@/data/realms";
-import { SidebarMenuButton, SidebarMenuSub } from "@/components/ui/sidebar";
+import {
+  SidebarMenuItem, // Imported to use as a wrapper if needed, or removed if not
+  SidebarMenuButton,
+  SidebarMenuSub,
+} from "@/components/ui/sidebar"; // Your existing sidebar components
 
 interface Realm {
   id: number;
@@ -14,15 +36,11 @@ interface Realm {
 
 interface SidebarSearchBarProps {
   isExpanded: boolean;
-  searchOpen: boolean;
-  setSearchOpen: (open: boolean) => void;
 }
 
-const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
-  isExpanded,
-  searchOpen,
-  setSearchOpen,
-}) => {
+// Note : searchOpen et setSearchOpen are removed from the props here,
+// because AppSidebar will handle the opening of this panel directly.
+const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({ isExpanded }) => {
   const router = useRouter();
   const [region, setRegion] = useState<string>("");
   const [realm, setRealm] = useState<string>("");
@@ -64,30 +82,34 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setIsSubmitting(true);
 
     if (!region || !realm || !character) {
-      setError("Please fill in all fields");
-      setIsSubmitting(false);
+      setError("Please fill in all fields.");
       return;
     }
-
+    setIsSubmitting(true);
     try {
       const result = await checkCharacter();
-      if (result.error) {
-        throw new Error("Character not found");
+      // The error checking of react-query is often via result.isError or result.error
+      if (result.isError || result.error) {
+        // Adapt this to the return structure of your hook
+        throw new Error(
+          result.error?.message || "Character not found or API error."
+        );
       }
+      // If checkCharacter() throws an exception in case of error, the catch will handle it.
+      // Otherwise, explicitly check result.data or a success indicator.
 
       router.push(
         `/character/${region.toLowerCase()}/${realm.toLowerCase()}/${character.toLowerCase()}`
       );
-      setSearchOpen(false);
+      // The closing of the panel (formerly setSearchOpen(false)) will be handled by AppSidebar
       resetForm();
     } catch (err) {
       if (err instanceof Error) {
-        setError("Character not found.");
+        setError(err.message || "Character not found.");
       } else {
-        setError("An error occurred while searching. Please try again.");
+        setError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -101,95 +123,83 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
     setError(null);
   };
 
+  // The button to open/close the search will be in AppSidebar.
+  // This component will only render the form itself.
+  // It will be displayed conditionally by AppSidebar.
+
   return (
-    <>
-      <SidebarMenuButton onClick={() => setSearchOpen(!searchOpen)}>
-        <div
-          className={`flex items-center w-full mb-2 ${
-            isExpanded ? "w-full" : "justify-center"
-          }`}
+    <div className="p-3 space-y-3">
+      {" "}
+      {/* Padding and spacing for the form */}
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <Select value={region} onValueChange={(value) => setRegion(value)}>
+          <SelectTrigger className="w-full bg-[color:var(--input)]">
+            <SelectValue placeholder="Select Region" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="eu">EU</SelectItem>
+            <SelectItem value="us">US</SelectItem>
+            <SelectItem value="kr">KR</SelectItem>
+            <SelectItem value="tw">TW</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={realm}
+          onValueChange={(value) => setRealm(value)}
+          disabled={!region}
         >
-          <Search className={isExpanded ? "mr-4" : ""} />
-          {isExpanded && (
+          <SelectTrigger className="w-full bg-[color:var(--input)]">
+            <SelectValue placeholder="Select Realm" />
+          </SelectTrigger>
+          <SelectContent>
+            {realms.map((r) => (
+              <SelectItem key={r.id} value={r.slug}>
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="text"
+          placeholder="Character Name"
+          value={character}
+          onChange={(e) => setCharacter(e.target.value)}
+          className="bg-[color:var(--input)]"
+        />
+
+        {error && (
+          <Alert
+            variant="destructive"
+            className="bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)]"
+          >
+            <AlertCircle className="h-4 w-4" />{" "}
+            {/* Icon for the destructive alert of shadcn/ui */}
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button
+          type="submit"
+          disabled={isSubmitting || !region || !realm || !character}
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90" // Main button style
+        >
+          {isSubmitting ? (
             <>
-              <span>Search</span>
-              {searchOpen ? (
-                <ChevronUp className="ml-auto" />
-              ) : (
-                <ChevronDown className="ml-auto" />
-              )}
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="mr-2 h-4 w-4" />
+              Search
             </>
           )}
-        </div>
-      </SidebarMenuButton>
-
-      {isExpanded && searchOpen && (
-        <SidebarMenuSub>
-          <form onSubmit={handleSubmit} className="px-4 py-4">
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-            >
-              <option value="">Select Region</option>
-              <option value="eu">EU</option>
-              <option value="us">US</option>
-              <option value="kr">KR</option>
-              <option value="tw">TW</option>
-            </select>
-
-            <select
-              value={realm}
-              onChange={(e) => setRealm(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-              disabled={!region}
-            >
-              <option value="">Select Realm</option>
-              {realms.map((realm) => (
-                <option key={realm.id} value={realm.slug}>
-                  {realm.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              placeholder="Character Name"
-              value={character}
-              onChange={(e) => setCharacter(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-            />
-
-            {error && (
-              <Alert
-                variant="destructive"
-                className="mb-2 text-red-500 flex items-center"
-              >
-                <AlertTitle>
-                  <CircleX className="size-4 text-red-500 mr-2" />
-                </AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || !region || !realm || !character}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                "Search"
-              )}
-            </button>
-          </form>
-        </SidebarMenuSub>
-      )}
-    </>
+        </Button>
+      </form>
+    </div>
   );
 };
 

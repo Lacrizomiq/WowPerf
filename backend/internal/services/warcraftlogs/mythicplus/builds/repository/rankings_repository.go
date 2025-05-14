@@ -13,12 +13,14 @@ import (
 )
 
 type RankingsRepository struct {
-	db *gorm.DB
+	db                 *gorm.DB
+	maxRankingsPerSpec int
 }
 
-func NewRankingsRepository(db *gorm.DB) *RankingsRepository {
+func NewRankingsRepository(db *gorm.DB, maxRankingsPerSpec int) *RankingsRepository {
 	return &RankingsRepository{
-		db: db,
+		db:                 db,
+		maxRankingsPerSpec: maxRankingsPerSpec,
 	}
 }
 
@@ -52,8 +54,8 @@ func (r *RankingsRepository) StoreRankings(ctx context.Context, encounterID uint
 	className := newRankings[0].Class
 	specName := newRankings[0].Spec
 
-	if len(newRankings) > 150 {
-		return fmt.Errorf("too many rankings provided: got %d, maximum allowed is 150", len(newRankings))
+	if len(newRankings) > r.maxRankingsPerSpec {
+		return fmt.Errorf("too many rankings provided: got %d, maximum allowed is %d", len(newRankings), r.maxRankingsPerSpec)
 	}
 
 	log.Printf("[INFO] Storing rankings for encounter %d, class %s, spec %s: %d new rankings to process",
@@ -119,9 +121,9 @@ func (r *RankingsRepository) StoreRankings(ctx context.Context, encounterID uint
 		log.Printf("[INFO] Rankings update completed for encounter %d: %d total rankings stored",
 			encounterID, finalCount)
 
-		if finalCount > 150 {
-			return fmt.Errorf("too many rankings after update for encounter %d: got %d, maximum allowed is 150",
-				encounterID, finalCount)
+		if finalCount > int64(r.maxRankingsPerSpec) {
+			return fmt.Errorf("too many rankings after update for encounter %d: got %d, maximum allowed is %d",
+				encounterID, finalCount, r.maxRankingsPerSpec)
 		}
 
 		return nil
@@ -195,14 +197,22 @@ func (r *RankingsRepository) MarkRankingsAsProcessedForReports(ctx context.Conte
 }
 
 // GetRankingsNeedingReportProcessing retrieves the rankings that need report processing
-func (r *RankingsRepository) GetRankingsNeedingReportProcessing(ctx context.Context, limit int, maxAge time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
+// It retrieves the rankings that need report processing and are older than the max age
+// It also filters by class if a class is provided
+func (r *RankingsRepository) GetRankingsNeedingReportProcessing(ctx context.Context, className string, limit int, maxAge time.Duration) ([]*warcraftlogsBuilds.ClassRanking, error) {
 	var rankings []*warcraftlogsBuilds.ClassRanking
 	minDate := time.Now().Add(-maxAge)
 
-	result := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Where("(report_processing_status = ? OR (report_processing_status = ? AND report_processing_at < ?)) AND created_at > ?",
-			"pending", "failed", minDate, minDate).
-		Order("created_at DESC").
+			"pending", "failed", minDate, minDate)
+
+	// Add the class filter
+	if className != "" {
+		query = query.Where("class = ?", className)
+	}
+
+	result := query.Order("created_at DESC").
 		Limit(limit).
 		Find(&rankings)
 

@@ -270,15 +270,19 @@ func (r *ReportRepository) MarkReportsForBuildProcessing(ctx context.Context, id
 }
 
 // GetReportsNeedingBuildExtraction retrieves reports that need build extraction
-func (r *ReportRepository) GetReportsNeedingBuildExtraction(ctx context.Context, limit int, maxAge time.Duration) ([]*warcraftlogsBuilds.Report, error) {
+// This function is used to get reports that need build extraction
+// It takes a limit and an offset to paginate through the reports
+// It also takes a maxAge to only get reports that are older than the maxAge
+func (r *ReportRepository) GetReportsNeedingBuildExtraction(ctx context.Context, limit int, offset int, maxAge time.Duration) ([]*warcraftlogsBuilds.Report, error) {
 	var reports []*warcraftlogsBuilds.Report
 	minDate := time.Now().Add(-maxAge)
 
 	result := r.db.WithContext(ctx).
 		Where("(build_extraction_status = ? OR (build_extraction_status = ? AND build_extraction_at < ?)) AND created_at > ?",
 			"pending", "failed", minDate, minDate).
-		Order("created_at ASC").
+		Order("created_at ASC, code ASC, fight_id ASC").
 		Limit(limit).
+		Offset(offset).
 		Find(&reports)
 
 	if result.Error != nil {
@@ -318,4 +322,21 @@ func (r *ReportRepository) MarkReportsAsProcessedForBuilds(ctx context.Context, 
 		}
 		return nil
 	})
+}
+
+// CountReportsNeedingBuildExtraction counts the total number of reports that need build extraction
+func (r *ReportRepository) CountReportsNeedingBuildExtraction(ctx context.Context, maxAge time.Duration) (int64, error) {
+	var count int64
+	minDate := time.Now().Add(-maxAge)
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.Report{}).
+		Where("(build_extraction_status = ? OR (build_extraction_status = ? AND build_extraction_at < ?)) AND created_at > ?",
+			"pending", "failed", minDate, minDate).
+		Count(&count)
+
+	if result.Error != nil {
+		return 0, fmt.Errorf("failed to count reports needing build extraction: %w", result.Error)
+	}
+	return count, nil
 }
