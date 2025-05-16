@@ -36,6 +36,14 @@ export default function Statistics() {
           />
 
           <FeatureCard
+            icon={<Settings className="h-10 w-10 text-purple-500" />}
+            title="Find Your Optimal Character Build"
+            description="Discover the most effective talent builds, gear setups, and stat priorities for your class and spec."
+            link="/builds"
+            linkText="Builds"
+          />
+
+          <FeatureCard
             icon={<PieChart className="h-10 w-10 text-purple-500" />}
             title="Uncover Trends & Statistics"
             description="Stay ahead of the meta with weekly trends and statistics."
@@ -45,18 +53,10 @@ export default function Statistics() {
 
           <FeatureCard
             icon={<Trophy className="h-10 w-10 text-purple-500" />}
-            title="Study the Anatomy of Top Runs"
-            description="Learn from the best by examining the gear, talents, and composition of top-ranking players."
-            link="/best-runs"
-            linkText="Best Runs"
-          />
-
-          <FeatureCard
-            icon={<Settings className="h-10 w-10 text-purple-500" />}
-            title="Find Your Optimal Character Build"
-            description="Discover the most effective talent builds, gear setups, and stat priorities for your class and spec."
-            link="/builds"
-            linkText="Builds"
+            title="Study the Anatomy of Leaderboards"
+            description="Learn from the best by examining the top-ranking players."
+            link="/leaderboards"
+            linkText="Leaderboards"
           />
 
           <FeatureCard

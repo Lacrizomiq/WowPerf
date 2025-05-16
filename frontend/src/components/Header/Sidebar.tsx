@@ -374,6 +374,19 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             </SidebarMenuItem>
 
             <SidebarMenuItem>
+              <Link href="/builds" className={getMenuItemClasses("/builds")}>
+                {isExpanded ? (
+                  <ListChecks className="h-4 w-4 mr-3" />
+                ) : (
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    <ListChecks className="w-5 h-5" />
+                  </div>
+                )}
+                {isExpanded && <span>Builds</span>}
+              </Link>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
               <Link
                 href="/statistics"
                 className={getMenuItemClasses("/statistics")}
@@ -391,8 +404,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
             <SidebarMenuItem>
               <Link
-                href="/best-runs"
-                className={getMenuItemClasses("/best-runs")}
+                href="/leaderboards"
+                className={getMenuItemClasses("/leaderboards")}
               >
                 {isExpanded ? (
                   <Trophy className="h-4 w-4 mr-3" />
@@ -401,20 +414,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     <Trophy className="w-5 h-5" />
                   </div>
                 )}
-                {isExpanded && <span>Best Runs</span>}
-              </Link>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <Link href="/builds" className={getMenuItemClasses("/builds")}>
-                {isExpanded ? (
-                  <ListChecks className="h-4 w-4 mr-3" />
-                ) : (
-                  <div className="w-6 h-6 flex items-center justify-center">
-                    <ListChecks className="w-5 h-5" />
-                  </div>
-                )}
-                {isExpanded && <span>Builds</span>}
+                {isExpanded && <span>Leaderboards</span>}
               </Link>
             </SidebarMenuItem>
 

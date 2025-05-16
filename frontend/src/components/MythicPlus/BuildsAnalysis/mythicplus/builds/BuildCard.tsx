@@ -1,3 +1,4 @@
+// BuildCard.tsx - Version mise à jour avec les couleurs harmonisées
 "use client";
 
 import { useState } from "react";
@@ -32,7 +33,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
   const displaySpecName = formatDisplaySpecName(spec);
 
   return (
-    <div className="bg-slate-900 rounded-lg overflow-hidden border border-slate-800">
+    <div className="bg-slate-800/30 rounded-lg border border-slate-700 overflow-hidden">
       <div className="p-6">
         {/* Header section with title and stats */}
         <div className="flex flex-col md:flex-row justify-between mb-6">
@@ -50,7 +51,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
           {/* Stats and Buttons */}
           <div className="flex flex-wrap gap-4 items-start justify-end">
             {/* Average Key */}
-            <div className="bg-slate-800 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
+            <div className="bg-slate-800/50 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
               <div className="text-2xl font-bold text-white">
                 +{Math.round(build.avg_keystone_level)}
               </div>
@@ -60,7 +61,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
             </div>
 
             {/* Talent Popularity */}
-            <div className="bg-slate-800 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
+            <div className="bg-slate-800/50 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
               <div className="text-2xl font-bold text-white">
                 {Math.round(build.avg_usage_percentage)}%
               </div>
@@ -76,7 +77,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
                 className={`w-full h-[48px] rounded-md transition-colors flex items-center justify-center ${
                   isCopied
                     ? "bg-green-600 text-white"
-                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    : "bg-purple-600 hover:bg-purple-700 text-white"
                 }`}
               >
                 {isCopied ? (
@@ -93,8 +94,8 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
               </button>
 
               <Link
-                href={`/mythic-plus/builds/${className}/${spec}/talents`}
-                className="w-full h-[48px] bg-slate-800 hover:bg-slate-700 text-white rounded-md flex items-center justify-center"
+                href={`/builds/mythic-plus/${className}/${spec}/talents`}
+                className="w-full h-[48px] bg-slate-800/50 hover:bg-slate-700 text-white rounded-md flex items-center justify-center"
               >
                 View More
               </Link>
@@ -103,7 +104,7 @@ export default function BuildCard({ build, className, spec }: BuildCardProps) {
         </div>
 
         {/* Talents iframe - displayed directly */}
-        <div className="bg-black bg-opacity-30 rounded-lg p-2 border border-gray-600 shadow-xl">
+        <div className="bg-black bg-opacity-30 rounded-lg p-2 border border-slate-700 shadow-xl">
           <iframe
             src={`https://www.raidbots.com/simbot/render/talents/${build.talent_import}?width=1000&level=80`}
             width="100%"

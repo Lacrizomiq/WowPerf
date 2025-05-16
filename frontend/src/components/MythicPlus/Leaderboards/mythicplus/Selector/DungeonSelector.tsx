@@ -1,3 +1,4 @@
+// DungeonSelector.tsx - Version harmonisée
 import React from "react";
 import {
   Select,
@@ -22,11 +23,15 @@ const DungeonSelector: React.FC<DungeonSelectorProps> = ({
 }) => {
   return (
     <Select onValueChange={onDungeonChange} value={selectedDungeon}>
-      <SelectTrigger className="w-[200px] bg-gradient-blue shadow-2xl text-white border-none">
+      <SelectTrigger className="w-[200px] bg-slate-800/50 text-white border-slate-700 focus:ring-purple-600">
         <SelectValue placeholder="Select a dungeon" />
       </SelectTrigger>
-      <SelectContent className="bg-black text-white">
-        <SelectItem key="all" value="all" className="hover:bg-gradient-purple">
+      <SelectContent className="bg-slate-900 border-slate-700 text-white">
+        <SelectItem
+          key="all"
+          value="all"
+          className="hover:bg-slate-800 focus:bg-purple-600"
+        >
           All Dungeons
         </SelectItem>
         {dungeons.map((dungeon) => {
@@ -34,7 +39,7 @@ const DungeonSelector: React.FC<DungeonSelectorProps> = ({
             <SelectItem
               key={dungeon.Slug}
               value={dungeon.Slug}
-              className="hover:bg-gradient-purple mr-16"
+              className="hover:bg-slate-800 focus:bg-purple-600"
             >
               <div className="flex items-center gap-2">
                 <Image
@@ -42,6 +47,7 @@ const DungeonSelector: React.FC<DungeonSelectorProps> = ({
                   alt={dungeon.Name}
                   width={30}
                   height={30}
+                  unoptimized
                 />
                 {dungeon.Name}
               </div>

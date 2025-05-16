@@ -1,3 +1,4 @@
+// RunsDetailsGear.tsx - Version réajustée avec fond plus sombre
 import React from "react";
 import Image from "next/image";
 import { EquippedItem } from "@/types/runsDetails";
@@ -49,15 +50,15 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
   };
 
   return (
-    <div className="flex flex-row gap-2 mt-4 mb-4 justify-center items-center border-2 rounded-xl border-gray-600 p-2 bg-black bg-opacity-30">
-      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-gray-600">
+    <div className="flex flex-row gap-2 mt-4 mb-4 justify-center items-center rounded-lg border border-slate-800 p-4 bg-[#1a1c25]">
+      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-slate-800 rounded-md overflow-hidden">
         {gearOrder.slice(0, 8).map((slot) => {
           const item = items[slot];
           if (!item) return null;
           return (
             <div
               key={slot}
-              className="flex items-center space-x-2 border border-gray-600"
+              className="flex items-center space-x-2 border-b last:border-b-0 border-slate-800 p-1 hover:bg-slate-900"
             >
               <a
                 href={`https://www.wowhead.com/item=${item.item_id}`}
@@ -68,7 +69,7 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
                   alt={item.name}
                   width={32}
                   height={32}
-                  className="rounded-md border border-gray-600"
+                  className="rounded-md border border-slate-800"
                 />
               </a>
               <span
@@ -82,14 +83,14 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
           );
         })}
       </div>
-      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-gray-600">
+      <div className="mt-4 flex flex-wrap flex-col mb-4 border border-slate-800 rounded-md overflow-hidden">
         {gearOrder.slice(8, 16).map((slot) => {
           const item = items[slot];
           if (!item) return null;
           return (
             <div
               key={slot}
-              className="flex items-center space-x-2 border border-gray-600 "
+              className="flex items-center space-x-2 border-b last:border-b-0 border-slate-800 p-1 hover:bg-slate-900"
             >
               <a
                 href={`https://www.wowhead.com/item=${item.item_id}`}
@@ -100,7 +101,7 @@ const RunsDetailsGear: React.FC<RunsDetailsGearProps> = ({ items }) => {
                   alt={item.name}
                   width={32}
                   height={32}
-                  className="rounded-md border border-gray-600"
+                  className="rounded-md border border-slate-800"
                 />
               </a>
               <span

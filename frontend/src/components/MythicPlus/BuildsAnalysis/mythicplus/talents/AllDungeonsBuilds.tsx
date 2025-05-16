@@ -1,3 +1,4 @@
+// AllDungeonsBuilds.tsx - Version harmonisée
 "use client";
 
 import { useGetTopTalentBuilds } from "@/hooks/useBuildsAnalysisApi";
@@ -27,7 +28,7 @@ export default function AllDungeonsBuilds({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -49,7 +50,7 @@ export default function AllDungeonsBuilds({
   // No data state
   if (!buildsData || buildsData.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">No builds available yet.</p>
       </div>
     );

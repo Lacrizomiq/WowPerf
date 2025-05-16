@@ -1,3 +1,4 @@
+// RunsCard.tsx - Version harmonisée
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useGetRaiderioMythicPlusBestRuns } from "@/hooks/useRaiderioApi";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
@@ -96,16 +97,24 @@ const RunsCard: React.FC<RunsCardProps> = ({
   };
 
   if (isLoading)
-    return <div className="text-white text-center p-4">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+      </div>
+    );
   if (error)
     return (
-      <div className="text-red-500 text-center p-4">
-        Error: {(error as Error).message}
+      <div className="bg-red-900/20 border border-red-500 rounded-md p-4 my-4">
+        <h3 className="text-red-500 text-lg font-medium">
+          Error: {(error as Error).message}
+        </h3>
       </div>
     );
   if (!mythicPlusData || !mythicPlusData.rankings)
     return (
-      <div className="text-yellow-500 text-center p-4">No data available</div>
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
+        <p className="text-slate-400">No data available</p>
+      </div>
     );
 
   return (
@@ -122,36 +131,38 @@ const RunsCard: React.FC<RunsCardProps> = ({
             ref={(el) => {
               cardRefs.current[ranking.run.keystone_run_id] = el;
             }}
-            className="bg-deep-blue bg-opacity-80 rounded-2xl overflow-hidden shadow-2xl glow-effect"
+            className="bg-slate-800/30 rounded-lg border border-slate-700 overflow-hidden"
           >
-            <div className="flex">
-              <div className="w-1/3 relative">
-                <Image
-                  src={dungeonInfo?.MediaURL || "/placeholder.jpg"}
-                  alt={ranking.run.dungeon.name}
-                  layout="fill"
-                  objectFit="cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center">
-                  <h2 className="text-white text-xl font-bold mb-2">
-                    {ranking.run.dungeon.name}
-                  </h2>
-                  <div className="flex items-center">
-                    <span className="text-white text-4xl font-bold">
-                      +{ranking.run.mythic_level}
-                    </span>
-                    <div className="ml-2">
-                      {[...Array(ranking.run.num_chests)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="inline-block text-yellow-400 w-6 h-6"
-                        />
-                      ))}
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-1/3 relative">
+                <div className="aspect-w-16 aspect-h-9 md:h-full">
+                  <Image
+                    src={dungeonInfo?.MediaURL || "/placeholder.jpg"}
+                    alt={ranking.run.dungeon.name}
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center">
+                    <h2 className="text-white text-xl font-bold mb-2">
+                      {ranking.run.dungeon.name}
+                    </h2>
+                    <div className="flex items-center">
+                      <span className="text-white text-4xl font-bold">
+                        +{ranking.run.mythic_level}
+                      </span>
+                      <div className="ml-2">
+                        {[...Array(ranking.run.num_chests)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="inline-block text-yellow-400 w-6 h-6"
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="w-2/3 p-4 flex flex-col justify-between">
+              <div className="w-full md:w-2/3 p-4 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <p className="text-white text-2xl font-bold">
@@ -166,7 +177,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
                           isSelected ? null : ranking.run.keystone_run_id
                         )
                       }
-                      className="text-blue-500 hover:text-blue-400 font-semibold flex items-center"
+                      className="text-purple-500 hover:text-purple-400 font-semibold flex items-center"
                     >
                       {isSelected ? (
                         <>
@@ -185,7 +196,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
                   </p>
                   <p className="text-white text-sm mb-2">
                     Completed at:{" "}
-                    {new Date(ranking.run.completed_at).toUTCString()}
+                    {new Date(ranking.run.completed_at).toLocaleString()}
                   </p>
                   <p className="text-white mb-4">
                     Affixes:{" "}
@@ -198,11 +209,11 @@ const RunsCard: React.FC<RunsCardProps> = ({
                   <h3 className="text-white font-semibold mb-2">
                     Team Composition:
                   </h3>
-                  <div className="flex justify-between">
+                  <div className="flex flex-wrap justify-between">
                     {sortedRoster.map((member: RosterMember) => (
                       <div
                         key={member.character.id}
-                        className="text-center mb-2"
+                        className="text-center mb-2 px-2"
                       >
                         <div
                           className={`w-12 h-12 mx-auto rounded-full bg-${member.character.class.slug} flex items-center justify-center relative`}
@@ -239,7 +250,7 @@ const RunsCard: React.FC<RunsCardProps> = ({
               </div>
             </div>
             {isSelected && (
-              <div className="border-t border-gray-600  pt-4">
+              <div className="border-t border-slate-700 pt-4">
                 <RunsDetails
                   season={season}
                   runId={ranking.run.keystone_run_id}

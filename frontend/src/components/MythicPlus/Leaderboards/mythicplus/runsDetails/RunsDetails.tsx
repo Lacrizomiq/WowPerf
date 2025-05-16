@@ -1,3 +1,4 @@
+// RunsDetails.tsx - Version réajustée avec fond plus sombre
 import React, { useEffect } from "react";
 import { MythicPlusRun, Roster } from "@/types/runsDetails";
 import { useGetRaiderioMythicPlusRunDetails } from "@/hooks/useRaiderioApi";
@@ -27,24 +28,30 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
   }, [runDetails]);
 
   if (isLoading)
-    return <div className="text-white text-center p-4">Loading details...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+      </div>
+    );
   if (error)
     return (
-      <div className="text-red-500 text-center p-4">
-        Error: {(error as Error).message}
+      <div className="bg-slate-800/30 border border-red-500 rounded-md p-4 my-4">
+        <h3 className="text-red-500 text-lg font-medium">
+          Error: {(error as Error).message}
+        </h3>
       </div>
     );
   if (!runDetails)
     return (
-      <div className="text-yellow-500 text-center p-4">
-        No details available
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
+        <p className="text-slate-400">No details available</p>
       </div>
     );
 
   return (
-    <div className="p-4 bg-deep-blue-light rounded-lg">
+    <div className="px-4 pb-4 bg-slate-800/30">
       <h3 className="text-2xl font-bold mb-4 text-white">Run Details</h3>
-      <p className="text-gray-200 text-sm mb-4">
+      <p className="text-slate-400 text-sm mb-4">
         Here you can see the details of the mythic plus run, including the gear,
         talents and score of each player during that key.
       </p>
@@ -52,7 +59,7 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
         {runDetails.roster.map((member: Roster) => (
           <div
             key={member.character.id}
-            className="bg-deep-blue-lighter rounded-lg p-4 bg-black bg-opacity-30 shadow-2xl"
+            className="bg-slate-800/40 rounded-lg p-4 border border-slate-700 shadow-lg"
           >
             <div className="flex items-center mb-2 justify-between">
               <div>
@@ -84,17 +91,17 @@ const RunsDetails: React.FC<RunsDetailsProps> = ({ season, runId }) => {
               </div>
             </div>
             <details className="mt-2">
-              <summary className="cursor-pointer text-white">
+              <summary className="cursor-pointer text-white hover:text-purple-400 transition-colors">
                 Equipment Details
               </summary>
               <RunsDetailsGear items={member.items.items} />
             </details>
 
             <details className="mt-4">
-              <summary className="cursor-pointer text-white">
+              <summary className="cursor-pointer text-white hover:text-purple-400 transition-colors">
                 Talents Details
               </summary>
-              <div className="mt-2 bg-black bg-opacity-30 rounded-lg p-2 border-2 border-gray-600 shadow-xl">
+              <div className="mt-2 bg-[#1a1c25] rounded-lg p-2 border border-slate-800 shadow-lg">
                 <iframe
                   src={`https://www.raidbots.com/simbot/render/talents/${member.character.talentLoadout.loadoutText}?width=900&level=80`}
                   width="100%"

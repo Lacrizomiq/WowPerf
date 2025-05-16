@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/enchants-gems/BestGemsOverview.tsx
+// BestGemsOverview.tsx - Version harmonisée
 "use client";
 
 import Image from "next/image";
@@ -17,7 +17,7 @@ const getGemCombinationKey = (gem: GemUsage): string => {
 export default function BestGemsOverview({ gemsData }: BestGemsOverviewProps) {
   if (!gemsData || gemsData.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">No gem data available.</p>
       </div>
     );
@@ -90,10 +90,10 @@ export default function BestGemsOverview({ gemsData }: BestGemsOverviewProps) {
         return (
           <div
             key={combination.key}
-            className="bg-slate-800/80 rounded-lg overflow-hidden border border-slate-700"
+            className="bg-slate-800/30 rounded-lg overflow-hidden border border-slate-700"
           >
             {/* Card Header - Styled like enchants header */}
-            <div className="bg-slate-700/80 px-3 py-2">
+            <div className="bg-slate-800/50 px-3 py-2">
               <h3 className="text-white font-medium text-base">
                 {combination.gemsCount}{" "}
                 {combination.gemsCount === 1 ? "Gem" : "Gems"}

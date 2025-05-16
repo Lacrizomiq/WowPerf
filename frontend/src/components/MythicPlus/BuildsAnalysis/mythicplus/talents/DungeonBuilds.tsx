@@ -1,3 +1,4 @@
+// DungeonBuilds.tsx - Version harmonisée
 "use client";
 
 import { useGetTalentBuildsByDungeon } from "@/hooks/useBuildsAnalysisApi";
@@ -30,7 +31,7 @@ export default function DungeonBuilds({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -52,7 +53,7 @@ export default function DungeonBuilds({
   // No data state
   if (!dungeonBuildsData || dungeonBuildsData.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">
           No builds available for this dungeon yet.
         </p>
@@ -68,7 +69,7 @@ export default function DungeonBuilds({
   // If no matching builds found
   if (matchingBuilds.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">
           No builds available for the selected dungeon.
         </p>

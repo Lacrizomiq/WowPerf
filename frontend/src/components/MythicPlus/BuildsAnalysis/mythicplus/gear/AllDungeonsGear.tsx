@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/gear/AllDungeonsGear.tsx
+// AllDungeonsGear.tsx - Version harmonisée
 "use client";
 
 import { useEffect } from "react";
@@ -67,7 +67,7 @@ export default function AllDungeonsGear({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function AllDungeonsGear({
 
   if (!itemsData || itemsData.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">No gear data available.</p>
       </div>
     );
@@ -128,7 +128,7 @@ export default function AllDungeonsGear({
           <h2 className="text-2xl font-bold text-white">{title}</h2>
 
           {/* Slot filter with better UX */}
-          <div className="inline-flex items-center bg-slate-900 rounded-lg border border-slate-600 hover:border-indigo-400 transition-colors duration-150 px-3 py-2 shadow-sm">
+          <div className="inline-flex items-center bg-slate-800/50 rounded-lg border border-slate-700 hover:border-purple-400 transition-colors duration-150 px-3 py-2 shadow-sm">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -136,7 +136,7 @@ export default function AllDungeonsGear({
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              className="text-indigo-400 mr-2"
+              className="text-purple-400 mr-2"
             >
               <path
                 strokeLinecap="round"
@@ -145,12 +145,12 @@ export default function AllDungeonsGear({
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
             </svg>
-            <span className="text-indigo-300 mr-3 whitespace-nowrap font-medium">
+            <span className="text-purple-300 mr-3 whitespace-nowrap font-medium">
               Item Slot:
             </span>
             <div className="relative">
               <select
-                className="appearance-none bg-slate-800 hover:bg-slate-700 text-white pl-3 pr-8 py-1 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer transition-colors duration-150"
+                className="appearance-none bg-slate-800/70 hover:bg-slate-700 text-white pl-3 pr-8 py-1 rounded focus:ring-2 focus:ring-purple-500 focus:outline-none cursor-pointer transition-colors duration-150"
                 value={selectedSlotId?.toString() || "all"}
                 onChange={handleSlotChange}
                 aria-label="Select item slot to filter"
@@ -163,7 +163,7 @@ export default function AllDungeonsGear({
                 ))}
               </select>
               {/* Custom dropdown arrow */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-indigo-300">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
                 <svg
                   className="fill-current h-4 w-4"
                   xmlns="http://www.w3.org/2000/svg"

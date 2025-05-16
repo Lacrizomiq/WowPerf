@@ -1,3 +1,4 @@
+// MythicBestRuns.tsx - Version harmonisée
 import React, { useState, useEffect } from "react";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import RunsCard from "./RunsCard";
@@ -28,15 +29,15 @@ const MythicPlusBestRuns: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-black">
+    <div className="relative w-full h-full">
       <div className="relative z-10 h-full overflow-auto">
         <div className="relative z-10 h-full overflow-auto">
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="max-w-7xl mx-auto">
             <h2 className="text-2xl font-bold text-white mb-6">
               Mythic+ Best Runs Leaderboard for TWW Season 1
             </h2>
 
-            <div className="flex space-x-4 mb-6">
+            <div className="flex flex-wrap gap-3 mb-6">
               <RegionSelector
                 regions={["US", "EU", "TW", "KR", "CN"]}
                 onRegionChange={setRegion}

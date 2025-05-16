@@ -393,6 +393,17 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
               </button>
 
               <button
+                onClick={() => handleNavigation("/builds")}
+                className={getMenuItemClasses("/builds")}
+              >
+                <span className="flex items-center">
+                  <ListChecks className="h-5 w-5 mr-3" />
+                  Builds
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </button>
+
+              <button
                 onClick={() => handleNavigation("/statistics")}
                 className={getMenuItemClasses("/statistics")}
               >
@@ -404,23 +415,12 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
               </button>
 
               <button
-                onClick={() => handleNavigation("/best-runs")}
-                className={getMenuItemClasses("/best-runs")}
+                onClick={() => handleNavigation("/leaderboards")}
+                className={getMenuItemClasses("/leaderboards")}
               >
                 <span className="flex items-center">
                   <Trophy className="h-5 w-5 mr-3" />
-                  Best Runs
-                </span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </button>
-
-              <button
-                onClick={() => handleNavigation("/builds")}
-                className={getMenuItemClasses("/builds")}
-              >
-                <span className="flex items-center">
-                  <ListChecks className="h-5 w-5 mr-3" />
-                  Builds
+                  Leaderboards
                 </span>
                 <ChevronRight className="h-4 w-4 text-slate-400" />
               </button>

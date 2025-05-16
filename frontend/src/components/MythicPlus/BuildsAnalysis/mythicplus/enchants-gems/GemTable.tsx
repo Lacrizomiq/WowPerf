@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/enchants-gems/GemTable.tsx
+// GemTable.tsx - Version harmonisée
 "use client";
 
 import Image from "next/image";
@@ -20,10 +20,10 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
   const totalCount = sortedGems.reduce((acc, gem) => acc + gem.usage_count, 0);
 
   return (
-    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-900">
+    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-800/30">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[400px]">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800/50">
             <tr>
               <th className="py-2 px-3 text-left text-sm font-semibold text-white">
                 {slotName} Gems
@@ -45,7 +45,7 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                   key={`${gem.item_slot}-${gem.gem_ids_array.join("-")}-${
                     gem.rank
                   }`}
-                  className="hover:bg-slate-800"
+                  className="hover:bg-slate-800/70"
                 >
                   <td className="py-2 px-3">
                     <div className="flex items-center">
@@ -58,7 +58,7 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                             data-wowhead={`item=${gemId}`}
                             className="block"
                           >
-                            <div className="w-8 h-8 border border-slate-600 rounded-full overflow-hidden bg-slate-800">
+                            <div className="w-8 h-8 border border-slate-600 rounded-full overflow-hidden bg-slate-900">
                               <Image
                                 src={getGemIconUrl(gemId)}
                                 alt={`Gem ${gemId}`}
@@ -76,7 +76,7 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                       <div>
                         <div
                           className={`text-${
-                            gem.rank === 1 ? "indigo" : "slate"
+                            gem.rank === 1 ? "purple" : "slate"
                           }-${gem.rank === 1 ? "400" : "300"} ${
                             gem.rank === 1 ? "font-medium" : ""
                           }`}
@@ -84,7 +84,7 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                           {gem.gems_count}{" "}
                           {gem.gems_count === 1 ? "Gem" : "Gems"} Socket
                           {gem.rank === 1 && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-900 text-indigo-300">
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-900 text-purple-300">
                               Best
                             </span>
                           )}
@@ -96,7 +96,7 @@ export default function GemTable({ slotName, gems }: GemTableProps) {
                     {Math.round(gem.avg_keystone_level * 10) / 10}
                   </td>
                   <td className="py-2 px-2 text-right">
-                    <div className="inline-block bg-slate-800 rounded-full px-2 py-1 text-sm font-medium text-white">
+                    <div className="inline-block bg-slate-800/70 rounded-full px-2 py-1 text-sm font-medium text-white">
                       {Math.round(usagePercentage)}%
                     </div>
                   </td>

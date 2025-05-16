@@ -23,7 +23,7 @@ const DungeonSelector: React.FC<DungeonSelectorProps> = ({
 }) => {
   return (
     <Select onValueChange={onDungeonChange} value={selectedDungeon}>
-      <SelectTrigger className="w-[200px] bg-slate-800/50 text-white border-slate-700 focus:ring-purple-600">
+      <SelectTrigger className="w-[200px] bg-slate-800/30 text-white border-slate-700 focus:ring-purple-600">
         <SelectValue placeholder="All Dungeons" />
       </SelectTrigger>
       <SelectContent className="bg-slate-900 border-slate-700 text-white">

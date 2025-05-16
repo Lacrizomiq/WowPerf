@@ -1,4 +1,4 @@
-// components/builds/gear/ItemSlotSection.tsx
+// ItemSlotSection.tsx - Version harmonisée
 import {
   GlobalPopularItem,
   PopularItem,
@@ -25,7 +25,7 @@ export default function ItemSlotSection({
   const sortedItems = [...items].sort((a, b) => a.rank - b.rank);
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+    <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-4">
       <h3 className="text-xl font-bold text-white mb-4">{slotName}</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

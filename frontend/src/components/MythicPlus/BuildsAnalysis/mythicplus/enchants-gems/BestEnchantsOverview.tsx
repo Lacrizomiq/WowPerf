@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/enchants-gems/BestEnchantsOverview.tsx
+// BestEnchantsOverview.tsx - Version harmonisée
 "use client";
 
 import { EnchantUsage } from "@/types/warcraftlogs/builds/buildsAnalysis";
@@ -16,7 +16,7 @@ export default function BestEnchantsOverview({
   // No enchants data
   if (slotIds.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">No enchant data available.</p>
       </div>
     );
@@ -44,10 +44,10 @@ export default function BestEnchantsOverview({
         return (
           <div
             key={`${enchant.item_slot}-${enchant.permanent_enchant_id}`}
-            className="bg-slate-800/80 rounded-lg overflow-hidden border border-slate-700"
+            className="bg-slate-800/30 rounded-lg overflow-hidden border border-slate-700"
           >
             {/* Slot Name Header */}
-            <div className="bg-slate-700/80 px-3 py-2">
+            <div className="bg-slate-800/50 px-3 py-2">
               <h3 className="text-white font-medium text-base">
                 {ITEM_SLOT_NAMES[enchant.item_slot]}
               </h3>
@@ -55,7 +55,7 @@ export default function BestEnchantsOverview({
 
             {/* Enchant Name */}
             <div className="px-3 pt-3 pb-2">
-              <div className="text-indigo-400 font-medium text-base">
+              <div className="text-purple-400 font-medium text-base">
                 {enchant.permanent_enchant_name}
               </div>
             </div>

@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import MythicPlusBestRuns from "@/components/Home/mythicplus/MythicBestRuns";
+import LeaderboardsLayout from "@/components/MythicPlus/Leaderboards/layout/LeaderboardsLayout";
 
 const MythicPlusBestRunsPage = () => {
   return (
     <>
-      <MythicPlusBestRuns />
+      <LeaderboardsLayout />
       {/* <FeaturedContent /> */}
     </>
   );

@@ -1,3 +1,4 @@
+// TalentBuildCard.tsx - Version harmonisée
 "use client";
 
 import { useState } from "react";
@@ -42,17 +43,17 @@ export default function TalentBuildCard({
   const displaySpecName = formatDisplaySpecName(spec);
 
   return (
-    <div className="bg-slate-900 rounded-lg overflow-hidden border border-slate-800 mb-8">
+    <div className="bg-slate-800/30 rounded-lg border border-slate-700 overflow-hidden mb-8">
       <div className="p-6">
         {/* Header section with title and stats */}
         <div className="flex flex-col md:flex-row justify-between mb-6">
           {/* Title and Description */}
           <div className="mb-4 md:mb-0 md:pr-6 md:max-w-[50%]">
             <h3 className="text-2xl font-bold text-white mb-2">
-              {rank && <span className="text-indigo-400">{rank} </span>}
+              {rank && <span className="text-purple-400">{rank} </span>}
               {displaySpecName} {displayClassName} Talents Build
               {dungeonName && (
-                <span className="text-indigo-400"> for {dungeonName}</span>
+                <span className="text-purple-400"> for {dungeonName}</span>
               )}
             </h3>
             <p className="text-slate-400 text-sm">
@@ -66,7 +67,7 @@ export default function TalentBuildCard({
           {/* Stats and Buttons */}
           <div className="flex flex-wrap gap-4 items-start justify-end">
             {/* Average Key */}
-            <div className="bg-slate-800 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
+            <div className="bg-slate-800/50 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
               <div className="text-2xl font-bold text-white">
                 +
                 {Math.round(
@@ -79,7 +80,7 @@ export default function TalentBuildCard({
             </div>
 
             {/* Talent Popularity */}
-            <div className="bg-slate-800 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
+            <div className="bg-slate-800/50 rounded-md p-4 text-center w-[100px] h-[100px] flex flex-col items-center justify-center">
               <div className="text-2xl font-bold text-white">
                 {Math.round(
                   "avg_usage_percentage" in build
@@ -100,7 +101,7 @@ export default function TalentBuildCard({
                 className={`w-full h-[48px] rounded-md transition-colors flex items-center justify-center ${
                   isCopied
                     ? "bg-green-600 text-white"
-                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    : "bg-purple-600 hover:bg-purple-700 text-white"
                 }`}
               >
                 {isCopied ? (
@@ -120,7 +121,7 @@ export default function TalentBuildCard({
         </div>
 
         {/* Talents iframe - displayed directly */}
-        <div className="bg-black bg-opacity-30 rounded-lg p-2 border border-gray-600 shadow-xl">
+        <div className="bg-black bg-opacity-30 rounded-lg p-2 border border-slate-700 shadow-xl">
           <iframe
             src={`https://www.raidbots.com/simbot/render/talents/${build.talent_import}?width=900&level=80`}
             width="100%"

@@ -1,4 +1,4 @@
-// components/builds/gear/ItemCard.tsx
+// ItemCard.tsx - Version harmonisée
 import Image from "next/image";
 import {
   GlobalPopularItem,
@@ -35,7 +35,7 @@ export default function ItemCard({ item }: ItemCardProps) {
   };
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 flex items-center">
+    <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-center">
       {/* Item icon with colored border */}
       <a
         href={`https://www.wowhead.com/item=${item.item_id}`}
@@ -85,7 +85,7 @@ export default function ItemCard({ item }: ItemCardProps) {
 
       {/* Rank indicator (optional) */}
       {item.rank === 1 && (
-        <div className="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
+        <div className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
           Best
         </div>
       )}

@@ -1,4 +1,4 @@
-// BuildNav.tsx - Version complète harmonisée
+// BuildNav.tsx - Version mise à jour avec correction de la surbrillance
 import { TabsContent, TabsList } from "@/components/ui/tabs";
 import { ReactNode } from "react";
 import Link from "next/link";
@@ -26,11 +26,15 @@ export default function BuildNav({
   // Determine which tab is active based on the pathname
   const isActive = (tab: string) => {
     if (tab === "builds") {
-      // The Builds tab is active only on the base route (without subpath)
-      return pathname === `/mythic-plus/builds/${className}/${spec}`;
+      // La page builds est active si le chemin ne contient pas talents, gear ou enchants-gems
+      return !(
+        pathname.includes("/talents") ||
+        pathname.includes("/gear") ||
+        pathname.includes("/enchants-gems")
+      );
     }
 
-    // For other tabs, check if the pathname ends with this tab
+    // Pour les autres onglets, vérifier si le chemin se termine par cet onglet
     return pathname.endsWith(`/${tab}`) || pathname.includes(`/${tab}/`);
   };
 

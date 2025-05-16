@@ -1,22 +1,20 @@
-// components/performance/layout/PerformanceLayout.tsx
+// components/leaderboards/layout/LeaderboardsLayout.tsx
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import MythicPlusContent from "@/components/MythicPlus/PerformanceStatistics/mythicplus/MythicPlusContent";
-import RaidsContent from "@/components/MythicPlus/PerformanceStatistics/raids/RaidsContent";
-import PvPContent from "@/components/MythicPlus/PerformanceStatistics/pvp/PvPContent";
+import MythicPlusBestRuns from "@/components/MythicPlus/Leaderboards/mythicplus/MythicBestRuns";
+import RaidsContent from "@/components/MythicPlus/Leaderboards/raids/RaidsContent";
+import PvPContent from "@/components/MythicPlus/Leaderboards/pvp/PvPContent";
 
-export default function PerformanceLayout() {
+export default function LeaderboardsLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1D21] text-[#EAEAEA]">
       {/* Page Header */}
       <header className="pt-8 pb-6 px-4 md:px-8 border-b border-slate-800">
         <div className="container mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Performance Analysis
-          </h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Leaderboards</h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            Explore detailed class and specialization rankings across Mythic +,
+            Explore detailed teams, players and guilds rankings across Mythic +,
             Raids and PvP game content.
           </p>
         </div>
@@ -57,7 +55,7 @@ export default function PerformanceLayout() {
 
           {/* Tab Contents */}
           <TabsContent value="mythic" className="space-y-6">
-            <MythicPlusContent />
+            <MythicPlusBestRuns />
           </TabsContent>
 
           <TabsContent value="raids" className="space-y-6">

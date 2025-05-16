@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/enchants-gems/EnchantTable.tsx
+// EnchantTable.tsx - Version harmonisée
 "use client";
 
 import { EnchantUsage } from "@/types/warcraftlogs/builds/buildsAnalysis";
@@ -24,10 +24,10 @@ export default function EnchantTable({
   );
 
   return (
-    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-900">
+    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-800/30">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[400px]">
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800/50">
             <tr>
               <th className="py-2 px-3 text-left text-sm font-semibold text-white">
                 {slotName} Enchants
@@ -47,19 +47,19 @@ export default function EnchantTable({
               return (
                 <tr
                   key={`${enchant.item_slot}-${enchant.permanent_enchant_id}-${enchant.rank}`}
-                  className="hover:bg-slate-800"
+                  className="hover:bg-slate-800/70"
                 >
                   <td className="py-2 px-3">
                     <span
                       className={`text-${
-                        enchant.rank === 1 ? "indigo" : "slate"
+                        enchant.rank === 1 ? "purple" : "slate"
                       }-${enchant.rank === 1 ? "400" : "300"} ${
                         enchant.rank === 1 ? "font-medium" : ""
                       }`}
                     >
                       {enchant.permanent_enchant_name}
                       {enchant.rank === 1 && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-900 text-indigo-300">
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-900 text-purple-300">
                           Best
                         </span>
                       )}
@@ -69,7 +69,7 @@ export default function EnchantTable({
                     {Math.round(enchant.avg_keystone_level * 10) / 10}
                   </td>
                   <td className="py-2 px-2 text-right">
-                    <div className="inline-block bg-slate-800 rounded-full px-2 py-1 text-sm font-medium text-white">
+                    <div className="inline-block bg-slate-800/70 rounded-full px-2 py-1 text-sm font-medium text-white">
                       {Math.round(usagePercentage)}%
                     </div>
                   </td>

@@ -1,4 +1,4 @@
-// components/MythicPlus/BuildsAnalysis/gear/ItemTable.tsx
+// ItemTable.tsx - Version harmonisée
 "use client";
 
 import Image from "next/image";
@@ -20,14 +20,10 @@ export default function ItemTable({ slotName, items }: ItemTableProps) {
   const sortedItems = [...items].sort((a, b) => a.rank - b.rank);
 
   return (
-    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-900">
+    <div className="w-full rounded-lg border border-slate-700 overflow-hidden bg-slate-800/30">
       <div className="overflow-x-auto">
-        {" "}
-        {/* Add a horizontal scroll if necessary */}
         <table className="w-full min-w-[400px]">
-          {" "}
-          {/* Minimum width to avoid excessive compression */}
-          <thead className="bg-slate-800">
+          <thead className="bg-slate-800/50">
             <tr>
               <th className="py-2 px-3 text-left text-sm font-semibold text-white">
                 {slotName}
@@ -44,7 +40,7 @@ export default function ItemTable({ slotName, items }: ItemTableProps) {
             {sortedItems.map((item) => (
               <tr
                 key={`${item.item_id}-${item.rank}`}
-                className="hover:bg-slate-800"
+                className="hover:bg-slate-800/70"
               >
                 <td className="py-2 px-3">
                   <a
@@ -73,7 +69,7 @@ export default function ItemTable({ slotName, items }: ItemTableProps) {
                   {Math.round(item.avg_keystone_level)}
                 </td>
                 <td className="py-2 px-2 text-right">
-                  <div className="inline-block bg-slate-800 rounded-full px-2 py-1 text-sm font-medium text-white">
+                  <div className="inline-block bg-slate-800/70 rounded-full px-2 py-1 text-sm font-medium text-white">
                     {Math.round(item.usage_percentage)}%
                   </div>
                 </td>

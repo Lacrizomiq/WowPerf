@@ -1,3 +1,4 @@
+// EnchantGemsContent.tsx - Version harmonisée
 "use client";
 
 import { useEffect } from "react";
@@ -109,7 +110,7 @@ export default function EnchantGemsContent({
   if (enchantsLoading || gemsLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -138,7 +139,7 @@ export default function EnchantGemsContent({
     (!gemsData || gemsData.length === 0)
   ) {
     return (
-      <div className="bg-slate-800 rounded-lg p-5 text-center">
+      <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5 text-center">
         <p className="text-slate-400">No enchants and gems data available.</p>
       </div>
     );
@@ -202,7 +203,7 @@ export default function EnchantGemsContent({
         </div>
       )}
 
-      {/* Best Gems Overview Section */}
+      {/* Best Gems Overview Section 
       {gemsData && gemsData.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">
@@ -211,6 +212,7 @@ export default function EnchantGemsContent({
           <BestGemsOverview gemsData={gemsData} />
         </div>
       )}
+        */}
 
       {/* Enchants Tables Section with Filter */}
       {enchantsData && enchantsData.length > 0 && (
@@ -221,7 +223,7 @@ export default function EnchantGemsContent({
             {/* Enchant Slot Filter */}
             <div className="mt-2 sm:mt-0">
               <select
-                className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-slate-700 transition-colors cursor-pointer"
+                className="bg-slate-800/50 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 hover:bg-slate-700 transition-colors cursor-pointer"
                 value={selectedEnchantSlot?.toString() || "all"}
                 onChange={handleEnchantSlotChange}
                 aria-label="Filter enchantments by slot"
@@ -260,7 +262,7 @@ export default function EnchantGemsContent({
             {/* Gem Slot Filter */}
             <div className="mt-2 sm:mt-0">
               <select
-                className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-slate-700 transition-colors cursor-pointer"
+                className="bg-slate-800/50 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 hover:bg-slate-700 transition-colors cursor-pointer"
                 value={selectedGemSlot?.toString() || "all"}
                 onChange={handleGemSlotChange}
                 aria-label="Filter gems by slot"
