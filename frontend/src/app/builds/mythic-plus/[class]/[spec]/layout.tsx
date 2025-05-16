@@ -1,3 +1,4 @@
+// BuildLayout.tsx - Version complète harmonisée
 "use client";
 
 import {
@@ -153,43 +154,49 @@ export default function BuildLayout({
   };
 
   return (
-    <div className="w-full text-slate-100 min-h-screen">
+    <div className="w-full text-slate-100 min-h-screen bg-[#1A1D21]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         {/* Header Section */}
-        <header className="pt-4 pb-6">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Builds</h1>
-          <p className="text-slate-400">
-            Explore optimal talent builds, gear setups, and stat priorities for
-            all classes and specializations.
-          </p>
-        </header>
+        <div className="border-b border-slate-800 w-full">
+          <header className="pt-4 pb-6">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-white">
+              Builds
+            </h1>
+            <p className="text-muted-foreground text-base md:text-lg">
+              Explore optimal talent builds, gear setups, and stat priorities
+              for all classes and specializations.
+            </p>
+          </header>
 
-        {/* Content Type Tabs */}
-        <ContentTypeTabs
-          className={className}
-          spec={spec}
-          activeTab="mythic-plus"
-        />
-
-        {/* Header Section */}
-        <BuildHeader className={className} spec={spec} />
-
-        {/* Main Navigation */}
-        <BuildNav defaultTab="builds" className={className} spec={spec}>
-          {/* Filters Section */}
-          <BuildFilters
+          {/* Content Type Tabs */}
+          <ContentTypeTabs
             className={className}
             spec={spec}
-            onDungeonChange={handleDungeonChange}
-            onClassChange={handleClassChange}
-            onSpecChange={handleSpecChange}
-            showDungeonSelector={!isBuildsTab}
-            selectedDungeon={dungeonId}
+            activeTab="mythic-plus"
           />
+        </div>
 
-          {/* Content will be injected here */}
-          {children}
-        </BuildNav>
+        <div className="pt-6">
+          {/* Header Section */}
+          <BuildHeader className={className} spec={spec} />
+
+          {/* Main Navigation */}
+          <BuildNav defaultTab="builds" className={className} spec={spec}>
+            {/* Filters Section */}
+            <BuildFilters
+              className={className}
+              spec={spec}
+              onDungeonChange={handleDungeonChange}
+              onClassChange={handleClassChange}
+              onSpecChange={handleSpecChange}
+              showDungeonSelector={!isBuildsTab}
+              selectedDungeon={dungeonId}
+            />
+
+            {/* Content will be injected here */}
+            {children}
+          </BuildNav>
+        </div>
       </div>
     </div>
   );

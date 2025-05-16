@@ -1,3 +1,4 @@
+// SpecSelector.tsx - Version complète harmonisée
 import Image from "next/image";
 import {
   Select,
@@ -54,7 +55,7 @@ export default function SpecSelector({
       value={selectedSpec}
       onValueChange={(value) => onSpecChange(value as WowSpecParam)}
     >
-      <SelectTrigger className="w-[180px] bg-slate-800 text-white border-slate-700">
+      <SelectTrigger className="w-[180px] bg-slate-800/50 text-white border-slate-700 focus:ring-purple-600">
         {selectedSpec && (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full overflow-hidden">
@@ -77,7 +78,11 @@ export default function SpecSelector({
 
       <SelectContent className="bg-slate-900 border-slate-700 text-white">
         {specs.map((spec) => (
-          <SelectItem key={spec} value={spec} className="hover:bg-slate-800">
+          <SelectItem
+            key={spec}
+            value={spec}
+            className="hover:bg-slate-800 focus:bg-purple-600 focus:text-white"
+          >
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full overflow-hidden">
                 <Image

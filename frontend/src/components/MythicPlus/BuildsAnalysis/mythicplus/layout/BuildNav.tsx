@@ -1,3 +1,4 @@
+// BuildNav.tsx - Version complète harmonisée
 import { TabsContent, TabsList } from "@/components/ui/tabs";
 import { ReactNode } from "react";
 import Link from "next/link";
@@ -34,14 +35,14 @@ export default function BuildNav({
   };
 
   // CSS classes for the tabs
-  const tabClass = "py-3 px-6 rounded-none";
-  const activeTabClass = "bg-indigo-600 text-white";
-  const inactiveTabClass = "hover:bg-slate-700";
+  const tabClass = "py-3 px-6 rounded-none transition-colors duration-200";
+  const activeTabClass = "bg-purple-600 text-white"; // Couleur violette pour l'onglet actif
+  const inactiveTabClass = "hover:bg-slate-700 text-slate-300"; // Hover plus clair, texte plus visible
 
   return (
     <div className="mt-6">
-      <div className="bg-slate-800 p-0 mb-6 border-b border-slate-700 w-full flex justify-start rounded-none">
-        <Link href={`/mythic-plus/builds/${className}/${spec}`}>
+      <div className="bg-slate-800/30 p-0 mb-6 border-b border-slate-700 w-full flex justify-start rounded-none">
+        <Link href={`/builds/mythic-plus/${className}/${spec}`}>
           <div
             className={`${tabClass} ${
               isActive("builds") ? activeTabClass : inactiveTabClass
@@ -51,7 +52,7 @@ export default function BuildNav({
           </div>
         </Link>
 
-        <Link href={`/mythic-plus/builds/${className}/${spec}/talents`}>
+        <Link href={`/builds/mythic-plus/${className}/${spec}/talents`}>
           <div
             className={`${tabClass} ${
               isActive("talents") ? activeTabClass : inactiveTabClass
@@ -61,7 +62,7 @@ export default function BuildNav({
           </div>
         </Link>
 
-        <Link href={`/mythic-plus/builds/${className}/${spec}/gear`}>
+        <Link href={`/builds/mythic-plus/${className}/${spec}/gear`}>
           <div
             className={`${tabClass} ${
               isActive("gear") ? activeTabClass : inactiveTabClass
@@ -71,7 +72,7 @@ export default function BuildNav({
           </div>
         </Link>
 
-        <Link href={`/mythic-plus/builds/${className}/${spec}/enchants-gems`}>
+        <Link href={`/builds/mythic-plus/${className}/${spec}/enchants-gems`}>
           <div
             className={`${tabClass} ${
               isActive("enchants-gems") ? activeTabClass : inactiveTabClass

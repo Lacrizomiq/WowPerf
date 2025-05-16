@@ -1,3 +1,4 @@
+// ClassSelector.tsx - Version complète harmonisée
 import Image from "next/image";
 import {
   Select,
@@ -16,19 +17,19 @@ import { useRouter } from "next/navigation";
 
 // Mapping of classes to their available specs
 const CLASS_SPECS: Record<WowClassParam, string[]> = {
-  warrior: ["arms", "fury", "protection"],
-  paladin: ["holy", "protection", "retribution"],
-  hunter: ["beastmastery", "marksmanship", "survival"],
-  rogue: ["assassination", "outlaw", "subtlety"],
-  priest: ["discipline", "holy", "shadow"],
   deathknight: ["blood", "frost", "unholy"],
-  shaman: ["elemental", "enhancement", "restoration"],
-  mage: ["arcane", "fire", "frost"],
-  warlock: ["affliction", "demonology", "destruction"],
-  monk: ["brewmaster", "mistweaver", "windwalker"],
-  druid: ["balance", "feral", "guardian", "restoration"],
   demonhunter: ["havoc", "vengeance"],
+  druid: ["balance", "feral", "guardian", "restoration"],
   evoker: ["devastation", "preservation", "augmentation"],
+  hunter: ["beastmastery", "marksmanship", "survival"],
+  mage: ["arcane", "fire", "frost"],
+  monk: ["brewmaster", "mistweaver", "windwalker"],
+  paladin: ["holy", "protection", "retribution"],
+  priest: ["discipline", "holy", "shadow"],
+  rogue: ["assassination", "outlaw", "subtlety"],
+  shaman: ["elemental", "enhancement", "restoration"],
+  warlock: ["affliction", "demonology", "destruction"],
+  warrior: ["arms", "fury", "protection"],
 };
 
 interface ClassSelectorProps {
@@ -54,12 +55,12 @@ export default function ClassSelector({
     // Get the first spec of the selected class
     const firstSpec = CLASS_SPECS[newClass][0];
 
-    router.push(`/mythic-plus/builds/${newClass}/${firstSpec}`);
+    router.push(`/builds/mythic-plus/${newClass}/${firstSpec}`);
   };
 
   return (
     <Select value={selectedClass} onValueChange={handleClassChange}>
-      <SelectTrigger className="w-[180px] bg-slate-800 text-white border-slate-700">
+      <SelectTrigger className="w-[180px] bg-slate-800/50 text-white border-slate-700 focus:ring-purple-600">
         {selectedClass && (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full overflow-hidden">
@@ -82,7 +83,7 @@ export default function ClassSelector({
           <SelectItem
             key={className}
             value={className}
-            className="hover:bg-slate-800"
+            className="hover:bg-slate-800 focus:bg-purple-600 focus:text-white"
           >
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full overflow-hidden">

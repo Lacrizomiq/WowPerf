@@ -1,4 +1,4 @@
-// components/builds/layout/BuildFilters.tsx
+// BuildFilters.tsx - Version complète harmonisée
 import { useState, useEffect } from "react";
 import {
   WowClassParam,
@@ -59,7 +59,7 @@ export default function BuildFilters({
         onSpecChange={onSpecChange || (() => {})}
       />
 
-      <div className="px-4 py-2 bg-indigo-600 rounded flex items-center">
+      <div className="px-4 py-2 bg-purple-600 rounded flex items-center text-white">
         <span>Mythic+</span>
       </div>
 

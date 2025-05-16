@@ -56,7 +56,7 @@ export default function ContentTypeTabs({
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 mb-6">
+      <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 mb-6 ">
         <TabsTrigger
           value="mythic-plus"
           className="data-[state=active]:bg-purple-600"
