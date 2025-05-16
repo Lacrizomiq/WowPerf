@@ -45,13 +45,15 @@ export default function MythicPlusContent() {
       filtered = filtered.filter((spec) => spec.class === selectedClass);
     }
 
-    // Note: intégration du filtre par donjon à faire selon vos données
+    // TODO : Implement this to filter the score per dungeon instead of global when the user select a dungeon
     // if (selectedDungeon !== "all") {
-    //   filtered = filtered.filter((spec) => spec.performanceByDungeon?.[selectedDungeon]);
+    // filtered = filtered.filter(
+    // (spec) => spec.performanceByDungeon?.[selectedDungeon]
+    // );
     // }
 
     return filtered;
-  }, [sortedSpecs, selectedRole, selectedClass, selectedDungeon]);
+  }, [sortedSpecs, selectedRole, selectedClass]);
 
   // Gestionnaires d'événements
   const handleRoleChange = (role: RoleType) => {
@@ -125,7 +127,7 @@ export default function MythicPlusContent() {
         isFiltered={isFiltered}
       />
 
-      {/* Description des données */}
+      {/* Data Description */}
       <div className="mt-6">
         <p className="text-gray-400">
           Showing average global scores for the very best players of each spec.

@@ -27,13 +27,10 @@ export default function SpecButton({ className, spec }: SpecButtonProps) {
 
   return (
     <Link
-      href={`/mythic-plus/builds/${className}/${spec}`}
-      className="flex items-center gap-3 py-2 px-3 rounded-md bg-slate-700/50 hover:bg-slate-600 transition-colors w-full group relative overflow-hidden"
+      href={`/builds/mythic-plus/${className}/${spec}`}
+      className="flex items-center gap-3 p-3 rounded-md bg-slate-800/70 hover:bg-slate-700 transition-colors mb-2"
     >
-      {/* Effet de soulignement au hover */}
-      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-slate-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-
-      <span className="w-6 h-6 flex-shrink-0 rounded-full overflow-hidden">
+      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-slate-700">
         <Image
           src={specIconUrl}
           alt={displayName}
@@ -41,8 +38,8 @@ export default function SpecButton({ className, spec }: SpecButtonProps) {
           height={24}
           className="w-full h-full object-cover"
         />
-      </span>
-      <span>{displayName}</span>
+      </div>
+      <span className="text-slate-200">{displayName}</span>
     </Link>
   );
 }

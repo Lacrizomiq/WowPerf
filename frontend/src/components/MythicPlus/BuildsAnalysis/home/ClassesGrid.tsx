@@ -1,24 +1,31 @@
-import { useState } from "react";
-import ClassCard from "./ClassCard";
 import { WowClassParam } from "@/types/warcraftlogs/builds/classSpec";
+import ClassCard from "./ClassCard";
 
 export default function ClassesGrid() {
   // Organized classes by row by alphabetical order
   const classRows: WowClassParam[][] = [
-    ["priest", "demonhunter", "druid", "evoker"],
+    ["deathknight", "demonhunter", "druid", "evoker"],
     ["hunter", "mage", "monk", "paladin"],
-    ["deathknight", "rogue", "shaman"],
-    ["warlock", "warrior"],
+    ["priest", "rogue", "shaman", "warlock"],
+    ["warrior"],
   ];
 
   return (
-    <div className="min-h-screen bg-black text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2">Data-Driven Mythic+ Builds</h1>
-        <p className="text-slate-400 mb-10">
-          Select a specialization to view builds, talents, gear, and more.
-        </p>
+    <div className="flex flex-col min-h-screen">
+      {/* Page Header */}
+      <header className="pt-8 pb-6 px-4 md:px-8 border-b border-slate-800">
+        <div className="container mx-auto">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            Data-Driven Builds
+          </h1>
+          <p className="text-muted-foreground text-base md:text-lg">
+            Select a specialization to view builds, talents, gear, and more.
+          </p>
+        </div>
+      </header>
 
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 md:px-8 py-6">
         <div className="space-y-6">
           {classRows.map((classRow, rowIndex) => (
             <div
@@ -31,7 +38,7 @@ export default function ClassesGrid() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

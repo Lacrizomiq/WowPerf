@@ -4,9 +4,10 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import BuildHeader from "@/components/MythicPlus/BuildsAnalysis/layout/BuildHeader";
-import BuildNav from "@/components/MythicPlus/BuildsAnalysis/layout/BuildNav";
-import BuildFilters from "@/components/MythicPlus/BuildsAnalysis/layout/BuildFilters";
+import BuildHeader from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildHeader";
+import BuildNav from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildNav";
+import BuildFilters from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildFilters";
+import ContentTypeTabs from "@/components/MythicPlus/BuildsAnalysis/layout/ContentTypeTabs";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
@@ -85,7 +86,7 @@ export default function BuildLayout({
   // Handle class change
   const handleClassChange = (newClass: WowClassParam) => {
     // Build the new path while keeping the same tab
-    let newPath = `/mythic-plus/builds/${newClass}`;
+    let newPath = `/builds/mythic-plus/${newClass}`;
 
     // Determine the first spec of the new class
     // This is already handled by ClassSelector, which redirects to the first spec,
@@ -123,7 +124,7 @@ export default function BuildLayout({
   // Handle spec change
   const handleSpecChange = (newSpec: WowSpecParam) => {
     // Build the new path while keeping the same tab
-    let newPath = `/mythic-plus/builds/${className}/${newSpec}`;
+    let newPath = `/builds/mythic-plus/${className}/${newSpec}`;
 
     if (pathname.includes("/talents")) {
       newPath += "/talents";
@@ -152,8 +153,24 @@ export default function BuildLayout({
   };
 
   return (
-    <div className="w-full bg-black text-slate-100 min-h-screen">
+    <div className="w-full text-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        {/* Header Section */}
+        <header className="pt-4 pb-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Builds</h1>
+          <p className="text-slate-400">
+            Explore optimal talent builds, gear setups, and stat priorities for
+            all classes and specializations.
+          </p>
+        </header>
+
+        {/* Content Type Tabs */}
+        <ContentTypeTabs
+          className={className}
+          spec={spec}
+          activeTab="mythic-plus"
+        />
+
         {/* Header Section */}
         <BuildHeader className={className} spec={spec} />
 

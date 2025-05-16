@@ -33,31 +33,43 @@ interface ClassCardProps {
 }
 
 export default function ClassCard({ className }: ClassCardProps) {
-  // Get the specs for this class
-  const specs = CLASS_SPECS[className];
+  // Protection contre les valeurs undefined
+  if (!className) {
+    console.error("ClassCard received undefined className");
+    return null;
+  }
 
-  // Get the formatted display name of the class
-  const displayName = formatDisplayClassName(className);
+  // Get the specs for this class
+  const specs = CLASS_SPECS[className] || [];
+
+  // Get the formatted display name of the class (avec protection)
+  const displayName =
+    typeof className === "string"
+      ? formatDisplayClassName(className)
+      : className;
 
   // Style for the class color
   const classColorStyle = { color: `var(--color-${className})` };
   const classBorderStyle = { borderColor: `var(--color-${className})` };
 
-  // Get the URL of the class icon
-  const classIconName = classNameToPascalCase(className);
+  // Get the URL of the class icon (avec protection)
+  const classIconName =
+    typeof className === "string"
+      ? classNameToPascalCase(className)
+      : className;
   const classIconUrl = getClassIcon(classIconName);
 
   return (
     <div
-      className="bg-[#112240] rounded-lg overflow-hidden shadow-lg border-l-4 hover:shadow-xl"
+      className={`bg-slate-800/50 rounded-lg border overflow-hidden`}
       style={classBorderStyle}
     >
-      <div className="p-5">
-        <h2
-          className="text-xl font-bold mb-4 flex items-center gap-3"
+      <div className="p-4 border-b border-slate-700">
+        <h3
+          className="text-xl font-bold flex items-center gap-3"
           style={classColorStyle}
         >
-          <span className="w-8 h-8 flex-shrink-0 rounded-full overflow-hidden">
+          <span className="w-8 h-8 flex-shrink-0 rounded-full overflow-hidden bg-slate-700">
             <Image
               src={classIconUrl}
               alt={displayName}
@@ -67,13 +79,12 @@ export default function ClassCard({ className }: ClassCardProps) {
             />
           </span>
           {displayName}
-        </h2>
-
-        <div className="space-y-2">
-          {specs.map((spec) => (
-            <SpecButton key={spec} className={className} spec={spec} />
-          ))}
-        </div>
+        </h3>
+      </div>
+      <div className="p-2 space-y-2">
+        {specs.map((spec) => (
+          <SpecButton key={spec} className={className} spec={spec} />
+        ))}
       </div>
     </div>
   );

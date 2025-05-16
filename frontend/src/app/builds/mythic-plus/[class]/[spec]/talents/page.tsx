@@ -2,9 +2,9 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import BuildsContent from "@/components/MythicPlus/BuildsAnalysis/builds/BuildsContent";
+import TalentsContent from "@/components/MythicPlus/BuildsAnalysis/mythicplus/talents/TalentsContent";
 
-export default function BuildPage({
+export default function TalentsPage({
   params,
 }: {
   params: { class: string; spec: string };
@@ -12,5 +12,5 @@ export default function BuildPage({
   const className = params.class as WowClassParam;
   const spec = params.spec as WowSpecParam;
 
-  return <BuildsContent className={className} spec={spec} />;
+  return <TalentsContent className={className} spec={spec} />;
 }
