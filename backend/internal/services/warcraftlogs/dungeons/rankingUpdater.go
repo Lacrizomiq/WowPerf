@@ -151,7 +151,7 @@ func (r *RankingsUpdater) UpdateRankings(ctx context.Context) error {
 		DungeonRookery,
 		DungeonTheaterPain,
 	}
-	pagesPerDungeon := 1
+	pagesPerDungeon := 2
 
 	rankings, err := GetGlobalRankings(r.service, ctx, dungeonIDs, pagesPerDungeon)
 	if err != nil {

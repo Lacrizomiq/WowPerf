@@ -1,4 +1,4 @@
-// MythicBestRuns.tsx - Version harmonisée
+// MythicPlusBestRuns.tsx
 import React, { useState, useEffect } from "react";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import RunsCard from "./RunsCard";
@@ -11,7 +11,7 @@ const MythicPlusBestRuns: React.FC = () => {
   const season = "season-tww-2";
   const [region, setRegion] = useState("world");
   const [dungeon, setDungeon] = useState("all");
-  const [page, setPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0); // Renommé pour plus de clarté
 
   const { data: dungeonData } = useGetBlizzardMythicDungeonPerSeason(season);
 
@@ -26,6 +26,18 @@ const MythicPlusBestRuns: React.FC = () => {
   const handleDungeonChange = (selectedDungeonSlug: string) => {
     console.log("selectedDungeonSlug", selectedDungeonSlug);
     setDungeon(selectedDungeonSlug);
+    setCurrentPage(0); // Réinitialiser la page lors du changement de donjon
+  };
+
+  const handleRegionChange = (newRegion: string) => {
+    setRegion(newRegion);
+    setCurrentPage(0); // Réinitialiser la page lors du changement de région
+  };
+
+  // Ajout de cette fonction pour gérer le changement de page
+  const handlePageChange = (newPage: number) => {
+    console.log("Changing page to:", newPage);
+    setCurrentPage(newPage);
   };
 
   return (
@@ -40,7 +52,7 @@ const MythicPlusBestRuns: React.FC = () => {
             <div className="flex flex-wrap gap-3 mb-6">
               <RegionSelector
                 regions={["US", "EU", "TW", "KR", "CN"]}
-                onRegionChange={setRegion}
+                onRegionChange={handleRegionChange}
                 selectedRegion={region}
               />
               <DungeonSelector
@@ -54,10 +66,9 @@ const MythicPlusBestRuns: React.FC = () => {
               season={season}
               region={region}
               dungeon={dungeon}
-              page={page}
+              page={currentPage}
+              onPageChange={handlePageChange}
             />
-
-            {/* Pagination to be added here if needed */}
           </div>
         </div>
       </div>

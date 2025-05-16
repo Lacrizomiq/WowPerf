@@ -4,7 +4,7 @@ import LeaderboardsLayout from "@/components/MythicPlus/Leaderboards/layout/Lead
 const MythicPlusBestRunsPage = () => {
   return (
     <>
-      <LeaderboardsLayout activeTab="mythic-plus" />
+      <LeaderboardsLayout activeTab="raids" />
     </>
   );
 };

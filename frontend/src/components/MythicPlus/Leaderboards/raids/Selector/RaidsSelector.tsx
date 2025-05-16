@@ -30,15 +30,15 @@ const RaidsSelector: React.FC<RaidsSelectorProps> = ({
       }}
       value={selectedRaid?.Slug || ""}
     >
-      <SelectTrigger className="w-[200px] bg-gradient-blue shadow-2xl text-white border-none">
+      <SelectTrigger className="w-[250px] bg-slate-800/50 text-white border-slate-700 focus:ring-purple-600">
         <SelectValue placeholder="Select a raid" />
       </SelectTrigger>
-      <SelectContent className="bg-black text-white">
+      <SelectContent className="bg-slate-900 border-slate-700 text-white">
         {raids.map((raid) => (
           <SelectItem
             key={raid.Slug}
             value={raid.Slug}
-            className="hover:bg-gradient-purple mr-16"
+            className="hover:bg-slate-800 focus:bg-purple-600"
           >
             <div className="flex items-center gap-2">
               <Image
