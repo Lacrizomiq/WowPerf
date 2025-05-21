@@ -4,7 +4,7 @@ import {
   BarChart3,
   PieChart,
   Trophy,
-  Settings,
+  ListChecks,
   TrendingUp,
   LayoutDashboard,
 } from "lucide-react";
@@ -36,7 +36,7 @@ export default function Statistics() {
           />
 
           <FeatureCard
-            icon={<Settings className="h-10 w-10 text-purple-500" />}
+            icon={<ListChecks className="h-10 w-10 text-purple-500" />}
             title="Find Your Optimal Character Build"
             description="Discover the most effective talent builds, gear setups, and stat priorities for your class and spec."
             link="/builds"

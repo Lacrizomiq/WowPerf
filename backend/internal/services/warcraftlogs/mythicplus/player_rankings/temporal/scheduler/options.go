@@ -16,7 +16,7 @@ type PlayerRankingsScheduleConfig struct {
 var DefaultPlayerRankingsScheduleConfig = PlayerRankingsScheduleConfig{
 	Hour:      12, // 12h
 	Minute:    0,  // 0 minute
-	TaskQueue: "player-rankings-queue",
+	TaskQueue: "warcraft-logs-sync",
 }
 
 // RetryPolicy définit comment les échecs sont gérés

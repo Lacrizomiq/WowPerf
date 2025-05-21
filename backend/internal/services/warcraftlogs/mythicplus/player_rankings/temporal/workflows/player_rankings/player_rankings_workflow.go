@@ -44,32 +44,32 @@ func (w *PlayerRankingsWorkflow) Execute(ctx workflow.Context, params models.Pla
 
 	// Configurer les options des activities avec retry
 	activityOptions := workflow.ActivityOptions{
-		StartToCloseTimeout: 30 * time.Minute,
+		StartToCloseTimeout: 24 * time.Hour,
 		RetryPolicy: &temporal.RetryPolicy{
-			InitialInterval:    time.Second * time.Duration(params.RetryDelay),
+			InitialInterval:    params.RetryDelay,
 			BackoffCoefficient: 2.0,
 			MaximumInterval:    5 * time.Minute,
 			MaximumAttempts:    int32(params.RetryAttempts),
 		},
-		HeartbeatTimeout: 2 * time.Minute,
+		HeartbeatTimeout: 20 * time.Minute,
 	}
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
-	// 1. Récupérer les classements pour tous les donjons
-	logger.Info("Starting rankings fetch")
+	// 1. Récupérer et stocker les classements pour tous les donjons
+	logger.Info("Starting rankings fetch and storage")
 	fetchStart := workflow.Now(ctx)
 
-	var rankings []playerRankingModels.PlayerRanking
+	var rankingStats *models.RankingsStats
 	err := workflow.ExecuteActivity(
 		ctx,
 		definitions.FetchAllDungeonRankingsActivity,
 		dungeonIDs,
 		params.PagesPerDungeon,
 		params.MaxConcurrency,
-	).Get(ctx, &rankings)
+	).Get(ctx, &rankingStats)
 
 	if err != nil {
-		logger.Error("Failed to fetch rankings", "error", err)
+		logger.Error("Failed to fetch and store rankings", "error", err)
 		result.Error = err.Error()
 		result.EndTime = workflow.Now(ctx)
 		result.TotalDuration = result.EndTime.Sub(result.StartTime)
@@ -77,31 +77,13 @@ func (w *PlayerRankingsWorkflow) Execute(ctx workflow.Context, params models.Pla
 	}
 
 	result.FetchDuration = workflow.Now(ctx).Sub(fetchStart)
-	result.RankingsCount = len(rankings)
-	logger.Info("Fetch completed", "rankingsCount", result.RankingsCount, "duration", result.FetchDuration)
+	result.RankingsCount = rankingStats.TotalCount
+	result.TankCount = rankingStats.TankCount
+	result.HealerCount = rankingStats.HealerCount
+	result.DPSCount = rankingStats.DPSCount
+	logger.Info("Fetch and storage completed", "rankingsCount", result.RankingsCount, "duration", result.FetchDuration)
 
-	// 2. Stocker les classements en base de données
-	logger.Info("Starting rankings storage")
-	storeStart := workflow.Now(ctx)
-
-	err = workflow.ExecuteActivity(
-		ctx,
-		definitions.StoreRankingsActivity,
-		rankings,
-	).Get(ctx, nil)
-
-	if err != nil {
-		logger.Error("Failed to store rankings", "error", err)
-		result.Error = err.Error()
-		result.EndTime = workflow.Now(ctx)
-		result.TotalDuration = result.EndTime.Sub(result.StartTime)
-		return result, err
-	}
-
-	result.StoreDuration = workflow.Now(ctx).Sub(storeStart)
-	logger.Info("Storage completed", "duration", result.StoreDuration)
-
-	// 3. Calculer les métriques quotidiennes
+	// 2. Calculer les métriques quotidiennes
 	logger.Info("Starting daily metrics calculation")
 	metricsStart := workflow.Now(ctx)
 
@@ -121,7 +103,7 @@ func (w *PlayerRankingsWorkflow) Execute(ctx workflow.Context, params models.Pla
 	result.MetricDuration = workflow.Now(ctx).Sub(metricsStart)
 	logger.Info("Metrics calculation completed", "duration", result.MetricDuration)
 
-	// 4. Tenter de récupérer les statistiques globales (optionnel, ne bloque pas le workflow)
+	// 3. Tenter de récupérer les statistiques globales (optionnel, ne bloque pas le workflow)
 	var globalRankings *playerRankingModels.GlobalRankings
 	err = workflow.ExecuteActivity(
 		ctx,

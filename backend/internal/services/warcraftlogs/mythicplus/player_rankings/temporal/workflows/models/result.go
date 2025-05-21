@@ -34,3 +34,14 @@ type WorkflowResult struct {
 	// Données de récapitulation optionnelles
 	GlobalRankings *playerRankingModels.GlobalRankings `json:"global_rankings,omitempty"`
 }
+
+// RankingsStats contient uniquement des statistiques sur les classements traités
+// Utilisé pour éviter de transférer toutes les données entre l'activité et le workflow
+type RankingsStats struct {
+	TotalCount        int           `json:"total_count"`        // Nombre total de classements récupérés
+	DungeonsProcessed int           `json:"dungeons_processed"` // Nombre de donjons traités
+	ProcessingTime    time.Duration `json:"processing_time"`    // Temps de traitement total
+	TankCount         int           `json:"tank_count"`         // Nombre de tanks
+	HealerCount       int           `json:"healer_count"`       // Nombre de healers
+	DPSCount          int           `json:"dps_count"`          // Nombre de DPS
+}

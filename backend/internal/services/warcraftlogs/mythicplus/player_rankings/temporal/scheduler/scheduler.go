@@ -67,6 +67,9 @@ func (sm *PlayerRankingsScheduleManager) CreatePlayerRankingsSchedule(ctx contex
 	// Créer le schedule
 	scheduleOptions := client.ScheduleOptions{
 		ID: scheduleID,
+		Spec: client.ScheduleSpec{
+			CronExpressions: []string{"0 12 * * *"},
+		},
 		Action: &client.ScheduleWorkflowAction{
 			ID:        workflowID,
 			Workflow:  definitions.PlayerRankingsWorkflowName,

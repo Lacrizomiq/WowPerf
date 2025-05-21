@@ -46,15 +46,6 @@ export default function Footer() {
                   Leaderboards
                 </Link>
               </li>
-
-              <li>
-                <Link
-                  href="/character-progress"
-                  className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
-                >
-                  Character Progress
-                </Link>
-              </li>
             </ul>
           </div>
 

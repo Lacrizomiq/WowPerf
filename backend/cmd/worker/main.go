@@ -12,36 +12,17 @@ import (
 	"wowperf/internal/database"
 	"wowperf/internal/services/warcraftlogs"
 
-	// Ranking, report and player builds repository
-	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	workflowStatesRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-
-	// package
-	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
+	// Scheduler pour la configuration de la queue
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
-	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
+	buildsDefinitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
-	// workflow
-	buildsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds"
-	rankingsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/rankings"
-	reportsWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/reports"
-
-	// build analysis repository
-	buildsStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	statStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	talentStatisticsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-
-	// build analysis workflows
-	equipmentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/equipment_statistics"
-	statAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/stats_statistics"
-	talentAnalysisWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/builds_statistics/talent_statistics"
+	// Import des packages d'initialisation pour chaque feature
+	buildsInit "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal"
+	playerRankingsInit "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/temporal"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
-	"go.temporal.io/sdk/workflow"
 	"gorm.io/gorm"
 )
 
@@ -62,31 +43,29 @@ func main() {
 	}
 	defer temporalClient.Close()
 
-	config, err := definitions.LoadConfig("configs/config_s2_tww.dev.yaml")
+	// Charger la configuration
+	config, err := buildsDefinitions.LoadConfig("configs/config_s2_tww.dev.yaml")
 	if err != nil {
 		logger.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize repositories and activities (no changes needed)
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db, int(config.Rankings.MaxRankingsPerSpec))
-	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
-	buildsStatsRepo := buildsStatisticsRepository.NewBuildsStatisticsRepository(db)
-	talentStatsRepo := talentStatisticsRepository.NewTalentStatisticsRepository(db)
-	statStatsRepo := statStatisticsRepository.NewStatStatisticsRepository(db)
-	workflowStatesRepo := workflowStatesRepository.NewWorkflowStateRepository(db)
-	// Initialize activities with all services
-	activitiesService := initializeActivities(
+	// Initialiser les features
+	logger.Printf("Initializing features")
+
+	// Initialiser la feature builds
+	_, _, _, _, _, _, _, buildsActivitiesService := buildsInit.InitBuilds(
+		db,
 		warcraftLogsClient,
-		reportsRepo,
-		rankingsRepo,
-		playerBuildsRepo,
-		buildsStatsRepo,
-		talentStatsRepo,
-		statStatsRepo,
-		workflowStatesRepo,
+		int(config.Rankings.MaxRankingsPerSpec),
 	)
-	// Create a single worker that will handle both production and test schedules
+
+	// Initialiser la feature player rankings
+	_, playerRankingsActivitiesService := playerRankingsInit.InitPlayerRankings(
+		db,
+		warcraftLogsClient,
+	)
+
+	// Create a single worker
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
 	w := worker.New(temporalClient, taskQueue, worker.Options{
 		MaxConcurrentActivityExecutionSize:     1,
@@ -97,7 +76,10 @@ func main() {
 		EnableSessionWorker:                    true,
 	})
 
-	registerWorkflowsAndActivities(w, activitiesService)
+	// Enregistrer les workflows et activities pour chaque feature
+	logger.Printf("Registering workflows and activities")
+	buildsInit.RegisterBuilds(w, buildsActivitiesService)
+	playerRankingsInit.RegisterPlayerRankings(w, playerRankingsActivitiesService)
 
 	workerMgr := &WorkerManager{
 		worker: w,
@@ -149,135 +131,6 @@ func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsCl
 	}
 
 	return temporalClient, db, warcraftLogsClient, nil
-}
-
-// Initialize activities with all services
-func initializeActivities(
-	warcraftLogsClient *warcraftlogs.WarcraftLogsClientService,
-	reportsRepo *reportsRepository.ReportRepository,
-	rankingsRepo *rankingsRepository.RankingsRepository,
-	playerBuildsRepo *playerBuildsRepository.PlayerBuildsRepository,
-	buildsStatisticsRepo *buildsStatisticsRepository.BuildsStatisticsRepository,
-	talentStatisticsRepo *talentStatisticsRepository.TalentStatisticsRepository,
-	statStatisticsRepo *statStatisticsRepository.StatStatisticsRepository,
-	workflowStatesRepo *workflowStatesRepository.WorkflowStateRepository,
-) *activities.Activities {
-	// Create the existing activities
-	rankingsActivity := activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo)
-	reportsActivity := activities.NewReportsActivity(warcraftLogsClient, reportsRepo, rankingsRepo)
-	playerBuildsActivity := activities.NewPlayerBuildsActivity(playerBuildsRepo, reportsRepo)
-	rateLimitActivity := activities.NewRateLimitActivity(warcraftLogsClient)
-	workflowStatesActivity := activities.NewWorkflowStateActivity(workflowStatesRepo)
-
-	// Create the new analysis activities
-	buildsStatisticsActivity := activities.NewBuildsStatisticsActivity(
-		playerBuildsRepo,
-		buildsStatisticsRepo,
-	)
-	talentStatisticActivity := activities.NewTalentStatisticActivity(
-		playerBuildsRepo,
-		talentStatisticsRepo,
-	)
-	statStatisticsActivity := activities.NewStatStatisticsActivity(
-		playerBuildsRepo,
-		statStatisticsRepo,
-	)
-
-	// Return the complete Activities structure
-	return &activities.Activities{
-		Rankings:         rankingsActivity,
-		Reports:          reportsActivity,
-		PlayerBuilds:     playerBuildsActivity,
-		RateLimit:        rateLimitActivity,
-		BuildStatistics:  buildsStatisticsActivity,
-		TalentStatistics: talentStatisticActivity,
-		StatStatistics:   statStatisticsActivity,
-		WorkflowState:    workflowStatesActivity,
-	}
-}
-
-func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
-	// Register workflows (New workflows, will be used soon)
-	rankingsWorkflowImpl := rankingsWorkflow.NewRankingsWorkflow()
-	reportsWorkflowImpl := reportsWorkflow.NewReportsWorkflow()
-	buildsBatchWorkflowImpl := buildsWorkflow.NewBuildsBatchWorkflow()
-	buildsWorkflowImpl := buildsWorkflow.NewBuildsWorkflow()
-	equipmentAnalysisWorkflowImpl := equipmentAnalysisWorkflow.NewEquipmentAnalysisWorkflow()
-	talentAnalysisWorkflowImpl := talentAnalysisWorkflow.NewTalentAnalysisWorkflow()
-	statAnalysisWorkflowImpl := statAnalysisWorkflow.NewStatAnalysisWorkflow()
-
-	// Register rankings workflow
-	w.RegisterWorkflowWithOptions(rankingsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.RankingsWorkflowName,
-	})
-
-	// Register reports workflow
-	w.RegisterWorkflowWithOptions(reportsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.ReportsWorkflowName,
-	})
-
-	// Register builds batch workflow
-	w.RegisterWorkflowWithOptions(buildsBatchWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.ProcessBuildsBatchWorkflow,
-	})
-
-	// Register builds workflow
-	w.RegisterWorkflowWithOptions(buildsWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.BuildsWorkflowName,
-	})
-
-	// Register equipment analysis workflow
-	w.RegisterWorkflowWithOptions(equipmentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.AnalyzeBuildsWorkflowName,
-	})
-
-	// Register talent analysis workflow
-	w.RegisterWorkflowWithOptions(talentAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.AnalyzeTalentsWorkflowName,
-	})
-
-	// Register stat analysis workflow
-	w.RegisterWorkflowWithOptions(statAnalysisWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.AnalyzeStatStatisticsWorkflowName,
-	})
-
-	// Register rankingsactivities
-	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
-	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
-	w.RegisterActivity(activitiesService.Rankings.MarkRankingsForReportProcessing)
-
-	// Register reports activities
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)
-	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
-	w.RegisterActivity(activitiesService.Reports.CountAllReports)
-	w.RegisterActivity(activitiesService.Reports.GetUniqueReportReferences)
-	w.RegisterActivity(activitiesService.Reports.GetRankingsNeedingReportProcessing)
-	w.RegisterActivity(activitiesService.Reports.MarkReportsForBuildProcessing)
-
-	// Register player builds activities
-	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
-	w.RegisterActivity(activitiesService.PlayerBuilds.GetReportsNeedingBuildExtraction)
-	w.RegisterActivity(activitiesService.PlayerBuilds.MarkReportsAsProcessedForBuilds)
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountReportsNeedingBuildExtraction)
-
-	// Register rate limit activities
-	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
-	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
-	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
-
-	// Register new analysis activities
-	w.RegisterActivity(activitiesService.BuildStatistics.ProcessItemStatistics)
-	w.RegisterActivity(activitiesService.TalentStatistics.ProcessTalentStatistics)
-	w.RegisterActivity(activitiesService.StatStatistics.ProcessStatStatistics)
-
-	// Workflow state activities
-	w.RegisterActivity(activitiesService.WorkflowState.CreateWorkflowState)
-	w.RegisterActivity(activitiesService.WorkflowState.UpdateWorkflowState)
-	w.RegisterActivity(activitiesService.WorkflowState.GetLastWorkflowRun)
-	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStatistics)
-	w.RegisterActivity(activitiesService.WorkflowState.GetWorkflowStateByID)
-	w.RegisterActivity(activitiesService.WorkflowState.DeleteOldWorkflowStates)
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {

@@ -13,6 +13,7 @@ import (
 	warcraftlogs "wowperf/internal/services/warcraftlogs"
 	playerRankingsQueries "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/queries"
 	playerRankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/repository"
+	models "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/temporal/workflows/models"
 )
 
 // PlayerRankingsActivity handles all activities related to player rankings
@@ -33,27 +34,31 @@ func NewPlayerRankingsActivity(
 	}
 }
 
-// FetchAllDungeonRankings retrieves player rankings for multiple dungeons in parallel
-// It handles multiple pages and processes the results for storage
-// Corresponds to definitions.FetchAllDungeonRankingsActivity
+// FetchAllDungeonRankings récupère les classements de plusieurs donjons en parallèle
+// Elle stocke directement les résultats en base de données et retourne uniquement des statistiques
 func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 	ctx context.Context,
 	dungeonIDs []int,
 	pagesPerDungeon int,
 	maxConcurrency int,
-) ([]playerRankingModels.PlayerRanking, error) {
+) (*models.RankingsStats, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting rankings fetch for multiple dungeons",
 		"dungeonCount", len(dungeonIDs),
 		"pagesPerDungeon", pagesPerDungeon,
 		"maxConcurrency", maxConcurrency)
 
+	startTime := time.Now()
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, maxConcurrency)
 
 	var mu sync.Mutex
 	var allRankings []playerRankingModels.PlayerRanking
 	errorsChan := make(chan error, len(dungeonIDs))
+
+	// Compteurs pour les statistiques de rôles
+	var tankCount, healerCount, dpsCount int
+	var statsMutex sync.Mutex
 
 	for _, dungeonID := range dungeonIDs {
 		wg.Add(1)
@@ -83,10 +88,25 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 					return
 				}
 
+				// Compter les rôles pour chaque classement
+				localTankCount := 0
+				localHealerCount := 0
+				localDpsCount := 0
+
 				// Convert to PlayerRanking objects
 				for _, ranking := range dungeonData.Rankings {
 					// Determine role based on class and spec
 					role := determineRole(ranking.Class, ranking.Spec)
+
+					// Track role counts
+					switch role {
+					case "Tank":
+						localTankCount++
+					case "Healer":
+						localHealerCount++
+					case "DPS":
+						localDpsCount++
+					}
 
 					// Create PlayerRanking object
 					playerRanking := playerRankingModels.PlayerRanking{
@@ -118,6 +138,13 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 
 					dungeonRankings = append(dungeonRankings, playerRanking)
 				}
+
+				// Mettre à jour les compteurs globaux
+				statsMutex.Lock()
+				tankCount += localTankCount
+				healerCount += localHealerCount
+				dpsCount += localDpsCount
+				statsMutex.Unlock()
 
 				// If there are no more pages, break the loop
 				if !dungeonData.HasMorePages {
@@ -156,7 +183,40 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 	logger.Info("Successfully fetched rankings for all dungeons",
 		"totalRankingsCount", len(allRankings))
 
-	return allRankings, nil
+	// Stockage direct en base de données
+	if len(allRankings) > 0 {
+		// D'abord supprimer les classements existants
+		if err := a.repository.DeleteExistingRankings(ctx); err != nil {
+			logger.Error("Failed to delete existing rankings", "error", err)
+			return nil, temporal.NewApplicationError(
+				fmt.Sprintf("Failed to delete existing rankings: %v", err),
+				"DB_ERROR",
+			)
+		}
+
+		// Stocker les nouveaux classements
+		if err := a.repository.StoreRankingsByBatches(ctx, allRankings); err != nil {
+			logger.Error("Failed to store rankings", "error", err)
+			return nil, temporal.NewApplicationError(
+				fmt.Sprintf("Failed to store rankings: %v", err),
+				"DB_ERROR",
+			)
+		}
+
+		logger.Info("Successfully stored rankings directly in database", "count", len(allRankings))
+	}
+
+	// Créer et retourner les statistiques
+	stats := &models.RankingsStats{
+		TotalCount:        len(allRankings),
+		DungeonsProcessed: len(dungeonIDs),
+		ProcessingTime:    time.Since(startTime),
+		TankCount:         tankCount,
+		HealerCount:       healerCount,
+		DPSCount:          dpsCount,
+	}
+
+	return stats, nil
 }
 
 // StoreRankings stores the rankings in the database

@@ -221,20 +221,34 @@ func (r *PlayerRankingsRepository) CalculateDailySpecMetrics(ctx context.Context
 		// Filter to keep only players who have completed all 8 dungeons
 		if err := tx.Raw(`
 			SELECT 
-				spec, 
-				class, 
-				role, 
-				name,
-				server_name,
-				SUM(score) AS total_score,
-				AVG(hard_mode_level) AS avg_key_level,
-				MAX(hard_mode_level) AS max_key_level,
-				MIN(hard_mode_level) AS min_key_level,
-				COUNT(DISTINCT dungeon_id) AS dungeon_count
-			FROM player_rankings
-			WHERE server_region != 'CN'
-			GROUP BY spec, class, role, name, server_name
-			HAVING COUNT(DISTINCT dungeon_id) = 8
+    spec, 
+    class, 
+    role, 
+    name,
+    server_name,
+    SUM(best_score) AS total_score,
+    AVG(avg_key_level) AS avg_key_level,
+    MAX(max_key_level) AS max_key_level,
+    MIN(min_key_level) AS min_key_level,
+    COUNT(DISTINCT dungeon_id) AS dungeon_count
+FROM (
+    SELECT 
+        spec, 
+        class, 
+        role, 
+        name,
+        server_name,
+        dungeon_id,
+        MAX(score) as best_score,
+        AVG(hard_mode_level) as avg_key_level,
+        MAX(hard_mode_level) as max_key_level,
+        MIN(hard_mode_level) as min_key_level
+    FROM player_rankings
+    WHERE server_region != 'CN'
+    GROUP BY spec, class, role, name, server_name, dungeon_id
+) AS best_scores
+GROUP BY spec, class, role, name, server_name
+HAVING COUNT(DISTINCT dungeon_id) = 8
 		`).Scan(&playerScores).Error; err != nil {
 			return fmt.Errorf("error calculating player global scores: %w", err)
 		}
@@ -440,20 +454,36 @@ func (r *PlayerRankingsRepository) GetGlobalRankings(ctx context.Context) (*play
 	var playersData []PlayerData
 	err := r.db.WithContext(ctx).Raw(`
 		SELECT
-			name,
-			class,
-			spec,
-			role,
-			SUM(score) as total_score,
-			guild_id,
-			guild_name,
-			guild_faction as faction,
-			server_id,
-			server_name,
-			server_region as region
-		FROM player_rankings
-		GROUP BY name, class, spec, role, guild_id, guild_name, guild_faction, server_id, server_name, server_region
-		ORDER BY total_score DESC
+    name,
+    class,
+    spec,
+    role,
+    SUM(best_score) as total_score,
+    guild_id,
+    guild_name,
+    guild_faction as faction,
+    server_id,
+    server_name,
+    server_region as region
+FROM (
+    SELECT
+        name,
+        class,
+        spec,
+        role,
+        dungeon_id,
+        MAX(score) as best_score,
+        guild_id,
+        guild_name,
+        guild_faction,
+        server_id,
+        server_name,
+        server_region
+    FROM player_rankings
+    GROUP BY name, class, spec, role, dungeon_id, guild_id, guild_name, guild_faction, server_id, server_name, server_region
+) as best_runs
+GROUP BY name, class, spec, role, guild_id, guild_name, guild_faction, server_id, server_name, server_region
+ORDER BY total_score DESC
 	`).Scan(&playersData).Error
 
 	if err != nil {
