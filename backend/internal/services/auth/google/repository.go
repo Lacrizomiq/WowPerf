@@ -121,57 +121,147 @@ func (r *GoogleAuthRepository) CheckUserExistsByEmail(email string) (bool, error
 	return count > 0, nil
 }
 
-// ===== MÉTHODES MÉTIER SPÉCIFIQUES =====
+// =====  LOGIQUE DE CRÉATION D'UTILISATEUR (Evite la duplication d'username) =====
 
-// GenerateUsernameFromGoogle génère un nom d'utilisateur depuis les infos Google
-func (r *GoogleAuthRepository) GenerateUsernameFromGoogle(userInfo *GoogleUserInfo) string {
+// CreateUserFromGoogle crée un nouvel utilisateur avec gestion intelligente des conflits username
+func (r *GoogleAuthRepository) CreateUserFromGoogle(userInfo *GoogleUserInfo) (*models.User, error) {
+	baseUsername := r.generateBaseUsername(userInfo)
+
+	// 1. Essayer le username de base d'abord
+	if user, err := r.tryCreateUser(baseUsername, userInfo); err == nil {
+		return user, nil // ✅ Succès avec "ludovic"
+	} else if !r.isUniqueConstraintError(err) {
+		return nil, err // Erreur autre que contrainte unique → fail immédiat
+	}
+
+	// 2. Trouver le prochain numéro disponible
+	nextNumber := r.findNextAvailableNumber(baseUsername)
+
+	// 3. Essayer 100 variations à partir du prochain disponible
+	for i := nextNumber; i < nextNumber+100; i++ {
+		username := fmt.Sprintf("%s%d", baseUsername, i)
+
+		if user, err := r.tryCreateUser(username, userInfo); err == nil {
+			return user, nil // ✅ Succès avec "ludovic42"
+		} else if !r.isUniqueConstraintError(err) {
+			return nil, err // Erreur autre que contrainte unique → fail
+		}
+	}
+
+	// 4. Fallback ultime : UUID garanti unique (cas très extrême)
+	uuid := r.generateUUID8()
+	username := fmt.Sprintf("%s_%s", baseUsername, uuid)
+	return r.tryCreateUser(username, userInfo)
+}
+
+// tryCreateUser tente de créer un utilisateur avec un username donné
+func (r *GoogleAuthRepository) tryCreateUser(username string, userInfo *GoogleUserInfo) (*models.User, error) {
+	user := &models.User{
+		Username: username,
+		Email:    userInfo.Email,
+		Password: "", // Pas de mot de passe pour comptes Google
+	}
+
+	// Lier le compte Google
+	user.LinkGoogleAccount(userInfo.ID, userInfo.Email)
+
+	// Tenter la création
+	if err := r.CreateUser(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// findNextAvailableNumber trouve le prochain numéro disponible pour un username
+func (r *GoogleAuthRepository) findNextAvailableNumber(baseUsername string) int {
+	var result struct {
+		MaxNum int `gorm:"column:max_num"`
+	}
+
+	// Requête pour trouver le plus grand numéro existant
+	// Ex: pour "ludovic" → trouve le max de "ludovic1", "ludovic2", "ludovic99", etc.
+	r.db.Raw(`
+		SELECT COALESCE(MAX(
+			CASE 
+				WHEN username ~ ? 
+				THEN CAST(REGEXP_REPLACE(username, ?, '', 'g') AS INTEGER)
+				ELSE 0 
+			END
+		), 0) as max_num
+		FROM users 
+		WHERE username = ? OR username ~ ?
+	`,
+		"^"+baseUsername+"[0-9]+$", // Pattern regex : "ludovic[0-9]+"
+		"^"+baseUsername,           // Enlever "ludovic" pour garder que le numéro
+		baseUsername,               // Username exact : "ludovic"
+		"^"+baseUsername+"[0-9]+$", // Pattern regex : "ludovic[0-9]+"
+	).Scan(&result)
+
+	return result.MaxNum + 1 // Retourner le suivant
+}
+
+// isUniqueConstraintError détecte si l'erreur est due à une contrainte unique
+func (r *GoogleAuthRepository) isUniqueConstraintError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := strings.ToLower(err.Error())
+
+	// PostgreSQL
+	if strings.Contains(errStr, "duplicate key") &&
+		(strings.Contains(errStr, "username") || strings.Contains(errStr, "uniqueindex")) {
+		return true
+	}
+
+	// MySQL
+	if strings.Contains(errStr, "duplicate entry") && strings.Contains(errStr, "username") {
+		return true
+	}
+
+	// SQLite
+	if strings.Contains(errStr, "unique constraint") && strings.Contains(errStr, "username") {
+		return true
+	}
+
+	// GORM peut wrapper l'erreur
+	if strings.Contains(errStr, "unique") && strings.Contains(errStr, "constraint") {
+		return true
+	}
+
+	return false
+}
+
+// generateBaseUsername génère le username de base (sans numéro)
+func (r *GoogleAuthRepository) generateBaseUsername(userInfo *GoogleUserInfo) string {
 	// Priorité : prénom > nom complet > partie email
 	if userInfo.GivenName != "" {
-		return r.ensureUniqueUsername(userInfo.GivenName)
+		return r.cleanUsername(userInfo.GivenName)
 	}
 
 	if userInfo.Name != "" {
 		// Prendre le premier mot du nom complet
 		parts := strings.Fields(userInfo.Name)
 		if len(parts) > 0 {
-			return r.ensureUniqueUsername(parts[0])
+			return r.cleanUsername(parts[0])
 		}
 	}
 
 	// Fallback : partie avant @ de l'email
 	if parts := strings.Split(userInfo.Email, "@"); len(parts) > 0 {
-		return r.ensureUniqueUsername(parts[0])
+		return r.cleanUsername(parts[0])
 	}
 
 	// Dernier fallback
-	return r.ensureUniqueUsername("user")
+	return "user"
 }
 
-// ensureUniqueUsername s'assure que le nom d'utilisateur est unique
-func (r *GoogleAuthRepository) ensureUniqueUsername(baseUsername string) string {
-	// Nettoyer le nom d'utilisateur (supprimer caractères spéciaux, etc.)
-	username := r.cleanUsername(baseUsername)
-
-	// Vérifier si le nom existe déjà
-	var count int64
-	r.db.Model(&models.User{}).Where("username = ?", username).Count(&count)
-
-	// Si pas de conflit, retourner tel quel
-	if count == 0 {
-		return username
-	}
-
-	// Sinon, ajouter un numéro
-	for i := 1; i <= 999; i++ {
-		candidateUsername := fmt.Sprintf("%s%d", username, i)
-		r.db.Model(&models.User{}).Where("username = ?", candidateUsername).Count(&count)
-		if count == 0 {
-			return candidateUsername
-		}
-	}
-
-	// Fallback avec timestamp si vraiment pas de chance
-	return fmt.Sprintf("%s%d", username, time.Now().Unix())
+// generateUUID8 génère 8 caractères UUID pour fallback ultime
+func (r *GoogleAuthRepository) generateUUID8() string {
+	// Version simple sans import uuid - utilise timestamp + random
+	timestamp := time.Now().UnixNano()
+	return fmt.Sprintf("%08x", timestamp)[:8] // 8 premiers chars en hexa
 }
 
 // cleanUsername nettoie un nom d'utilisateur
@@ -195,22 +285,4 @@ func (r *GoogleAuthRepository) cleanUsername(username string) string {
 	}
 
 	return cleaned
-}
-
-// CreateUserFromGoogle crée un nouvel utilisateur à partir des infos Google
-func (r *GoogleAuthRepository) CreateUserFromGoogle(userInfo *GoogleUserInfo) (*models.User, error) {
-	user := &models.User{
-		Username: r.GenerateUsernameFromGoogle(userInfo),
-		Email:    userInfo.Email,
-		Password: "", // Pas de mot de passe pour les comptes Google uniquement
-	}
-
-	// Lier le compte Google
-	user.LinkGoogleAccount(userInfo.ID, userInfo.Email)
-
-	if err := r.CreateUser(user); err != nil {
-		return nil, err
-	}
-
-	return user, nil
 }

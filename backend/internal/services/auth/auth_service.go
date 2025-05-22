@@ -82,7 +82,7 @@ func NewAuthService(
 }
 
 // setAuthCookies sets the authentication cookies in the response
-func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+func (s *AuthService) SetAuthCookies(c *gin.Context, accessToken, refreshToken string) {
 	c.SetCookie(
 		"access_token",
 		accessToken,
@@ -136,17 +136,17 @@ func (s *AuthService) Login(c *gin.Context, email, password string) error {
 		return ErrInvalidCredentials
 	}
 
-	accessToken, err := s.generateToken(user.ID, s.TokenExpiration)
+	accessToken, err := s.GenerateToken(user.ID, s.TokenExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshToken, err := s.generateRefreshToken(user.ID)
+	refreshToken, err := s.GenerateRefreshToken(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	s.setAuthCookies(c, accessToken, refreshToken)
+	s.SetAuthCookies(c, accessToken, refreshToken)
 	return nil
 }
 
@@ -213,8 +213,8 @@ func (s *AuthService) IsTokenBlacklisted(token string) (bool, error) {
 	return true, nil
 }
 
-// generateToken creates a new JWT token
-func (s *AuthService) generateToken(userID uint, expiration time.Duration) (string, error) {
+// GenerateToken creates a new JWT token
+func (s *AuthService) GenerateToken(userID uint, expiration time.Duration) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -228,7 +228,7 @@ func (s *AuthService) generateToken(userID uint, expiration time.Duration) (stri
 }
 
 // generateRefreshToken creates a new refresh token
-func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
+func (s *AuthService) GenerateRefreshToken(userID uint) (string, error) {
 	ctx := context.Background()
 	refreshToken := fmt.Sprintf("%d", time.Now().UnixNano())
 	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, RefreshTokenDuration).Err()
@@ -274,19 +274,19 @@ func (s *AuthService) RefreshToken(c *gin.Context) error {
 	}
 
 	// Generate new access token
-	newAccessToken, err := s.generateToken(uint(userID), s.TokenExpiration)
+	newAccessToken, err := s.GenerateToken(uint(userID), s.TokenExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
 	// Generate new refresh token
-	newRefreshToken, err := s.generateRefreshToken(uint(userID))
+	newRefreshToken, err := s.GenerateRefreshToken(uint(userID))
 	if err != nil {
 		return fmt.Errorf("failed to generate new refresh token: %w", err)
 	}
 
 	// Set new cookie
-	s.setAuthCookies(c, newAccessToken, newRefreshToken)
+	s.SetAuthCookies(c, newAccessToken, newRefreshToken)
 
 	// Delete old refresh token
 	err = s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Err()

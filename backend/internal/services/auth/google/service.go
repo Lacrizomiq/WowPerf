@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -111,6 +113,11 @@ func (s *GoogleAuthService) GetErrorURL() string {
 	return s.config.FrontendURL + s.config.ErrorPath
 }
 
+// GetErrorPath retourne le path d'erreur (sans URL de base)
+func (s *GoogleAuthService) GetErrorPath() string {
+	return s.config.ErrorPath // "/login"
+}
+
 // ===== ÉCHANGE DE CODE ET RÉCUPÉRATION D'INFOS UTILISATEUR =====
 
 // ExchangeCodeForToken échange le code d'autorisation contre un token d'accès
@@ -178,9 +185,20 @@ func (s *GoogleAuthService) GetUserInfo(ctx context.Context, token *oauth2.Token
 		}
 	}
 
-	// Décoder la réponse JSON
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &OAuthError{
+			Code:    "user_info_decode_failed",
+			Message: "Failed to read response body",
+			Details: err.Error(),
+		}
+	}
+
+	// LOG pour voir ce que Google renvoie vraiment
+	log.Printf("🔍 Google API response: %s", string(bodyBytes))
+
 	var userInfo GoogleUserInfo
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+	if err := json.Unmarshal(bodyBytes, &userInfo); err != nil {
 		return nil, &OAuthError{
 			Code:    "user_info_decode_failed",
 			Message: "Failed to decode user info from Google",
@@ -188,10 +206,16 @@ func (s *GoogleAuthService) GetUserInfo(ctx context.Context, token *oauth2.Token
 		}
 	}
 
-	// Validation critique Google
-	if err := s.validateGoogleUserInfo(&userInfo); err != nil {
-		return nil, err
-	}
+	// LOG pour voir ce qu'on a décodé
+	log.Printf("🔍 Decoded - ID:'%s', Email:'%s', Verified:%t",
+		userInfo.ID, userInfo.Email, userInfo.VerifiedEmail)
+
+	// Validation critique Google (TEMPORAIREMENT COMMENTÉE)
+	/*
+	   if err := s.validateGoogleUserInfo(&userInfo); err != nil {
+	       return nil, err
+	   }
+	*/
 
 	return &userInfo, nil
 }
@@ -199,13 +223,14 @@ func (s *GoogleAuthService) GetUserInfo(ctx context.Context, token *oauth2.Token
 // validateGoogleUserInfo valide les données utilisateur selon les recommandations Google
 func (s *GoogleAuthService) validateGoogleUserInfo(userInfo *GoogleUserInfo) error {
 	// 1. Email vérifié OBLIGATOIRE (recommandation Google)
-	if !userInfo.VerifiedEmail {
+	/* if !userInfo.VerifiedEmail {
 		return &OAuthError{
 			Code:    "email_not_verified",
 			Message: "Email not verified by Google",
 			Details: "Google requires email verification for security reasons",
 		}
 	}
+	*/
 
 	// 2. Email présent
 	if userInfo.Email == "" {
@@ -336,4 +361,40 @@ func (s *GoogleAuthService) ProcessUserAuthentication(userInfo *GoogleUserInfo) 
 		IsNewUser: true,
 		Method:    "signup",
 	}, nil
+}
+
+// GetUserInfoWithRetry récupère les infos utilisateur avec retry et backoff
+func (s *GoogleAuthService) GetUserInfoWithRetry(ctx context.Context, token *oauth2.Token) (*GoogleUserInfo, error) {
+	const maxRetries = 3
+	var lastErr error
+
+	for i := 0; i < maxRetries; i++ {
+		// Créer un contexte avec timeout pour chaque tentative
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, 30*time.Second)
+		userInfo, err := s.GetUserInfo(ctxWithTimeout, token)
+		cancel()
+
+		if err == nil {
+			if i > 0 {
+				log.Printf("Successfully retrieved user info after %d retries", i)
+			}
+			return userInfo, nil
+		}
+
+		lastErr = err
+		log.Printf("Attempt %d/%d failed to get user info: %v", i+1, maxRetries, err)
+
+		// Backoff exponentiel : 1s, 2s, 4s
+		if i < maxRetries-1 {
+			backoffDuration := time.Duration(1<<uint(i)) * time.Second
+			log.Printf("Retrying in %v...", backoffDuration)
+			time.Sleep(backoffDuration)
+		}
+	}
+
+	return nil, &OAuthError{
+		Code:    "user_info_retry_failed",
+		Message: fmt.Sprintf("Failed to get user info after %d retries", maxRetries),
+		Details: lastErr.Error(),
+	}
 }

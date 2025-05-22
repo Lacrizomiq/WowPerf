@@ -9,7 +9,7 @@ import (
 
 // GoogleUserInfo structures des infos utilisateur récupérées de Google
 type GoogleUserInfo struct {
-	ID            string `json:"id"`             // Google ID unique
+	ID            string `json:"sub"`            // Google ID unique
 	Email         string `json:"email"`          // Email utilisateur
 	VerifiedEmail bool   `json:"verified_email"` // CRITIQUE : email vérifié par Google
 	Name          string `json:"name"`           // Nom complet
