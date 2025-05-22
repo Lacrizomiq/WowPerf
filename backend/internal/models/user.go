@@ -35,6 +35,10 @@ type User struct {
 	BattleNetScopes       []string  `gorm:"type:text[]" json:"-"`
 	LastTokenRefresh      time.Time `json:"-"`
 
+	// Google OAuth fields
+	GoogleID    *string `gorm:"uniqueIndex" json:"google_id"`
+	GoogleEmail *string `json:"google_email"`
+
 	// Character relationship
 	FavoriteCharacterID *uint           `json:"favorite_character_id"`
 	Characters          []UserCharacter `gorm:"foreignKey:UserID" json:"characters,omitempty"`
@@ -180,4 +184,43 @@ func (u *User) ValidatePasswordResetToken(token string) bool {
 	}
 
 	return u.IsPasswordResetTokenValid()
+}
+
+// === GOOGLE OAUTH METHODS ===
+
+// IsGoogleLinked vérifie si le compte Google est lié à un utilisateur
+func (u *User) IsGoogleLinked() bool {
+	return u.GoogleID != nil
+}
+
+// CanLoginWithGoogle vérifie si l'utilisateur peut se connecter avec Google
+func (u *User) CanLoginWithGoogle() bool {
+	return u.IsGoogleLinked() && u.GoogleEmail != nil
+}
+
+// LinkGoogleAccount lie un compte Google à l'utilisateur
+func (u *User) LinkGoogleAccount(googleID, googleEmail string) {
+	u.GoogleID = &googleID
+	u.GoogleEmail = &googleEmail
+}
+
+// UnlinkGoogleAccount supprime le lien Google de l'utilisateur
+func (u *User) UnlinkGoogleAccount() {
+	u.GoogleID = nil
+	u.GoogleEmail = nil
+}
+
+// HasMultipleAuthMethods vérifie si l'utilisateur a plusieurs méthodes d'auth
+func (u *User) HasMultipleAuthMethods() bool {
+	methods := 0
+	if u.Password != "" {
+		methods++
+	}
+	if u.IsGoogleLinked() {
+		methods++
+	}
+	if u.IsBattleNetLinked() {
+		methods++
+	}
+	return methods > 1
 }
