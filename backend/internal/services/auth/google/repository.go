@@ -2,6 +2,7 @@ package googleauth
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"wowperf/internal/models"
@@ -156,19 +157,27 @@ func (r *GoogleAuthRepository) CreateUserFromGoogle(userInfo *GoogleUserInfo) (*
 
 // tryCreateUser tente de créer un utilisateur avec un username donné
 func (r *GoogleAuthRepository) tryCreateUser(username string, userInfo *GoogleUserInfo) (*models.User, error) {
-	user := &models.User{
-		Username: username,
-		Email:    userInfo.Email,
-		Password: "", // Pas de mot de passe pour comptes Google
-	}
+	// Prépare les pointeurs avant la création
+	googleID := userInfo.ID
+	googleEmail := userInfo.Email
 
-	// Lier le compte Google
-	user.LinkGoogleAccount(userInfo.ID, userInfo.Email)
+	user := &models.User{
+		Username:    username,
+		Email:       userInfo.Email,
+		Password:    "", // Pas de mot de passe pour comptes Google
+		GoogleID:    &googleID,
+		GoogleEmail: &googleEmail,
+	}
 
 	// Tenter la création
 	if err := r.CreateUser(user); err != nil {
+		log.Printf("❌ Failed to create user: %v", err)
 		return nil, err
 	}
+
+	// Vérifier après création
+	log.Printf("✅ User created successfully - ID: %d, GoogleID: %v",
+		user.ID, user.GoogleID)
 
 	return user, nil
 }

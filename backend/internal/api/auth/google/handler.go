@@ -178,7 +178,7 @@ func (h *GoogleAuthHandler) redirectToFrontendWithSuccess(c *gin.Context, result
 	if result.IsNewUser {
 		redirectPath = "/" // Page de bienvenue pour nouveaux utilisateurs
 	} else {
-		redirectPath = "/dashboard" // Dashboard pour utilisateurs existants
+		redirectPath = "/profile" // Dashboard pour utilisateurs existants
 	}
 
 	finalURL := frontendURL + redirectPath

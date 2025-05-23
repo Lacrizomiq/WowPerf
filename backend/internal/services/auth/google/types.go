@@ -11,7 +11,7 @@ import (
 type GoogleUserInfo struct {
 	ID            string `json:"sub"`            // Google ID unique
 	Email         string `json:"email"`          // Email utilisateur
-	VerifiedEmail bool   `json:"verified_email"` // CRITIQUE : email vérifié par Google
+	VerifiedEmail bool   `json:"email_verified"` // CRITIQUE : email vérifié par Google
 	Name          string `json:"name"`           // Nom complet
 	GivenName     string `json:"given_name"`     // Prénom
 	FamilyName    string `json:"family_name"`    // Nom de famille
