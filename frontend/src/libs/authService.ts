@@ -39,6 +39,24 @@ export enum AuthErrorCode {
   SIGNUP_ERROR = "signup_error",
   LOGOUT_ERROR = "logout_error",
   REFRESH_ERROR = "refresh_token_error",
+
+  // OAuth specific errors
+  OAUTH_CANCELLED = "auth_cancelled",
+  OAUTH_FAILED = "auth_failed",
+  OAUTH_PROCESSING_FAILED = "auth_processing_failed",
+  OAUTH_STATE_MISMATCH = "state_mismatch",
+  OAUTH_INVALID_CALLBACK = "invalid_callback",
+  OAUTH_TOKEN_EXCHANGE_FAILED = "token_exchange_failed",
+  OAUTH_USER_INFO_FAILED = "user_info_failed",
+  EMAIL_ALREADY_LINKED = "email_already_linked",
+}
+
+// Authentication method used for login
+export enum AuthMethod {
+  PASSWORD = "password",
+  GOOGLE = "google",
+  // Future providers
+  // DISCORD = "discord",
 }
 
 export class AuthError extends Error {

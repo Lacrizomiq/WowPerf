@@ -174,15 +174,17 @@ func (h *GoogleAuthHandler) setAuthenticationCookies(c *gin.Context, user *model
 func (h *GoogleAuthHandler) redirectToFrontendWithSuccess(c *gin.Context, result *googleauthService.AuthResult) {
 	frontendURL := h.service.GetFrontendURL()
 
-	var redirectPath string
+	// Toujours rediriger vers /auth/callback pour une meilleur UX
+	redirectPath := "/auth/callback"
+
+	// Ajouter query param pour indiquer si nouvel utilisateur
+	var queryParams string
 	if result.IsNewUser {
-		redirectPath = "/" // Page de bienvenue pour nouveaux utilisateurs
-	} else {
-		redirectPath = "/profile" // Dashboard pour utilisateurs existants
+		queryParams = "?new_user=true"
 	}
 
-	finalURL := frontendURL + redirectPath
-	log.Printf("Redirecting to frontend: %s (method: %s)", finalURL, result.Method)
+	finalURL := frontendURL + redirectPath + queryParams
+	log.Printf("Redirecting to frontend callback: %s (method: %s)", finalURL, result.Method)
 
 	c.Redirect(http.StatusSeeOther, finalURL)
 }

@@ -8,10 +8,16 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
+import {
+  authService,
+  AuthError,
+  AuthErrorCode,
+  AuthMethod,
+} from "@/libs/authService";
 import { useRouter } from "next/navigation";
 import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
 import { usePathname } from "next/navigation";
+import { googleAuthService } from "@/libs/googleAuthService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -20,11 +26,15 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
+  checkAuth: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
 }
 
 interface UserData {
   username: string;
   email?: string;
+  authMethod?: AuthMethod;
+  hasGoogleLinked?: boolean;
 }
 
 interface AuthState {
@@ -207,6 +217,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [router, handleAuthError, updateState]
   );
 
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      await googleAuthService.initiateGoogleLogin();
+      // Le backend redirige automatiquement vers Google
+    } catch (error) {
+      console.error("Failed to initiate Google login:", error);
+      const errorMessage = await handleAuthError(error);
+      throw new Error(errorMessage);
+    }
+  }, [handleAuthError]);
+
   const value = {
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
@@ -214,6 +235,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     login,
     logout,
     signup,
+    checkAuth,
+    loginWithGoogle,
   };
 
   if (state.isLoading) {
