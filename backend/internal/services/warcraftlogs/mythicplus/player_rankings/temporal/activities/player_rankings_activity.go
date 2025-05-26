@@ -16,14 +16,14 @@ import (
 	models "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/temporal/workflows/models"
 )
 
-// PlayerRankingsActivity handles all activities related to player rankings
+// PlayerRankingsActivity gère toutes les activités liées aux classements des joueurs
 // Implémente l'interface definitions.PlayerRankingsActivity
 type PlayerRankingsActivity struct {
 	client     *warcraftlogs.WarcraftLogsClientService
 	repository *playerRankingsRepository.PlayerRankingsRepository
 }
 
-// NewPlayerRankingsActivity creates a new player rankings activity handler
+// NewPlayerRankingsActivity crée un nouveau gestionnaire d'activités de classements de joueurs
 func NewPlayerRankingsActivity(
 	client *warcraftlogs.WarcraftLogsClientService,
 	repository *playerRankingsRepository.PlayerRankingsRepository,
@@ -53,7 +53,7 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 	sem := make(chan struct{}, maxConcurrency)
 
 	var mu sync.Mutex
-	// ✅ Changement 1: Map pour garder seulement le meilleur score par joueur/donjon
+	// Map pour garder seulement le meilleur score par joueur/donjon
 	type playerDungeonKey struct {
 		name      string
 		dungeonID int
@@ -69,41 +69,41 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 		go func(dID int) {
 			defer wg.Done()
 
-			sem <- struct{}{}        // Acquire semaphore
-			defer func() { <-sem }() // Release semaphore
+			sem <- struct{}{}        // Acquérir le sémaphore
+			defer func() { <-sem }() // Libérer le sémaphore
 
 			// Record heartbeat
 			activity.RecordHeartbeat(ctx, fmt.Sprintf("Processing dungeon %d", dID))
 
-			// Process each page
+			// Traiter chaque page
 			for page := 1; page <= pagesPerDungeon; page++ {
-				// Prepare query parameters
+				// Préparer les paramètres de la requête
 				params := playerRankingsQueries.LeaderboardParams{
 					EncounterID: dID,
 					Page:        page,
 				}
 
-				// Fetch rankings
+				// Récupérer les classements
 				dungeonData, err := playerRankingsQueries.GetDungeonLeaderboardByPlayer(a.client, params)
 				if err != nil {
 					errorsChan <- fmt.Errorf("failed to fetch dungeon %d page %d: %w", dID, page, err)
 					return
 				}
 
-				// ✅ Changement 2: Traiter chaque ranking et garder seulement le meilleur
+				// Traiter chaque classement et garder seulement le meilleur
 				mu.Lock()
 				for _, ranking := range dungeonData.Rankings {
-					// Determine role based on class and spec
+					// Déterminer le rôle en fonction de la classe et de la spécialisation
 					role := determineRole(ranking.Class, ranking.Spec)
 
-					// Create key for this player/dungeon combination
+					// Créer une clé pour cette combinaison joueur/donjon
 					// Inclure le serveur pour éviter les homonymes
 					key := playerDungeonKey{
 						name:      fmt.Sprintf("%s-%s", ranking.Name, ranking.Server.Name),
 						dungeonID: dID,
 					}
 
-					// Create PlayerRanking object
+					// Créer un objet PlayerRanking
 					playerRanking := &playerRankingModels.PlayerRanking{
 						DungeonID:       dID,
 						Name:            ranking.Name,
@@ -131,7 +131,7 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 						Leaderboard:     0,
 					}
 
-					// ✅ Changement 3: Garder seulement le meilleur score (comme l'ancienne version)
+					// Garder seulement le meilleur score (comme l'ancienne version)
 					if existing, exists := bestScores[key]; exists {
 						if ranking.Score > existing.Score {
 							bestScores[key] = playerRanking
@@ -142,7 +142,7 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 				}
 				mu.Unlock()
 
-				// If there are no more pages, break the loop
+				// Si il n'y a plus de pages, arrêter la boucle
 				if !dungeonData.HasMorePages {
 					break
 				}
@@ -152,11 +152,11 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 		}(dungeonID)
 	}
 
-	// Wait for all goroutines to finish
+	// Attendre que toutes les goroutines soient terminées
 	wg.Wait()
 	close(errorsChan)
 
-	// Process errors
+	// Traiter les erreurs
 	var errors []error
 	for err := range errorsChan {
 		errors = append(errors, err)
@@ -169,7 +169,7 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 		)
 	}
 
-	// ✅ Changement 4: Convertir la map en slice et calculer les statistiques
+	// Convertir la map en slice et calculer les statistiques
 	var allRankings []playerRankingModels.PlayerRanking
 	for _, ranking := range bestScores {
 		allRankings = append(allRankings, *ranking)
@@ -224,9 +224,9 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 	return stats, nil
 }
 
-// StoreRankings stores the rankings in the database
-// It first deletes existing rankings and then stores new ones in batches
-// Corresponds to definitions.StoreRankingsActivity
+// StoreRankings stocke les classements dans la base de données
+// Elle d'abord supprime les classements existants et stocke les nouveaux dans des lots
+// Corresponds à definitions.StoreRankingsActivity
 func (a *PlayerRankingsActivity) StoreRankings(
 	ctx context.Context,
 	rankings []playerRankingModels.PlayerRanking,
@@ -243,7 +243,7 @@ func (a *PlayerRankingsActivity) StoreRankings(
 		)
 	}
 
-	// Store new rankings
+	// Stocker les nouveaux classements
 	if err := a.repository.StoreRankingsByBatches(ctx, rankings); err != nil {
 		logger.Error("Failed to store rankings", "error", err)
 		return temporal.NewApplicationError(
@@ -256,15 +256,15 @@ func (a *PlayerRankingsActivity) StoreRankings(
 	return nil
 }
 
-// CalculateDailyMetrics calculates daily metrics for specializations
-// Corresponds to definitions.CalculateDailyMetricsActivity
+// CalculateDailyMetrics calcule les métriques quotidiennes pour les spécialisations
+// Correspond à definitions.CalculateDailyMetricsActivity
 func (a *PlayerRankingsActivity) CalculateDailyMetrics(ctx context.Context) error {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Starting daily metrics calculation")
 
 	startTime := time.Now()
 
-	// Calculate metrics
+	// Calculer les métriques
 	if err := a.repository.CalculateDailySpecMetrics(ctx); err != nil {
 		logger.Error("Failed to calculate daily metrics", "error", err)
 		return temporal.NewApplicationError(
@@ -278,7 +278,7 @@ func (a *PlayerRankingsActivity) CalculateDailyMetrics(ctx context.Context) erro
 	return nil
 }
 
-// determineRole determines the role (Tank, Healer, DPS) based on class and spec
+// determineRole détermine le rôle (Tank, Healer, DPS) en fonction de la classe et de la spécialisation
 func determineRole(class, spec string) string {
 	tanks := map[string][]string{
 		"Warrior":     {"Protection"},
