@@ -153,22 +153,37 @@ func (r *PlayerRankingsRepository) CalculateDailySpecMetrics(ctx context.Context
 
 		// Optimized query with GROUP BY
 		if err := tx.Raw(`
-			SELECT 
-				spec, 
-				class, 
-				role, 
-				dungeon_id,
-				COALESCE(AVG(score), 0) AS avg_score,
-				COALESCE(MAX(score), 0) AS max_score,
-				COALESCE(MIN(score), 0) AS min_score,
-				COALESCE(AVG(hard_mode_level), 0) AS avg_key_level,
-				COALESCE(MAX(hard_mode_level), 0) AS max_key_level,
-				COALESCE(MIN(hard_mode_level), 0) AS min_key_level,
-				COUNT(*) AS count
-			FROM player_rankings
-			WHERE server_region != 'CN'
-			GROUP BY spec, class, role, dungeon_id
-		`).Scan(&dungeonMetrics).Error; err != nil {
+    WITH ranked_players AS (
+        SELECT 
+            spec,
+            class,
+            role,
+            dungeon_id,
+            score,
+            hard_mode_level,
+            ROW_NUMBER() OVER (
+                PARTITION BY spec, class, role, dungeon_id 
+                ORDER BY score DESC
+            ) as player_rank
+        FROM player_rankings
+        WHERE server_region != 'CN'
+    )
+    SELECT 
+        spec, 
+        class, 
+        role, 
+        dungeon_id,
+        COALESCE(AVG(score), 0) AS avg_score,
+        COALESCE(MAX(score), 0) AS max_score,
+        COALESCE(MIN(score), 0) AS min_score,
+        COALESCE(AVG(hard_mode_level), 0) AS avg_key_level,
+        COALESCE(MAX(hard_mode_level), 0) AS max_key_level,
+        COALESCE(MIN(hard_mode_level), 0) AS min_key_level,
+        COUNT(*) AS count
+    FROM ranked_players
+    WHERE player_rank <= 10
+    GROUP BY spec, class, role, dungeon_id
+`).Scan(&dungeonMetrics).Error; err != nil {
 			return fmt.Errorf("error calculating dungeon metrics: %w", err)
 		}
 

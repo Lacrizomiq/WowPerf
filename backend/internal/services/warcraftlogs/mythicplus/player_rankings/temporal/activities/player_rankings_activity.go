@@ -53,12 +53,16 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 	sem := make(chan struct{}, maxConcurrency)
 
 	var mu sync.Mutex
-	var allRankings []playerRankingModels.PlayerRanking
+	// ✅ Changement 1: Map pour garder seulement le meilleur score par joueur/donjon
+	type playerDungeonKey struct {
+		name      string
+		dungeonID int
+	}
+	bestScores := make(map[playerDungeonKey]*playerRankingModels.PlayerRanking)
 	errorsChan := make(chan error, len(dungeonIDs))
 
 	// Compteurs pour les statistiques de rôles
 	var tankCount, healerCount, dpsCount int
-	var statsMutex sync.Mutex
 
 	for _, dungeonID := range dungeonIDs {
 		wg.Add(1)
@@ -72,8 +76,6 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 			activity.RecordHeartbeat(ctx, fmt.Sprintf("Processing dungeon %d", dID))
 
 			// Process each page
-			var dungeonRankings []playerRankingModels.PlayerRanking
-
 			for page := 1; page <= pagesPerDungeon; page++ {
 				// Prepare query parameters
 				params := playerRankingsQueries.LeaderboardParams{
@@ -88,28 +90,21 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 					return
 				}
 
-				// Compter les rôles pour chaque classement
-				localTankCount := 0
-				localHealerCount := 0
-				localDpsCount := 0
-
-				// Convert to PlayerRanking objects
+				// ✅ Changement 2: Traiter chaque ranking et garder seulement le meilleur
+				mu.Lock()
 				for _, ranking := range dungeonData.Rankings {
 					// Determine role based on class and spec
 					role := determineRole(ranking.Class, ranking.Spec)
 
-					// Track role counts
-					switch role {
-					case "Tank":
-						localTankCount++
-					case "Healer":
-						localHealerCount++
-					case "DPS":
-						localDpsCount++
+					// Create key for this player/dungeon combination
+					// Inclure le serveur pour éviter les homonymes
+					key := playerDungeonKey{
+						name:      fmt.Sprintf("%s-%s", ranking.Name, ranking.Server.Name),
+						dungeonID: dID,
 					}
 
 					// Create PlayerRanking object
-					playerRanking := playerRankingModels.PlayerRanking{
+					playerRanking := &playerRankingModels.PlayerRanking{
 						DungeonID:       dID,
 						Name:            ranking.Name,
 						Class:           ranking.Class,
@@ -136,15 +131,16 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 						Leaderboard:     0,
 					}
 
-					dungeonRankings = append(dungeonRankings, playerRanking)
+					// ✅ Changement 3: Garder seulement le meilleur score (comme l'ancienne version)
+					if existing, exists := bestScores[key]; exists {
+						if ranking.Score > existing.Score {
+							bestScores[key] = playerRanking
+						}
+					} else {
+						bestScores[key] = playerRanking
+					}
 				}
-
-				// Mettre à jour les compteurs globaux
-				statsMutex.Lock()
-				tankCount += localTankCount
-				healerCount += localHealerCount
-				dpsCount += localDpsCount
-				statsMutex.Unlock()
+				mu.Unlock()
 
 				// If there are no more pages, break the loop
 				if !dungeonData.HasMorePages {
@@ -152,14 +148,7 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 				}
 			}
 
-			// Add results to global array with mutex protection
-			mu.Lock()
-			allRankings = append(allRankings, dungeonRankings...)
-			mu.Unlock()
-
-			logger.Info("Completed dungeon rankings fetch",
-				"dungeonID", dID,
-				"rankingsCount", len(dungeonRankings))
+			logger.Info("Completed dungeon rankings fetch", "dungeonID", dID)
 		}(dungeonID)
 	}
 
@@ -178,6 +167,22 @@ func (a *PlayerRankingsActivity) FetchAllDungeonRankings(
 			fmt.Sprintf("Failed to fetch rankings for some dungeons: %v", errors),
 			"FETCH_ERROR",
 		)
+	}
+
+	// ✅ Changement 4: Convertir la map en slice et calculer les statistiques
+	var allRankings []playerRankingModels.PlayerRanking
+	for _, ranking := range bestScores {
+		allRankings = append(allRankings, *ranking)
+
+		// Compter les rôles
+		switch ranking.Role {
+		case "Tank":
+			tankCount++
+		case "Healer":
+			healerCount++
+		case "DPS":
+			dpsCount++
+		}
 	}
 
 	logger.Info("Successfully fetched rankings for all dungeons",
