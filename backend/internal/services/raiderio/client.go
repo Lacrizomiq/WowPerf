@@ -30,7 +30,7 @@ func NewRaiderIOClient() (*RaiderIOClient, error) {
 			Timeout: 3 * time.Minute,
 		},
 		baseURL: apiURL,
-		limiter: rate.NewLimiter(rate.Every(2*time.Second), 1), // 1 requête toutes les 2 secondes
+		limiter: rate.NewLimiter(rate.Every(1*time.Second), 1), // 1 requête toutes les 1 secondes
 	}
 	return client, nil
 }

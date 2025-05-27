@@ -7,38 +7,53 @@ import (
 	service "wowperf/internal/services/raiderio"
 )
 
+// MythicPlusRunsParams contient les paramètres pour l'appel API
 type MythicPlusRunsParams struct {
 	Season    string
 	Region    string
 	Dungeon   string
-	Affixes   string
 	Page      int
 	AccessKey string
 }
 
-// GetMythicPlusRunsComplete récupère et parse les runs M+ depuis l'API
-func GetMythicPlusRunsComplete(s *service.RaiderIOService, params MythicPlusRunsParams) (*models.MythicPlusRunsResponse, error) {
-	// 1. Préparation des paramètres d'appel
-	apiParams := buildAPIParams(params)
+// APIResponse représente la structure exacte de la réponse API
+type APIResponse struct {
+	Rankings []struct {
+		Rank  int        `json:"rank"`
+		Score float64    `json:"score"`
+		Run   models.Run `json:"run"`
+	} `json:"rankings"`
+	LeaderboardURL string `json:"leaderboard_url"`
+	Params         struct {
+		Season  string `json:"season"`
+		Region  string `json:"region"`
+		Dungeon string `json:"dungeon"`
+		Page    int    `json:"page"`
+	} `json:"params"`
+}
 
-	// 2. Appel API (réutilise votre infrastructure existante)
-	rawData, err := s.Client.Get("/mythic-plus/runs", apiParams)
+// GetMythicPlusRuns récupère les runs depuis l'API et les retourne parsés
+// Cette fonction s'occupe UNIQUEMENT de l'API et du parsing vers les modèles
+func GetMythicPlusRuns(s *service.RaiderIOService, params MythicPlusRunsParams) ([]*models.Run, error) {
+	// 1. Appel API
+	rawData, err := s.Client.Get("/mythic-plus/runs", buildAPIParams(params))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch mythic plus runs: %w", err)
 	}
 
-	// 3. Parsing et validation
-	response, err := parseMythicPlusRunsResponse(rawData)
+	// 2. Parse la réponse API
+	apiResponse, err := parseAPIResponse(rawData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, fmt.Errorf("failed to parse API response: %w", err)
 	}
 
-	// 4. Validation business
-	if err := validateMythicPlusResponse(response); err != nil {
-		return nil, fmt.Errorf("invalid response data: %w", err)
+	// 3. Extrait et retourne les runs
+	runs := make([]*models.Run, len(apiResponse.Rankings))
+	for i, ranking := range apiResponse.Rankings {
+		runs[i] = &ranking.Run
 	}
 
-	return response, nil
+	return runs, nil
 }
 
 // buildAPIParams convertit les paramètres en format API
@@ -50,11 +65,6 @@ func buildAPIParams(params MythicPlusRunsParams) map[string]string {
 		"page":    fmt.Sprintf("%d", params.Page),
 	}
 
-	// Paramètres optionnels
-	if params.Affixes != "" {
-		apiParams["affixes"] = params.Affixes
-	}
-
 	if params.AccessKey != "" {
 		apiParams["access_key"] = params.AccessKey
 	}
@@ -62,14 +72,14 @@ func buildAPIParams(params MythicPlusRunsParams) map[string]string {
 	return apiParams
 }
 
-// parseMythicPlusRunsResponse parse la réponse JSON brute
-func parseMythicPlusRunsResponse(data map[string]interface{}) (*models.MythicPlusRunsResponse, error) {
+// parseAPIResponse parse la réponse JSON brute vers notre structure
+func parseAPIResponse(data map[string]interface{}) (*APIResponse, error) {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal data: %w", err)
 	}
 
-	var response models.MythicPlusRunsResponse
+	var response APIResponse
 	if err := json.Unmarshal(jsonBytes, &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -77,50 +87,34 @@ func parseMythicPlusRunsResponse(data map[string]interface{}) (*models.MythicPlu
 	return &response, nil
 }
 
-// validateMythicPlusResponse valide la cohérence des données
-func validateMythicPlusResponse(response *models.MythicPlusRunsResponse) error {
-	if response.Rankings == nil {
-		return fmt.Errorf("no rankings found in response")
+// GetMythicPlusRunsWithScore récupère les runs avec leur score de ranking
+// Utile si tu as besoin du score dans tes activities
+func GetMythicPlusRunsWithScore(s *service.RaiderIOService, params MythicPlusRunsParams) ([]*RunWithScore, error) {
+	rawData, err := s.Client.Get("/mythic-plus/runs", buildAPIParams(params))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch mythic plus runs: %w", err)
 	}
 
-	// Validation des runs individuels
-	for i, ranking := range response.Rankings {
-		if ranking.Run.KeystoneRunID == 0 {
-			return fmt.Errorf("ranking %d: missing keystone_run_id", i)
-		}
+	apiResponse, err := parseAPIResponse(rawData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse API response: %w", err)
+	}
 
-		if len(ranking.Run.Roster) != 5 {
-			return fmt.Errorf("ranking %d: invalid roster size %d, expected 5", i, len(ranking.Run.Roster))
-		}
-
-		// Validation de la composition (1 tank, 1 heal, 3 dps)
-		if err := validateTeamComposition(ranking.Run.Roster); err != nil {
-			return fmt.Errorf("ranking %d: %w", i, err)
+	runsWithScore := make([]*RunWithScore, len(apiResponse.Rankings))
+	for i, ranking := range apiResponse.Rankings {
+		runsWithScore[i] = &RunWithScore{
+			Run:   &ranking.Run,
+			Score: ranking.Score,
+			Rank:  ranking.Rank,
 		}
 	}
 
-	return nil
+	return runsWithScore, nil
 }
 
-// validateTeamComposition vérifie qu'on a bien 1 tank, 1 heal, 3 dps
-func validateTeamComposition(roster []models.RosterMember) error {
-	roleCount := map[string]int{}
-
-	for _, member := range roster {
-		roleCount[member.Role]++
-	}
-
-	if roleCount["tank"] != 1 {
-		return fmt.Errorf("expected 1 tank, got %d", roleCount["tank"])
-	}
-
-	if roleCount["healer"] != 1 {
-		return fmt.Errorf("expected 1 healer, got %d", roleCount["healer"])
-	}
-
-	if roleCount["dps"] != 3 {
-		return fmt.Errorf("expected 3 dps, got %d", roleCount["dps"])
-	}
-
-	return nil
+// RunWithScore combine un run avec son score de ranking
+type RunWithScore struct {
+	Run   *models.Run `json:"run"`
+	Score float64     `json:"score"`
+	Rank  int         `json:"rank"`
 }
