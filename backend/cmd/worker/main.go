@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 	"wowperf/internal/database"
+	"wowperf/internal/services/raiderio"
 	"wowperf/internal/services/warcraftlogs"
 
 	// Scheduler pour la configuration de la queue
@@ -17,9 +18,12 @@ import (
 	buildsDefinitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
 
-	// Import des packages d'initialisation pour chaque feature
+	// Import des packages d'initialisation pour chaque feature WarcraftLogs
 	buildsInit "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal"
 	playerRankingsInit "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/temporal"
+
+	// Import des packages d'initialisation pour chaque feature RaiderIO
+	mythicPlusRunsInit "wowperf/internal/services/raiderio/mythicplus/mythicplus_runs/temporal"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -37,21 +41,22 @@ func main() {
 	logger.Printf("Starting Temporal worker")
 
 	// Initialize services
-	temporalClient, db, warcraftLogsClient, err := initializeServices()
+	temporalClient, db, warcraftLogsClient, raiderIOClient, err := initializeServices()
 	if err != nil {
 		logger.Fatalf("Failed to initialize services: %v", err)
 	}
 	defer temporalClient.Close()
 
-	// Charger la configuration
+	// Charger la configuration WarcraftLogs
 	config, err := buildsDefinitions.LoadConfig("configs/config_s2_tww.dev.yaml")
 	if err != nil {
-		logger.Fatalf("Failed to load config: %v", err)
+		logger.Fatalf("Failed to load WarcraftLogs config: %v", err)
 	}
 
 	// Initialiser les features
 	logger.Printf("Initializing features")
 
+	// === WARCRAFTLOGS FEATURES ===
 	// Initialiser la feature builds
 	_, _, _, _, _, _, _, buildsActivitiesService := buildsInit.InitBuilds(
 		db,
@@ -65,7 +70,14 @@ func main() {
 		warcraftLogsClient,
 	)
 
-	// Create a single worker
+	// === RAIDERIO FEATURES ===
+	// Initialiser la feature mythic plus runs
+	_, mythicPlusRunsActivitiesService := mythicPlusRunsInit.InitMythicPlusRuns(
+		db,
+		raiderIOClient,
+	)
+
+	// Create a single worker (même task queue pour toutes les features)
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
 	w := worker.New(temporalClient, taskQueue, worker.Options{
 		MaxConcurrentActivityExecutionSize:     1,
@@ -78,8 +90,13 @@ func main() {
 
 	// Enregistrer les workflows et activities pour chaque feature
 	logger.Printf("Registering workflows and activities")
+
+	// WarcraftLogs features
 	buildsInit.RegisterBuilds(w, buildsActivitiesService)
 	playerRankingsInit.RegisterPlayerRankings(w, playerRankingsActivitiesService)
+
+	// RaiderIO features
+	mythicPlusRunsInit.RegisterMythicPlusRuns(w, mythicPlusRunsActivitiesService)
 
 	workerMgr := &WorkerManager{
 		worker: w,
@@ -106,7 +123,7 @@ func main() {
 	handleGracefulShutdown(workerMgr, &wg, workerErrorChan, logger)
 }
 
-func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, error) {
+func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, *raiderio.RaiderIOService, error) {
 	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
 	if temporalAddress == "" {
 		temporalAddress = "localhost:7233"
@@ -117,20 +134,25 @@ func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsCl
 		Namespace: models.DefaultNamespace,
 	})
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
 	}
 
 	db, err := database.InitDB()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
 	}
 
-	return temporalClient, db, warcraftLogsClient, nil
+	raiderIOClient, err := raiderio.NewRaiderIOService()
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize RaiderIO client: %w", err)
+	}
+
+	return temporalClient, db, warcraftLogsClient, raiderIOClient, nil
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {

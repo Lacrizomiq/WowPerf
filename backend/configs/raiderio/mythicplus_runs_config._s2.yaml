@@ -29,6 +29,6 @@ dungeons:
 
 # Paramètres d'exécution
 execution:
-  pages_per_dungeon: 3
-  max_concurrency: 5
+  pages_per_dungeon: 5
+  max_concurrency: 3
   retry_attempts: 3

@@ -27,8 +27,7 @@ type MythicPlusTeamComposition struct {
 	Dps3Spec  string `gorm:"not null"`
 
 	// Relations
-	MythicRuns []MythicPlusRuns      `gorm:"foreignKey:TeamCompositionID"`
-	RunRoster  []MythicPlusRunRoster `gorm:"foreignKey:TeamCompositionID"`
+	MythicRuns []MythicPlusRuns `gorm:"foreignKey:TeamCompositionID"`
 
 	// Timestamps
 	CreatedAt time.Time

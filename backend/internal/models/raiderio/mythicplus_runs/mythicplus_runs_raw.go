@@ -9,6 +9,7 @@ import (
 // Run contient toutes les informations d'une run mythic+
 type Run struct {
 	KeystoneTeamID     int64            `json:"keystone_team_id"`
+	Score              float64          `json:"score"`
 	Season             string           `json:"season"`
 	Status             string           `json:"status"`
 	Dungeon            DungeonInfo      `json:"dungeon"`

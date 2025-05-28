@@ -25,27 +25,33 @@ func NewMythicPlusRunsRepository(db *gorm.DB) *MythicPlusRunsRepository {
 // ProcessingStats contient les stats de traitement pour Temporal (optionnel)
 type ProcessingStats struct {
 	NewRuns              int
+	UpdatedRuns          int // Runs mises à jour
 	SkippedRuns          int // Runs déjà existants
 	NewCompositions      int
 	ExistingCompositions int
 }
 
-// ProcessRuns traite les runs Mythic+ et les enregistre dans la base de données
-// Logique de traitement: si keystone_run_id existe déjà, on l'ignore
-// Sinon, on l'enregistre
+// ProcessRuns récupère les runs depuis l'API et les insère dans la DB
 func (r *MythicPlusRunsRepository) ProcessRuns(runs []*models.Run, batchID string) (*ProcessingStats, error) {
 	stats := &ProcessingStats{}
 
 	return stats, r.db.Transaction(func(tx *gorm.DB) error {
+		const batchSize = 100
+
+		// Collections pour batch processing
+		var validRuns []*models.MythicPlusRuns
+		teamCompositionCache := make(map[string]*models.MythicPlusTeamComposition)
+
+		// 1. Prépare toutes les données en mémoire d'abord
 		for _, run := range runs {
-			// 1. Valide la run (logique métier basique)
+			// Valide la run
 			if !r.isValidRun(run) {
 				stats.SkippedRuns++
 				continue
 			}
 
-			// 2. Gère la composition d'équipe
-			teamComp, isNewComp, err := r.getOrCreateTeamComposition(tx, run.Roster)
+			// Gère la composition d'équipe avec cache
+			teamComp, isNewComp, err := r.getOrCreateTeamCompositionCached(tx, run.Roster, teamCompositionCache)
 			if err != nil {
 				return fmt.Errorf("failed to handle team composition: %w", err)
 			}
@@ -56,72 +62,132 @@ func (r *MythicPlusRunsRepository) ProcessRuns(runs []*models.Run, batchID strin
 				stats.ExistingCompositions++
 			}
 
-			// 3. Tente d'insérer la run (skip si existe déjà grâce à la contrainte UNIQUE)
-			if err := r.insertRun(tx, run, teamComp.ID, batchID); err != nil {
-				// Si c'est une violation de contrainte unique, on skip
-				if r.isDuplicateError(err) {
-					stats.SkippedRuns++
-					continue
-				}
-				return fmt.Errorf("failed to insert run: %w", err)
+			// Prépare la run pour batch insert - AVEC LE SCORE
+			dbRun := &models.MythicPlusRuns{
+				KeystoneRunID:     run.KeystoneRunID,
+				Season:            run.Season,
+				Region:            r.extractRegion(run),
+				DungeonSlug:       run.Dungeon.Slug,
+				DungeonName:       run.Dungeon.Name,
+				MythicLevel:       run.MythicLevel,
+				Score:             run.Score,
+				Status:            run.Status,
+				ClearTimeMs:       run.ClearTimeMs,
+				KeystoneTimeMs:    run.KeystoneTimeMs,
+				CompletedAt:       run.CompletedAt,
+				NumChests:         run.NumChests,
+				TimeRemainingMs:   run.TimeRemainingMs,
+				TeamCompositionID: &teamComp.ID,
+				CreatedAt:         time.Now(),
+				UpdatedAt:         time.Now(),
 			}
 
-			stats.NewRuns++
+			validRuns = append(validRuns, dbRun)
+		}
+
+		// 2. Batch insert/update des runs avec stats détaillées
+		if len(validRuns) > 0 {
+			newRuns, updatedRuns, err := r.batchUpsertRuns(tx, validRuns, batchSize)
+			if err != nil {
+				return fmt.Errorf("failed to batch upsert runs: %w", err)
+			}
+			stats.NewRuns = newRuns
+			stats.UpdatedRuns = updatedRuns
 		}
 
 		return nil
 	})
 }
 
-// insertRun insère une nouvelle run
-func (r *MythicPlusRunsRepository) insertRun(tx *gorm.DB, run *models.Run, teamCompID uint, batchID string) error {
-	dbRun := &models.MythicPlusRuns{
-		KeystoneRunID:     run.KeystoneRunID,
-		Season:            run.Season,
-		Region:            r.extractRegion(run),
-		DungeonSlug:       run.Dungeon.Slug,
-		DungeonName:       run.Dungeon.Name,
-		MythicLevel:       run.MythicLevel,
-		Status:            run.Status,
-		ClearTimeMs:       run.ClearTimeMs,
-		KeystoneTimeMs:    run.KeystoneTimeMs,
-		CompletedAt:       run.CompletedAt,
-		NumChests:         run.NumChests,
-		TimeRemainingMs:   run.TimeRemainingMs,
-		TeamCompositionID: &teamCompID,
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
-	}
+// batchUpsertRuns gère l'insertion/update par batch avec UPSERT
+// Retourne (nouvelles_runs, runs_mises_à_jour, erreur)
+func (r *MythicPlusRunsRepository) batchUpsertRuns(tx *gorm.DB, runs []*models.MythicPlusRuns, batchSize int) (int, int, error) {
+	newRuns := 0
+	updatedRuns := 0
 
-	if err := tx.Create(dbRun).Error; err != nil {
-		return err
-	}
+	for i := 0; i < len(runs); i += batchSize {
+		end := i + batchSize
+		if end > len(runs) {
+			end = len(runs)
+		}
 
-	// Crée les entrées roster
-	return r.createRosterEntries(tx, teamCompID, run.Roster)
+		batch := runs[i:end]
+
+		// Utilise UPSERT pour mettre à jour les runs existantes
+		for _, run := range batch {
+			var existingRun models.MythicPlusRuns
+			result := tx.Where("keystone_run_id = ?", run.KeystoneRunID).First(&existingRun)
+
+			if result.Error == gorm.ErrRecordNotFound {
+				// Run n'existe pas, on l'insère
+				if err := tx.Create(run).Error; err != nil {
+					return newRuns, updatedRuns, fmt.Errorf("failed to create run %d: %w", run.KeystoneRunID, err)
+				}
+				newRuns++
+			} else if result.Error == nil {
+				// Run existe, on la met à jour avec les nouvelles données
+				if err := tx.Model(&existingRun).
+					Updates(map[string]interface{}{
+						"score":               run.Score,
+						"season":              run.Season,
+						"region":              run.Region,
+						"dungeon_slug":        run.DungeonSlug,
+						"dungeon_name":        run.DungeonName,
+						"mythic_level":        run.MythicLevel,
+						"status":              run.Status,
+						"clear_time_ms":       run.ClearTimeMs,
+						"keystone_time_ms":    run.KeystoneTimeMs,
+						"completed_at":        run.CompletedAt,
+						"num_chests":          run.NumChests,
+						"time_remaining_ms":   run.TimeRemainingMs,
+						"team_composition_id": run.TeamCompositionID,
+						"updated_at":          time.Now(),
+					}).Error; err != nil {
+					return newRuns, updatedRuns, fmt.Errorf("failed to update run %d: %w", run.KeystoneRunID, err)
+				}
+				updatedRuns++
+			} else {
+				// Erreur lors de la recherche
+				return newRuns, updatedRuns, fmt.Errorf("failed to check if run %d exists: %w", run.KeystoneRunID, result.Error)
+			}
+		}
+	}
+	return newRuns, updatedRuns, nil
 }
 
-// getOrCreateTeamComposition gère la composition d'équipe avec déduplication
-func (r *MythicPlusRunsRepository) getOrCreateTeamComposition(tx *gorm.DB, roster []models.RosterMember) (*models.MythicPlusTeamComposition, bool, error) {
+// getOrCreateTeamCompositionCached fait une mise en cache pour éviter les requêtes répétées
+func (r *MythicPlusRunsRepository) getOrCreateTeamCompositionCached(
+	tx *gorm.DB,
+	roster []models.RosterMember,
+	cache map[string]*models.MythicPlusTeamComposition,
+) (*models.MythicPlusTeamComposition, bool, error) {
+
 	// 1. Extrait et trie les rôles
 	tank, healer, dps := r.extractRoles(roster)
 
 	// 2. Crée le hash de composition
 	compHash := r.createCompositionHash(tank, healer, dps)
 
-	// 3. Cherche si elle existe déjà
+	// 3. Vérifie le cache d'abord
+	if cachedComp, exists := cache[compHash]; exists {
+		return cachedComp, false, nil
+	}
+
+	// 4. Cherche en DB
 	var existing models.MythicPlusTeamComposition
 	err := tx.Where("composition_hash = ?", compHash).First(&existing).Error
 
 	if err == nil {
-		return &existing, false, nil // Existe déjà
+		// Ajoute au cache et retourne
+		cache[compHash] = &existing
+		return &existing, false, nil
 	}
 
 	if err != gorm.ErrRecordNotFound {
 		return nil, false, fmt.Errorf("failed to query team composition: %w", err)
 	}
 
-	// 4. Crée nouvelle composition
+	// 5. Crée nouvelle composition
 	newComp := &models.MythicPlusTeamComposition{
 		CompositionHash: compHash,
 		TankClass:       tank.Character.Class.Name,
@@ -142,6 +208,8 @@ func (r *MythicPlusRunsRepository) getOrCreateTeamComposition(tx *gorm.DB, roste
 		return nil, false, fmt.Errorf("failed to create team composition: %w", err)
 	}
 
+	// Ajoute au cache
+	cache[compHash] = newComp
 	return newComp, true, nil
 }
 
@@ -184,26 +252,6 @@ func (r *MythicPlusRunsRepository) createCompositionHash(tank, healer models.Ros
 	return fmt.Sprintf("%x", md5.Sum([]byte(composition)))
 }
 
-// createRosterEntries crée les entrées détaillées du roster
-func (r *MythicPlusRunsRepository) createRosterEntries(tx *gorm.DB, teamCompID uint, roster []models.RosterMember) error {
-	for _, member := range roster {
-		rosterEntry := &models.MythicPlusRunRoster{
-			TeamCompositionID: teamCompID,
-			Role:              member.Role,
-			ClassName:         member.Character.Class.Name,
-			SpecName:          member.Character.Spec.Name,
-			CreatedAt:         time.Now(),
-			UpdatedAt:         time.Now(),
-		}
-
-		if err := tx.Create(rosterEntry).Error; err != nil {
-			return fmt.Errorf("failed to create roster entry: %w", err)
-		}
-	}
-
-	return nil
-}
-
 // isValidRun valide qu'une run est correcte (logique métier basique)
 func (r *MythicPlusRunsRepository) isValidRun(run *models.Run) bool {
 	// Vérifie qu'on a bien 5 membres
@@ -226,13 +274,4 @@ func (r *MythicPlusRunsRepository) extractRegion(run *models.Run) string {
 		return run.Roster[0].Character.Region.Slug
 	}
 	return "unknown"
-}
-
-// isDuplicateError vérifie si l'erreur est due à une contrainte unique
-func (r *MythicPlusRunsRepository) isDuplicateError(err error) bool {
-	// À adapter selon ta DB (PostgreSQL, MySQL, etc.)
-	errorStr := err.Error()
-	return strings.Contains(errorStr, "duplicate key") ||
-		strings.Contains(errorStr, "UNIQUE constraint") ||
-		strings.Contains(errorStr, "Duplicate entry")
 }

@@ -33,27 +33,57 @@ type APIResponse struct {
 }
 
 // GetMythicPlusRuns récupère les runs depuis l'API et les retourne parsés
-// Cette fonction s'occupe UNIQUEMENT de l'API et du parsing vers les modèles
+// VERSION OPTIMISÉE - utilise GetRaw pour éviter le double parsing
 func GetMythicPlusRuns(s *service.RaiderIOService, params MythicPlusRunsParams) ([]*models.Run, error) {
-	// 1. Appel API
-	rawData, err := s.Client.Get("/mythic-plus/runs", buildAPIParams(params))
+	// 1. Appel API direct avec GetRaw (évite le double parsing)
+	jsonData, err := s.GetRaw("/mythic-plus/runs", buildAPIParams(params))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch mythic plus runs: %w", err)
 	}
 
-	// 2. Parse la réponse API
-	apiResponse, err := parseAPIResponse(rawData)
-	if err != nil {
+	// 2. Parse directement vers notre structure
+	var apiResponse APIResponse
+	if err := json.Unmarshal(jsonData, &apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse API response: %w", err)
 	}
 
 	// 3. Extrait et retourne les runs
 	runs := make([]*models.Run, len(apiResponse.Rankings))
 	for i, ranking := range apiResponse.Rankings {
-		runs[i] = &ranking.Run
+		run := ranking.Run
+		run.Score = ranking.Score
+		runs[i] = &run
 	}
 
 	return runs, nil
+}
+
+// GetMythicPlusRunsWithScore récupère les runs avec leur score de ranking
+// VERSION OPTIMISÉE - utilise GetRaw pour éviter le double parsing
+func GetMythicPlusRunsWithScore(s *service.RaiderIOService, params MythicPlusRunsParams) ([]*RunWithScore, error) {
+	// 1. Appel API direct avec GetRaw
+	jsonData, err := s.GetRaw("/mythic-plus/runs", buildAPIParams(params))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch mythic plus runs: %w", err)
+	}
+
+	// 2. Parse directement vers notre structure
+	var apiResponse APIResponse
+	if err := json.Unmarshal(jsonData, &apiResponse); err != nil {
+		return nil, fmt.Errorf("failed to parse API response: %w", err)
+	}
+
+	// 3. Extrait et retourne les runs avec score
+	runsWithScore := make([]*RunWithScore, len(apiResponse.Rankings))
+	for i, ranking := range apiResponse.Rankings {
+		runsWithScore[i] = &RunWithScore{
+			Run:   &ranking.Run,
+			Score: ranking.Score,
+			Rank:  ranking.Rank,
+		}
+	}
+
+	return runsWithScore, nil
 }
 
 // buildAPIParams convertit les paramètres en format API
@@ -70,46 +100,6 @@ func buildAPIParams(params MythicPlusRunsParams) map[string]string {
 	}
 
 	return apiParams
-}
-
-// parseAPIResponse parse la réponse JSON brute vers notre structure
-func parseAPIResponse(data map[string]interface{}) (*APIResponse, error) {
-	jsonBytes, err := json.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal data: %w", err)
-	}
-
-	var response APIResponse
-	if err := json.Unmarshal(jsonBytes, &response); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	return &response, nil
-}
-
-// GetMythicPlusRunsWithScore récupère les runs avec leur score de ranking
-// Utile si tu as besoin du score dans tes activities
-func GetMythicPlusRunsWithScore(s *service.RaiderIOService, params MythicPlusRunsParams) ([]*RunWithScore, error) {
-	rawData, err := s.Client.Get("/mythic-plus/runs", buildAPIParams(params))
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch mythic plus runs: %w", err)
-	}
-
-	apiResponse, err := parseAPIResponse(rawData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse API response: %w", err)
-	}
-
-	runsWithScore := make([]*RunWithScore, len(apiResponse.Rankings))
-	for i, ranking := range apiResponse.Rankings {
-		runsWithScore[i] = &RunWithScore{
-			Run:   &ranking.Run,
-			Score: ranking.Score,
-			Rank:  ranking.Rank,
-		}
-	}
-
-	return runsWithScore, nil
 }
 
 // RunWithScore combine un run avec son score de ranking

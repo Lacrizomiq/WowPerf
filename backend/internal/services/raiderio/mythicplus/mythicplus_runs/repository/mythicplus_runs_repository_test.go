@@ -277,13 +277,6 @@ func TestDataMappingAndInsertion(t *testing.T) {
 		assert.Equal(t, "Warrior", dbRun.TeamComposition.TankClass)
 		assert.Equal(t, "Druid", dbRun.TeamComposition.HealerClass)
 
-		// Vérifie que les roster entries sont liées
-		assert.Len(t, dbRun.TeamComposition.RunRoster, 5)
-
-		// Vérifie que toutes les entrées pointent vers la bonne composition
-		for _, rosterEntry := range dbRun.TeamComposition.RunRoster {
-			assert.Equal(t, dbRun.TeamComposition.ID, rosterEntry.TeamCompositionID)
-		}
 	})
 
 	t.Run("Verify edge cases and data types", func(t *testing.T) {
@@ -334,10 +327,10 @@ func TestTeamCompositionHashing(t *testing.T) {
 	tx := db.Begin()
 	defer tx.Rollback()
 
-	comp1, _, err1 := repo.getOrCreateTeamComposition(tx, roster1)
+	comp1, _, err1 := repo.getOrCreateTeamCompositionCached(tx, roster1, nil)
 	require.NoError(t, err1)
 
-	comp2, isNew, err2 := repo.getOrCreateTeamComposition(tx, roster2)
+	comp2, isNew, err2 := repo.getOrCreateTeamCompositionCached(tx, roster2, nil)
 	require.NoError(t, err2)
 
 	assert.Equal(t, comp1.CompositionHash, comp2.CompositionHash)

@@ -32,9 +32,31 @@ func LoadMythicRunsParams(configPath string) (*models.MythicRunsWorkflowParams, 
 		return nil, fmt.Errorf("error parsing config file: %w", err)
 	}
 
-	// Validation + defaults
+	// Valider les éléments essentiels
+	if len(config.Seasons) == 0 {
+		return nil, fmt.Errorf("at least one season must be configured")
+	}
+	if len(config.Regions) == 0 {
+		return nil, fmt.Errorf("at least one region must be configured")
+	}
 	if len(config.Dungeons) == 0 {
 		return nil, fmt.Errorf("at least one dungeon must be configured")
+	}
+
+	// Valeurs par défaut pour les paramètres d'exécution
+	pagesPerDungeon := config.Execution.PagesPerDungeon
+	if pagesPerDungeon == 0 {
+		pagesPerDungeon = 5 // Par défaut : 5 pages par donjon
+	}
+
+	maxConcurrency := config.Execution.MaxConcurrency
+	if maxConcurrency == 0 {
+		maxConcurrency = 3 // Par défaut : 3 workers parallèles
+	}
+
+	retryAttempts := config.Execution.RetryAttempts
+	if retryAttempts == 0 {
+		retryAttempts = 3 // Par défaut : 3 tentatives
 	}
 
 	return &models.MythicRunsWorkflowParams{
