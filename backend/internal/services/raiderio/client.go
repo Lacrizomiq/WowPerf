@@ -46,75 +46,93 @@ func maskAPIKeyInURL(url string) string {
 	return url
 }
 
-// RateLimitTracker surveille l'utilisation de l'API de manière thread-safe
-type RateLimitTracker struct {
+// UltraSimpleTracker - Juste un compteur avec alertes
+type UltraSimpleTracker struct {
 	mu            sync.RWMutex
-	requests      []time.Time // Timestamps des requêtes
-	windowSize    time.Duration
-	maxRequests   int
-	totalRequests int64 // Compteur total depuis le démarrage
+	totalRequests int64
+	startTime     time.Time
+	logger        *log.Logger
+	lastAlert     time.Time
 }
 
-// NewRateLimitTracker crée un nouveau tracker
-func NewRateLimitTracker(maxRequests int, window time.Duration) *RateLimitTracker {
-	return &RateLimitTracker{
-		requests:    make([]time.Time, 0),
-		windowSize:  window,
-		maxRequests: maxRequests,
-	}
-}
-
-// RecordRequest enregistre une nouvelle requête et nettoie les anciennes
-func (rt *RateLimitTracker) RecordRequest() {
-	rt.mu.Lock()
-	defer rt.mu.Unlock()
-
+func NewUltraSimpleTracker(logger *log.Logger) *UltraSimpleTracker {
 	now := time.Now()
-	rt.totalRequests++
+	tracker := &UltraSimpleTracker{
+		startTime: now,
+		logger:    logger,
+		lastAlert: now,
+	}
 
-	// Ajoute la nouvelle requête
-	rt.requests = append(rt.requests, now)
+	// Log de démarrage
+	logger.Printf("API client started - tracking requests")
 
-	// Nettoie les requêtes trop anciennes (hors de la fenêtre)
-	cutoff := now.Add(-rt.windowSize)
-	validRequests := make([]time.Time, 0, len(rt.requests))
+	return tracker
+}
 
-	for _, reqTime := range rt.requests {
-		if reqTime.After(cutoff) {
-			validRequests = append(validRequests, reqTime)
+func (ut *UltraSimpleTracker) RecordRequest() {
+	ut.mu.Lock()
+	defer ut.mu.Unlock()
+
+	ut.totalRequests++
+	now := time.Now()
+
+	// Alertes occasionnelles basées sur les seuils
+	ut.checkAlerts(now)
+}
+
+func (ut *UltraSimpleTracker) checkAlerts(now time.Time) {
+	total := ut.totalRequests
+
+	// Alertes à des seuils spécifiques (10, 50, 100, 200, etc.)
+	alertThresholds := []int64{10, 50, 100, 200, 500, 1000}
+
+	for _, threshold := range alertThresholds {
+		if total == threshold {
+			duration := now.Sub(ut.startTime)
+			rate := float64(total) / duration.Hours()
+
+			ut.logger.Printf("Milestone: %d requests completed (%.1f req/hour average since start)",
+				total, rate)
+			ut.lastAlert = now
+			return
 		}
 	}
 
-	rt.requests = validRequests
-}
+	// Alerte quotidienne si beaucoup d'activité
+	if now.Sub(ut.lastAlert) >= 24*time.Hour && total > 0 {
+		duration := now.Sub(ut.startTime)
+		rate := float64(total) / duration.Hours()
 
-// GetStats retourne les statistiques actuelles thread-safe
-func (rt *RateLimitTracker) GetStats() (currentRequests int, totalRequests int64, remainingCapacity int) {
-	rt.mu.RLock()
-	defer rt.mu.RUnlock()
-
-	current := len(rt.requests)
-	remaining := rt.maxRequests - current
-	if remaining < 0 {
-		remaining = 0
+		ut.logger.Printf("Daily summary: %d total requests (%.1f req/hour average)",
+			total, rate)
+		ut.lastAlert = now
 	}
-
-	return current, rt.totalRequests, remaining
 }
 
-// IsNearLimit vérifie si on approche de la limite (80% par exemple)
-func (rt *RateLimitTracker) IsNearLimit(threshold float64) bool {
-	current, _, _ := rt.GetStats()
-	return float64(current) >= float64(rt.maxRequests)*threshold
+func (ut *UltraSimpleTracker) GetSummary() (total int64, duration time.Duration, avgPerHour float64) {
+	ut.mu.RLock()
+	defer ut.mu.RUnlock()
+
+	duration = time.Since(ut.startTime)
+	avgPerHour = float64(ut.totalRequests) / duration.Hours()
+
+	return ut.totalRequests, duration, avgPerHour
+}
+
+// Méthode pour forcer un résumé (pour debug ou monitoring)
+func (ut *UltraSimpleTracker) LogSummary() {
+	total, duration, rate := ut.GetSummary()
+	ut.logger.Printf("Current summary: %d requests in %s (%.1f req/hour)",
+		total, duration.Round(time.Minute), rate)
 }
 
 type RaiderIOClient struct {
-	httpClient  *http.Client
-	baseURL     string
-	limiter     *rate.Limiter
-	rateTracker *RateLimitTracker
-	apiKey      string
-	logger      *log.Logger
+	httpClient     *http.Client
+	baseURL        string
+	limiter        *rate.Limiter
+	requestTracker *UltraSimpleTracker
+	apiKey         string
+	logger         *log.Logger
 }
 
 type RaiderIOService struct {
@@ -134,65 +152,41 @@ func NewRaiderIOClient() (*RaiderIOClient, error) {
 
 	// Détermine les limites selon la présence de l'API key
 	var maxRequests int
-	var rateLimitInterval time.Duration
 
 	if apiKey != "" {
 		// Avec API key : limite plus élevée
 		maxRequests = 1000
-		rateLimitInterval = time.Minute
 		log.Printf("[INFO] RaiderIO client initialized with API key (limit: %d req/min)", maxRequests)
 	} else {
 		// Sans API key : 300 req/min
 		maxRequests = 300
-		rateLimitInterval = time.Minute
 		log.Printf("[INFO] RaiderIO client initialized without API key (limit: %d req/min)", maxRequests)
 	}
+
+	logger := log.New(os.Stdout, "[RAIDERIO] ", log.LstdFlags)
 
 	client := &RaiderIOClient{
 		httpClient: &http.Client{
 			Timeout: 3 * time.Minute,
 		},
-		baseURL:     apiURL,
-		limiter:     rate.NewLimiter(rate.Every(1*time.Second), 1),
-		rateTracker: NewRateLimitTracker(maxRequests, rateLimitInterval),
-		apiKey:      apiKey,
-		logger:      log.New(os.Stdout, "[RAIDERIO] ", log.LstdFlags),
+		baseURL:        apiURL,
+		limiter:        rate.NewLimiter(rate.Every(1*time.Second), 1),
+		requestTracker: NewUltraSimpleTracker(logger),
+		apiKey:         apiKey,
+		logger:         logger,
 	}
-
-	// Démarre le monitoring périodique mais plus discrètement
-	client.startPeriodicLogging()
 
 	return client, nil
 }
 
-// startPeriodicLogging démarre un goroutine pour logger les stats périodiquement
-func (c *RaiderIOClient) startPeriodicLogging() {
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute) // Log toutes les 5 minutes au lieu de 1
-		defer ticker.Stop()
-
-		for range ticker.C {
-			current, total, remaining := c.rateTracker.GetStats()
-
-			// Log seulement si il y a eu des requêtes
-			if total > 0 {
-				c.logger.Printf("Rate limit stats: %d/%d requests in last 5min, %d remaining, %d total since start",
-					current, c.rateTracker.maxRequests, remaining, total)
-
-				// Alerte seulement si vraiment proche de la limite
-				if c.rateTracker.IsNearLimit(0.9) {
-					c.logger.Printf("[WARNING] Very close to rate limit: %d/%d requests (90%% threshold)",
-						current, c.rateTracker.maxRequests)
-				}
-			}
-		}
-	}()
+// GetRequestStats retourne les statistiques de requêtes (pour monitoring externe)
+func (c *RaiderIOClient) GetRequestStats() (total int64, duration time.Duration, avgPerHour float64) {
+	return c.requestTracker.GetSummary()
 }
 
-// GetRateLimitStats retourne les statistiques actuelles (pour monitoring externe)
-func (c *RaiderIOClient) GetRateLimitStats() (current int, total int64, remaining int, maxRequests int) {
-	current, total, remaining = c.rateTracker.GetStats()
-	return current, total, remaining, c.rateTracker.maxRequests
+// LogRequestSummary force un log des statistiques actuelles
+func (c *RaiderIOClient) LogRequestSummary() {
+	c.requestTracker.LogSummary()
 }
 
 // doRequestWithRetry performs a request with rate limiting and retries
@@ -202,14 +196,8 @@ func (c *RaiderIOClient) doRequestWithRetry(req *http.Request) (*http.Response, 
 	maxRetries := 3 // Réduit les retries pour éviter trop d'attente
 
 	for i := 0; i < maxRetries; i++ {
-		// Rate limiting non bloquant - juste pour le tracking
-		c.rateTracker.RecordRequest()
-
-		// Logger seulement si vraiment proche de la limite
-		if c.rateTracker.IsNearLimit(0.95) {
-			current, _, remaining, max := c.GetRateLimitStats()
-			c.logger.Printf("[WARNING] Very high API usage: %d/%d requests, %d remaining", current, max, remaining)
-		}
+		// Enregistrement simple de la requête
+		c.requestTracker.RecordRequest()
 
 		resp, err = c.httpClient.Do(req)
 		if err == nil && resp.StatusCode != http.StatusGatewayTimeout {

@@ -32,6 +32,7 @@ type SpecializationStats struct {
 	Display    string   `json:"display"`
 	UsageCount int      `json:"usage_count"`
 	Percentage float64  `json:"percentage"`
+	Rank       int      `json:"rank"`
 	AvgScore   *float64 `json:"avg_score,omitempty"`
 }
 
@@ -44,6 +45,7 @@ type CompositionStats struct {
 	DPS3       string  `json:"dps3"`
 	UsageCount int     `json:"usage_count"`
 	Percentage float64 `json:"percentage"`
+	Rank       int     `json:"rank"`
 	AvgScore   float64 `json:"avg_score"`
 }
 
@@ -83,6 +85,7 @@ type KeyLevelStats struct {
 	Display         string  `json:"display"`
 	UsageCount      int     `json:"usage_count"`
 	Percentage      float64 `json:"percentage"`
+	Rank            int     `json:"rank"`
 	AvgScore        float64 `json:"avg_score"`
 }
 
@@ -95,6 +98,7 @@ type RegionStats struct {
 	Display            string  `json:"display"`
 	UsageCount         int     `json:"usage_count"`
 	PercentageInRegion float64 `json:"percentage_in_region"`
+	RankInRegion       int     `json:"rank_in_region"`
 }
 
 // OverallStats représente les stats générales
@@ -115,6 +119,7 @@ type KeyLevelDistribution struct {
 	MythicLevel int     `json:"mythic_level"`
 	Count       int     `json:"count"`
 	Percentage  float64 `json:"percentage"`
+	Rank        int     `json:"rank"`
 	AvgScore    float64 `json:"avg_score"`
 	MinScore    float64 `json:"min_score"`
 	MaxScore    float64 `json:"max_score"`
@@ -126,6 +131,7 @@ type DungeonDistribution struct {
 	DungeonName string  `json:"dungeon_name"`
 	RunCount    int     `json:"run_count"`
 	Percentage  float64 `json:"percentage"`
+	Rank        int     `json:"rank"`
 	AvgScore    float64 `json:"avg_score"`
 	AvgKeyLevel float64 `json:"avg_key_level"`
 	MinScore    float64 `json:"min_score"`
@@ -137,6 +143,7 @@ type RegionDistribution struct {
 	Region      string  `json:"region"`
 	RunCount    int     `json:"run_count"`
 	Percentage  float64 `json:"percentage"`
+	Rank        int     `json:"rank"`
 	AvgScore    float64 `json:"avg_score"`
 	AvgKeyLevel float64 `json:"avg_key_level"`
 }
@@ -155,11 +162,12 @@ func (s *MythicPlusRunsAnalysisService) GetTankSpecializations() ([]Specializati
 			tc.tank_spec as spec,
 			CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		GROUP BY tc.tank_class, tc.tank_spec
-		ORDER BY usage_count DESC`
+		ORDER BY rank`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tank specializations: %w", err)
@@ -178,11 +186,12 @@ func (s *MythicPlusRunsAnalysisService) GetHealerSpecializations() ([]Specializa
 			tc.healer_spec as spec,
 			CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		GROUP BY tc.healer_class, tc.healer_spec
-		ORDER BY usage_count DESC`
+		ORDER BY rank`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get healer specializations: %w", err)
@@ -201,7 +210,8 @@ func (s *MythicPlusRunsAnalysisService) GetDPSSpecializations() ([]Specializatio
 			dps_spec as spec,
 			CONCAT(dps_class, ' - ', dps_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank
 		FROM (
 			SELECT tc.dps1_class as dps_class, tc.dps1_spec as dps_spec FROM mythicplus_runs r
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
@@ -217,7 +227,7 @@ func (s *MythicPlusRunsAnalysisService) GetDPSSpecializations() ([]Specializatio
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		) dps_data
 		GROUP BY dps_class, dps_spec
-		ORDER BY usage_count DESC`
+		ORDER BY rank`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get DPS specializations: %w", err)
@@ -246,13 +256,14 @@ func (s *MythicPlusRunsAnalysisService) GetTopCompositions(limit int, minUsage i
 			CONCAT(tc.dps3_class, ' - ', tc.dps3_spec) as dps3,
 			COUNT(*) as usage_count,
 			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
-			ROUND(AVG(r.score), 1) as avg_score
+			ROUND(AVG(r.score), 1) as avg_score,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		GROUP BY tc.id, tc.tank_class, tc.tank_spec, tc.healer_class, tc.healer_spec,
 				 tc.dps1_class, tc.dps1_spec, tc.dps2_class, tc.dps2_spec, tc.dps3_class, tc.dps3_spec
 		HAVING COUNT(*) >= ?
-		ORDER BY usage_count DESC
+		ORDER BY rank
 		LIMIT ?`
 
 	if err := s.db.Raw(query, minUsage, limit).Scan(&results).Error; err != nil {
@@ -576,6 +587,15 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(minUsage int) ([]KeyL
 					ELSE 'Other Keys (<16)'
 				END
 			), 2) as percentage,
+			ROW_NUMBER() OVER (PARTITION BY 
+				CASE 
+					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+					ELSE 'Other Keys (<16)'
+				END
+				ORDER BY COUNT(*) DESC
+			) as rank,
 			ROUND(AVG(r.score), 1) as avg_score
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
@@ -612,6 +632,15 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(minUsage int) ([]KeyL
 					ELSE 'Other Keys (<16)'
 				END
 			), 2) as percentage,
+			ROW_NUMBER() OVER (PARTITION BY 
+				CASE 
+					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+					ELSE 'Other Keys (<16)'
+				END
+				ORDER BY COUNT(*) DESC
+			) as rank,
 			ROUND(AVG(r.score), 1) as avg_score
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
@@ -636,6 +665,7 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(minUsage int) ([]KeyL
 			CONCAT(dps_class, ' - ', dps_spec) as display,
 			COUNT(*) as usage_count,
 			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY key_level_bracket), 2) as percentage,
+			ROW_NUMBER() OVER (PARTITION BY key_level_bracket ORDER BY COUNT(*) DESC) as rank,
 			ROUND(AVG(score), 1) as avg_score
 		FROM (
 			SELECT 
@@ -684,7 +714,7 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(minUsage int) ([]KeyL
 		GROUP BY key_level_bracket, dps_class, dps_spec
 		HAVING COUNT(*) >= ?
 
-		ORDER BY role, key_level_bracket, usage_count DESC`
+		ORDER BY role, key_level_bracket, rank`
 
 	if err := s.db.Raw(query, minUsage, minUsage, minUsage).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get specs by key level: %w", err)
@@ -706,7 +736,8 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion() ([]RegionStats, error
 			tc.tank_spec as spec,
 			CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+			ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		GROUP BY r.region, tc.tank_class, tc.tank_spec
@@ -721,7 +752,8 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion() ([]RegionStats, error
 			tc.healer_spec as spec,
 			CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+			ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
 		FROM mythicplus_runs r
 		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
 		GROUP BY r.region, tc.healer_class, tc.healer_spec
@@ -736,7 +768,8 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion() ([]RegionStats, error
 			dps_spec as spec,
 			CONCAT(dps_class, ' - ', dps_spec) as display,
 			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY region), 2) as percentage_in_region
+			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY region), 2) as percentage_in_region,
+			ROW_NUMBER() OVER (PARTITION BY region ORDER BY COUNT(*) DESC) as rank_in_region
 		FROM (
 			SELECT r.region, tc.dps1_class as dps_class, tc.dps1_spec as dps_spec 
 			FROM mythicplus_runs r
@@ -756,7 +789,7 @@ func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion() ([]RegionStats, error
 		) dps_data
 		GROUP BY region, dps_class, dps_spec
 
-		ORDER BY role, region, usage_count DESC`
+		ORDER BY role, region, rank_in_region`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get specs by region: %w", err)
@@ -803,6 +836,7 @@ func (s *MythicPlusRunsAnalysisService) GetKeyLevelDistribution() ([]KeyLevelDis
 			r.mythic_level,
 			COUNT(*) as count,
 			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank,
 			ROUND(AVG(r.score), 1) as avg_score,
 			ROUND(MIN(r.score), 1) as min_score,
 			ROUND(MAX(r.score), 1) as max_score
@@ -827,13 +861,14 @@ func (s *MythicPlusRunsAnalysisService) GetDungeonDistribution() ([]DungeonDistr
 			r.dungeon_name,
 			COUNT(*) as run_count,
 			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank,
 			ROUND(AVG(r.score), 1) as avg_score,
 			ROUND(AVG(r.mythic_level), 1) as avg_key_level,
 			ROUND(MIN(r.score), 1) as min_score,
 			ROUND(MAX(r.score), 1) as max_score
 		FROM mythicplus_runs r
 		GROUP BY r.dungeon_slug, r.dungeon_name
-		ORDER BY run_count DESC`
+		ORDER BY rank`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get dungeon distribution: %w", err)
@@ -851,11 +886,12 @@ func (s *MythicPlusRunsAnalysisService) GetRegionDistribution() ([]RegionDistrib
 			r.region,
 			COUNT(*) as run_count,
 			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage,
+			ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rank,
 			ROUND(AVG(r.score), 1) as avg_score,
 			ROUND(AVG(r.mythic_level), 1) as avg_key_level
 		FROM mythicplus_runs r
 		GROUP BY r.region
-		ORDER BY run_count DESC`
+		ORDER BY rank`
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get region distribution: %w", err)

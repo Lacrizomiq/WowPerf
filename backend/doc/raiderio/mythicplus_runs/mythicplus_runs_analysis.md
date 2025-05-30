@@ -115,6 +115,8 @@ Cette API fournit des analyses statistiques complètes sur les runs Mythic+ bas�
 
 **Réponse :** `Array<DungeonCompositionStats>`
 
+**Exemple :** `/dungeons/compositions?top_n=3&min_usage=5`
+
 ---
 
 ## 🔥 Analyses Avancées

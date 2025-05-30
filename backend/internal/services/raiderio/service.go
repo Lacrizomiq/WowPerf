@@ -1,5 +1,7 @@
 package raiderio
 
+import "time"
+
 func NewRaiderIOService() (*RaiderIOService, error) {
 	client, err := NewRaiderIOClient()
 	if err != nil {
@@ -16,7 +18,12 @@ func (s *RaiderIOService) GetRaw(endpoint string, params map[string]string) ([]b
 	return s.Client.GetRaw(endpoint, params)
 }
 
-// GetRateLimitStats expose les statistiques de rate limiting
-func (s *RaiderIOService) GetRateLimitStats() (current int, total int64, remaining int, maxRequests int) {
-	return s.Client.GetRateLimitStats()
+// GetRequestStats expose les statistiques de rate limiting
+func (s *RaiderIOService) GetRequestStats() (total int64, duration time.Duration, avgPerHour float64) {
+	return s.Client.GetRequestStats()
+}
+
+// LogRequestSummary log les statistiques de rate limiting
+func (s *RaiderIOService) LogRequestSummary() {
+	s.Client.LogRequestSummary()
 }
