@@ -170,7 +170,7 @@ func NewRaiderIOClient() (*RaiderIOClient, error) {
 			Timeout: 3 * time.Minute,
 		},
 		baseURL:        apiURL,
-		limiter:        rate.NewLimiter(rate.Every(1*time.Second), 1),
+		limiter:        rate.NewLimiter(rate.Every(1*time.Second), 1), // 1 req/sec
 		requestTracker: NewUltraSimpleTracker(logger),
 		apiKey:         apiKey,
 		logger:         logger,
