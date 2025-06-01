@@ -13,13 +13,67 @@ import {
   KeyLevelDistribution,
 } from "../types/raiderio/mythicplus_runs/mythicPlusRuns";
 
-/* === Analyses globales === */
+// ========================================
+// INTERFACES POUR LES PARAMÈTRES
+// ========================================
 
+/**
+ * Paramètres pour récupérer les spécialisations par rôle
+ */
 interface GetSpecByRoleParams {
+  /** Nombre de spécialisations à retourner (0 = toutes) */
   top_n?: number;
 }
 
-// GetSpecByRole - Récupère les stats par spécialisation et rôle
+/**
+ * Paramètres pour récupérer les compositions d'équipes globales
+ */
+interface GetTopTeamCompositionsParams {
+  /** Nombre maximum de compositions à retourner */
+  limit?: number;
+  /** Nombre minimum d'utilisations pour filtrer les résultats */
+  min_usage?: number;
+}
+
+/**
+ * Paramètres pour récupérer les spécialisations par donjon et rôle
+ */
+interface GetSpecByDungeonAndRoleParams {
+  /** Nombre de spécialisations à retourner par donjon (0 = toutes) */
+  top_n?: number;
+}
+
+/**
+ * Paramètres pour récupérer les compositions par donjon
+ */
+interface GetTopTeamCompositionsByDungeonParams {
+  /** Nombre de compositions à retourner par donjon (0 = toutes) */
+  top_n?: number;
+  /** Nombre minimum d'utilisations pour filtrer les résultats */
+  min_usage?: number;
+}
+
+/**
+ * Paramètres pour récupérer les métadonnées par niveau de clé
+ */
+interface GetMetaByKeyLevelsParams {
+  /** Nombre minimum d'utilisations pour filtrer les résultats */
+  min_usage?: number;
+}
+
+// ========================================
+// ANALYSES GLOBALES
+// ========================================
+
+/**
+ * Récupère les statistiques des spécialisations par rôle à travers tous les donjons
+ *
+ * @param role - Le rôle à analyser (tank, healer, dps)
+ * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Limite le nombre de résultats retournés (0 = tous)
+ *
+ * @returns Promise<SpecByRole[]> - Liste des spécialisations avec leurs statistiques
+ */
 export const getSpecByRole = async (
   role: Role,
   params?: GetSpecByRoleParams
@@ -31,17 +85,21 @@ export const getSpecByRole = async (
     );
     return data;
   } catch (error) {
-    console.error("Error fetching spec by role:", error);
+    console.error(`Error fetching ${role} specializations:`, error);
     throw error;
   }
 };
 
-interface GetTopTeamCompositionsParams {
-  limit?: number;
-  min_usage?: number;
-}
-
-// GetTopTeamCompositionsGlobal - Récupère les compositions de team les plus utilisées
+/**
+ * Récupère les compositions d'équipes les plus populaires globalement
+ *
+ * @param params - Paramètres optionnels de la requête
+ * @param params.limit - Nombre maximum de compositions à retourner (défaut: 20)
+ * @param params.min_usage - Filtre les compositions avec moins d'utilisations (défaut: 5)
+ *
+ * @returns Promise<TopTeamCompositionsGlobal[]> - Liste des compositions populaires
+ *
+ */
 export const getTopTeamCompositionsGlobal = async (
   params?: GetTopTeamCompositionsParams
 ): Promise<TopTeamCompositionsGlobal[]> => {
@@ -57,13 +115,21 @@ export const getTopTeamCompositionsGlobal = async (
   }
 };
 
-/* === Analyses par donjon === */
+// ========================================
+// ANALYSES PAR DONJON
+// ========================================
 
-interface GetSpecByDungeonAndRoleParams {
-  top_n?: number;
-}
-
-// GetSpecByDungeonAndRole - Récupère les stats par spécialisation et rôle pour un donjon
+/**
+ * Récupère les statistiques des spécialisations pour un donjon et rôle spécifiques
+ *
+ * @param dungeonSlug - Identifiant unique du donjon (ex: "mists-of-tirna-scithe")
+ * @param role - Le rôle à analyser (tank, healer, dps)
+ * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Limite le nombre de résultats par donjon (0 = tous)
+ *
+ * @returns Promise<SpecByDungeonAndRole[]> - Spécialisations avec stats par donjon
+ *
+ */
 export const getSpecByDungeonAndRole = async (
   dungeonSlug: string,
   role: Role,
@@ -76,17 +142,24 @@ export const getSpecByDungeonAndRole = async (
     );
     return data;
   } catch (error) {
-    console.error("Error fetching spec by dungeon and role:", error);
+    console.error(
+      `Error fetching ${role} specs for dungeon ${dungeonSlug}:`,
+      error
+    );
     throw error;
   }
 };
 
-interface GetTopTeamCompositionsByDungeonParams {
-  top_n?: number;
-  min_usage?: number;
-}
-
-// GetTopTeamCompositionsByDungeon - Récupère les compositions de team les plus utilisées par donjon
+/**
+ * Récupère les compositions d'équipes les plus utilisées groupées par donjon
+ *
+ * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Nombre de compositions par donjon (0 = toutes)
+ * @param params.min_usage - Filtre les compositions avec moins d'utilisations (défaut: 3)
+ *
+ * @returns Promise<TopTeamCompositionsByDungeon[]> - Compositions par donjon
+ *
+ */
 export const getTopTeamCompositionsByDungeon = async (
   params?: GetTopTeamCompositionsByDungeonParams
 ): Promise<TopTeamCompositionsByDungeon[]> => {
@@ -102,16 +175,27 @@ export const getTopTeamCompositionsByDungeon = async (
   }
 };
 
-/* === Analyses par niveau de clé === */
+// ========================================
+// ANALYSES PAR NIVEAU DE CLÉ
+// ========================================
 
-// GetMetaByKeyLevels - Récupère les stats par spécialisation et niveau de clé
+/**
+ * Récupère les statistiques des spécialisations groupées par niveau de clé
+ * Utilise des brackets prédéfinis : Very High Keys (20+), High Keys (18-19), Mid Keys (16-17)
+ *
+ * @param params - Paramètres optionnels de la requête
+ * @param params.min_usage - Filtre les spécialisations avec moins d'utilisations (défaut: 5)
+ *
+ * @returns Promise<MetaByKeyLevels[]> - Métadonnées par niveau de clé
+ *
+ */
 export const getMetaByKeyLevels = async (
-  min_usage?: number
+  params?: GetMetaByKeyLevelsParams
 ): Promise<MetaByKeyLevels[]> => {
   try {
     const { data } = await api.get<MetaByKeyLevels[]>(
       "raiderio/mythicplus/analytics/key-levels",
-      { params: { min_usage } }
+      { params }
     );
     return data;
   } catch (error) {
@@ -120,9 +204,17 @@ export const getMetaByKeyLevels = async (
   }
 };
 
-/* === Analyses par région === */
+// ========================================
+// ANALYSES PAR RÉGION
+// ========================================
 
-// GetMetaByRegion - Récupère les stats par spécialisation et région
+/**
+ * Récupère les statistiques des spécialisations groupées par région
+ * Couvre les régions : US, EU, KR, TW
+ *
+ * @returns Promise<MetaByRegion[]> - Métadonnées par région
+ *
+ */
 export const getMetaByRegion = async (): Promise<MetaByRegion[]> => {
   try {
     const { data } = await api.get<MetaByRegion[]>(
@@ -135,9 +227,17 @@ export const getMetaByRegion = async (): Promise<MetaByRegion[]> => {
   }
 };
 
-/* === Analyses utilitaires === */
+// ========================================
+// ANALYSES UTILITAIRES
+// ========================================
 
-// GetOverallStats - Récupère les statistiques globales
+/**
+ * Récupère les statistiques générales du dataset Mythic+
+ * Inclut : nombre total de runs, scores moyens, compositions uniques, etc.
+ *
+ * @returns Promise<OverallStatsData> - Statistiques générales
+ *
+ */
 export const getOverallStats = async (): Promise<OverallStatsData> => {
   try {
     const { data } = await api.get<OverallStatsData>(
@@ -150,7 +250,13 @@ export const getOverallStats = async (): Promise<OverallStatsData> => {
   }
 };
 
-// GetKeyLevelDistribution - Récupère la distribution des niveaux de clé
+/**
+ * Récupère la distribution des runs par niveau de clé Mythic+
+ * Utile pour comprendre la répartition des joueurs par difficulté
+ *
+ * @returns Promise<KeyLevelDistribution[]> - Distribution des niveaux de clé
+ *
+ */
 export const getKeyLevelDistribution = async (): Promise<
   KeyLevelDistribution[]
 > => {
