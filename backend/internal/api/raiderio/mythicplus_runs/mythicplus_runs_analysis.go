@@ -352,12 +352,20 @@ func (h *MythicPlusRunsAnalysisHandler) GetCompositionsByDungeon(c *gin.Context)
 // @Tags Mythic+ Analytics - Advanced
 // @Accept json
 // @Produce json
+// @Param top_n query int false "Number of top specs per key level bracket and role (0 = all specs, default: 0)"
 // @Param min_usage query int false "Minimum usage count to filter results (default: 5)"
 // @Success 200 {array} analyticsService.KeyLevelStats
 // @Failure 400 {object} string "Bad request"
 // @Failure 500 {object} string "Internal server error"
 // @Router /raiderio/mythicplus/analytics/key-levels [get]
 func (h *MythicPlusRunsAnalysisHandler) GetSpecsByKeyLevel(c *gin.Context) {
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+
 	minUsage := 5 // default
 	if minUsageStr := c.Query("min_usage"); minUsageStr != "" {
 		if parsedMinUsage, err := strconv.Atoi(minUsageStr); err == nil && parsedMinUsage > 0 {
@@ -365,7 +373,7 @@ func (h *MythicPlusRunsAnalysisHandler) GetSpecsByKeyLevel(c *gin.Context) {
 		}
 	}
 
-	results, err := h.mythicPlusRunsAnalysisService.GetSpecsByKeyLevel(minUsage)
+	results, err := h.mythicPlusRunsAnalysisService.GetSpecsByKeyLevel(topN, minUsage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -380,11 +388,19 @@ func (h *MythicPlusRunsAnalysisHandler) GetSpecsByKeyLevel(c *gin.Context) {
 // @Tags Mythic+ Analytics - Advanced
 // @Accept json
 // @Produce json
+// @Param top_n query int false "Number of top specs per region and role (0 = all specs, default: 0)"
 // @Success 200 {array} analyticsService.RegionStats
 // @Failure 500 {object} string "Internal server error"
 // @Router /raiderio/mythicplus/analytics/regions [get]
 func (h *MythicPlusRunsAnalysisHandler) GetSpecsByRegion(c *gin.Context) {
-	results, err := h.mythicPlusRunsAnalysisService.GetSpecsByRegion()
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+
+	results, err := h.mythicPlusRunsAnalysisService.GetSpecsByRegion(topN)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -570,241 +570,484 @@ func (s *MythicPlusRunsAnalysisService) GetTopCompositionsByDungeon(topN int, mi
 // ========================================
 
 // GetSpecsByKeyLevel retourne les spécialisations par niveau de clé (tous rôles)
-func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(minUsage int) ([]KeyLevelStats, error) {
+// Si topN = 0, retourne toutes les spécs. Si topN > 0, limite aux top N par bracket et par rôle
+func (s *MythicPlusRunsAnalysisService) GetSpecsByKeyLevel(topN int, minUsage int) ([]KeyLevelStats, error) {
 	var results []KeyLevelStats
 
 	if minUsage <= 0 {
 		minUsage = 5
 	}
 
-	query := `
-		-- Tank par niveau de clé
-		SELECT 
-			'Tank' as role,
-			CASE 
-				WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-				WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-				WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-				ELSE 'Other Keys (<16)'
-			END as key_level_bracket,
-			tc.tank_class as class,
-			tc.tank_spec as spec,
-			CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
-				CASE 
-					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-					ELSE 'Other Keys (<16)'
-				END
-			), 2) as percentage,
-			ROW_NUMBER() OVER (PARTITION BY 
-				CASE 
-					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-					ELSE 'Other Keys (<16)'
-				END
-				ORDER BY COUNT(*) DESC
-			) as rank,
-			ROUND(AVG(r.score), 1) as avg_score
-		FROM mythicplus_runs r
-		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		GROUP BY 
-			CASE 
-				WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-				WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-				WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-				ELSE 'Other Keys (<16)'
-			END,
-			tc.tank_class, tc.tank_spec
-		HAVING COUNT(*) >= ?
-
-		UNION ALL
-
-		-- Healer par niveau de clé
-		SELECT 
-			'Healer' as role,
-			CASE 
-				WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-				WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-				WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-				ELSE 'Other Keys (<16)'
-			END as key_level_bracket,
-			tc.healer_class as class,
-			tc.healer_spec as spec,
-			CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
-				CASE 
-					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-					ELSE 'Other Keys (<16)'
-				END
-			), 2) as percentage,
-			ROW_NUMBER() OVER (PARTITION BY 
-				CASE 
-					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-					ELSE 'Other Keys (<16)'
-				END
-				ORDER BY COUNT(*) DESC
-			) as rank,
-			ROUND(AVG(r.score), 1) as avg_score
-		FROM mythicplus_runs r
-		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		GROUP BY 
-			CASE 
-				WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-				WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-				WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-				ELSE 'Other Keys (<16)'
-			END,
-			tc.healer_class, tc.healer_spec
-		HAVING COUNT(*) >= ?
-
-		UNION ALL
-
-		-- DPS par niveau de clé
-		SELECT 
-			'DPS' as role,
-			key_level_bracket,
-			dps_class as class,
-			dps_spec as spec,
-			CONCAT(dps_class, ' - ', dps_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY key_level_bracket), 2) as percentage,
-			ROW_NUMBER() OVER (PARTITION BY key_level_bracket ORDER BY COUNT(*) DESC) as rank,
-			ROUND(AVG(score), 1) as avg_score
-		FROM (
+	var query string
+	if topN <= 0 {
+		// Retourne TOUTES les spécialisations (requête originale)
+		query = `
+			-- Tank par niveau de clé
 			SELECT 
+				'Tank' as role,
 				CASE 
 					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
 					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
 					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
 					ELSE 'Other Keys (<16)'
 				END as key_level_bracket,
-				tc.dps1_class as dps_class, 
-				tc.dps1_spec as dps_spec,
-				r.score
+				tc.tank_class as class,
+				tc.tank_spec as spec,
+				CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END
+				), 2) as percentage,
+				ROW_NUMBER() OVER (PARTITION BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END
+					ORDER BY COUNT(*) DESC
+				) as rank,
+				ROUND(AVG(r.score), 1) as avg_score
 			FROM mythicplus_runs r
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-			
+			GROUP BY 
+				CASE 
+					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+					ELSE 'Other Keys (<16)'
+				END,
+				tc.tank_class, tc.tank_spec
+			HAVING COUNT(*) >= ?
+
 			UNION ALL
-			
+
+			-- Healer par niveau de clé
 			SELECT 
+				'Healer' as role,
 				CASE 
 					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
 					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
 					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
 					ELSE 'Other Keys (<16)'
 				END as key_level_bracket,
-				tc.dps2_class, 
-				tc.dps2_spec,
-				r.score
+				tc.healer_class as class,
+				tc.healer_spec as spec,
+				CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END
+				), 2) as percentage,
+				ROW_NUMBER() OVER (PARTITION BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END
+					ORDER BY COUNT(*) DESC
+				) as rank,
+				ROUND(AVG(r.score), 1) as avg_score
 			FROM mythicplus_runs r
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-			
+			GROUP BY 
+				CASE 
+					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+					ELSE 'Other Keys (<16)'
+				END,
+				tc.healer_class, tc.healer_spec
+			HAVING COUNT(*) >= ?
+
 			UNION ALL
-			
+
+			-- DPS par niveau de clé
 			SELECT 
-				CASE 
-					WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
-					WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
-					WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
-					ELSE 'Other Keys (<16)'
-				END as key_level_bracket,
-				tc.dps3_class, 
-				tc.dps3_spec,
-				r.score
-			FROM mythicplus_runs r
-			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		) dps_data
-		GROUP BY key_level_bracket, dps_class, dps_spec
-		HAVING COUNT(*) >= ?
+				'DPS' as role,
+				key_level_bracket,
+				dps_class as class,
+				dps_spec as spec,
+				CONCAT(dps_class, ' - ', dps_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY key_level_bracket), 2) as percentage,
+				ROW_NUMBER() OVER (PARTITION BY key_level_bracket ORDER BY COUNT(*) DESC) as rank,
+				ROUND(AVG(score), 1) as avg_score
+			FROM (
+				SELECT 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END as key_level_bracket,
+					tc.dps1_class as dps_class, 
+					tc.dps1_spec as dps_spec,
+					r.score
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				
+				UNION ALL
+				
+				SELECT 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END as key_level_bracket,
+					tc.dps2_class, 
+					tc.dps2_spec,
+					r.score
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				
+				UNION ALL
+				
+				SELECT 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END as key_level_bracket,
+					tc.dps3_class, 
+					tc.dps3_spec,
+					r.score
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+			) dps_data
+			GROUP BY key_level_bracket, dps_class, dps_spec
+			HAVING COUNT(*) >= ?
 
-		ORDER BY role, key_level_bracket, rank`
+			ORDER BY role, key_level_bracket, rank`
 
-	if err := s.db.Raw(query, minUsage, minUsage, minUsage).Scan(&results).Error; err != nil {
-		return nil, fmt.Errorf("failed to get specs by key level: %w", err)
+		if err := s.db.Raw(query, minUsage, minUsage, minUsage).Scan(&results).Error; err != nil {
+			return nil, fmt.Errorf("failed to get specs by key level: %w", err)
+		}
+	} else {
+		// Limite aux top N par bracket et par rôle
+		query = `
+			WITH all_specs_by_key_level AS (
+				-- Tank par niveau de clé
+				SELECT 
+					'Tank' as role,
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END as key_level_bracket,
+					tc.tank_class as class,
+					tc.tank_spec as spec,
+					CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END
+					), 2) as percentage,
+					ROW_NUMBER() OVER (PARTITION BY 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END
+						ORDER BY COUNT(*) DESC
+					) as rank,
+					ROUND(AVG(r.score), 1) as avg_score
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				GROUP BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END,
+					tc.tank_class, tc.tank_spec
+				HAVING COUNT(*) >= ?
+
+				UNION ALL
+
+				-- Healer par niveau de clé
+				SELECT 
+					'Healer' as role,
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END as key_level_bracket,
+					tc.healer_class as class,
+					tc.healer_spec as spec,
+					CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END
+					), 2) as percentage,
+					ROW_NUMBER() OVER (PARTITION BY 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END
+						ORDER BY COUNT(*) DESC
+					) as rank,
+					ROUND(AVG(r.score), 1) as avg_score
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				GROUP BY 
+					CASE 
+						WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+						WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+						WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+						ELSE 'Other Keys (<16)'
+					END,
+					tc.healer_class, tc.healer_spec
+				HAVING COUNT(*) >= ?
+
+				UNION ALL
+
+				-- DPS par niveau de clé
+				SELECT 
+					'DPS' as role,
+					key_level_bracket,
+					dps_class as class,
+					dps_spec as spec,
+					CONCAT(dps_class, ' - ', dps_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY key_level_bracket), 2) as percentage,
+					ROW_NUMBER() OVER (PARTITION BY key_level_bracket ORDER BY COUNT(*) DESC) as rank,
+					ROUND(AVG(score), 1) as avg_score
+				FROM (
+					SELECT 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END as key_level_bracket,
+						tc.dps1_class as dps_class, 
+						tc.dps1_spec as dps_spec,
+						r.score
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+					
+					UNION ALL
+					
+					SELECT 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END as key_level_bracket,
+						tc.dps2_class, 
+						tc.dps2_spec,
+						r.score
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+					
+					UNION ALL
+					
+					SELECT 
+						CASE 
+							WHEN r.mythic_level >= 20 THEN 'Very High Keys (20+)'
+							WHEN r.mythic_level >= 18 THEN 'High Keys (18-19)'
+							WHEN r.mythic_level >= 16 THEN 'Mid Keys (16-17)'
+							ELSE 'Other Keys (<16)'
+						END as key_level_bracket,
+						tc.dps3_class, 
+						tc.dps3_spec,
+						r.score
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				) dps_data
+				GROUP BY key_level_bracket, dps_class, dps_spec
+				HAVING COUNT(*) >= ?
+			)
+			SELECT *
+			FROM all_specs_by_key_level
+			WHERE rank <= ?
+			ORDER BY role, key_level_bracket, rank`
+
+		if err := s.db.Raw(query, minUsage, minUsage, minUsage, topN).Scan(&results).Error; err != nil {
+			return nil, fmt.Errorf("failed to get specs by key level: %w", err)
+		}
 	}
 
 	return results, nil
 }
 
 // GetSpecsByRegion retourne les spécialisations par région (tous rôles)
-func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion() ([]RegionStats, error) {
+// Si topN = 0, retourne toutes les spécs. Si topN > 0, limite aux top N par région et par rôle
+func (s *MythicPlusRunsAnalysisService) GetSpecsByRegion(topN int) ([]RegionStats, error) {
 	var results []RegionStats
 
-	query := `
-		-- Tank par région
-		SELECT 
-			'Tank' as role,
-			r.region,
-			tc.tank_class as class,
-			tc.tank_spec as spec,
-			CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
-			ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
-		FROM mythicplus_runs r
-		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		GROUP BY r.region, tc.tank_class, tc.tank_spec
-
-		UNION ALL
-
-		-- Healer par région
-		SELECT 
-			'Healer' as role,
-			r.region,
-			tc.healer_class as class,
-			tc.healer_spec as spec,
-			CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
-			ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
-		FROM mythicplus_runs r
-		JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		GROUP BY r.region, tc.healer_class, tc.healer_spec
-
-		UNION ALL
-
-		-- DPS par région
-		SELECT 
-			'DPS' as role,
-			region,
-			dps_class as class,
-			dps_spec as spec,
-			CONCAT(dps_class, ' - ', dps_spec) as display,
-			COUNT(*) as usage_count,
-			ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY region), 2) as percentage_in_region,
-			ROW_NUMBER() OVER (PARTITION BY region ORDER BY COUNT(*) DESC) as rank_in_region
-		FROM (
-			SELECT r.region, tc.dps1_class as dps_class, tc.dps1_spec as dps_spec 
+	var query string
+	if topN <= 0 {
+		// Retourne TOUTES les spécialisations (requête originale)
+		query = `
+			-- Tank par région
+			SELECT 
+				'Tank' as role,
+				r.region,
+				tc.tank_class as class,
+				tc.tank_spec as spec,
+				CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+				ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
 			FROM mythicplus_runs r
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-			
+			GROUP BY r.region, tc.tank_class, tc.tank_spec
+
 			UNION ALL
-			
-			SELECT r.region, tc.dps2_class, tc.dps2_spec 
+
+			-- Healer par région
+			SELECT 
+				'Healer' as role,
+				r.region,
+				tc.healer_class as class,
+				tc.healer_spec as spec,
+				CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+				ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
 			FROM mythicplus_runs r
 			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-			
+			GROUP BY r.region, tc.healer_class, tc.healer_spec
+
 			UNION ALL
-			
-			SELECT r.region, tc.dps3_class, tc.dps3_spec 
-			FROM mythicplus_runs r
-			JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
-		) dps_data
-		GROUP BY region, dps_class, dps_spec
 
-		ORDER BY role, region, rank_in_region`
+			-- DPS par région
+			SELECT 
+				'DPS' as role,
+				region,
+				dps_class as class,
+				dps_spec as spec,
+				CONCAT(dps_class, ' - ', dps_spec) as display,
+				COUNT(*) as usage_count,
+				ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY region), 2) as percentage_in_region,
+				ROW_NUMBER() OVER (PARTITION BY region ORDER BY COUNT(*) DESC) as rank_in_region
+			FROM (
+				SELECT r.region, tc.dps1_class as dps_class, tc.dps1_spec as dps_spec 
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				
+				UNION ALL
+				
+				SELECT r.region, tc.dps2_class, tc.dps2_spec 
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				
+				UNION ALL
+				
+				SELECT r.region, tc.dps3_class, tc.dps3_spec 
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+			) dps_data
+			GROUP BY region, dps_class, dps_spec
 
-	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
-		return nil, fmt.Errorf("failed to get specs by region: %w", err)
+			ORDER BY role, region, rank_in_region`
+
+		if err := s.db.Raw(query).Scan(&results).Error; err != nil {
+			return nil, fmt.Errorf("failed to get specs by region: %w", err)
+		}
+	} else {
+		// Limite aux top N par région et par rôle
+		query = `
+			WITH all_specs_by_region AS (
+				-- Tank par région
+				SELECT 
+					'Tank' as role,
+					r.region,
+					tc.tank_class as class,
+					tc.tank_spec as spec,
+					CONCAT(tc.tank_class, ' - ', tc.tank_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+					ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				GROUP BY r.region, tc.tank_class, tc.tank_spec
+
+				UNION ALL
+
+				-- Healer par région
+				SELECT 
+					'Healer' as role,
+					r.region,
+					tc.healer_class as class,
+					tc.healer_spec as spec,
+					CONCAT(tc.healer_class, ' - ', tc.healer_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY r.region), 2) as percentage_in_region,
+					ROW_NUMBER() OVER (PARTITION BY r.region ORDER BY COUNT(*) DESC) as rank_in_region
+				FROM mythicplus_runs r
+				JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				GROUP BY r.region, tc.healer_class, tc.healer_spec
+
+				UNION ALL
+
+				-- DPS par région
+				SELECT 
+					'DPS' as role,
+					region,
+					dps_class as class,
+					dps_spec as spec,
+					CONCAT(dps_class, ' - ', dps_spec) as display,
+					COUNT(*) as usage_count,
+					ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY region), 2) as percentage_in_region,
+					ROW_NUMBER() OVER (PARTITION BY region ORDER BY COUNT(*) DESC) as rank_in_region
+				FROM (
+					SELECT r.region, tc.dps1_class as dps_class, tc.dps1_spec as dps_spec 
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+					
+					UNION ALL
+					
+					SELECT r.region, tc.dps2_class, tc.dps2_spec 
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+					
+					UNION ALL
+					
+					SELECT r.region, tc.dps3_class, tc.dps3_spec 
+					FROM mythicplus_runs r
+					JOIN mythicplus_team_compositions tc ON r.team_composition_id = tc.id
+				) dps_data
+				GROUP BY region, dps_class, dps_spec
+			)
+			SELECT *
+			FROM all_specs_by_region
+			WHERE rank_in_region <= ?
+			ORDER BY role, region, rank_in_region`
+
+		if err := s.db.Raw(query, topN).Scan(&results).Error; err != nil {
+			return nil, fmt.Errorf("failed to get specs by region: %w", err)
+		}
 	}
 
 	return results, nil

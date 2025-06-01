@@ -59,6 +59,16 @@ interface GetTopTeamCompositionsByDungeonParams {
 interface GetMetaByKeyLevelsParams {
   /** Nombre minimum d'utilisations pour filtrer les résultats */
   min_usage?: number;
+  /** Nombre maximum de résultats à retourner (0 = toutes) */
+  top_n?: number;
+}
+
+/**
+ * Paramètres pour récupérer les métadonnées par région
+ */
+interface GetMetaByRegionParams {
+  /** Nombre de spécialisations à retourner par région et par rôle (0 = toutes) */
+  top_n?: number;
 }
 
 // ========================================
@@ -184,6 +194,7 @@ export const getTopTeamCompositionsByDungeon = async (
  * Utilise des brackets prédéfinis : Very High Keys (20+), High Keys (18-19), Mid Keys (16-17)
  *
  * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Limite le nombre de spécialisations par bracket et par rôle (0 = toutes)
  * @param params.min_usage - Filtre les spécialisations avec moins d'utilisations (défaut: 5)
  *
  * @returns Promise<MetaByKeyLevels[]> - Métadonnées par niveau de clé
@@ -212,13 +223,19 @@ export const getMetaByKeyLevels = async (
  * Récupère les statistiques des spécialisations groupées par région
  * Couvre les régions : US, EU, KR, TW
  *
+ * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Limite le nombre de spécialisations par région et par rôle (0 = toutes)
+ *
  * @returns Promise<MetaByRegion[]> - Métadonnées par région
  *
  */
-export const getMetaByRegion = async (): Promise<MetaByRegion[]> => {
+export const getMetaByRegion = async (
+  params?: GetMetaByRegionParams
+): Promise<MetaByRegion[]> => {
   try {
     const { data } = await api.get<MetaByRegion[]>(
-      "raiderio/mythicplus/analytics/regions"
+      "raiderio/mythicplus/analytics/regions",
+      { params }
     );
     return data;
   } catch (error) {

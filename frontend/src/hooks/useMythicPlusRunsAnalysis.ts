@@ -240,6 +240,7 @@ export const useTopTeamCompositionsByDungeon = (
  * Organise les données par brackets : Very High Keys (20+), High Keys (18-19), Mid Keys (16-17)
  *
  * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Nombre de spécialisations par bracket et par rôle (0 = toutes)
  * @param params.min_usage - Filtre les spécialisations avec moins d'utilisations
  * @param options - Options React Query personnalisées
  *
@@ -247,8 +248,14 @@ export const useTopTeamCompositionsByDungeon = (
  *
  * @example
  * ```typescript
- * // Récupère la méta high keys
- * const { data: keyMeta } = useMetaByKeyLevels({ min_usage: 5 });
+ * // Récupère la méta high keys - top 3 par bracket et rôle
+ * const { data: keyMeta } = useMetaByKeyLevels({
+ *   top_n: 3,
+ *   min_usage: 5
+ * });
+ *
+ * // Toutes les spécialisations pour les very high keys
+ * const { data: allSpecs } = useMetaByKeyLevels({ top_n: 0 });
  *
  * // Filtrer pour les very high keys uniquement
  * const veryHighKeys = keyMeta?.filter(
@@ -264,7 +271,7 @@ export const useTopTeamCompositionsByDungeon = (
  * ```
  */
 export const useMetaByKeyLevels = (
-  params?: { min_usage?: number },
+  params?: { top_n?: number; min_usage?: number },
   options?: QueryOptions<MetaByKeyLevels[]>
 ): UseQueryResult<MetaByKeyLevels[], Error> => {
   return useQuery({
@@ -273,6 +280,7 @@ export const useMetaByKeyLevels = (
       "mythicplus",
       "meta",
       "key-levels",
+      params?.top_n,
       params?.min_usage,
     ],
     queryFn: () => getMetaByKeyLevels(params),
@@ -289,28 +297,38 @@ export const useMetaByKeyLevels = (
  * Hook pour récupérer les métadonnées par région
  * Couvre les régions : US, EU, KR, TW
  *
+ * @param params - Paramètres optionnels de la requête
+ * @param params.top_n - Nombre de spécialisations par région et par rôle (0 = toutes)
  * @param options - Options React Query personnalisées
  *
  * @returns Résultat de la query avec les métadonnées par région
  *
  * @example
  * ```typescript
- * // Récupère la méta par région
- * const { data: regionMeta } = useMetaByRegion();
+ * // Récupère le top 5 des spécs par région et rôle
+ * const { data: regionMeta } = useMetaByRegion({ top_n: 5 });
+ *
+ * // Toutes les spécialisations
+ * const { data: allRegionMeta } = useMetaByRegion({ top_n: 0 });
  *
  * // Filtrer pour l'Europe
  * const euMeta = regionMeta?.filter(spec => spec.region === 'EU');
  *
  * // Comparer les régions pour un rôle spécifique
  * const tankByRegion = regionMeta?.filter(spec => spec.role === 'Tank');
+ *
+ * // Top 3 DPS par région
+ * const { data: topDPSByRegion } = useMetaByRegion({ top_n: 3 });
+ * const dpsOnly = topDPSByRegion?.filter(spec => spec.role === 'DPS');
  * ```
  */
 export const useMetaByRegion = (
+  params?: { top_n?: number },
   options?: QueryOptions<MetaByRegion[]>
 ): UseQueryResult<MetaByRegion[], Error> => {
   return useQuery({
-    queryKey: ["raiderio", "mythicplus", "meta", "region"],
-    queryFn: () => getMetaByRegion(),
+    queryKey: ["raiderio", "mythicplus", "meta", "region", params?.top_n],
+    queryFn: () => getMetaByRegion(params),
     ...defaultQueryConfig,
     ...options,
   });
