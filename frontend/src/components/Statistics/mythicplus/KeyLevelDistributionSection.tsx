@@ -123,7 +123,7 @@ const KeyLevelDistributionSection: React.FC = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-mono text-white">
-                        {level.count.toLocaleString("fr-FR")}
+                        {level.count.toLocaleString("en-US")}
                       </TableCell>
                       <TableCell className="text-right font-semibold text-white">
                         {level.percentage.toFixed(1)}%

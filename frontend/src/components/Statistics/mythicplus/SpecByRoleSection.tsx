@@ -1,6 +1,6 @@
 // components/Statistics/mythicplus/SpecByRoleSection.tsx
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useSpecsByRole } from "@/hooks/useMythicPlusRunsAnalysis";
 import { ClassColoredText, getRoleStyle } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -115,6 +117,8 @@ const SpecByRoleSection: React.FC = () => {
   );
 };
 
+export default SpecByRoleSection;
+
 /**
  * Table component to display specializations for a role
  */
@@ -123,7 +127,20 @@ interface RoleSpecTableProps {
 }
 
 const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
-  const { data: specs, isLoading, error, isError } = useSpecsByRole(role);
+  const [showAll, setShowAll] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Determine top_n parameter based on showAll state
+  const topN = showAll ? 0 : 5; // 0 = all specs, 5 = top 5 only
+
+  const {
+    data: specs,
+    isLoading,
+    error,
+    isError,
+  } = useSpecsByRole(role, {
+    top_n: topN,
+  });
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -159,8 +176,24 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
     return colors[role] || "";
   };
 
+  // Toggle function for View More/Less with auto-scroll
+  const toggleViewAll = () => {
+    const newShowAll = !showAll;
+    setShowAll(newShowAll);
+
+    // If switching back to "top 5", scroll to section top
+    if (!newShowAll && sectionRef.current) {
+      setTimeout(() => {
+        sectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100); // Small delay to let the content update
+    }
+  };
+
   return (
-    <Card className="bg-slate-800/30 border-slate-700">
+    <Card ref={sectionRef} className="bg-slate-800/30 border-slate-700">
       <CardHeader>
         <div className="flex items-center gap-3">
           <Badge
@@ -173,8 +206,21 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
             Top Specializations - {getRoleDisplayName(role)}
           </CardTitle>
         </div>
+
         <CardDescription>
           Ranking based on usage in high-level Mythic+ runs
+          {!showAll && specs.length >= 5 && (
+            <span className="text-slate-300">
+              {" "}
+              • Showing top 5 specializations
+            </span>
+          )}
+          {showAll && (
+            <span className="text-slate-300">
+              {" "}
+              • Showing all {specs.length} specializations
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -253,6 +299,28 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
           </Table>
         </div>
 
+        {/* View More/Less Button - Positioned after table */}
+        <div className="mt-6 flex justify-center">
+          <Button
+            variant="outline"
+            size="default"
+            onClick={toggleViewAll}
+            className="flex items-center gap-2 bg-slate-700/50 border-slate-600 hover:bg-slate-600/50 text-slate-200 hover:text-white transition-all duration-200 px-6 py-2"
+          >
+            {showAll ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Show Top 5 Only
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                View All Specializations
+              </>
+            )}
+          </Button>
+        </div>
+
         {/* Summary statistics */}
         <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -261,7 +329,9 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
                 {specs.length}
               </div>
               <div className="text-sm text-slate-400">
-                {role.toLowerCase()} specializations
+                {showAll
+                  ? `total ${role.toLowerCase()} specs`
+                  : `top ${role.toLowerCase()} specs`}
               </div>
             </div>
             <div>
@@ -270,7 +340,9 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
                   .reduce((sum, spec) => sum + spec.usage_count, 0)
                   .toLocaleString("en-US")}
               </div>
-              <div className="text-sm text-slate-400">Total usage</div>
+              <div className="text-sm text-slate-400">
+                {showAll ? "Total usage" : "Top 5 usage"}
+              </div>
             </div>
             <div>
               <div className="text-2xl font-bold text-white">
@@ -284,5 +356,3 @@ const RoleSpecTable: React.FC<RoleSpecTableProps> = ({ role }) => {
     </Card>
   );
 };
-
-export default SpecByRoleSection;

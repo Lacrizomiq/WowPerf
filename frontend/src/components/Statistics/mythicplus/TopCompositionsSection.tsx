@@ -1,5 +1,5 @@
 // components/Statistics/mythicplus/TopCompositionsSection.tsx
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTopTeamCompositionsGlobal } from "@/hooks/useMythicPlusRunsAnalysis";
 import { ClassColoredText } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
@@ -25,15 +27,37 @@ import ErrorDisplay from "../shared/ErrorDisplay";
  * Section qui affiche les compositions d'équipes les plus populaires
  */
 const TopCompositionsSection: React.FC = () => {
+  const [showAll, setShowAll] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Determine limit parameter based on showAll state
+  const limit = showAll ? 15 : 5; // 5 = top 5, 15 = extended view
+
   const {
     data: compositions,
     isLoading,
     error,
     isError,
   } = useTopTeamCompositionsGlobal({
-    limit: 10,
+    limit: limit,
     min_usage: 10,
   });
+
+  // Toggle function for View More/Less with auto-scroll
+  const toggleViewAll = () => {
+    const newShowAll = !showAll;
+    setShowAll(newShowAll);
+
+    // If switching back to "top 5", scroll to section top
+    if (!newShowAll && sectionRef.current) {
+      setTimeout(() => {
+        sectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100); // Small delay to let the content update
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,11 +94,23 @@ const TopCompositionsSection: React.FC = () => {
     <section>
       <h2 className="text-2xl font-bold mb-4">Top Team Compositions</h2>
 
-      <Card className="bg-slate-800/30 border-slate-700">
+      <Card ref={sectionRef} className="bg-slate-800/30 border-slate-700">
         <CardHeader>
           <CardTitle>Most Popular Compositions</CardTitle>
           <CardDescription>
-            Based on usage in Mythic+ high-level runs (minimum 10 usages)
+            Based on usage in Mythic+ high-level runs
+            {!showAll && compositions.length >= 5 && (
+              <span className="text-slate-300">
+                {" "}
+                • Showing top 5 compositions
+              </span>
+            )}
+            {showAll && (
+              <span className="text-slate-300">
+                {" "}
+                • Showing top {compositions.length} compositions
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,7 +223,7 @@ const TopCompositionsSection: React.FC = () => {
                     {/* Utilisation */}
                     <TableCell className="text-right font-mono">
                       <div className="text-base font-semibold text-white">
-                        {comp.usage_count.toLocaleString("fr-FR")}
+                        {comp.usage_count.toLocaleString("en-US")}
                       </div>
                     </TableCell>
 
@@ -210,6 +246,28 @@ const TopCompositionsSection: React.FC = () => {
             </Table>
           </div>
 
+          {/* View More/Less Button - Positioned after table */}
+          <div className="mt-6 flex justify-center">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={toggleViewAll}
+              className="flex items-center gap-2 bg-slate-700/50 border-slate-600 hover:bg-slate-600/50 text-slate-200 hover:text-white transition-all duration-200 px-6 py-2"
+            >
+              {showAll ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  Show Top 5 Only
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  View More Compositions
+                </>
+              )}
+            </Button>
+          </div>
+
           {/* Statistiques résumées */}
           <div className="mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -218,16 +276,18 @@ const TopCompositionsSection: React.FC = () => {
                   {compositions.length}
                 </div>
                 <div className="text-sm text-slate-400">
-                  Popular compositions
+                  {showAll ? "Popular compositions" : "Top compositions"}
                 </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">
                   {compositions
                     .reduce((sum, comp) => sum + comp.usage_count, 0)
-                    .toLocaleString("fr-FR")}
+                    .toLocaleString("en-US")}
                 </div>
-                <div className="text-sm text-slate-400">Total usages</div>
+                <div className="text-sm text-slate-400">
+                  {showAll ? "Total usages" : "Top 5 usages"}
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-white">
