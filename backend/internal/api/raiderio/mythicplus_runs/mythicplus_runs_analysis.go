@@ -31,11 +31,19 @@ func NewMythicPlusRunsAnalysisHandler(service *analyticsService.MythicPlusRunsAn
 // @Tags Mythic+ Analytics - Global
 // @Accept json
 // @Produce json
+// @Param top_n query int false "Number of top specs to return (0 = all specs, default: 0)"
 // @Success 200 {array} analyticsService.SpecializationStats
 // @Failure 500 {object} string "Internal server error"
 // @Router /raiderio/mythicplus/analytics/specs/tank [get]
 func (h *MythicPlusRunsAnalysisHandler) GetTankSpecializations(c *gin.Context) {
-	results, err := h.mythicPlusRunsAnalysisService.GetTankSpecializations()
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+
+	results, err := h.mythicPlusRunsAnalysisService.GetTankSpecializations(topN)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -50,11 +58,19 @@ func (h *MythicPlusRunsAnalysisHandler) GetTankSpecializations(c *gin.Context) {
 // @Tags Mythic+ Analytics - Global
 // @Accept json
 // @Produce json
+// @Param top_n query int false "Number of top specs to return (0 = all specs, default: 0)"
 // @Success 200 {array} analyticsService.SpecializationStats
 // @Failure 500 {object} string "Internal server error"
 // @Router /raiderio/mythicplus/analytics/specs/healer [get]
 func (h *MythicPlusRunsAnalysisHandler) GetHealerSpecializations(c *gin.Context) {
-	results, err := h.mythicPlusRunsAnalysisService.GetHealerSpecializations()
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+
+	results, err := h.mythicPlusRunsAnalysisService.GetHealerSpecializations(topN)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -69,11 +85,18 @@ func (h *MythicPlusRunsAnalysisHandler) GetHealerSpecializations(c *gin.Context)
 // @Tags Mythic+ Analytics - Global
 // @Accept json
 // @Produce json
+// @Param top_n query int false "Number of top specs to return (0 = all specs, default: 0)"
 // @Success 200 {array} analyticsService.SpecializationStats
 // @Failure 500 {object} string "Internal server error"
 // @Router /raiderio/mythicplus/analytics/specs/dps [get]
 func (h *MythicPlusRunsAnalysisHandler) GetDPSSpecializations(c *gin.Context) {
-	results, err := h.mythicPlusRunsAnalysisService.GetDPSSpecializations()
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+	results, err := h.mythicPlusRunsAnalysisService.GetDPSSpecializations(topN)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -89,6 +112,7 @@ func (h *MythicPlusRunsAnalysisHandler) GetDPSSpecializations(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param role path string true "Role (tank, healer, dps)"
+// @Param top_n query int false "Number of top specs to return (0 = all specs, default: 0)"
 // @Success 200 {array} analyticsService.SpecializationStats
 // @Failure 400 {object} string "Bad request"
 // @Failure 500 {object} string "Internal server error"
@@ -100,7 +124,13 @@ func (h *MythicPlusRunsAnalysisHandler) GetSpecializationsByRole(c *gin.Context)
 		return
 	}
 
-	results, err := h.mythicPlusRunsAnalysisService.GetSpecializationsByRole(role)
+	topN := 0 // default: return all
+	if topNStr := c.Query("top_n"); topNStr != "" {
+		if parsedTopN, err := strconv.Atoi(topNStr); err == nil && parsedTopN >= 0 {
+			topN = parsedTopN
+		}
+	}
+	results, err := h.mythicPlusRunsAnalysisService.GetSpecializationsByRole(role, topN)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -127,7 +157,7 @@ func (h *MythicPlusRunsAnalysisHandler) GetSpecializationsByRole(c *gin.Context)
 // @Router /raiderio/mythicplus/analytics/compositions [get]
 func (h *MythicPlusRunsAnalysisHandler) GetTopCompositions(c *gin.Context) {
 	// Parse query parameters
-	limit := 20 // default
+	limit := 5 // default
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
 			limit = parsedLimit

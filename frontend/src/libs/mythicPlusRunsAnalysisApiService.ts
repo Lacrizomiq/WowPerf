@@ -15,11 +15,19 @@ import {
 
 /* === Analyses globales === */
 
+interface GetSpecByRoleParams {
+  top_n?: number;
+}
+
 // GetSpecByRole - Récupère les stats par spécialisation et rôle
-export const getSpecByRole = async (role: Role): Promise<SpecByRole[]> => {
+export const getSpecByRole = async (
+  role: Role,
+  params?: GetSpecByRoleParams
+): Promise<SpecByRole[]> => {
   try {
     const { data } = await api.get<SpecByRole[]>(
-      `raiderio/mythicplus/analytics/specs/${role}`
+      `raiderio/mythicplus/analytics/specs/${role}`,
+      { params }
     );
     return data;
   } catch (error) {
@@ -51,14 +59,20 @@ export const getTopTeamCompositionsGlobal = async (
 
 /* === Analyses par donjon === */
 
+interface GetSpecByDungeonAndRoleParams {
+  top_n?: number;
+}
+
 // GetSpecByDungeonAndRole - Récupère les stats par spécialisation et rôle pour un donjon
 export const getSpecByDungeonAndRole = async (
   dungeonSlug: string,
-  role: Role
+  role: Role,
+  params?: GetSpecByDungeonAndRoleParams
 ): Promise<SpecByDungeonAndRole[]> => {
   try {
     const { data } = await api.get<SpecByDungeonAndRole[]>(
-      `raiderio/mythicplus/analytics/dungeons/${dungeonSlug}/specs/${role}`
+      `raiderio/mythicplus/analytics/dungeons/${dungeonSlug}/specs/${role}`,
+      { params }
     );
     return data;
   } catch (error) {
@@ -91,10 +105,13 @@ export const getTopTeamCompositionsByDungeon = async (
 /* === Analyses par niveau de clé === */
 
 // GetMetaByKeyLevels - Récupère les stats par spécialisation et niveau de clé
-export const getMetaByKeyLevels = async (): Promise<MetaByKeyLevels[]> => {
+export const getMetaByKeyLevels = async (
+  min_usage?: number
+): Promise<MetaByKeyLevels[]> => {
   try {
     const { data } = await api.get<MetaByKeyLevels[]>(
-      "raiderio/mythicplus/analytics/key-levels"
+      "raiderio/mythicplus/analytics/key-levels",
+      { params: { min_usage } }
     );
     return data;
   } catch (error) {

@@ -153,7 +153,7 @@ type RegionDistribution struct {
 // ========================================
 
 // GetTankSpecializations retourne les spécialisations Tank les plus utilisées
-func (s *MythicPlusRunsAnalysisService) GetTankSpecializations() ([]SpecializationStats, error) {
+func (s *MythicPlusRunsAnalysisService) GetTankSpecializations(topN int) ([]SpecializationStats, error) {
 	var results []SpecializationStats
 
 	query := `
@@ -169,6 +169,10 @@ func (s *MythicPlusRunsAnalysisService) GetTankSpecializations() ([]Specializati
 		GROUP BY tc.tank_class, tc.tank_spec
 		ORDER BY rank`
 
+	if topN > 0 {
+		query += fmt.Sprintf(" LIMIT %d", topN)
+	}
+
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tank specializations: %w", err)
 	}
@@ -177,7 +181,7 @@ func (s *MythicPlusRunsAnalysisService) GetTankSpecializations() ([]Specializati
 }
 
 // GetHealerSpecializations retourne les spécialisations Healer les plus utilisées
-func (s *MythicPlusRunsAnalysisService) GetHealerSpecializations() ([]SpecializationStats, error) {
+func (s *MythicPlusRunsAnalysisService) GetHealerSpecializations(topN int) ([]SpecializationStats, error) {
 	var results []SpecializationStats
 
 	query := `
@@ -193,6 +197,10 @@ func (s *MythicPlusRunsAnalysisService) GetHealerSpecializations() ([]Specializa
 		GROUP BY tc.healer_class, tc.healer_spec
 		ORDER BY rank`
 
+	if topN > 0 {
+		query += fmt.Sprintf(" LIMIT %d", topN)
+	}
+
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get healer specializations: %w", err)
 	}
@@ -201,7 +209,7 @@ func (s *MythicPlusRunsAnalysisService) GetHealerSpecializations() ([]Specializa
 }
 
 // GetDPSSpecializations retourne les spécialisations DPS les plus utilisées
-func (s *MythicPlusRunsAnalysisService) GetDPSSpecializations() ([]SpecializationStats, error) {
+func (s *MythicPlusRunsAnalysisService) GetDPSSpecializations(topN int) ([]SpecializationStats, error) {
 	var results []SpecializationStats
 
 	query := `
@@ -228,6 +236,10 @@ func (s *MythicPlusRunsAnalysisService) GetDPSSpecializations() ([]Specializatio
 		) dps_data
 		GROUP BY dps_class, dps_spec
 		ORDER BY rank`
+
+	if topN > 0 {
+		query += fmt.Sprintf(" LIMIT %d", topN)
+	}
 
 	if err := s.db.Raw(query).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get DPS specializations: %w", err)
@@ -948,14 +960,14 @@ func (s *MythicPlusRunsAnalysisService) GetTopSpecsByDungeonClean(role string) (
 // ========================================
 
 // GetSpecializationsByRole retourne toutes les spécialisations d'un rôle donné
-func (s *MythicPlusRunsAnalysisService) GetSpecializationsByRole(role string) ([]SpecializationStats, error) {
+func (s *MythicPlusRunsAnalysisService) GetSpecializationsByRole(role string, topN int) ([]SpecializationStats, error) {
 	switch role {
 	case "tank":
-		return s.GetTankSpecializations()
+		return s.GetTankSpecializations(topN)
 	case "healer":
-		return s.GetHealerSpecializations()
+		return s.GetHealerSpecializations(topN)
 	case "dps":
-		return s.GetDPSSpecializations()
+		return s.GetDPSSpecializations(topN)
 	default:
 		return nil, fmt.Errorf("invalid role: %s (must be 'tank', 'healer', or 'dps')", role)
 	}
