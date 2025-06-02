@@ -67,7 +67,7 @@ const SpecByRoleSection: React.FC = () => {
         <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 mb-4">
           <TabsTrigger
             value={Role.TANK}
-            className="data-[state=active]:bg-purple-600 hover:bg-slate-700 transition-colors duration-200"
+            className="data-[state=active]:bg-indigo-600 hover:bg-slate-700 transition-colors duration-200"
           >
             <div className="flex items-center gap-2">
               <div

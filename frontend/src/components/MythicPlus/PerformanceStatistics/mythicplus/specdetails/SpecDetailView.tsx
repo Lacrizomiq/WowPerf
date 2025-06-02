@@ -17,6 +17,7 @@ import SpecHeader from "./SpecHeader";
 import ScoreEvolution from "./ScoreEvolution";
 import TopPlayersTable from "./TopPlayersTable";
 import DungeonPerformanceGrid from "./DungeonPerformanceGrid";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 interface SpecDetailViewProps {
   slug: string;
@@ -131,22 +132,39 @@ const SpecDetailView: React.FC<SpecDetailViewProps> = ({ slug }) => {
         <div className="space-y-10">
           {/* Score Evolution Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">Mythic+ Score Evolution</h2>
+            <h2 className="text-2xl font-bold mb-4 flex items-center">
+              Mythic+ Score Evolution
+              <InfoTooltip
+                content={`This section shows the evolution of the score for ${specName} ${className} specialization over a period of time.`}
+                className="ml-2"
+                size="lg"
+              />
+            </h2>
             <ScoreEvolution />
           </section>
 
           {/* Players Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-2xl font-bold mb-4 flex items-center">
               Top {specName} {className} Players in Mythic+
+              <InfoTooltip
+                content={`This section shows the top 10 players for ${specName} ${className} specialization in Mythic+.`}
+                className="ml-2"
+                size="lg"
+              />
             </h2>
             <TopPlayersTable players={topPlayers} className={className} />
           </section>
 
           {/* Dungeon Performance Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-2xl font-bold mb-4 flex items-center">
               Max Key Performance by Dungeon
+              <InfoTooltip
+                content={`This section shows the max key performance for ${specName} ${className} specialization in Mythic+.`}
+                className="ml-2"
+                size="lg"
+              />
             </h2>
             <DungeonPerformanceGrid className={className} specName={specName} />
           </section>

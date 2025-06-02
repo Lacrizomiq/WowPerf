@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+
 const ScoreEvolution: React.FC = () => {
   return (
     <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-5">
@@ -28,19 +29,6 @@ const ScoreEvolution: React.FC = () => {
               Last 30 Days
             </TabsTrigger>
           </TabsList>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-slate-400">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Average score across all players of this specialization</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
 
         {/* Coming Soon content for all tabs */}

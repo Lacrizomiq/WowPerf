@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { getSpecIcon, normalizeWowName } from "@/utils/classandspecicons";
 import { getSpecBackground } from "@/utils/classandspecbackgrounds";
 import StatCard from "./StatCard";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 interface SpecHeaderProps {
   className: string;
@@ -81,15 +82,18 @@ const SpecHeader: React.FC<SpecHeaderProps> = ({
               value={Math.round(
                 currentSpecData.avg_global_score
               ).toLocaleString()}
+              tooltip={`Average score for ${specName} ${className} specialization across the top 10 players.`}
             />
             <StatCard
               title="Overall Rank"
               value={`#${currentSpecData.overall_rank}`}
+              tooltip={`Overall rank for ${specName} ${className} specialization across all specializations.`}
             />
             <StatCard
               title="Weekly Change"
               value="Coming Soon"
               isComing={true}
+              tooltip={`Weekly change for ${specName} ${className} specialization rank across all specializations and average score . Coming soon.`}
             />
           </div>
         </div>

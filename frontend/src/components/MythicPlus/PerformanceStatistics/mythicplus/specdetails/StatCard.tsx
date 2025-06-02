@@ -8,10 +8,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
+
 interface StatCardProps {
   title: string;
   value: string;
-
+  tooltip?: string;
   trend?: "up" | "down";
   isComing?: boolean;
 }
@@ -19,6 +21,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
+  tooltip,
   trend,
   isComing = false,
 }) => {
@@ -27,6 +30,9 @@ const StatCard: React.FC<StatCardProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-slate-300">
           {title}
+          {tooltip && (
+            <InfoTooltip content={tooltip} className="ml-2" size="sm" />
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
