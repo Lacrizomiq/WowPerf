@@ -22,6 +22,7 @@ import { useTopTeamCompositionsGlobal } from "@/hooks/useMythicPlusRunsAnalysis"
 import { ClassColoredText } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section qui affiche les compositions d'équipes les plus populaires
@@ -92,7 +93,14 @@ const TopCompositionsSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Top Team Compositions</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Top Team Compositions
+        <InfoTooltip
+          content="This section shows the most popular team compositions across all runs and dungeons."
+          className="ml-2"
+          size="lg"
+        />
+      </h2>
 
       <Card ref={sectionRef} className="bg-slate-800/30 border-slate-700">
         <CardHeader>

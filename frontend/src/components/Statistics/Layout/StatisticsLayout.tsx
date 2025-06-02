@@ -41,7 +41,7 @@ export default function StatisticsLayout({ activeTab }: StatisticsLayoutProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#1A1D21] text-[#EAEAEA]">
+    <div className="bg-[#1A1D21] text-[#EAEAEA]">
       {/* Page Header */}
       <header className="pt-8 pb-6 px-4 md:px-8 border-b border-slate-800">
         <div className="container mx-auto">
@@ -56,7 +56,7 @@ export default function StatisticsLayout({ activeTab }: StatisticsLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 md:px-8 py-6">
+      <main className="container mx-auto px-4 md:px-8 py-6">
         {/* Content Type Tabs */}
         <Tabs
           value={activeTab}
@@ -94,23 +94,35 @@ export default function StatisticsLayout({ activeTab }: StatisticsLayoutProps) {
 
           {/* Mythic+ Content */}
           <TabsContent value="mythic" className="space-y-8">
-            {/* Section 1: Overall Overview */}
-            <OverallStatsSection />
+            {/* ✅ Section 1: Overall Overview */}
+            <div id="overview" className="scroll-mt-32">
+              <OverallStatsSection />
+            </div>
 
-            {/* Section 2: Key Level Distribution */}
-            <KeyLevelDistributionSection />
+            {/* ✅ Section 2: Key Level Distribution */}
+            <div id="key-distribution" className="scroll-mt-32">
+              <KeyLevelDistributionSection />
+            </div>
 
-            {/* Section 3: Specialization Usage by Role */}
-            <SpecByRoleSection />
+            {/* ✅ Section 3: Specialization Usage by Role */}
+            <div id="specializations" className="scroll-mt-32">
+              <SpecByRoleSection />
+            </div>
 
-            {/* Section 4: Top Team Compositions */}
-            <TopCompositionsSection />
+            {/* ✅ Section 4: Top Team Compositions */}
+            <div id="compositions" className="scroll-mt-32">
+              <TopCompositionsSection />
+            </div>
 
-            {/* Section 5: Meta by Key Levels */}
-            <MetaByKeyLevelsSection />
+            {/* ✅ Section 5: Meta by Key Levels */}
+            <div id="key-levels" className="scroll-mt-32">
+              <MetaByKeyLevelsSection />
+            </div>
 
-            {/* Section 6: Dungeon-Specific Stats */}
-            <DungeonSpecificStatsSection />
+            {/* ✅ Section 6: Dungeon-Specific Stats */}
+            <div id="dungeons" className="scroll-mt-32">
+              <DungeonSpecificStatsSection />
+            </div>
           </TabsContent>
 
           {/* Raids Content - Coming Soon */}

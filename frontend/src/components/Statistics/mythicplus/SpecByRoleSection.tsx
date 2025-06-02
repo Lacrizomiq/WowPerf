@@ -26,6 +26,7 @@ import { ClassColoredText, getRoleStyle } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import { Role } from "@/types/raiderio/mythicplus_runs/mythicPlusRuns";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section that displays specialization usage by role
@@ -49,7 +50,14 @@ const SpecByRoleSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Specialization Usage by Role</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Specialization Usage by Role
+        <InfoTooltip
+          content="This section shows the usage of specializations by role. It represents the global usage of specializations across all runs and dungeons."
+          className="ml-2"
+          size="lg"
+        />
+      </h2>
 
       <Tabs
         value={selectedRole}

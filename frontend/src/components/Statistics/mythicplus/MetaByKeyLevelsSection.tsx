@@ -33,6 +33,7 @@ import { ClassColoredText, getRoleStyle } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import { Role } from "@/types/raiderio/mythicplus_runs/mythicPlusRuns";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section qui affiche les métadonnées par niveau de clé
@@ -63,7 +64,14 @@ const MetaByKeyLevelsSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Meta by Key Levels</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Meta by Key Levels
+        <InfoTooltip
+          content="This section shows the meta analysis for each specialization in a specific key level bracket, filtered by the selected role."
+          className="ml-2"
+          size="lg"
+        />
+      </h2>
 
       {/* Key Level Bracket Selector */}
       <div className="mb-6">

@@ -38,6 +38,7 @@ import { ClassColoredText, getRoleStyle } from "../shared/ClassColorUtils";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
 import { Role } from "@/types/raiderio/mythicplus_runs/mythicPlusRuns";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section qui affiche les statistiques spécifiques à un donjon
@@ -105,7 +106,14 @@ const DungeonSpecificStatsSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Dungeon-Specific Statistics</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Dungeon-Specific Statistics
+        <InfoTooltip
+          content="This section shows the statistics for a specific dungeon. It includes the top specializations and compositions for each role."
+          className="ml-2"
+          size="lg"
+        />
+      </h2>
 
       {/* Dungeon Selector */}
       <div className="mb-6">

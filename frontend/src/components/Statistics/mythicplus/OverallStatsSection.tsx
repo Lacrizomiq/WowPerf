@@ -11,6 +11,7 @@ import {
 import { useOverallStats } from "@/hooks/useMythicPlusRunsAnalysis";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section qui affiche les statistiques générales du dataset Mythic+
@@ -75,13 +76,21 @@ const OverallStatsSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Dataset Overview</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Dataset Overview
+        <InfoTooltip
+          content="This section provides an overview of the dataset used to generate the statistics."
+          className="ml-2"
+          size="lg"
+        />
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total des Runs */}
         <StatCard
           title="Total Runs"
           value={overallStats.total_runs.toLocaleString("fr-FR")}
           description="Runs analyzed"
+          tooltip="Total number of Mythic+ dungeon runs recorded in our dataset"
         />
 
         {/* Runs avec Score 
@@ -100,6 +109,7 @@ const OverallStatsSection: React.FC = () => {
           title="Unique Compositions"
           value={overallStats.unique_compositions.toLocaleString("fr-FR")}
           description="Team combinations"
+          tooltip="Number of distinct team compositions (tank, healer, 3 DPS specializations) found across all runs."
         />
 
         {/* Score Moyen 
@@ -115,6 +125,7 @@ const OverallStatsSection: React.FC = () => {
           title="Average Key Level"
           value={`+${overallStats.avg_key_level.toFixed(1)}`}
           description="Average difficulty"
+          tooltip="Average keystone level across all recorded runs. Higher levels indicate more challenging content with better rewards."
         />
 
         {/* Donjons Analysés 
@@ -130,6 +141,7 @@ const OverallStatsSection: React.FC = () => {
           title="Covered Regions"
           value={overallStats.unique_regions.toString()}
           description="Global regions"
+          tooltip="Number of different regions covered by the dataset. This includes EU, US, KR and TW. CN runs are not included."
         />
 
         {/* Période d'Analyse 
@@ -151,6 +163,7 @@ interface StatCardProps {
   title: string;
   value: string;
   description?: string;
+  tooltip?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -161,6 +174,7 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   description,
+  tooltip,
   trend,
 }) => {
   return (
@@ -168,6 +182,15 @@ const StatCard: React.FC<StatCardProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-slate-300">
           {title}
+          {tooltip && (
+            <InfoTooltip
+              content={tooltip}
+              side="right"
+              delayDuration={100}
+              size="sm"
+              className="ml-1"
+            />
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { useKeyLevelDistribution } from "@/hooks/useMythicPlusRunsAnalysis";
 import LoadingSpinner from "../shared/LoadingSpinner";
 import ErrorDisplay from "../shared/ErrorDisplay";
+import InfoTooltip from "@/components/Shared/InfoTooltip";
 
 /**
  * Section qui affiche la distribution des runs par niveau de clé Mythic+
@@ -57,7 +58,13 @@ const KeyLevelDistributionSection: React.FC = () => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold mb-4">Key Level Distribution</h2>
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        Key Level Distribution
+        <InfoTooltip
+          content="This section shows the distribution of runs by key level difficulty. It includes the percentage of runs by key level and the average score for each key level."
+          className="ml-2"
+        />
+      </h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Graphique de répartition */}
         <Card className="bg-slate-800/30 border-slate-700">
