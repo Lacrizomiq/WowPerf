@@ -126,7 +126,9 @@ const TopCompositionsSection: React.FC = () => {
                   <TableHead>DPS 3</TableHead>
                   <TableHead className="text-right">Usage</TableHead>
                   <TableHead className="text-right">%</TableHead>
-                  <TableHead className="text-right">Average Score</TableHead>
+                  <TableHead className="text-right">
+                    Average Score per Key
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -294,7 +296,7 @@ const TopCompositionsSection: React.FC = () => {
                   {compositions[0]?.avg_score.toFixed(0) || "N/A"}
                 </div>
                 <div className="text-sm text-slate-400">
-                  Average score top 1
+                  Average score per key
                 </div>
               </div>
             </div>

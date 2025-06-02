@@ -3,7 +3,7 @@ import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Game Analytics - WoWPerf",
+  title: "Trends & Statistics - WoWPerf",
   description:
     "Explore trends, meta, and detailed statistics for World of Warcraft content",
   keywords: [

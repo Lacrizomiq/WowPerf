@@ -11,6 +11,8 @@ import OverallStatsSection from "../mythicplus/OverallStatsSection";
 import SpecByRoleSection from "../mythicplus/SpecByRoleSection";
 import KeyLevelDistributionSection from "../mythicplus/KeyLevelDistributionSection";
 import TopCompositionsSection from "../mythicplus/TopCompositionsSection";
+import MetaByKeyLevelsSection from "../mythicplus/MetaByKeyLevelsSection";
+import DungeonSpecificStatsSection from "../mythicplus/DungeonSpecificStatsSection";
 
 // Import Coming Soon components
 import ComingSoon from "../shared/ComingSoon";
@@ -103,6 +105,12 @@ export default function StatisticsLayout({ activeTab }: StatisticsLayoutProps) {
 
             {/* Section 4: Top Team Compositions */}
             <TopCompositionsSection />
+
+            {/* Section 5: Meta by Key Levels */}
+            <MetaByKeyLevelsSection />
+
+            {/* Section 6: Dungeon-Specific Stats */}
+            <DungeonSpecificStatsSection />
           </TabsContent>
 
           {/* Raids Content - Coming Soon */}
