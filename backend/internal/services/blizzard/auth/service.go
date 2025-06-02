@@ -25,7 +25,7 @@ const (
 	userInfoEndpoint  = authEndpoint + "/userinfo"
 
 	// Token settings
-	TokenRefreshThreshold = 5 * time.Minute // Refresh token if expiring within 5 minutes
+	TokenRefreshThreshold = 5 * time.Minute // Check token if expiring within 5 minutes
 )
 
 // BattleNetUserInfo represents the user info returned from the Battle.net API
@@ -170,8 +170,8 @@ func (s *BattleNetAuthService) GetUserInfo(ctx context.Context, token *oauth2.To
 }
 
 // LinkUserAccount links a Battle.net account to a user account
-func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth2.Token, userID string) error {
-	log.Printf("Starting LinkUserAccount for userID=%s", userID)
+func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth2.Token, userID uint) error {
+	log.Printf("Starting LinkUserAccount for userID=%d", userID)
 
 	tx := s.db.Begin()
 	if tx.Error != nil {
@@ -195,9 +195,7 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 	}
 	log.Printf("Got user info: battleTag=%s, id=%d", userInfo.BattleTag, userInfo.ID)
 
-	// Convert userInfo.ID to string
-	battleNetID := fmt.Sprintf("%d", userInfo.ID)
-
+	// Charger l'utilisateur
 	var user models.User
 	if err := tx.First(&user, userID).Error; err != nil {
 		log.Printf("User not found: %v", err)
@@ -205,27 +203,28 @@ func (s *BattleNetAuthService) LinkUserAccount(ctx context.Context, token *oauth
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Encrypt and save only the access token
+	// Chiffrer et sauver SEULEMENT le access token (Battle.net ne fournit pas de refresh token)
 	if err := user.SetBattleNetTokens(token.AccessToken, ""); err != nil {
-		log.Printf("Failed to set Battle.net token")
+		log.Printf("Failed to set Battle.net tokens: %v", err)
 		tx.Rollback()
-		return fmt.Errorf("failed to encrypt token")
+		return fmt.Errorf("failed to encrypt tokens: %w", err)
 	}
 
-	// Update fields
+	// Mettre à jour les champs
+	battleNetID := fmt.Sprintf("%d", userInfo.ID)
 	user.BattleNetID = &battleNetID
 	user.BattleTag = &userInfo.BattleTag
 	user.BattleNetExpiresAt = token.Expiry
 	user.BattleNetTokenType = token.TokenType
 
-	// Save user
+	// Sauver l'utilisateur
 	if err := tx.Save(&user).Error; err != nil {
 		log.Printf("Failed to save user: %v", err)
 		tx.Rollback()
 		return fmt.Errorf("failed to save user: %w", err)
 	}
 
-	log.Printf("Successfully linked account and updated user %s", userID)
+	log.Printf("Successfully linked account for user %d", userID)
 	return tx.Commit().Error
 }
 
@@ -243,13 +242,12 @@ func (s *BattleNetAuthService) UnlinkUserAccount(ctx context.Context, userID uin
 	}()
 
 	updates := map[string]interface{}{
-		"battle_net_id":           nil,
-		"battle_tag":              nil,
-		"encrypted_access_token":  nil,
-		"encrypted_refresh_token": nil,
-		"battle_net_token_type":   "",
-		"battle_net_expires_at":   nil,
-		"battle_net_scopes":       nil,
+		"battle_net_id":          nil,
+		"battle_tag":             nil,
+		"encrypted_access_token": nil,
+		"battle_net_token_type":  "",
+		"battle_net_expires_at":  nil,
+		"battle_net_scopes":      nil,
 	}
 
 	if err := tx.Model(&models.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
@@ -258,22 +256,6 @@ func (s *BattleNetAuthService) UnlinkUserAccount(ctx context.Context, userID uin
 	}
 
 	return tx.Commit().Error
-}
-
-// RefreshToken refreshes an expired access token using the refresh token
-func (s *BattleNetAuthService) RefreshToken(ctx context.Context, refreshToken string) (*oauth2.Token, error) {
-	token := &oauth2.Token{
-		RefreshToken: refreshToken,
-	}
-
-	// Use OAuth2 config to get a new token
-	source := s.oauthConfig.TokenSource(ctx, token)
-	newToken, err := source.Token()
-	if err != nil {
-		return nil, fmt.Errorf("failed to refresh token: %w", err)
-	}
-
-	return newToken, nil
 }
 
 // ValidateToken checks if a token is valid and not expired
@@ -308,6 +290,11 @@ func (s *BattleNetAuthService) GetUserToken(ctx context.Context, userID uint) (*
 		return nil, fmt.Errorf("battle.net account not linked")
 	}
 
+	// Check if token is expired
+	if user.IsTokenExpired() {
+		return nil, fmt.Errorf("battle.net token expired - user must re-authenticate")
+	}
+
 	// Get decrypted access token
 	accessToken, err := user.GetBattleNetAccessToken()
 	if err != nil {
@@ -320,26 +307,6 @@ func (s *BattleNetAuthService) GetUserToken(ctx context.Context, userID uint) (*
 		Expiry:      user.BattleNetExpiresAt,
 	}
 
-	// Check if token needs refresh
-	if time.Until(token.Expiry) < TokenRefreshThreshold {
-		refreshToken, err := user.GetBattleNetRefreshToken()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get refresh token: %w", err)
-		}
-
-		newToken, err := s.RefreshToken(ctx, refreshToken)
-		if err != nil {
-			return nil, fmt.Errorf("failed to refresh token: %w", err)
-		}
-
-		// Update tokens in database
-		if err := s.UpdateUserToken(userID, newToken); err != nil {
-			return nil, fmt.Errorf("failed to update token: %w", err)
-		}
-
-		return newToken, nil
-	}
-
 	return token, nil
 }
 
@@ -350,8 +317,8 @@ func (s *BattleNetAuthService) UpdateUserToken(userID uint, token *oauth2.Token)
 		return fmt.Errorf("user not found: %w", err)
 	}
 
-	// Encrypt and store new tokens
-	if err := user.SetBattleNetTokens(token.AccessToken, token.RefreshToken); err != nil {
+	// Encrypt and store new tokens (only access token for Battle.net)
+	if err := user.SetBattleNetTokens(token.AccessToken, ""); err != nil {
 		return fmt.Errorf("failed to encrypt tokens: %w", err)
 	}
 

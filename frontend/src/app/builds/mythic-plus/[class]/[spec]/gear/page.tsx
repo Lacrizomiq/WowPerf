@@ -3,7 +3,7 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import GearContent from "@/components/MythicPlus/BuildsAnalysis/mythicplus/gear/GearContent";
+import GearContent from "@/components/BuildsAnalysis/mythicplus/gear/GearContent";
 
 export default function BuildGearPage({
   params,

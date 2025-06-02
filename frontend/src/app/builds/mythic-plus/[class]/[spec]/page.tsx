@@ -3,7 +3,7 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import BuildsContent from "@/components/MythicPlus/BuildsAnalysis/mythicplus/builds/BuildsContent";
+import BuildsContent from "@/components/BuildsAnalysis/mythicplus/builds/BuildsContent";
 import {
   formatDisplayClassName,
   formatDisplaySpecName,

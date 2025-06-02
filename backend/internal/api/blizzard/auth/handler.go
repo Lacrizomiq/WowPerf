@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	bnAuth "wowperf/internal/services/blizzard/auth"
@@ -44,8 +43,7 @@ func (h *BattleNetAuthHandler) RegisterRoutes(r *gin.Engine, requireAuth gin.Han
 
 		// Routes requiring a linked Battle.net account
 		bnetProtected := authed.Group("")
-		bnetProtected.Use(h.middleware.RequireBattleNetAccount())
-		bnetProtected.Use(h.middleware.RequireValidToken())
+		bnetProtected.Use(h.middleware.RequireBattleNetAuth()) // Nouveau middleware simplifié
 		{
 			bnetProtected.GET("/profile", h.GetBattleNetProfile)
 		}
@@ -83,10 +81,11 @@ func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 
 // HandleCallback processes the Battle.net OAuth callback
 func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
-	log.Printf("Starting Oauth callback process")
+	log.Printf("Starting OAuth callback process")
+
+	// 1. Vérifier la présence des paramètres
 	code := c.Query("code")
 	state := c.Query("state")
-
 	if code == "" || state == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Missing required OAuth parameters",
@@ -95,8 +94,18 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	// Exchange the code for a token and validate the state
-	token, userID, err := h.BattleNetAuthService.ExchangeCodeForToken(c.Request.Context(), code, state)
+	// 2. Récupérer l'utilisateur authentifié
+	authenticatedUserID := c.GetUint("user_id")
+	if authenticatedUserID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User not authenticated",
+			"code":  "user_not_authenticated",
+		})
+		return
+	}
+
+	// 3. Échanger le code et VALIDER que l'état correspond à l'utilisateur authentifié
+	token, stateUserID, err := h.BattleNetAuthService.ExchangeCodeForToken(c.Request.Context(), code, state)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to exchange code for token",
@@ -105,11 +114,23 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("Token exchange successful: userID=%d, token_type=%s, expires=%v",
-		userID, token.TokenType, token.Expiry)
 
-	// Link the Battle.net account to the user
-	if err := h.BattleNetAuthService.LinkUserAccount(c.Request.Context(), token, fmt.Sprint(userID)); err != nil {
+	// 4. SÉCURITÉ : Vérifier que l'utilisateur du state = utilisateur authentifié
+	if stateUserID != authenticatedUserID {
+		log.Printf("SECURITY ALERT: State user ID (%d) != authenticated user ID (%d)",
+			stateUserID, authenticatedUserID)
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "OAuth state mismatch - security violation",
+			"code":  "state_user_mismatch",
+		})
+		return
+	}
+
+	log.Printf("Token exchange successful: userID=%d, token_type=%s, expires=%v",
+		stateUserID, token.TokenType, token.Expiry)
+
+	// 5. Lier le compte Battle.net à l'utilisateur (userID déjà validé)
+	if err := h.BattleNetAuthService.LinkUserAccount(c.Request.Context(), token, stateUserID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to link Battle.net account",
 			"code":    "link_failed",
@@ -117,15 +138,16 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("Battle.net account linked: userID=%d", userID)
+	log.Printf("Battle.net account linked: userID=%d", stateUserID)
 
-	// Get user info for the response
+	// 6. Récupérer les infos utilisateur pour la réponse
 	userInfo, err := h.BattleNetAuthService.GetUserInfo(c.Request.Context(), token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to get Battle.net user info",
-			"code":    "user_info_failed",
-			"details": err.Error(),
+		// Le linking a réussi mais impossible de récupérer les infos
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Battle.net authentication successful",
+			"code":    "auth_successful",
+			"linked":  true,
 		})
 		return
 	}
@@ -205,25 +227,4 @@ func (h *BattleNetAuthHandler) GetBattleNetProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, profile)
-}
-
-// Private helper methods
-
-func (h *BattleNetAuthHandler) verifyState(c *gin.Context) error {
-	state := c.Query("state")
-	storedState, err := c.Cookie("oauth_state")
-
-	if err != nil {
-		return fmt.Errorf("state cookie not found")
-	}
-
-	if state == "" {
-		return fmt.Errorf("state parameter missing")
-	}
-
-	if state != storedState {
-		return fmt.Errorf("state mismatch")
-	}
-
-	return nil
 }

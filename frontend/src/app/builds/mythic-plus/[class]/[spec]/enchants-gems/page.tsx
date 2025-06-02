@@ -3,7 +3,7 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import EnchantGemsContent from "@/components/MythicPlus/BuildsAnalysis/mythicplus/enchants-gems/EnchantGemsContent";
+import EnchantGemsContent from "@/components/BuildsAnalysis/mythicplus/enchants-gems/EnchantGemsContent";
 
 export default function BuildEnchantsGemsPage({
   params,

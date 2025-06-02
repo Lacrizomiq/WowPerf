@@ -214,8 +214,8 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
-      interval: 10s
-      timeout: 10s
+      interval: 100s
+      timeout: 100s
       retries: 5
 
   temporal-ui:

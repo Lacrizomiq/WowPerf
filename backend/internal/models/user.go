@@ -25,15 +25,14 @@ type User struct {
 	ResetPasswordToken   *string    `gorm:"uniqueIndex" json:"-"`
 	ResetPasswordExpires *time.Time `json:"-"`
 
-	// Battle.net specific fields - now with pointers
-	BattleNetID           *string   `gorm:"uniqueIndex" json:"battle_net_id"`
-	BattleTag             *string   `gorm:"uniqueIndex" json:"battle_tag"`
-	EncryptedAccessToken  []byte    `gorm:"type:bytea" json:"-"`
-	EncryptedRefreshToken []byte    `gorm:"type:bytea" json:"-"`
-	BattleNetTokenType    string    `gorm:"type:varchar(50)" json:"-"`
-	BattleNetExpiresAt    time.Time `json:"-"`
-	BattleNetScopes       []string  `gorm:"type:text[]" json:"-"`
-	LastTokenRefresh      time.Time `json:"-"`
+	// Battle.net specific fields - NOTE: Battle.net doesn't provide refresh tokens
+	BattleNetID          *string   `gorm:"uniqueIndex" json:"battle_net_id"`
+	BattleTag            *string   `gorm:"uniqueIndex" json:"battle_tag"`
+	EncryptedAccessToken []byte    `gorm:"type:bytea" json:"-"`
+	BattleNetTokenType   string    `gorm:"type:varchar(50)" json:"-"`
+	BattleNetExpiresAt   time.Time `json:"-"`
+	BattleNetScopes      []string  `gorm:"type:text[]" json:"-"`
+	LastTokenRefresh     time.Time `json:"-"`
 
 	// Google OAuth fields
 	GoogleID    *string `gorm:"uniqueIndex" json:"google_id"`
@@ -53,8 +52,35 @@ type UserCreate struct {
 
 // Token management methods
 func (u *User) SetBattleNetTokens(accessToken, refreshToken string) error {
-	log.Printf("Starting SetBattleNetTokens: access_token_length=%d refresh_token_length=%d",
-		len(accessToken), len(refreshToken))
+	log.Printf("Starting SetBattleNetTokens: access_token_length=%d", len(accessToken))
+
+	if accessToken == "" {
+		return fmt.Errorf("access token is empty")
+	}
+
+	// Note: Battle.net doesn't provide refresh tokens, so we ignore the refreshToken parameter
+	if refreshToken != "" {
+		log.Printf("Warning: Battle.net doesn't provide refresh tokens, ignoring refresh token parameter")
+	}
+
+	// Encrypt access token
+	encryptedAccess, err := crypto.Encrypt([]byte(accessToken))
+	if err != nil {
+		log.Printf("Failed to encrypt access token: %v", err)
+		return fmt.Errorf("failed to encrypt access token: %w", err)
+	}
+	log.Printf("Access token encrypted successfully: length=%d", len(encryptedAccess))
+
+	u.EncryptedAccessToken = encryptedAccess
+	u.LastTokenRefresh = time.Now()
+
+	log.Printf("Battle.net access token set successfully")
+	return nil
+}
+
+// SetBattleNetAccessToken sets only the access token (simplified version for future use)
+func (u *User) SetBattleNetAccessToken(accessToken string) error {
+	log.Printf("Setting Battle.net access token: length=%d", len(accessToken))
 
 	if accessToken == "" {
 		return fmt.Errorf("access token is empty")
@@ -66,24 +92,11 @@ func (u *User) SetBattleNetTokens(accessToken, refreshToken string) error {
 		log.Printf("Failed to encrypt access token: %v", err)
 		return fmt.Errorf("failed to encrypt access token: %w", err)
 	}
-	log.Printf("Access token encrypted successfully: length=%d", len(encryptedAccess))
-
-	// Encrypt refresh token if present
-	var encryptedRefresh []byte
-	if refreshToken != "" {
-		encryptedRefresh, err = crypto.Encrypt([]byte(refreshToken))
-		if err != nil {
-			log.Printf("Failed to encrypt refresh token: %v", err)
-			return fmt.Errorf("failed to encrypt refresh token: %w", err)
-		}
-		log.Printf("Refresh token encrypted successfully: length=%d", len(encryptedRefresh))
-	}
 
 	u.EncryptedAccessToken = encryptedAccess
-	u.EncryptedRefreshToken = encryptedRefresh
 	u.LastTokenRefresh = time.Now()
 
-	log.Printf("Tokens set successfully")
+	log.Printf("Battle.net access token encrypted and set successfully")
 	return nil
 }
 
@@ -98,16 +111,10 @@ func (u *User) GetBattleNetAccessToken() (string, error) {
 	return string(decrypted), nil
 }
 
-// Get the refresh token
+// DEPRECATED: Battle.net doesn't provide refresh tokens
+// This method is kept for backward compatibility but will always return an error
 func (u *User) GetBattleNetRefreshToken() (string, error) {
-	if len(u.EncryptedRefreshToken) == 0 {
-		return "", fmt.Errorf("no refresh token found")
-	}
-	decrypted, err := crypto.Decrypt(u.EncryptedRefreshToken)
-	if err != nil {
-		return "", fmt.Errorf("failed to decrypt refresh token: %w", err)
-	}
-	return string(decrypted), nil
+	return "", fmt.Errorf("battle.net doesn't provide refresh tokens")
 }
 
 // Battle.net account status

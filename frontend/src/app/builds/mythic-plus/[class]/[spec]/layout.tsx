@@ -5,10 +5,10 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import BuildHeader from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildHeader";
-import BuildNav from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildNav";
-import BuildFilters from "@/components/MythicPlus/BuildsAnalysis/mythicplus/layout/BuildFilters";
-import ContentTypeTabs from "@/components/MythicPlus/BuildsAnalysis/layout/ContentTypeTabs";
+import BuildHeader from "@/components/BuildsAnalysis/mythicplus/layout/BuildHeader";
+import BuildNav from "@/components/BuildsAnalysis/mythicplus/layout/BuildNav";
+import BuildFilters from "@/components/BuildsAnalysis/mythicplus/layout/BuildFilters";
+import ContentTypeTabs from "@/components/BuildsAnalysis/layout/ContentTypeTabs";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";

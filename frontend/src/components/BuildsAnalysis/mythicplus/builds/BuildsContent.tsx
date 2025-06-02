@@ -1,4 +1,4 @@
-// BuildsContent.tsx - Version mise à jour avec les couleurs harmonisées
+// BuildsContent.tsx
 "use client";
 
 import { useState } from "react";

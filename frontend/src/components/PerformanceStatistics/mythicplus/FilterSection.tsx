@@ -4,8 +4,8 @@ import { useGetBlizzardMythicDungeonPerSeason } from "@/hooks/useBlizzardApi";
 import { useEffect, useState } from "react";
 import { Dungeon } from "@/types/mythicPlusRuns";
 
-import ClassSelector from "@/components/MythicPlus/PerformanceStatistics/selector/ClassSelector";
-import DungeonSelector from "@/components/MythicPlus/PerformanceStatistics/selector/DungeonSelector";
+import ClassSelector from "@/components/PerformanceStatistics/selector/ClassSelector";
+import DungeonSelector from "@/components/PerformanceStatistics/selector/DungeonSelector";
 
 interface FilterSectionProps {
   selectedRole: string;

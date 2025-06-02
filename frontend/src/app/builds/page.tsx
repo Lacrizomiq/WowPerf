@@ -1,5 +1,5 @@
 // # Home page with the selection of classes and specs
-import ClassesGrid from "@/components/MythicPlus/BuildsAnalysis/home/ClassesGrid";
+import ClassesGrid from "@/components/BuildsAnalysis/home/ClassesGrid";
 import { Metadata } from "next";
 
 // Metadata for the page (for SEO)

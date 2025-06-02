@@ -2,9 +2,9 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import MythicPlusContent from "@/components/MythicPlus/PerformanceStatistics/mythicplus/MythicPlusContent";
-import RaidsContent from "@/components/MythicPlus/PerformanceStatistics/raids/RaidsContent";
-import PvPContent from "@/components/MythicPlus/PerformanceStatistics/pvp/PvPContent";
+import MythicPlusContent from "@/components/PerformanceStatistics/mythicplus/MythicPlusContent";
+import RaidsContent from "@/components/PerformanceStatistics/raids/RaidsContent";
+import PvPContent from "@/components/PerformanceStatistics/pvp/PvPContent";
 
 export default function PerformanceLayout() {
   return (

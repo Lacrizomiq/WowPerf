@@ -2,7 +2,7 @@ import {
   WowClassParam,
   WowSpecParam,
 } from "@/types/warcraftlogs/builds/classSpec";
-import TalentsContent from "@/components/MythicPlus/BuildsAnalysis/mythicplus/talents/TalentsContent";
+import TalentsContent from "@/components/BuildsAnalysis/mythicplus/talents/TalentsContent";
 
 export default function TalentsPage({
   params,
