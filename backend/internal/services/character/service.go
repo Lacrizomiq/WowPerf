@@ -1,10 +1,11 @@
 package character
 
 import (
+	"context"
 	"fmt"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
-	characterSummary "wowperf/internal/services/blizzard/character/character_summary"
+	"wowperf/internal/services/character/enrichers"
 
 	"gorm.io/gorm"
 )
@@ -30,8 +31,9 @@ func NewCharacterService(db *gorm.DB, profileService *blizzard.ProfileService) C
 
 // GetCharacterDetails retrieves the details of a character and saves them
 func (s *CharacterService) GetCharacterDetails(character *models.UserCharacter) error {
-	// Fetch data using character_summary
-	if err := characterSummary.GetCharacterSummaryDetails(s.profileService, character); err != nil {
+	// Utilise le nouvel enrichisseur summary
+	summaryEnricher := enrichers.NewSummaryEnricher(s.profileService)
+	if err := summaryEnricher.EnrichCharacter(context.Background(), character); err != nil {
 		return fmt.Errorf("failed to get character details: %w", err)
 	}
 

@@ -20,6 +20,7 @@ import (
 	apiBlizzard "wowperf/internal/api/blizzard"
 	bnetAuthHandler "wowperf/internal/api/blizzard/auth"
 	protectedProfileHandler "wowperf/internal/api/blizzard/protected/profile"
+	charactersHandler "wowperf/internal/api/characters"
 	"wowperf/internal/api/raiderio"
 	userHandler "wowperf/internal/api/user"
 	apiWarcraftlogs "wowperf/internal/api/warcraftlogs"
@@ -29,6 +30,7 @@ import (
 	googleauthService "wowperf/internal/services/auth/google"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	bnetAuth "wowperf/internal/services/blizzard/auth"
+	characterService "wowperf/internal/services/character"
 	email "wowperf/internal/services/email"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
@@ -56,6 +58,7 @@ type AppServices struct {
 	BattleNet                    *bnetAuth.BattleNetAuthService
 	User                         *userService.UserService
 	Blizzard                     *serviceBlizzard.Service
+	Character                    characterService.CharacterServiceInterface
 	RaiderIO                     *serviceRaiderio.RaiderIOService
 	WarcraftLogs                 *warcraftlogs.WarcraftLogsClientService
 	LeaderBoard                  *warcraftLogsLeaderboard.GlobalLeaderboardService
@@ -71,6 +74,7 @@ type AppHandlers struct {
 	GoogleAuth       *googleauthHandler.GoogleAuthHandler
 	User             *userHandler.UserHandler
 	BattleNet        *bnetAuthHandler.BattleNetAuthHandler
+	Characters       *charactersHandler.CharactersHandler
 	RaiderIO         *raiderio.Handler
 	Blizzard         *apiBlizzard.Handler
 	WarcraftLogs     *apiWarcraftlogs.Handler
@@ -138,6 +142,8 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		return nil, fmt.Errorf("failed to initialize blizzard service: %w", err)
 	}
 
+	characterSvc := characterService.NewCharacterService(db, blizzardService.Profile)
+
 	rioService, err := serviceRaiderio.NewRaiderIOService()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize raiderio service: %w", err)
@@ -165,6 +171,7 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		BattleNet:                    battleNetService,
 		User:                         userSvc,
 		Blizzard:                     blizzardService,
+		Character:                    characterSvc,
 		RaiderIO:                     rioService,
 		WarcraftLogs:                 warcraftLogsService,
 		LeaderBoard:                  globalLeaderboardService,
@@ -182,6 +189,7 @@ func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.C
 		GoogleAuth: googleauthHandler.NewGoogleAuthHandler(services.GoogleAuth, services.Auth),
 		User:       userHandler.NewUserHandler(services.User),
 		BattleNet:  bnetAuthHandler.NewBattleNetAuthHandler(services.BattleNet),
+		Characters: charactersHandler.NewCharactersHandler(services.Character, services.Blizzard),
 		RaiderIO:   raiderio.NewHandler(services.RaiderIO, db, cacheService, cacheManagers.RaiderIO),
 		Blizzard:   apiBlizzard.NewHandler(services.Blizzard, db, cacheService, cacheManagers.Blizzard),
 		WarcraftLogs: apiWarcraftlogs.NewHandler(
@@ -230,6 +238,7 @@ func setupRoutes(
 
 		// Protected Blizzard API routes
 		handlers.ProtectedProfile.RegisterRoutes(bnetProtected)
+		handlers.Characters.RegisterRoutes(bnetProtected)
 
 		// Other API routes
 		handlers.RaiderIO.RegisterRoutes(r)
