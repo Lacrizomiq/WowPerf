@@ -34,14 +34,10 @@ func (r *CharacterRepository) CreateCharacter(character *models.UserCharacter) e
 
 // CreateOrUpdateCharacter creates or updates a character with all fields
 func (r *CharacterRepository) CreateOrUpdateCharacter(character *models.UserCharacter) error {
-	// Set last update timestamp
 	character.LastAPIUpdate = time.Now()
 
-	// Use clause OnConflict to upsert the character
-	result := r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "character_id"}, {Name: "realm"}, {Name: "region"}},
-		UpdateAll: true,
-	}).Create(character)
+	// Save() fait automatiquement INSERT si ID=0, UPDATE sinon
+	result := r.db.Save(character)
 
 	return result.Error
 }

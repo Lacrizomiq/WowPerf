@@ -3,6 +3,7 @@ package enrichers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 	"wowperf/internal/models"
 	"wowperf/internal/services/blizzard"
@@ -27,12 +28,15 @@ func (e *SummaryEnricher) EnrichCharacter(ctx context.Context, character *models
 	namespace := fmt.Sprintf("profile-%s", character.Region)
 	locale := "en_US"
 
+	// API Blizzard exige un nom en minuscules
+	characterNameLowercase := strings.ToLower(character.Name)
+
 	// Récupérer les données du profil depuis l'API Blizzard
 	characterProfile, err := common.FetchCharacterProfileData(
 		e.profileService,
 		character.Region,
 		character.Realm,
-		character.Name,
+		characterNameLowercase,
 		namespace,
 		locale,
 	)

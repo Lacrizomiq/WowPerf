@@ -1,12 +1,11 @@
 // AccountProfile.tsx (WoWProfile)
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
-import { useWoWCharacters } from "@/hooks/useWowProtectedAccount";
+import { useCharacters } from "@/hooks/useCharacters";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { WoWError, WoWErrorCode } from "@/types/userCharacter/userCharacter";
 import CharacterCardItem from "./CharacterCardItem";
 import Image from "next/image";
 
@@ -17,28 +16,19 @@ export const WoWProfile: React.FC<{
   // Get Battle.net link status
   const { linkStatus, initiateLink } = useBattleNetLink();
 
-  // Use the WoWCharacters hook to access locally stored characters
-  // This replaces direct Blizzard API calls with cached data from our database
+  // Use the new useCharacters hook for enriched data from BDD
   const {
-    userCharacters,
-    isLoadingUserCharacters,
-    wowProfile,
-    syncCharacters,
-    userCharactersError,
-  } = useWoWCharacters();
-
-  // Handle unauthorized errors by initiating Battle.net link
-  useEffect(() => {
-    if (
-      userCharactersError instanceof WoWError &&
-      userCharactersError.code === WoWErrorCode.UNAUTHORIZED
-    ) {
-      initiateLink();
-    }
-  }, [userCharactersError, initiateLink]);
+    characters,
+    isLoadingCharacters,
+    actions,
+    isLoading,
+    ui,
+    rateLimitState,
+    region,
+  } = useCharacters();
 
   // Loading state - display spinner while characters are loading
-  if (isLoadingUserCharacters) {
+  if (isLoadingCharacters) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -92,11 +82,10 @@ export const WoWProfile: React.FC<{
     );
   }
 
-  // Use userCharacters directly instead of fetching from Blizzard API
-  // These characters are already stored in our database from previous syncs
-  let displayCharacters = userCharacters || [];
+  // Use characters from our enriched database instead of direct API calls
+  let displayCharacters = Array.isArray(characters) ? characters : [];
 
-  // If no characters are found, prompt for synchronization
+  // If no characters are found, show sync or appropriate message
   if (displayCharacters.length === 0) {
     return (
       <Card className="bg-[#131e33] border-gray-800">
@@ -105,16 +94,78 @@ export const WoWProfile: React.FC<{
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8">
-            <p className="text-gray-400 text-center mb-6">
-              No characters found. Synchronize your Battle.net account to see
-              your characters.
-            </p>
+            <div className="mb-6">
+              <svg
+                className="w-16 h-16 text-gray-500 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+
+              <p className="text-gray-400 text-center mb-4">
+                {isLoading.sync
+                  ? "Synchronizing your characters..."
+                  : "Sync not done, click on sync button to display your characters"}
+              </p>
+
+              {isLoading.sync && (
+                <div className="text-sm text-gray-500 space-y-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-pulse h-2 w-2 bg-blue-500 rounded-full"></div>
+                    <span>Fetching character data</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-pulse h-2 w-2 bg-blue-500 rounded-full"></div>
+                    <span>Enriching character information</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sync Characters Button */}
             <Button
-              onClick={() => syncCharacters()}
-              className="flex items-center gap-2"
+              onClick={actions.syncAndEnrich}
+              disabled={ui.isDisabled.sync}
+              className="flex items-center gap-2 mb-4"
             >
-              Synchronize Characters
+              {isLoading.sync ? "Synchronizing..." : "Sync Characters"}
             </Button>
+
+            {/* Rate limit message */}
+            {ui.showRateLimit && (
+              <div className="mt-4 p-3 bg-orange-900/30 border border-orange-500/50 rounded-lg max-w-md">
+                <div className="text-orange-400 font-semibold flex items-center justify-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  {rateLimitState.formattedTime && (
+                    <span className="font-mono">
+                      {rateLimitState.formattedTime}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-orange-300 mt-1 text-center">
+                  {rateLimitState.message}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -126,24 +177,24 @@ export const WoWProfile: React.FC<{
     displayCharacters = displayCharacters.slice(0, limit);
   }
 
-  // Render character grid
+  // Render character grid using enriched data from our database
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {displayCharacters.map((character, index) => (
         <CharacterCardItem
-          key={`${character.name}-${index}`}
+          key={`${character.name}-${character.id}-${index}`}
           character={character}
-          region={wowProfile?.region || character.region || "eu"}
-          onToggleDisplay={(display) => {
-            /* Not used in this view */
+          region={region}
+          onToggleDisplay={() => {
+            /* Not used in this overview */
           }}
           onSetFavorite={() => {
-            /* Not used in this view */
+            /* Not used in this overview */
           }}
           isTogglingDisplay={false}
           isSettingFavorite={false}
-          // We can directly use the character's mythic_plus_rating from our database
-          // No need to fetch it from Blizzard API again
+          // Character data is already enriched from our database
+          // including mythic_plus_rating, item_level, active_spec_name, etc.
         />
       ))}
     </div>

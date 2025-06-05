@@ -70,51 +70,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </Card>
 
-      {/* Favorite character */}
-      <Card className="bg-[#131e33] border-gray-800 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-blue-500"
-            >
-              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-            </svg>
-            Your favorite character
-          </h2>
-          <button
-            className="text-blue-500 flex items-center gap-1 hover:underline"
-            onClick={() => onNavigate("characters")}
-          >
-            View all
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14" />
-              <path d="m12 5 7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
-        <FavoriteCharacterSection />
-      </Card>
-
       <Card className="bg-[#131e33] border-gray-800 p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <svg

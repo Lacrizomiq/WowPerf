@@ -208,3 +208,19 @@ func (h *CharactersHandler) GetStatus(c *gin.Context) {
 		"version":     "1.0",
 	})
 }
+
+/*
+
+Synchronisation et enrichissement automatique :
+POST /api/characters/sync-and-enrich           # characters
+
+Rafraîchissement et enrichissement des personnages :
+POST /api/characters/refresh-and-enrich        # characters
+
+Récupération des personnages enrichis :
+GET  /api/characters                           # characters
+
+Enrichissement individuel d'un personnage :
+POST /api/characters/:id/enrich                # characters
+
+*/

@@ -224,10 +224,22 @@ func (o *CharacterOrchestrator) enrichAllCharacters(ctx context.Context, charact
 
 		if successCount > 0 {
 			result.EnrichedCount++
+
+			// 🔍 DEBUG: Logs avant sauvegarde
+			log.Printf("💾 Saving enriched character %s with data:", character.Name)
+			log.Printf("   Race: %s, Class: %s, Faction: %s", character.Race, character.Class, character.Faction)
+			log.Printf("   Spec: %s (%d), Role: %s", character.ActiveSpecName, character.ActiveSpecID, character.ActiveSpecRole)
+			log.Printf("   Achievement Points: %d", character.AchievementPoints)
+			log.Printf("   Avatar URL: %s", character.AvatarURL)
+			log.Printf("   Last API Update: %v", character.LastAPIUpdate)
+
 			// Sauvegarder les changements après enrichissement
 			if err := o.characterService.CreateOrUpdateCharacter(character); err != nil {
+				log.Printf("❌ SAVE ERROR for %s: %v", character.Name, err)
 				result.Errors = append(result.Errors,
 					fmt.Sprintf("Failed to save character %s: %v", character.Name, err))
+			} else {
+				log.Printf("✅ SAVE SUCCESS for %s", character.Name)
 			}
 		}
 	}
