@@ -92,7 +92,8 @@ func GetAllDungeonStats(s *raiderio.RaiderIOService, season, region string, dung
 	return stats, nil
 }
 
-// processRun processes a run and updates the stats// processRun processes a single run and updates the stats
+// processRun processes a run and updates the stats
+// processRun processes a single run and updates the stats
 func processRun(ranking interface{}, stats *DungeonStats) {
 	run, ok := ranking.(map[string]interface{})
 	if !ok {

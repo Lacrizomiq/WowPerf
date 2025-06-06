@@ -3,24 +3,14 @@ import React from "react";
 import Image from "next/image";
 import { getClassIcon } from "@/utils/classandspecicons";
 import { useRouter } from "next/navigation";
-import {
-  useGetBlizzardCharacterProfile,
-  useGetBlizzardCharacterEquipment,
-  useGetBlizzardCharacterMythicPlusBestRuns,
-} from "@/hooks/useBlizzardApi";
+import { EnrichedUserCharacter } from "@/types/character/character";
+import { getCharacterAvatarUrl } from "@/utils/character/character";
 
 interface CharacterCardProps {
-  character: {
-    name: string;
-    playable_class: { name: string; id: number };
-    level: number;
-    realm: { name: string; slug: string };
-    mPlusScore?: number; // Add this property
-  };
+  character: EnrichedUserCharacter;
   region?: string;
   showTooltip?: boolean;
   isMainCard?: boolean;
-  mythicPlusScore?: number; // New prop for passing pre-fetched score
 }
 
 const CharacterCard: React.FC<CharacterCardProps> = ({
@@ -28,80 +18,51 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   region,
   showTooltip = false,
   isMainCard = false,
-  mythicPlusScore,
 }) => {
   const router = useRouter();
-  const { name, playable_class, level, realm } = character;
-  const normalized = playable_class.name.replace(/\s+/g, "");
-  const classIcon = getClassIcon(normalized);
-  const safeRegion = region || "eu";
+
+  // Extract data from enriched character (from BDD)
+  const {
+    name,
+    class: className,
+    level,
+    realm,
+    active_spec_name,
+    avatar_url,
+    equipment_json,
+    mythic_plus_json,
+  } = character;
+
+  const normalizedClass = className.replace(/\s+/g, "");
+  const classIcon = getClassIcon(normalizedClass);
+  const safeRegion = region || character.region || "eu";
   const characterName = name.toLowerCase();
-  const realmSlug = realm.slug;
+  const realmSlug = realm;
 
-  // Dynamically build namespace based on the region
-  const profileNamespace = `profile-${safeRegion}`;
+  // Get enriched data from our database instead of API calls
+  const avatarUrl = getCharacterAvatarUrl(character);
 
-  // Fetch character profile information
-  const { data: characterData } = useGetBlizzardCharacterProfile(
-    safeRegion,
-    realmSlug,
-    characterName,
-    profileNamespace,
-    "en_GB"
-  );
+  // Extract item level from equipment JSON (already enriched)
+  const itemLevel =
+    equipment_json?.average_item_level ||
+    equipment_json?.item_level_equipped ||
+    0;
 
-  // Fetch character equipment data
-  const { data: equipmentData } = useGetBlizzardCharacterEquipment(
-    safeRegion,
-    realmSlug,
-    characterName,
-    profileNamespace,
-    "en_GB"
-  );
-
-  // Fetch mythic+ data
-  const { data: mythicPlusData } = useGetBlizzardCharacterMythicPlusBestRuns(
-    safeRegion,
-    realmSlug,
-    characterName,
-    profileNamespace,
-    "en_GB",
-    "14"
-  );
-
-  // Get item level and round it
-  const itemLevel = equipmentData?.item_level_equipped
-    ? Math.round(equipmentData.item_level_equipped)
-    : "-";
-
-  // Use API data if available and non-zero, otherwise fall back to prop
-  const mPlusScore = mythicPlusData?.OverallMythicRating
-    ? mythicPlusData.OverallMythicRating.toFixed(0)
-    : mythicPlusScore !== undefined
-    ? mythicPlusScore.toFixed(0)
-    : "0";
-
-  // Add debugging
-  console.log(`Character ${name} - M+ Score:`, {
-    mythicPlusScore,
-    apiScore: mythicPlusData?.OverallMythicRating,
-    displayed: mPlusScore,
-  });
+  // Extract M+ score from mythic plus JSON (already enriched)
+  const mPlusScore =
+    mythic_plus_json?.current_rating || mythic_plus_json?.overall_rating || 0;
 
   const handleCharacterClick = () => {
     router.push(`/character/${safeRegion}/${realmSlug}/${characterName}`);
   };
 
   // Normalize class name for CSS classes
-  const className = playable_class.name.toLowerCase().replace(/\s+/g, "-");
-
-  // Create appropriate color class based on class name
-  const colorClass = `class-color--${className}`;
+  const cssClassName = className.toLowerCase().replace(/\s+/g, "-");
 
   // Create a background style with gradient based on class color
   const getBgStyle = () => {
     // Use the CSS variable corresponding to the class
-    const colorVar = `var(--color-${className})`;
+    const colorVar = `var(--color-${cssClassName})`;
     return {
       background: `linear-gradient(135deg, ${colorVar} 0%, rgba(0, 0, 0, 0.7) 100%)`,
     };
@@ -121,15 +82,30 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       <div className="relative z-10 flex flex-col justify-end h-full p-4">
         <div className="flex items-center justify-between mb-3">
           <div
-            className={`flex items-center gap-2 ${colorClass} font-bold text-lg`}
+            className={`flex items-center gap-2 font-bold text-lg text-white`}
           >
-            <Image
-              src={classIcon}
-              alt={playable_class.name}
-              width={38}
-              height={38}
-              className="rounded-full"
-            />
+            {/* Use enriched avatar if available, fallback to class icon */}
+            {avatar_url ? (
+              <Image
+                src={avatar_url}
+                alt={`${name} avatar`}
+                width={38}
+                height={38}
+                className="rounded-full"
+                onError={(e) => {
+                  // Fallback to class icon if avatar fails to load
+                  e.currentTarget.src = classIcon;
+                }}
+              />
+            ) : (
+              <Image
+                src={classIcon}
+                alt={className}
+                width={38}
+                height={38}
+                className="rounded-full"
+              />
+            )}
             {name}
           </div>
           <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full text-xs">
@@ -140,21 +116,28 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
 
         <div className="text-white/90 text-sm">
           <div>
-            {/* {playable_class.name} ({characterData?.active_spec_name || ""}) */}
-            {characterData?.active_spec_name || ""}
+            {/* Use enriched spec name from our database */}
+            {active_spec_name || className}
           </div>
           <div className="text-white/70">
-            {realm.name} ({safeRegion.toUpperCase()})
+            {realm} ({safeRegion.toUpperCase()})
           </div>
         </div>
 
         <div className="flex gap-2 mt-3">
+          {/* Item level from enriched data */}
           <div className="bg-black/60 px-3 py-1 rounded-md text-center">
-            <div className="font-bold">{itemLevel}</div>
+            <div className="font-bold">
+              {itemLevel > 0 ? Math.round(itemLevel) : "-"}
+            </div>
             <div className="text-xs text-white/70">iLvL</div>
           </div>
+
+          {/* M+ score from enriched data */}
           <div className="bg-black/60 px-3 py-1 rounded-md text-center">
-            <div className="font-bold">{mPlusScore}</div>
+            <div className="font-bold">
+              {mPlusScore > 0 ? Math.round(mPlusScore) : "0"}
+            </div>
             <div className="text-xs text-white/70">M+</div>
           </div>
         </div>

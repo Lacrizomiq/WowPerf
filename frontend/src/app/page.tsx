@@ -9,7 +9,7 @@ export default function Home() {
     <main className="bg-[#1A1D21]">
       <Hero />
       {/* Add a negative margin here */}
-      <div className="-mt-8">
+      <div className="-mt-2">
         <Feature />
       </div>
       <Statistics />

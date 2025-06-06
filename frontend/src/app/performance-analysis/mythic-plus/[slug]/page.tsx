@@ -1,4 +1,4 @@
-import SpecDetailView from "@/components/MythicPlus/PerformanceStatistics/mythicplus/specdetails/SpecDetailView";
+import SpecDetailView from "@/components/PerformanceStatistics/mythicplus/specdetails/SpecDetailView";
 
 interface PageProps {
   params: {

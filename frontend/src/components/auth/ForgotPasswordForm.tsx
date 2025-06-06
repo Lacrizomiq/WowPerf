@@ -4,6 +4,10 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import api from "@/libs/api";
 import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle } from "lucide-react";
 
 type ForgotPasswordFormData = {
   email: string;
@@ -42,26 +46,29 @@ const ForgotPasswordForm = () => {
 
   if (success) {
     return (
-      <div className="rounded-md bg-green-50 p-4">
-        <div className="flex">
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-green-800">
-              Password Reset Email Sent
-            </h3>
-            <div className="mt-2 text-sm text-green-700">
-              <p>
-                If an account exists with the email {submittedEmail}, you will
+      <div className="space-y-6">
+        {/* Success message avec le thème harmonisé */}
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-6 w-6 text-green-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-green-400 mb-2">
+                Password Reset Email Sent
+              </h3>
+              <p className="text-sm text-green-300/80 mb-4">
+                If an account exists with the email{" "}
+                <span className="font-medium">{submittedEmail}</span>, you will
                 receive password reset instructions shortly.
               </p>
-            </div>
-            <div className="mt-4">
-              <button
-                type="button"
+              <Button
                 onClick={() => router.push("/login")}
-                className="text-sm font-medium text-green-800 hover:text-green-700"
+                variant="outline"
+                className="border-green-500/30 text-green-400 hover:bg-green-500/10"
               >
                 Return to login
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -71,21 +78,19 @@ const ForgotPasswordForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-300 mb-2"
+          className="block text-sm font-medium text-foreground"
         >
           Email Address
         </label>
-        <input
+        <Input
           id="email"
           type="email"
           disabled={isSubmitting}
-          className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            errors.email || errors.root ? "border-red-500" : "border-gray-600"
-          } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Enter your email address"
+          className={errors.email || errors.root ? "border-destructive" : ""}
           {...register("email", {
             required: "Email is required",
             pattern: {
@@ -95,44 +100,33 @@ const ForgotPasswordForm = () => {
           })}
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-500" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {errors.email.message}
           </p>
         )}
       </div>
 
       {errors.root && (
-        <div
-          className="p-3 bg-red-100 border border-red-400 text-red-700 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{errors.root.message}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{errors.root.message}</AlertDescription>
+        </Alert>
       )}
 
       <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full px-4 py-2 bg-gradient-blue text-white rounded-md transition-all duration-200 ease-in-out
-            ${
-              isSubmitting
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-700 active:bg-blue-800"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-        >
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Sending..." : "Send Reset Instructions"}
-        </button>
+        </Button>
       </div>
 
-      <div className="text-center mt-4">
-        <button
+      <div className="text-center">
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => router.push("/login")}
-          className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200"
+          className="text-white bg-slate-800/40 border border-lg hover:text-purple-600"
         >
           Back to login
-        </button>
+        </Button>
       </div>
     </form>
   );

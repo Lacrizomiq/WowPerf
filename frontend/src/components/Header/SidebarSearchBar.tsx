@@ -3,30 +3,23 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // shadcn/ui Alert
-import { Input } from "@/components/ui/input"; // shadcn/ui Input
-import { Button } from "@/components/ui/button"; // shadcn/ui Button
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // shadcn/ui Select
+} from "@/components/ui/select";
 import {
-  Search,
-  ChevronDown,
-  ChevronUp,
+  Search as SearchIcon,
   Loader2,
-  AlertCircle,
-} from "lucide-react"; // AlertCircle for the error icon
+  AlertCircle as AlertCircleIcon,
+} from "lucide-react";
 import { useSearchBlizzardCharacter } from "@/hooks/useBlizzardApi";
 import { eu, us, tw, kr } from "@/data/realms";
-import {
-  SidebarMenuItem, // Imported to use as a wrapper if needed, or removed if not
-  SidebarMenuButton,
-  SidebarMenuSub,
-} from "@/components/ui/sidebar"; // Your existing sidebar components
 
 interface Realm {
   id: number;
@@ -36,30 +29,34 @@ interface Realm {
 
 interface SidebarSearchBarProps {
   isExpanded: boolean;
+  onToggleSidebar: () => void;
 }
 
-// Note : searchOpen et setSearchOpen are removed from the props here,
-// because AppSidebar will handle the opening of this panel directly.
-const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({ isExpanded }) => {
+const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
+  isExpanded,
+  onToggleSidebar,
+}) => {
   const router = useRouter();
-  const [region, setRegion] = useState<string>("");
-  const [realm, setRealm] = useState<string>("");
-  const [character, setCharacter] = useState<string>("");
-  const [realms, setRealms] = useState<Realm[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchRegion, setSearchRegion] = useState<string>("");
+  const [searchRealm, setSearchRealm] = useState<string>("");
+  const [searchCharacter, setSearchCharacter] = useState<string>("");
+  const [availableRealms, setAvailableRealms] = useState<Realm[]>([]);
+  const [filteredRealms, setFilteredRealms] = useState<Realm[]>([]);
+  const [realmSearchValue, setRealmSearchValue] = useState<string>("");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const { refetch: checkCharacter } = useSearchBlizzardCharacter(
-    region.toLowerCase(),
-    realm.toLowerCase(),
-    character.toLowerCase(),
-    `profile-${region.toLowerCase()}`,
+    searchRegion.toLowerCase(),
+    searchRealm.toLowerCase(),
+    searchCharacter.toLowerCase(),
+    `profile-${searchRegion.toLowerCase()}`,
     "en_GB"
   );
 
   useEffect(() => {
     let selectedRealms: Realm[] = [];
-    switch (region) {
+    switch (searchRegion) {
       case "eu":
         selectedRealms = eu.realms;
         break;
@@ -75,128 +72,179 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({ isExpanded }) => {
       default:
         selectedRealms = [];
     }
-    setRealms(selectedRealms.sort((a, b) => a.name.localeCompare(b.name)));
-    setRealm("");
-  }, [region]);
+    const sortedRealms = selectedRealms.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    setAvailableRealms(sortedRealms);
+    setFilteredRealms(sortedRealms);
+    setSearchRealm("");
+    setRealmSearchValue("");
+  }, [searchRegion]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-
-    if (!region || !realm || !character) {
-      setError("Please fill in all fields.");
+    setSearchError(null);
+    if (!searchRegion || !searchRealm || !searchCharacter) {
+      setSearchError("Please fill in all fields.");
       return;
     }
-    setIsSubmitting(true);
+    setIsSearching(true);
     try {
       const result = await checkCharacter();
-      // The error checking of react-query is often via result.isError or result.error
       if (result.isError || result.error) {
-        // Adapt this to the return structure of your hook
         throw new Error(
-          result.error?.message || "Character not found or API error."
+          (result.error as any)?.message || "Character not found or API error."
         );
       }
-      // If checkCharacter() throws an exception in case of error, the catch will handle it.
-      // Otherwise, explicitly check result.data or a success indicator.
-
       router.push(
-        `/character/${region.toLowerCase()}/${realm.toLowerCase()}/${character.toLowerCase()}`
+        `/character/${searchRegion.toLowerCase()}/${searchRealm.toLowerCase()}/${searchCharacter.toLowerCase()}`
       );
-      // The closing of the panel (formerly setSearchOpen(false)) will be handled by AppSidebar
-      resetForm();
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message || "Character not found.");
-      } else {
-        setError("An unexpected error occurred. Please try again.");
-      }
+      setSearchError(
+        err instanceof Error ? err.message : "An unexpected error occurred."
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsSearching(false);
     }
   };
 
-  const resetForm = () => {
-    setCharacter("");
-    setRealm("");
-    setRegion("");
-    setError(null);
-  };
-
-  // The button to open/close the search will be in AppSidebar.
-  // This component will only render the form itself.
-  // It will be displayed conditionally by AppSidebar.
+  // Render differently based on expanded state
+  if (!isExpanded) {
+    return (
+      <div className="px-4 py-2">
+        <Button
+          size="icon"
+          className="w-full h-8 bg-purple-600 hover:bg-purple-700"
+          onClick={onToggleSidebar}
+        >
+          <SearchIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-3 space-y-3">
-      {" "}
-      {/* Padding and spacing for the form */}
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <Select value={region} onValueChange={(value) => setRegion(value)}>
-          <SelectTrigger className="w-full bg-[color:var(--input)]">
-            <SelectValue placeholder="Select Region" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="eu">EU</SelectItem>
-            <SelectItem value="us">US</SelectItem>
-            <SelectItem value="kr">KR</SelectItem>
-            <SelectItem value="tw">TW</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={realm}
-          onValueChange={(value) => setRealm(value)}
-          disabled={!region}
-        >
-          <SelectTrigger className="w-full bg-[color:var(--input)]">
-            <SelectValue placeholder="Select Realm" />
-          </SelectTrigger>
-          <SelectContent>
-            {realms.map((r) => (
-              <SelectItem key={r.id} value={r.slug}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
+    <div className="px-4 py-2">
+      <div className="text-sm font-medium mb-1">Search Character</div>
+      <form onSubmit={handleSearchSubmit} className="space-y-1.5">
         <Input
-          type="text"
           placeholder="Character Name"
-          value={character}
-          onChange={(e) => setCharacter(e.target.value)}
-          className="bg-[color:var(--input)]"
+          value={searchCharacter}
+          onChange={(e) => setSearchCharacter(e.target.value)}
+          className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors"
         />
 
-        {error && (
+        <div className="grid grid-cols-2 gap-1.5">
+          <Select value={searchRegion} onValueChange={setSearchRegion}>
+            <SelectTrigger className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors">
+              <SelectValue placeholder="Region" />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-[#1e2025] border-slate-700 text-white p-0"
+              position="popper"
+            >
+              <div className="rounded-sm overflow-hidden">
+                <SelectItem
+                  value="eu"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  EU
+                </SelectItem>
+                <SelectItem
+                  value="us"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  US
+                </SelectItem>
+                <SelectItem
+                  value="kr"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  KR
+                </SelectItem>
+                <SelectItem
+                  value="tw"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  TW
+                </SelectItem>
+              </div>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={searchRealm}
+            onValueChange={setSearchRealm}
+            disabled={!searchRegion}
+          >
+            <SelectTrigger className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors">
+              <SelectValue placeholder="Realm" />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-[#1e2025] border-slate-700 text-white p-0"
+              position="popper"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <Input
+                  placeholder="Search realms..."
+                  className="bg-slate-800 border-slate-700 text-white mb-1 rounded-none focus:ring-0 focus:border-purple-500"
+                  value={realmSearchValue}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    const searchValue = e.target.value.toLowerCase();
+                    setRealmSearchValue(e.target.value);
+                    setFilteredRealms(
+                      availableRealms.filter(
+                        (r) =>
+                          r.name.toLowerCase().includes(searchValue) ||
+                          r.slug.toLowerCase().includes(searchValue)
+                      )
+                    );
+                  }}
+                />
+              </div>
+              <div className="max-h-[200px] overflow-y-auto">
+                {filteredRealms.map((r) => (
+                  <SelectItem
+                    key={r.id}
+                    value={r.slug}
+                    className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                  >
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </div>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {searchError && (
           <Alert
             variant="destructive"
-            className="bg-[color:var(--destructive)] text-[color:var(--destructive-foreground)]"
+            className="py-2 text-sm bg-red-900/50 border-red-800 text-red-200"
           >
-            <AlertCircle className="h-4 w-4" />{" "}
-            {/* Icon for the destructive alert of shadcn/ui */}
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertDescription className="ml-2">{searchError}</AlertDescription>
           </Alert>
         )}
 
         <Button
           type="submit"
-          disabled={isSubmitting || !region || !realm || !character}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90" // Main button style
+          className="w-full h-8 bg-purple-600 hover:bg-purple-700"
+          disabled={
+            isSearching || !searchRegion || !searchRealm || !searchCharacter
+          }
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Searching...
-            </>
+          {isSearching ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
-            <>
-              <Search className="mr-2 h-4 w-4" />
-              Search
-            </>
+            <SearchIcon className="h-4 w-4 mr-2" />
           )}
+          Search
         </Button>
       </form>
     </div>

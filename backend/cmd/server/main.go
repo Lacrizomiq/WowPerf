@@ -16,17 +16,21 @@ import (
 
 	// Internal Packages - API Handlers
 	authHandler "wowperf/internal/api/auth"
+	googleauthHandler "wowperf/internal/api/auth/google"
 	apiBlizzard "wowperf/internal/api/blizzard"
 	bnetAuthHandler "wowperf/internal/api/blizzard/auth"
 	protectedProfileHandler "wowperf/internal/api/blizzard/protected/profile"
+	charactersHandler "wowperf/internal/api/characters"
 	"wowperf/internal/api/raiderio"
 	userHandler "wowperf/internal/api/user"
 	apiWarcraftlogs "wowperf/internal/api/warcraftlogs"
 
 	// Internal Packages - Services
 	auth "wowperf/internal/services/auth"
+	googleauthService "wowperf/internal/services/auth/google"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	bnetAuth "wowperf/internal/services/blizzard/auth"
+	characterService "wowperf/internal/services/character"
 	email "wowperf/internal/services/email"
 	serviceRaiderio "wowperf/internal/services/raiderio"
 	mythicplusUpdate "wowperf/internal/services/raiderio/mythicplus"
@@ -50,9 +54,11 @@ import (
 // Struct to group Services
 type AppServices struct {
 	Auth                         *auth.AuthService
+	GoogleAuth                   *googleauthService.GoogleAuthService
 	BattleNet                    *bnetAuth.BattleNetAuthService
 	User                         *userService.UserService
 	Blizzard                     *serviceBlizzard.Service
+	Character                    characterService.CharacterServiceInterface
 	RaiderIO                     *serviceRaiderio.RaiderIOService
 	WarcraftLogs                 *warcraftlogs.WarcraftLogsClientService
 	LeaderBoard                  *warcraftLogsLeaderboard.GlobalLeaderboardService
@@ -65,8 +71,10 @@ type AppServices struct {
 // Struct to group Handlers
 type AppHandlers struct {
 	Auth             *authHandler.AuthHandler
+	GoogleAuth       *googleauthHandler.GoogleAuthHandler
 	User             *userHandler.UserHandler
 	BattleNet        *bnetAuthHandler.BattleNetAuthHandler
+	Characters       *charactersHandler.CharactersHandler
 	RaiderIO         *raiderio.Handler
 	Blizzard         *apiBlizzard.Handler
 	WarcraftLogs     *apiWarcraftlogs.Handler
@@ -120,6 +128,12 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		emailService,
 	)
 
+	// Google OAuth authentication service
+	googleAuthService, err := googleauthService.NewGoogleAuthService(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Google OAuth service: %w", err)
+	}
+
 	// Other services...
 	userSvc := userService.NewUserService(db)
 
@@ -127,6 +141,8 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize blizzard service: %w", err)
 	}
+
+	characterSvc := characterService.NewCharacterService(db, blizzardService.Profile)
 
 	rioService, err := serviceRaiderio.NewRaiderIOService()
 	if err != nil {
@@ -151,13 +167,15 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 
 	return &AppServices{
 		Auth:                         authService,
+		GoogleAuth:                   googleAuthService,
 		BattleNet:                    battleNetService,
 		User:                         userSvc,
 		Blizzard:                     blizzardService,
+		Character:                    characterSvc,
 		RaiderIO:                     rioService,
 		WarcraftLogs:                 warcraftLogsService,
 		LeaderBoard:                  globalLeaderboardService,
-		LeaderboardAnalysis:          globalLeaderboardAnalysisService, // Add analysis service to AppServices
+		LeaderboardAnalysis:          globalLeaderboardAnalysisService,
 		RankingsUpdater:              rankingsUpdater,
 		MythicPlusBuildsAnalysis:     mythicPlusBuildsAnalysisService,
 		SpecEvolutionMetricsAnalysis: specEvolutionMetricsAnalysisService,
@@ -167,11 +185,13 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 // Initialisation des handlers
 func initializeHandlers(services *AppServices, db *gorm.DB, cacheService cache.CacheService, cacheManagers CacheManagers) *AppHandlers {
 	return &AppHandlers{
-		Auth:      authHandler.NewAuthHandler(services.Auth),
-		User:      userHandler.NewUserHandler(services.User),
-		BattleNet: bnetAuthHandler.NewBattleNetAuthHandler(services.BattleNet),
-		RaiderIO:  raiderio.NewHandler(services.RaiderIO, db, cacheService, cacheManagers.RaiderIO),
-		Blizzard:  apiBlizzard.NewHandler(services.Blizzard, db, cacheService, cacheManagers.Blizzard),
+		Auth:       authHandler.NewAuthHandler(services.Auth),
+		GoogleAuth: googleauthHandler.NewGoogleAuthHandler(services.GoogleAuth, services.Auth),
+		User:       userHandler.NewUserHandler(services.User),
+		BattleNet:  bnetAuthHandler.NewBattleNetAuthHandler(services.BattleNet),
+		Characters: charactersHandler.NewCharactersHandler(services.Character, services.Blizzard),
+		RaiderIO:   raiderio.NewHandler(services.RaiderIO, db, cacheService, cacheManagers.RaiderIO),
+		Blizzard:   apiBlizzard.NewHandler(services.Blizzard, db, cacheService, cacheManagers.Blizzard),
 		WarcraftLogs: apiWarcraftlogs.NewHandler(
 			services.LeaderBoard,
 			services.LeaderboardAnalysis,
@@ -200,8 +220,9 @@ func setupRoutes(
 	r.GET("/csrf-token", csrfMiddleware.GetCSRFToken())
 
 	// Authentication routes
-	handlers.Auth.RegisterRoutes(r)
-	handlers.BattleNet.RegisterRoutes(r, jwtMiddleware)
+	handlers.Auth.RegisterRoutes(r)                     // Auth Routes
+	handlers.GoogleAuth.RegisterRoutes(r)               // Google OAuth Routes
+	handlers.BattleNet.RegisterRoutes(r, jwtMiddleware) // Blizzard Battle.Net OAuth Routes
 
 	// Protected API routes
 	apiGroup := r.Group("")
@@ -217,6 +238,7 @@ func setupRoutes(
 
 		// Protected Blizzard API routes
 		handlers.ProtectedProfile.RegisterRoutes(bnetProtected)
+		handlers.Characters.RegisterRoutes(bnetProtected)
 
 		// Other API routes
 		handlers.RaiderIO.RegisterRoutes(r)
@@ -317,6 +339,11 @@ func loadConfig() (*AppConfig, error) {
 		"DOMAIN",
 		"FRONTEND_URL",
 		"BACKEND_URL",
+		"GOOGLE_CLIENT_ID",
+		"GOOGLE_CLIENT_SECRET",
+		"GOOGLE_REDIRECT_URL",
+		"FRONTEND_DASHBOARD_PATH",
+		"FRONTEND_AUTH_ERROR_PATH",
 	}
 
 	// Check required variables with more logs
