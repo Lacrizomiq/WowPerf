@@ -25,7 +25,7 @@ interface InfoTooltipProps {
  * @param className - Classes CSS additionnelles
  * @param side - Position du tooltip par rapport à l'icône
  * @param size - Taille de l'icône
- * @param delayDuration - Délai avant affichage (ms), défaut: 300ms
+ * @param delayDuration - Délai avant affichage (ms), défaut: 100ms
  */
 const InfoTooltip: React.FC<InfoTooltipProps> = ({
   content,

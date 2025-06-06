@@ -4,9 +4,9 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import MythicPlusBestRuns from "@/components/MythicPlus/Leaderboards/mythicplus/MythicBestRuns";
-import RaidLeaderboard from "@/components/MythicPlus/Leaderboards/raids/RaidLeaderboard";
-import PvPContent from "@/components/MythicPlus/Leaderboards/pvp/PvPContent";
+import MythicPlusBestRuns from "@/components/Leaderboards/mythicplus/MythicBestRuns";
+import RaidLeaderboard from "@/components/Leaderboards/raids/RaidLeaderboard";
+import PvPContent from "@/components/Leaderboards/pvp/PvPContent";
 import { useRouter } from "next/navigation";
 
 interface LeaderboardsLayoutProps {

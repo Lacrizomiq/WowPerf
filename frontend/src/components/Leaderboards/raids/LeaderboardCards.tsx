@@ -19,7 +19,7 @@ import {
   EncounterDefeated,
   EncounterPulled,
 } from "@/types/raidLeaderboard";
-import Pagination from "../../../Shared/Pagination";
+import Pagination from "@/components/Shared/Pagination";
 
 interface LeaderBoardCardsProps {
   raid: string;

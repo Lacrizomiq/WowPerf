@@ -1,30 +1,23 @@
-// Profile.tsx
-// Main component that coordinates the profile interface and tab navigation
+// Profile.tsx - Version HTML native complète sans shadcn/ui
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuth } from "@/providers/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import TabNavigation from "./TabNavigation";
 import { useBattleNetLink } from "@/hooks/useBattleNetLink";
-import ChangePassword from "../Update/ChangePassword";
-import ChangeEmail from "../Update/ChangeEmail";
-import ChangeUsername from "../Update/ChangeUsername";
-import DeleteAccount from "../Update/DeleteAccount";
-import ProfileHeader from "./ProfileHeader";
-import OverviewTab from "./Tabs/OverviewTab";
-import CharactersTab from "./CharactersTab";
-import AccountTab from "./Tabs/AccountTab";
-import SecurityTab from "./Tabs/SecurityTab";
-import ConnectionsTab from "./Tabs/ConnectionsTab";
 import { showError, TOAST_IDS } from "@/utils/toastManager";
-import FavoriteCharacterSection from "./FavoriteCharacterSection";
+
+// Composants natifs
+import ProfileHeader from "./ProfileHeader";
+import TabNavigation from "./TabNavigation";
+import AccountTab from "./AccountTab";
+import CharactersTab from "./CharactersTab";
+import ConnectionsTab from "./ConnectionsTab";
 
 const Profile: React.FC = () => {
   // State for active tab navigation
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("account");
 
   // Ref to track if Battle.net warning was already shown
   const battleNetWarningShown = useRef(false);
@@ -79,7 +72,7 @@ const Profile: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     );
   }
@@ -138,67 +131,54 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Profile header with avatar and basic info */}
-      <ProfileHeader profile={profile} />
-
-      {/* Tab navigation */}
-      <TabNavigation activeTab={activeTab} setActiveTab={handleNavigate} />
-
-      {/* Tab content container */}
-      <div className="mt-6">
-        {/* Main tabs */}
-        {activeTab === "overview" && (
-          <OverviewTab
-            profile={profile}
-            linkStatus={linkStatus}
-            isLinkLoading={isLinkLoading}
-            isUnlinking={isUnlinking}
-            onBattleNetLink={handleBattleNetLink}
-            onBattleNetUnlink={handleBattleNetUnlink}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {/* Modified condition for CharactersTab */}
-        {activeTab === "characters" && linkStatus?.linked ? (
-          <CharactersTab />
-        ) : activeTab === "characters" ? (
-          <ConnectionsTab
-            profile={profile}
-            linkStatus={linkStatus}
-            isLinkLoading={isLinkLoading}
-            isUnlinking={isUnlinking}
-            onBattleNetLink={handleBattleNetLink}
-            onBattleNetUnlink={handleBattleNetUnlink}
-          />
-        ) : null}
-
-        {activeTab === "account" && (
-          <AccountTab profile={profile} onNavigate={handleNavigate} />
-        )}
-
-        {activeTab === "security" && (
-          <SecurityTab onNavigate={handleNavigate} />
-        )}
-
-        {activeTab === "connections" && (
-          <ConnectionsTab
-            profile={profile}
-            linkStatus={linkStatus}
-            isLinkLoading={isLinkLoading}
-            isUnlinking={isUnlinking}
-            onBattleNetLink={handleBattleNetLink}
-            onBattleNetUnlink={handleBattleNetUnlink}
-          />
-        )}
-
-        {/* Action tabs */}
-        {activeTab === "username" && <ChangeUsername />}
-        {activeTab === "email" && <ChangeEmail />}
-        {activeTab === "password" && <ChangePassword />}
-        {activeTab === "delete" && <DeleteAccount />}
+    <div className="flex flex-col min-h-screen bg-[#1A1D21]">
+      {/* Profile header with summary */}
+      <div className="">
+        <ProfileHeader profile={profile} />
       </div>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 md:px-8 py-6">
+        {/* Tab navigation */}
+        <TabNavigation activeTab={activeTab} setActiveTab={handleNavigate} />
+
+        {/* Tab content */}
+        <div className="mt-6">
+          {/* Account Tab */}
+          <AccountTab profile={profile} isActive={activeTab === "account"} />
+
+          {/* Characters Tab - only if Battle.net is linked */}
+          {activeTab === "characters" && linkStatus?.linked && (
+            <CharactersTab isActive={true} />
+          )}
+
+          {/* Show connections tab if trying to access characters without link */}
+          {activeTab === "characters" && !linkStatus?.linked && (
+            <ConnectionsTab
+              profile={profile}
+              linkStatus={linkStatus}
+              isLinkLoading={isLinkLoading}
+              isUnlinking={isUnlinking}
+              onBattleNetLink={handleBattleNetLink}
+              onBattleNetUnlink={handleBattleNetUnlink}
+              isActive={true}
+            />
+          )}
+
+          {/* Connections Tab */}
+          {activeTab === "connections" && (
+            <ConnectionsTab
+              profile={profile}
+              linkStatus={linkStatus}
+              isLinkLoading={isLinkLoading}
+              isUnlinking={isUnlinking}
+              onBattleNetLink={handleBattleNetLink}
+              onBattleNetUnlink={handleBattleNetUnlink}
+              isActive={true}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 };
