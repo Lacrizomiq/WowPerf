@@ -82,7 +82,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Header with sync/refresh buttons */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Characters linked to your account</h2>
@@ -177,7 +177,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
         </div>
       ) : (
         /* Characters table */
-        <div className="bg-slate-800/30 border-slate-700 rounded-lg">
+        <div className="bg-slate-800/30 border border-slate-700 rounded-lg">
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700">

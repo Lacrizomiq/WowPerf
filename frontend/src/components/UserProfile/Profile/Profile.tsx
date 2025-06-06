@@ -131,7 +131,7 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#1A1D21]">
       {/* Profile header with summary */}
       <div className="">
         <ProfileHeader profile={profile} />
