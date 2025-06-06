@@ -8,7 +8,7 @@ import Image from "next/image";
 import { Star, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import RunsDetails from "./runsDetails/RunsDetails";
-import Pagination from "../../../Shared/Pagination";
+import Pagination from "@/components/Shared/Pagination";
 
 interface RunsCardProps {
   season: string;

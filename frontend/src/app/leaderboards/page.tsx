@@ -1,5 +1,5 @@
 import React from "react";
-import LeaderboardsLayout from "@/components/MythicPlus/Leaderboards/layout/LeaderboardsLayout";
+import LeaderboardsLayout from "@/components/Leaderboards/layout/LeaderboardsLayout";
 
 const MythicPlusBestRunsPage = () => {
   return (
