@@ -15,7 +15,7 @@ export default function Hero() {
   return (
     <div className="relative w-full overflow-hidden bg-[#1A1D21]">
       {/* Hauteur réduite à 65vh */}
-      <div className="h-[65vh] relative">
+      <div className="h-[45vh] relative">
         {/* Gradient overlay at the bottom to blend image with content */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1A1D21] z-10"></div>
 

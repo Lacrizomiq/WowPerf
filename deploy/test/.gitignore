@@ -1,4 +1,5 @@
 .env
 traefik/acme/*
 !traefik/acme/.gitkeep
+traefik/dynamic/*
 

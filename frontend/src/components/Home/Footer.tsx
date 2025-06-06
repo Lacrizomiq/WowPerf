@@ -24,22 +24,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/statistics"
-                  className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
-                >
-                  Statistics
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/best-runs"
-                  className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
-                >
-                  Best Runs
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/builds"
                   className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
                 >
@@ -48,10 +32,18 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/character-progress"
+                  href="/statistics"
                   className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
                 >
-                  Character Progress
+                  Statistics
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/leaderboards"
+                  className="text-slate-300 hover:text-purple-400 transition-colors text-sm"
+                >
+                  Leaderboards
                 </Link>
               </li>
             </ul>

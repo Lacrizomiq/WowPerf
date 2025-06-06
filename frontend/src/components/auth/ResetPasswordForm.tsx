@@ -5,6 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/libs/api";
 import { toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 type ResetPasswordFormData = {
   password: string;
@@ -84,36 +88,40 @@ const ResetPasswordForm = () => {
     }
   };
 
+  // Loading state
   if (isValidToken === null) {
     return (
-      <div className="text-center">
-        <div className="text-gray-300">Validating reset token...</div>
+      <div className="flex items-center justify-center space-x-2">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <span className="text-muted-foreground">Validating reset token...</span>
       </div>
     );
   }
 
+  // Invalid token state
   if (isValidToken === false) {
     return (
-      <div className="rounded-md bg-red-50 p-4">
-        <div className="flex">
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">
-              Invalid or Expired Reset Link
-            </h3>
-            <div className="mt-2 text-sm text-red-700">
-              <p>
+      <div className="space-y-6">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-destructive mb-2">
+                Invalid or Expired Reset Link
+              </h3>
+              <p className="text-sm text-destructive/80 mb-4">
                 This password reset link is invalid or has expired. Please
                 request a new one.
               </p>
-            </div>
-            <div className="mt-4">
-              <button
-                type="button"
+              <Button
                 onClick={() => router.push("/forgot-password")}
-                className="text-sm font-medium text-red-800 hover:text-red-700"
+                variant="outline"
+                className="border-destructive/30 text-destructive hover:bg-destructive/10"
               >
                 Request New Reset Link
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -123,23 +131,19 @@ const ResetPasswordForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
+      <div className="space-y-2">
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-300 mb-2"
+          className="block text-sm font-medium text-foreground"
         >
           New Password
         </label>
-        <input
+        <Input
           id="password"
           type="password"
           disabled={isSubmitting}
-          className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            errors.password || errors.root
-              ? "border-red-500"
-              : "border-gray-600"
-          } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Enter your new password"
+          className={errors.password || errors.root ? "border-destructive" : ""}
           {...register("password", {
             required: "Password is required",
             minLength: {
@@ -153,29 +157,30 @@ const ResetPasswordForm = () => {
           })}
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-500" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {errors.password.message}
           </p>
         )}
+        <p className="text-xs text-muted-foreground">
+          Must be between 8 and 32 characters long
+        </p>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <label
           htmlFor="confirmPassword"
-          className="block text-sm font-medium text-gray-300 mb-2"
+          className="block text-sm font-medium text-foreground"
         >
           Confirm New Password
         </label>
-        <input
+        <Input
           id="confirmPassword"
           type="password"
           disabled={isSubmitting}
-          className={`mt-1 block w-full px-3 py-2 bg-deep-blue border ${
-            errors.confirmPassword || errors.root
-              ? "border-red-500"
-              : "border-gray-600"
-          } rounded-md text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
           placeholder="Confirm your new password"
+          className={
+            errors.confirmPassword || errors.root ? "border-destructive" : ""
+          }
           {...register("confirmPassword", {
             required: "Please confirm your password",
             validate: (value) =>
@@ -183,34 +188,40 @@ const ResetPasswordForm = () => {
           })}
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-500" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {errors.confirmPassword.message}
           </p>
         )}
       </div>
 
       {errors.root && (
-        <div
-          className="p-3 bg-red-100 border border-red-400 text-red-700 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{errors.root.message}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{errors.root.message}</AlertDescription>
+        </Alert>
       )}
 
       <div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full px-4 py-2 bg-gradient-blue text-white rounded-md transition-all duration-200 ease-in-out
-            ${
-              isSubmitting
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-700 active:bg-blue-800"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Resetting...
+            </span>
+          ) : (
+            "Reset Password"
+          )}
+        </Button>
+      </div>
+
+      <div className="text-center">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.push("/login")}
+          className="text-primary hover:text-primary/80"
         >
-          {isSubmitting ? "Resetting..." : "Reset Password"}
-        </button>
+          Back to login
+        </Button>
       </div>
     </form>
   );

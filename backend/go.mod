@@ -25,10 +25,12 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/datatypes v1.2.4
 	gorm.io/driver/postgres v1.5.9
+	gorm.io/driver/sqlite v1.4.3
 	gorm.io/gorm v1.25.11
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -62,6 +64,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nexus-rpc/sdk-go v0.1.0 // indirect

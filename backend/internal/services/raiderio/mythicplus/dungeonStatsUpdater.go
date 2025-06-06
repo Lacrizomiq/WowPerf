@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const updateInterval = 7 * 24 * time.Hour // 7 days
+const updateInterval = 30 * 24 * time.Hour // 30 days
 
 func IsDungeonStatsEmpty(db *gorm.DB) bool {
 	var count int64

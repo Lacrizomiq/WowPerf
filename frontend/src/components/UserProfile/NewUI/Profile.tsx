@@ -15,7 +15,7 @@ import ChangeUsername from "../Update/ChangeUsername";
 import DeleteAccount from "../Update/DeleteAccount";
 import ProfileHeader from "./ProfileHeader";
 import OverviewTab from "./Tabs/OverviewTab";
-import CharactersTab from "./Tabs/CharactersTab";
+import CharactersTab from "./CharactersTab";
 import AccountTab from "./Tabs/AccountTab";
 import SecurityTab from "./Tabs/SecurityTab";
 import ConnectionsTab from "./Tabs/ConnectionsTab";

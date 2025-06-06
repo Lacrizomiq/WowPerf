@@ -1,0 +1,34 @@
+# backend/configs/raiderio/mythicplus_runs_config.yaml
+seasons:
+  - season_id: "season-tww-2"
+    name: "The War Within Season 2"
+
+regions:
+  - "us"
+  - "eu"
+  - "tw"
+  - "kr"
+
+dungeons:
+  - slug: "cinderbrew-meadery"
+    name: "Cinderbrew Meadery"
+  - slug: "darkflame-cleft"
+    name: "Darkflame Cleft"
+  - slug: "operation-mechagon-workshop"
+    name: "Operation: Mechagon - Workshop"
+  - slug: "operation-floodgate"
+    name: "Operation: Floodgate"
+  - slug: "priory-of-the-sacred-flame"
+    name: "Priory of the Sacred Flame"
+  - slug: "the-motherlode"
+    name: "The MOTHERLODE!!"
+  - slug: "the-rookery"
+    name: "The Rookery"
+  - slug: "theater-of-pain"
+    name: "Theater of Pain"
+
+# Paramètres d'exécution
+execution:
+  pages_per_dungeon: 5
+  max_concurrency: 3
+  retry_attempts: 3
