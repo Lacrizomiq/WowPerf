@@ -1,0 +1,7 @@
+specs:
+  - class_name: "Evoker"
+    spec_name: "Devastation"
+  - class_name: "Evoker"
+    spec_name: "Preservation"
+  - class_name: "Evoker"
+    spec_name: "Augmentation"

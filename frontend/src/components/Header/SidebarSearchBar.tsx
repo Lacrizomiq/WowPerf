@@ -1,10 +1,25 @@
+// components/SidebarSearchBar.tsx
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Search, ChevronDown, ChevronUp, Loader2, CircleX } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search as SearchIcon,
+  Loader2,
+  AlertCircle as AlertCircleIcon,
+} from "lucide-react";
 import { useSearchBlizzardCharacter } from "@/hooks/useBlizzardApi";
 import { eu, us, tw, kr } from "@/data/realms";
-import { SidebarMenuButton, SidebarMenuSub } from "@/components/ui/sidebar";
 
 interface Realm {
   id: number;
@@ -14,34 +29,34 @@ interface Realm {
 
 interface SidebarSearchBarProps {
   isExpanded: boolean;
-  searchOpen: boolean;
-  setSearchOpen: (open: boolean) => void;
+  onToggleSidebar: () => void;
 }
 
 const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
   isExpanded,
-  searchOpen,
-  setSearchOpen,
+  onToggleSidebar,
 }) => {
   const router = useRouter();
-  const [region, setRegion] = useState<string>("");
-  const [realm, setRealm] = useState<string>("");
-  const [character, setCharacter] = useState<string>("");
-  const [realms, setRealms] = useState<Realm[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchRegion, setSearchRegion] = useState<string>("");
+  const [searchRealm, setSearchRealm] = useState<string>("");
+  const [searchCharacter, setSearchCharacter] = useState<string>("");
+  const [availableRealms, setAvailableRealms] = useState<Realm[]>([]);
+  const [filteredRealms, setFilteredRealms] = useState<Realm[]>([]);
+  const [realmSearchValue, setRealmSearchValue] = useState<string>("");
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const { refetch: checkCharacter } = useSearchBlizzardCharacter(
-    region.toLowerCase(),
-    realm.toLowerCase(),
-    character.toLowerCase(),
-    `profile-${region.toLowerCase()}`,
+    searchRegion.toLowerCase(),
+    searchRealm.toLowerCase(),
+    searchCharacter.toLowerCase(),
+    `profile-${searchRegion.toLowerCase()}`,
     "en_GB"
   );
 
   useEffect(() => {
     let selectedRealms: Realm[] = [];
-    switch (region) {
+    switch (searchRegion) {
       case "eu":
         selectedRealms = eu.realms;
         break;
@@ -57,139 +72,182 @@ const SidebarSearchBar: React.FC<SidebarSearchBarProps> = ({
       default:
         selectedRealms = [];
     }
-    setRealms(selectedRealms.sort((a, b) => a.name.localeCompare(b.name)));
-    setRealm("");
-  }, [region]);
+    const sortedRealms = selectedRealms.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    setAvailableRealms(sortedRealms);
+    setFilteredRealms(sortedRealms);
+    setSearchRealm("");
+    setRealmSearchValue("");
+  }, [searchRegion]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-
-    if (!region || !realm || !character) {
-      setError("Please fill in all fields");
-      setIsSubmitting(false);
+    setSearchError(null);
+    if (!searchRegion || !searchRealm || !searchCharacter) {
+      setSearchError("Please fill in all fields.");
       return;
     }
-
+    setIsSearching(true);
     try {
       const result = await checkCharacter();
-      if (result.error) {
-        throw new Error("Character not found");
+      if (result.isError || result.error) {
+        throw new Error(
+          (result.error as any)?.message || "Character not found or API error."
+        );
       }
-
       router.push(
-        `/character/${region.toLowerCase()}/${realm.toLowerCase()}/${character.toLowerCase()}`
+        `/character/${searchRegion.toLowerCase()}/${searchRealm.toLowerCase()}/${searchCharacter.toLowerCase()}`
       );
-      setSearchOpen(false);
-      resetForm();
     } catch (err) {
-      if (err instanceof Error) {
-        setError("Character not found.");
-      } else {
-        setError("An error occurred while searching. Please try again.");
-      }
+      setSearchError(
+        err instanceof Error ? err.message : "An unexpected error occurred."
+      );
     } finally {
-      setIsSubmitting(false);
+      setIsSearching(false);
     }
   };
 
-  const resetForm = () => {
-    setCharacter("");
-    setRealm("");
-    setRegion("");
-    setError(null);
-  };
+  // Render differently based on expanded state
+  if (!isExpanded) {
+    return (
+      <div className="px-4 py-2">
+        <Button
+          size="icon"
+          className="w-full h-8 bg-purple-600 hover:bg-purple-700"
+          onClick={onToggleSidebar}
+        >
+          <SearchIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <SidebarMenuButton onClick={() => setSearchOpen(!searchOpen)}>
-        <div
-          className={`flex items-center w-full mb-2 ${
-            isExpanded ? "w-full" : "justify-center"
-          }`}
-        >
-          <Search className={isExpanded ? "mr-4" : ""} />
-          {isExpanded && (
-            <>
-              <span>Search</span>
-              {searchOpen ? (
-                <ChevronUp className="ml-auto" />
-              ) : (
-                <ChevronDown className="ml-auto" />
-              )}
-            </>
-          )}
-        </div>
-      </SidebarMenuButton>
+    <div className="px-4 py-2">
+      <div className="text-sm font-medium mb-1">Search Character</div>
+      <form onSubmit={handleSearchSubmit} className="space-y-1.5">
+        <Input
+          placeholder="Character Name"
+          value={searchCharacter}
+          onChange={(e) => setSearchCharacter(e.target.value)}
+          className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors"
+        />
 
-      {isExpanded && searchOpen && (
-        <SidebarMenuSub>
-          <form onSubmit={handleSubmit} className="px-4 py-4">
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
+        <div className="grid grid-cols-2 gap-1.5">
+          <Select value={searchRegion} onValueChange={setSearchRegion}>
+            <SelectTrigger className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors">
+              <SelectValue placeholder="Region" />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-[#1e2025] border-slate-700 text-white p-0"
+              position="popper"
             >
-              <option value="">Select Region</option>
-              <option value="eu">EU</option>
-              <option value="us">US</option>
-              <option value="kr">KR</option>
-              <option value="tw">TW</option>
-            </select>
+              <div className="rounded-sm overflow-hidden">
+                <SelectItem
+                  value="eu"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  EU
+                </SelectItem>
+                <SelectItem
+                  value="us"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  US
+                </SelectItem>
+                <SelectItem
+                  value="kr"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  KR
+                </SelectItem>
+                <SelectItem
+                  value="tw"
+                  className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  TW
+                </SelectItem>
+              </div>
+            </SelectContent>
+          </Select>
 
-            <select
-              value={realm}
-              onChange={(e) => setRealm(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-              disabled={!region}
+          <Select
+            value={searchRealm}
+            onValueChange={setSearchRealm}
+            disabled={!searchRegion}
+          >
+            <SelectTrigger className="h-8 bg-slate-800/50 border-slate-700 text-white hover:border-purple-500 focus:border-purple-600 focus:ring-1 focus:ring-purple-500 transition-colors">
+              <SelectValue placeholder="Realm" />
+            </SelectTrigger>
+            <SelectContent
+              className="bg-[#1e2025] border-slate-700 text-white p-0"
+              position="popper"
             >
-              <option value="">Select Realm</option>
-              {realms.map((realm) => (
-                <option key={realm.id} value={realm.slug}>
-                  {realm.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              placeholder="Character Name"
-              value={character}
-              onChange={(e) => setCharacter(e.target.value)}
-              className="w-full px-2 py-2 mb-2 text-white border-2 rounded-md bg-deep-blue"
-            />
-
-            {error && (
-              <Alert
-                variant="destructive"
-                className="mb-2 text-red-500 flex items-center"
+              <div
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               >
-                <AlertTitle>
-                  <CircleX className="size-4 text-red-500 mr-2" />
-                </AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+                <Input
+                  placeholder="Search realms..."
+                  className="bg-slate-800 border-slate-700 text-white mb-1 rounded-none focus:ring-0 focus:border-purple-500"
+                  value={realmSearchValue}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    const searchValue = e.target.value.toLowerCase();
+                    setRealmSearchValue(e.target.value);
+                    setFilteredRealms(
+                      availableRealms.filter(
+                        (r) =>
+                          r.name.toLowerCase().includes(searchValue) ||
+                          r.slug.toLowerCase().includes(searchValue)
+                      )
+                    );
+                  }}
+                />
+              </div>
+              <div className="max-h-[200px] overflow-y-auto">
+                {filteredRealms.map((r) => (
+                  <SelectItem
+                    key={r.id}
+                    value={r.slug}
+                    className="py-3 hover:bg-slate-700 focus:bg-slate-700"
+                  >
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </div>
+            </SelectContent>
+          </Select>
+        </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting || !region || !realm || !character}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                "Search"
-              )}
-            </button>
-          </form>
-        </SidebarMenuSub>
-      )}
-    </>
+        {searchError && (
+          <Alert
+            variant="destructive"
+            className="py-2 text-sm bg-red-900/50 border-red-800 text-red-200"
+          >
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertDescription className="ml-2">{searchError}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full h-8 bg-purple-600 hover:bg-purple-700"
+          disabled={
+            isSearching || !searchRegion || !searchRealm || !searchCharacter
+          }
+        >
+          {isSearching ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <SearchIcon className="h-4 w-4 mr-2" />
+          )}
+          Search
+        </Button>
+      </form>
+    </div>
   );
 };
 

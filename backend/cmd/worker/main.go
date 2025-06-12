@@ -10,20 +10,23 @@ import (
 	"syscall"
 	"time"
 	"wowperf/internal/database"
+	"wowperf/internal/services/raiderio"
 	"wowperf/internal/services/warcraftlogs"
 
-	playerBuildsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	rankingsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	reportsRepository "wowperf/internal/services/warcraftlogs/mythicplus/builds/repository"
-	activities "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/activities"
+	// Scheduler pour la configuration de la queue
 	scheduler "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/scheduler"
-	definitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
+	buildsDefinitions "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/definitions"
 	models "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/models"
-	syncWorkflow "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal/workflows/sync"
+
+	// Import des packages d'initialisation pour chaque feature WarcraftLogs
+	buildsInit "wowperf/internal/services/warcraftlogs/mythicplus/builds/temporal"
+	playerRankingsInit "wowperf/internal/services/warcraftlogs/mythicplus/player_rankings/temporal"
+
+	// Import des packages d'initialisation pour chaque feature RaiderIO
+	mythicPlusRunsInit "wowperf/internal/services/raiderio/mythicplus/mythicplus_runs/temporal"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
-	"go.temporal.io/sdk/workflow"
 	"gorm.io/gorm"
 )
 
@@ -38,19 +41,43 @@ func main() {
 	logger.Printf("Starting Temporal worker")
 
 	// Initialize services
-	temporalClient, db, warcraftLogsClient, err := initializeServices()
+	temporalClient, db, warcraftLogsClient, raiderIOClient, err := initializeServices()
 	if err != nil {
 		logger.Fatalf("Failed to initialize services: %v", err)
 	}
 	defer temporalClient.Close()
 
-	// Initialize repositories and activities (no changes needed)
-	reportsRepo := reportsRepository.NewReportRepository(db)
-	rankingsRepo := rankingsRepository.NewRankingsRepository(db)
-	playerBuildsRepo := playerBuildsRepository.NewPlayerBuildsRepository(db)
-	activitiesService := initializeActivities(warcraftLogsClient, reportsRepo, rankingsRepo, playerBuildsRepo)
+	// Charger la configuration WarcraftLogs
+	config, err := buildsDefinitions.LoadConfig("configs/config_s2_tww.dev.yaml")
+	if err != nil {
+		logger.Fatalf("Failed to load WarcraftLogs config: %v", err)
+	}
 
-	// Create a single worker that will handle both production and test schedules
+	// Initialiser les features
+	logger.Printf("Initializing features")
+
+	// === WARCRAFTLOGS FEATURES ===
+	// Initialiser la feature builds
+	_, _, _, _, _, _, _, buildsActivitiesService := buildsInit.InitBuilds(
+		db,
+		warcraftLogsClient,
+		int(config.Rankings.MaxRankingsPerSpec),
+	)
+
+	// Initialiser la feature player rankings
+	_, playerRankingsActivitiesService := playerRankingsInit.InitPlayerRankings(
+		db,
+		warcraftLogsClient,
+	)
+
+	// === RAIDERIO FEATURES ===
+	// Initialiser la feature mythic plus runs
+	_, mythicPlusRunsActivitiesService := mythicPlusRunsInit.InitMythicPlusRuns(
+		db,
+		raiderIOClient,
+	)
+
+	// Create a single worker (même task queue pour toutes les features)
 	taskQueue := scheduler.DefaultScheduleConfig.TaskQueue
 	w := worker.New(temporalClient, taskQueue, worker.Options{
 		MaxConcurrentActivityExecutionSize:     1,
@@ -61,7 +88,15 @@ func main() {
 		EnableSessionWorker:                    true,
 	})
 
-	registerWorkflowsAndActivities(w, activitiesService)
+	// Enregistrer les workflows et activities pour chaque feature
+	logger.Printf("Registering workflows and activities")
+
+	// WarcraftLogs features
+	buildsInit.RegisterBuilds(w, buildsActivitiesService)
+	playerRankingsInit.RegisterPlayerRankings(w, playerRankingsActivitiesService)
+
+	// RaiderIO features
+	mythicPlusRunsInit.RegisterMythicPlusRuns(w, mythicPlusRunsActivitiesService)
 
 	workerMgr := &WorkerManager{
 		worker: w,
@@ -88,7 +123,7 @@ func main() {
 	handleGracefulShutdown(workerMgr, &wg, workerErrorChan, logger)
 }
 
-func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, error) {
+func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsClientService, *raiderio.RaiderIOService, error) {
 	temporalAddress := os.Getenv("TEMPORAL_ADDRESS")
 	if temporalAddress == "" {
 		temporalAddress = "localhost:7233"
@@ -99,55 +134,25 @@ func initializeServices() (client.Client, *gorm.DB, *warcraftlogs.WarcraftLogsCl
 		Namespace: models.DefaultNamespace,
 	})
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to create Temporal client: %w", err)
 	}
 
 	db, err := database.InitDB()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	warcraftLogsClient, err := warcraftlogs.NewWarcraftLogsClientService()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize WarcraftLogs client: %w", err)
 	}
 
-	return temporalClient, db, warcraftLogsClient, nil
-}
+	raiderIOClient, err := raiderio.NewRaiderIOService()
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("failed to initialize RaiderIO client: %w", err)
+	}
 
-func initializeActivities(
-	warcraftLogsClient *warcraftlogs.WarcraftLogsClientService,
-	reportsRepo *reportsRepository.ReportRepository,
-	rankingsRepo *rankingsRepository.RankingsRepository,
-	playerBuildsRepo *playerBuildsRepository.PlayerBuildsRepository,
-) *activities.Activities {
-	return activities.NewActivities(
-		activities.NewRankingsActivity(warcraftLogsClient, rankingsRepo),
-		activities.NewReportsActivity(warcraftLogsClient, reportsRepo),
-		activities.NewPlayerBuildsActivity(playerBuildsRepo),
-		activities.NewRateLimitActivity(warcraftLogsClient),
-	)
-}
-
-func registerWorkflowsAndActivities(w worker.Worker, activitiesService *activities.Activities) {
-	// Register workflows
-	syncWorkflowImpl := syncWorkflow.NewSyncWorkflow()
-
-	w.RegisterWorkflowWithOptions(syncWorkflowImpl.Execute, workflow.RegisterOptions{
-		Name: definitions.SyncWorkflowName,
-	})
-
-	// Register activities
-	w.RegisterActivity(activitiesService.Rankings.FetchAndStore)
-	w.RegisterActivity(activitiesService.Rankings.GetStoredRankings)
-	w.RegisterActivity(activitiesService.Reports.ProcessReports)
-	w.RegisterActivity(activitiesService.Reports.GetReportsBatch)
-	w.RegisterActivity(activitiesService.Reports.CountAllReports)
-	w.RegisterActivity(activitiesService.PlayerBuilds.ProcessAllBuilds)
-	w.RegisterActivity(activitiesService.PlayerBuilds.CountPlayerBuilds)
-	w.RegisterActivity(activitiesService.RateLimit.ReservePoints)
-	w.RegisterActivity(activitiesService.RateLimit.ReleasePoints)
-	w.RegisterActivity(activitiesService.RateLimit.CheckRemainingPoints)
+	return temporalClient, db, warcraftLogsClient, raiderIOClient, nil
 }
 
 func handleGracefulShutdown(mgr *WorkerManager, wg *sync.WaitGroup, errorChan chan error, logger *log.Logger) {

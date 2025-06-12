@@ -30,6 +30,10 @@ export enum AuthErrorCode {
   INVALID_CSRF_TOKEN = "INVALID_CSRF_TOKEN",
   UNAUTHORIZED = "unauthorized",
 
+  // Captcha errors
+  CAPTCHA_REQUIRED = "captcha_required",
+  CAPTCHA_INVALID = "captcha_invalid",
+
   // Technical errors
   NETWORK_ERROR = "network_error",
   SERVER_ERROR = "server_error",
@@ -39,6 +43,24 @@ export enum AuthErrorCode {
   SIGNUP_ERROR = "signup_error",
   LOGOUT_ERROR = "logout_error",
   REFRESH_ERROR = "refresh_token_error",
+
+  // OAuth specific errors
+  OAUTH_CANCELLED = "auth_cancelled",
+  OAUTH_FAILED = "auth_failed",
+  OAUTH_PROCESSING_FAILED = "auth_processing_failed",
+  OAUTH_STATE_MISMATCH = "state_mismatch",
+  OAUTH_INVALID_CALLBACK = "invalid_callback",
+  OAUTH_TOKEN_EXCHANGE_FAILED = "token_exchange_failed",
+  OAUTH_USER_INFO_FAILED = "user_info_failed",
+  EMAIL_ALREADY_LINKED = "email_already_linked",
+}
+
+// Authentication method used for login
+export enum AuthMethod {
+  PASSWORD = "password",
+  GOOGLE = "google",
+  // Future providers
+  // DISCORD = "discord",
 }
 
 export class AuthError extends Error {
@@ -56,13 +78,15 @@ export const authService = {
   async signup(
     username: string,
     email: string,
-    password: string
+    password: string,
+    captchaToken?: string
   ): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>("/auth/signup", {
         username,
         email,
         password,
+        captcha_token: captchaToken,
       });
 
       return response.data;
@@ -86,6 +110,16 @@ export const authService = {
             throw new AuthError(
               AuthErrorCode.INVALID_INPUT,
               err.response?.data?.error || "Invalid input data"
+            );
+          case "captcha_required":
+            throw new AuthError(
+              AuthErrorCode.CAPTCHA_REQUIRED,
+              "Please complete the captcha verification"
+            );
+          case "captcha_invalid":
+            throw new AuthError(
+              AuthErrorCode.CAPTCHA_INVALID,
+              "Captcha verification failed"
             );
           default:
             throw new AuthError(

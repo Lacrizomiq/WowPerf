@@ -5,11 +5,28 @@ export interface SpecAverageGlobalScore {
   class: string;
   spec: string;
   avg_global_score: number;
+  max_global_score: number;
+  min_global_score: number;
   player_count: number;
   role: string;
   overall_rank: number;
   role_rank: number;
   slug: string;
+}
+
+// SpecDungeonScoreAverage is the average score for a spec per dungeon
+export interface SpecDungeonScoreAverage {
+  class: string;
+  spec: string;
+  slug: string;
+  encounter_id: number;
+  avg_dungeon_score: number;
+  max_score: number;
+  min_score: number;
+  player_count: number;
+  role: string;
+  overall_rank: number;
+  role_rank: number;
 }
 
 // ClassAverageGlobalScore is the average global score for a class
@@ -25,6 +42,7 @@ export interface MaxKeyLevelsPerSpecAndDungeon {
   spec: string;
   dungeon_name: string;
   dungeon_slug: string;
+  encounter_id: number;
   max_key_level: number;
 }
 

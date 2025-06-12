@@ -10,6 +10,7 @@ import {
 } from "../types/warcraftlogs/globalLeaderboard";
 import {
   SpecAverageGlobalScore,
+  SpecDungeonScoreAverage,
   BestTenPlayerPerSpec,
   MaxKeyLevelsPerSpecAndDungeon,
   DungeonMedia,
@@ -155,6 +156,31 @@ export const useGetSpecAverageGlobalScore = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2, // Retry 2 times
+  });
+};
+
+// Hook to get the average scores per spec and dungeon with optional filters (returns an array)
+export const useGetSpecDungeonScoreAverages = (
+  className?: string,
+  spec?: string,
+  encounterId?: number
+) => {
+  return useQuery<SpecDungeonScoreAverage[], Error>({
+    queryKey: [
+      "warcraftlogs-spec-dungeon-scores",
+      className,
+      spec,
+      encounterId,
+    ],
+    queryFn: () =>
+      warcraftLogsApiService.getSpecDungeonScoreAverages(
+        className,
+        spec,
+        encounterId
+      ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2,
   });
 };
 

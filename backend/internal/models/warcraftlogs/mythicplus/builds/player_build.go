@@ -40,6 +40,14 @@ type PlayerBuild struct {
 	// Mythic+ information
 	KeystoneLevel int           `gorm:"index"`
 	Affixes       pq.Int64Array `gorm:"type:integer[]"`
+
+	// Analysis status and timestamps
+	EquipmentProcessedAt *time.Time `gorm:"column:equipment_processed_at"`
+	TalentProcessedAt    *time.Time `gorm:"column:talent_processed_at"`
+	StatProcessedAt      *time.Time `gorm:"column:stat_processed_at"`
+	EquipmentStatus      string     `gorm:"column:equipment_status;type:varchar(255)"`
+	TalentStatus         string     `gorm:"column:talent_status;type:varchar(255)"`
+	StatStatus           string     `gorm:"column:stat_status;type:varchar(255)"`
 }
 
 func (PlayerBuild) TableName() string {

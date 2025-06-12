@@ -2,108 +2,218 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  --color-deep-blue: #000033;
-  --color-midnight-blue: #191970;
-  --color-royal-blue: #4169e1;
-  --color-electric-blue: #00ffff;
+/* ========================================================================== */
+/* SECTION 1: Thème CSS Variables                                             */
+/* ========================================================================== */
 
-  /* shadcn/ui variables */
-  --background: 220 100% 2%;
-  --foreground: 0 0% 98%;
-  --card: 220 100% 2%;
-  --card-foreground: 0 0% 98%;
-  --popover: 220 100% 2%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 0 0% 98%;
+:root {
+  /* Mode clair variables - mais nous utilisons le thème sombre partout */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 262.1 83.3% 57.8%; /* Purple */
+  --primary-foreground: 210 40% 98%;
   --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary-foreground: 210 40% 98%;
   --muted: 217.2 32.6% 17.5%;
   --muted-foreground: 215 20.2% 65.1%;
   --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 0 0% 98%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 48%;
+  --ring: 262.1 83.3% 57.8%; /* Purple */
   --radius: 0.5rem;
 
+  /* Sidebar variables - le thème sombre est cohérent partout */
+  --sidebar-background: 222.2 84% 4.9%; /* #1A1D21 in HSL */
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 262.1 83.3% 57.8%; /* Purple */
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 215 27.9% 16.9%; /* #292c31 in HSL */
+  --sidebar-ring: 262.1 83.3% 57.8%; /* Purple */
+
+  /* Chart colors */
+  --chart-1: 262.1 83.3% 57.8%; /* Purple primary */
+  --chart-2: 220 70% 50%;
+  --chart-3: 160 60% 45%;
+  --chart-4: 30 80% 55%;
+  --chart-5: 340 75% 55%;
+}
+
+/* Dark theme is the default, but keep this for consistency */
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 262.1 70% 53%; /* Purple */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 262.1 70% 53%;
+
+  --sidebar-background: 222.2 47.4% 11.2%; /* Slightly lighter than main background */
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 262.1 70% 53%; /* Purple */
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 215 27.9% 16.9%; /* #292c31 in HSL */
+  --sidebar-ring: 262.1 70% 53%;
+}
+
+/* ========================================================================== */
+/* SECTION 2: Base Styles (Tailwind)                                          */
+/* ========================================================================== */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ========================================================================== */
+/* SECTION 3: Custom Animations                                               */
+/* ========================================================================== */
+
+@keyframes subtle-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 8s ease-in-out infinite;
+}
+
+/* ========================================================================== */
+/* SECTION 4: WoW Class Colors                                                */
+/* ========================================================================== */
+
+/* WoW Class colors */
+:root {
   --color-warrior: #c79c6e;
   --color-paladin: #f58cba;
   --color-hunter: #abd473;
   --color-rogue: #fff569;
   --color-priest: #ffffff;
   --color-death-knight: #c41f3b;
+  --color-deathknight: #c41f3b;
   --color-shaman: #0070de;
   --color-mage: #69ccf0;
   --color-warlock: #9482c9;
   --color-monk: #00ff96;
   --color-druid: #ff7d0a;
   --color-demon-hunter: #a330c9;
+  --color-demonhunter: #a330c9;
   --color-evoker: #33937f;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* Class colors with various formats */
+.class-color--warrior,
+.class-color--1 {
+  color: var(--color-warrior) !important;
+}
+.class-color--paladin,
+.class-color--2 {
+  color: var(--color-paladin) !important;
+}
+.class-color--hunter,
+.class-color--3 {
+  color: var(--color-hunter) !important;
+}
+.class-color--rogue,
+.class-color--4 {
+  color: var(--color-rogue) !important;
+}
+.class-color--priest,
+.class-color--5 {
+  color: var(--color-priest) !important;
+}
+.class-color--death-knight,
+.class-color--6,
+.class-color--deathknight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--shaman,
+.class-color--7 {
+  color: var(--color-shaman) !important;
+}
+.class-color--mage,
+.class-color--8 {
+  color: var(--color-mage) !important;
+}
+.class-color--warlock,
+.class-color--9 {
+  color: var(--color-warlock) !important;
+}
+.class-color--monk,
+.class-color--10 {
+  color: var(--color-monk) !important;
+}
+.class-color--druid,
+.class-color--11 {
+  color: var(--color-druid) !important;
+}
+.class-color--demon-hunter,
+.class-color--12,
+.class-color--demonhunter {
+  color: var(--color-demon-hunter) !important;
+}
+.class-color--evoker,
+.class-color--13 {
+  color: var(--color-evoker) !important;
 }
 
-body {
-  color: white;
-  min-height: 100vh;
-  background: black;
+/* Alternative formats */
+.class-color--Death-Knight,
+.class-color--death\ knight,
+.class-color--Death\ Knight {
+  color: var(--color-death-knight) !important;
+}
+.class-color--Demon-Hunter,
+.class-color--demon\ hunter,
+.class-color--Demon\ Hunter {
+  color: var(--color-demon-hunter) !important;
 }
 
-.bg-gradient-dark {
-  background: linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
+/* Item Quality */
+.item-quality--4 {
+  color: #a335ee !important;
 }
-
-.border-gradient-dark {
-  border: 4px solid linear-gradient(180deg, #2e2f2f 0%, #050607 100%);
+.item-quality--3 {
+  color: #0070ff !important;
 }
-
-.bg-deep-blue {
-  background-color: #001830;
-}
-
-.bg-gradient-purple {
-  background: linear-gradient(135deg, #182b5f, #43168a);
-}
-
-.bg-gradient-blue {
-  background: linear-gradient(
-    135deg,
-    var(--color-royal-blue),
-    rgba(9, 32, 85, 1)
-  );
-}
-
-.text-gradient-glow {
-  background: linear-gradient(
-    to right,
-    var(--color-royal-blue),
-    var(--color-electric-blue)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 10px rgba(65, 105, 225, 0.5);
-}
-
-.glow-effect {
-  box-shadow: 0 0 15px rgba(65, 105, 225, 0.5);
-}
-
-.hover-glow:hover {
-  text-shadow: 0 0 10px var(--color-electric-blue);
+.item-quality--2 {
+  color: #1eff00 !important;
 }
 
 /* Class colors */
@@ -432,35 +542,6 @@ body {
 
 .item-quality--2 {
   color: #1eff00;
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  :root {
-    --sidebar-background: 210 100% 9%; /* Équivalent à #001830 */
-    --sidebar-foreground: 0 0% 100%; /* Texte blanc pour un bon contraste */
-    --sidebar-primary: 210 100% 50%; /* Un bleu plus clair pour les éléments primaires */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 50% 15%; /* Un bleu légèrement plus clair pour l'accent */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 50% 20%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
 }
 
 /* Add API class name matches */

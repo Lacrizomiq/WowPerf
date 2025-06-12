@@ -1,0 +1,9 @@
+specs:
+  - class_name: "Druid"
+    spec_name: "Balance"
+  - class_name: "Druid"
+    spec_name: "Feral"
+  - class_name: "Druid"
+    spec_name: "Guardian"
+  - class_name: "Druid"
+    spec_name: "Restoration"

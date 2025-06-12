@@ -2,6 +2,7 @@ package warcraftlogsBuildsRepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -64,11 +65,25 @@ func (r *ReportRepository) StoreReports(ctx context.Context, reports []*warcraft
 
 // processBatchBulk handles bulk insertion of reports
 func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcraftlogsBuilds.Report) error {
+	// Deduplicate reports before processing
+	uniqueReports := make(map[string]*warcraftlogsBuilds.Report)
+	for _, report := range batch {
+		key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
+		uniqueReports[key] = report
+	}
+
+	// Convert map to slice for processing
+	deduplicatedBatch := make([]*warcraftlogsBuilds.Report, 0, len(uniqueReports))
+	for _, report := range uniqueReports {
+		deduplicatedBatch = append(deduplicatedBatch, report)
+	}
+
+	// Continue with processing on deduplicated reports
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
 		// Set timestamps for all reports in batch
-		for _, report := range batch {
+		for _, report := range deduplicatedBatch {
 			report.CreatedAt = now
 			report.UpdatedAt = now
 		}
@@ -92,7 +107,7 @@ func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcra
 				"affixes",
 				"updated_at",
 			}),
-		}).Create(&batch)
+		}).Create(&deduplicatedBatch)
 
 		if result.Error != nil {
 			return fmt.Errorf("failed to bulk store reports: %w", result.Error)
@@ -103,61 +118,15 @@ func (r *ReportRepository) processBatchBulk(ctx context.Context, batch []*warcra
 }
 
 // SyncReportsWithRankings synchronizes reports with the provided rankings
-// It deletes reports that no longer have associated rankings
 func (r *ReportRepository) SyncReportsWithRankings(ctx context.Context, rankings []*warcraftlogsBuilds.ClassRanking) error {
 	if len(rankings) == 0 {
 		return nil
 	}
 
-	// Create a map of active report identifiers from rankings
-	activeReports := make(map[string]bool)
-	for _, ranking := range rankings {
-		key := fmt.Sprintf("%s-%d", ranking.ReportCode, ranking.ReportFightID)
-		activeReports[key] = true
-	}
+	log.Printf("[INFO] SyncReportsWithRankings - Processing %d rankings without deleting any reports", len(rankings))
 
-	// Delete reports that are no longer referenced by any ranking
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var reportsToDelete []ReportIdentifier
-
-		// Find all reports for these rankings
-		rows, err := tx.Model(&warcraftlogsBuilds.Report{}).
-			Select("code, fight_id").
-			Where("encounter_id = ?", rankings[0].EncounterID).
-			Rows()
-
-		if err != nil {
-			return fmt.Errorf("failed to fetch reports: %w", err)
-		}
-		defer rows.Close()
-
-		// Check each report against active rankings
-		for rows.Next() {
-			var report ReportIdentifier
-			if err := rows.Scan(&report.Code, &report.FightID); err != nil {
-				return fmt.Errorf("failed to scan report: %w", err)
-			}
-
-			key := fmt.Sprintf("%s-%d", report.Code, report.FightID)
-			if !activeReports[key] {
-				reportsToDelete = append(reportsToDelete, report)
-			}
-		}
-
-		// Delete obsolete reports
-		if len(reportsToDelete) > 0 {
-			for _, report := range reportsToDelete {
-				if err := tx.Unscoped().Where("code = ? AND fight_id = ?",
-					report.Code, report.FightID).Delete(&warcraftlogsBuilds.Report{}).Error; err != nil {
-					return fmt.Errorf("failed to delete report %s-%d: %w",
-						report.Code, report.FightID, err)
-				}
-			}
-			log.Printf("[INFO] Deleted %d obsolete reports", len(reportsToDelete))
-		}
-
-		return nil
-	})
+	// Deletion temporarily disabled to test the solution
+	return nil
 }
 
 // GetReportsByRankings retrieves reports corresponding to the provided rankings
@@ -249,5 +218,125 @@ func (r *ReportRepository) CountAllReports(ctx context.Context) (int64, error) {
 		return 0, fmt.Errorf("failed to count reports: %w", result.Error)
 	}
 
+	return count, nil
+}
+
+// GetAllUniqueReportReferences retrieves all unique report references from rankings
+func (r *ReportRepository) GetAllUniqueReportReferences(ctx context.Context) ([]*warcraftlogsBuilds.ClassRanking, error) {
+	var rankings []*warcraftlogsBuilds.ClassRanking
+
+	// Get all unique report_code + report_fight_id combinations
+	// Even though we're using rankings table, this is a report functionality
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.ClassRanking{}).
+		Distinct("report_code", "report_fight_id", "encounter_id").
+		Find(&rankings)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to get unique report references: %w", result.Error)
+	}
+
+	log.Printf("[INFO] Retrieved %d unique report references", len(rankings))
+	return rankings, nil
+}
+
+// MarkReportsForBuildProcessing marks reports as ready for build processing
+func (r *ReportRepository) MarkReportsForBuildProcessing(ctx context.Context, identifiers []ReportIdentifier, batchID string) error {
+	if len(identifiers) == 0 {
+		return nil
+	}
+
+	// Use a transaction for this operation
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, id := range identifiers {
+			result := tx.Model(&warcraftlogsBuilds.Report{}).
+				Where("code = ? AND fight_id = ?", id.Code, id.FightID).
+				Updates(map[string]interface{}{
+					"build_extraction_status": "pending",
+					"processing_batch_id":     batchID,
+					"build_extraction_at":     nil,
+				})
+
+			if result.Error != nil {
+				return fmt.Errorf("failed to mark report %s-#%d: %w", id.Code, id.FightID, result.Error)
+			}
+
+			if result.RowsAffected == 0 {
+				log.Printf("[WARN] No report found for %s-#%d when marking for build processing", id.Code, id.FightID)
+			}
+		}
+		return nil
+	})
+}
+
+// GetReportsNeedingBuildExtraction retrieves reports that need build extraction
+// This function is used to get reports that need build extraction
+// It takes a limit and an offset to paginate through the reports
+// It also takes a maxAge to only get reports that are older than the maxAge
+func (r *ReportRepository) GetReportsNeedingBuildExtraction(ctx context.Context, limit int, offset int, maxAge time.Duration) ([]*warcraftlogsBuilds.Report, error) {
+	var reports []*warcraftlogsBuilds.Report
+	minDate := time.Now().Add(-maxAge)
+
+	result := r.db.WithContext(ctx).
+		Where("(build_extraction_status = ? OR (build_extraction_status = ? AND build_extraction_at < ?)) AND created_at > ?",
+			"pending", "failed", minDate, minDate).
+		Order("created_at ASC, code ASC, fight_id ASC").
+		Limit(limit).
+		Offset(offset).
+		Find(&reports)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return []*warcraftlogsBuilds.Report{}, nil
+		}
+		return nil, fmt.Errorf("failed to get reports needing build extraction: %w", result.Error)
+	}
+	return reports, nil
+}
+
+// MarkReportsAsProcessedForBuilds updates the processing status of reports (for builds)
+func (r *ReportRepository) MarkReportsAsProcessedForBuilds(ctx context.Context, identifiers []ReportIdentifier, batchID string) error {
+	if len(identifiers) == 0 {
+		return nil
+	}
+
+	// Use a transaction for this operation
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, id := range identifiers {
+			result := tx.Model(&warcraftlogsBuilds.Report{}).
+				Where("code = ? AND fight_id = ?", id.Code, id.FightID).
+				Updates(map[string]interface{}{
+					"build_extraction_status": "processed",
+					"build_extraction_at":     time.Now(),
+					"processing_batch_id":     batchID,
+				})
+
+			if result.Error != nil {
+				return fmt.Errorf("failed to mark report %s-#%d as processed: %w", id.Code, id.FightID, result.Error)
+			}
+
+			if result.RowsAffected == 0 {
+				log.Printf("[ERROR] No report found for %s-#%d when marking as processed for builds", id.Code, id.FightID)
+				// This situation is probably an error, because the report should exist
+			}
+		}
+		return nil
+	})
+}
+
+// CountReportsNeedingBuildExtraction counts the total number of reports that need build extraction
+func (r *ReportRepository) CountReportsNeedingBuildExtraction(ctx context.Context, maxAge time.Duration) (int64, error) {
+	var count int64
+	minDate := time.Now().Add(-maxAge)
+
+	result := r.db.WithContext(ctx).
+		Model(&warcraftlogsBuilds.Report{}).
+		Where("(build_extraction_status = ? OR (build_extraction_status = ? AND build_extraction_at < ?)) AND created_at > ?",
+			"pending", "failed", minDate, minDate).
+		Count(&count)
+
+	if result.Error != nil {
+		return 0, fmt.Errorf("failed to count reports needing build extraction: %w", result.Error)
+	}
 	return count, nil
 }

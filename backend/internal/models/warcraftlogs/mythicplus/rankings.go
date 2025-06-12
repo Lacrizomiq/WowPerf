@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PlayerRanking représente un classement de joueur dans un donjon
+// PlayerRanking represents a player ranking in a dungeon
 type PlayerRanking struct {
 	gorm.Model
 	DungeonID     int     `json:"dungeon_id" gorm:"index"`
@@ -20,22 +20,22 @@ type PlayerRanking struct {
 	Duration      int64   `json:"duration"`
 	StartTime     int64   `json:"start_time"`
 
-	// Informations du rapport
+	// Report information
 	ReportCode      string `json:"report_code"`
 	ReportFightID   int    `json:"report_fight_id"`
 	ReportStartTime int64  `json:"report_start_time"`
 
-	// Informations de la guilde
+	// Guild information
 	GuildID      int    `json:"guild_id"`
 	GuildName    string `json:"guild_name"`
 	GuildFaction int    `json:"guild_faction"`
 
-	// Informations du serveur
+	// Server information
 	ServerID     int    `json:"server_id"`
 	ServerName   string `json:"server_name"`
 	ServerRegion string `json:"server_region"`
 
-	// Autres informations
+	// Other information
 	BracketData int       `json:"bracket_data"`
 	Faction     int       `json:"faction"`
 	Affixes     []int     `json:"affixes" gorm:"type:integer[]"`
@@ -94,4 +94,65 @@ func GetOrCreateRankingsUpdateState(db *gorm.DB) (*RankingsUpdateState, error) {
 	}
 
 	return &state, nil
+}
+
+// Structures for API data
+type Report struct {
+	Code      string `json:"code"`
+	FightID   int    `json:"fightID"`
+	StartTime int64  `json:"startTime"`
+}
+
+type Guild struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Faction int    `json:"faction"`
+}
+
+type Server struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Region string `json:"region"`
+}
+
+type Run struct {
+	DungeonID     int     `json:"dungeonId"`
+	Score         float64 `json:"score"`
+	Duration      int64   `json:"duration"`
+	StartTime     int64   `json:"startTime"`
+	HardModeLevel int     `json:"hardModeLevel"`
+	BracketData   int     `json:"bracketData"`
+	Medal         string  `json:"medal"`
+	Affixes       []int   `json:"affixes"`
+	Report        Report  `json:"report"`
+}
+
+type PlayerScore struct {
+	Name       string  `json:"name"`
+	Class      string  `json:"class"`
+	Spec       string  `json:"spec"`
+	Role       string  `json:"role"`
+	TotalScore float64 `json:"totalScore"`
+	Amount     float64 `json:"amount"`
+	Guild      Guild   `json:"guild"`
+	Server     Server  `json:"server"`
+	Faction    int     `json:"faction"`
+	Runs       []Run   `json:"runs"`
+}
+
+type RoleRankings struct {
+	Players []PlayerScore `json:"players"`
+	Count   int           `json:"count"`
+}
+
+type GlobalRankings struct {
+	Tanks   RoleRankings `json:"tanks"`
+	Healers RoleRankings `json:"healers"`
+	DPS     RoleRankings `json:"dps"`
+}
+
+// Temporary data structure
+type playerData struct {
+	ranking   PlayerRanking
+	dungeonID int
 }

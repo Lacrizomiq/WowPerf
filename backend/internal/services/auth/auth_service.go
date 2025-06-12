@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"wowperf/internal/models"
+	"wowperf/internal/services/captcha"
 	"wowperf/internal/services/email"
 
 	"github.com/dgrijalva/jwt-go"
@@ -51,6 +52,7 @@ type AuthService struct {
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
 	EmailService    *email.EmailService
+	CaptchaService  *captcha.CaptchaService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -59,6 +61,7 @@ func NewAuthService(
 	jwtSecret string,
 	redisClient *redis.Client,
 	emailService *email.EmailService,
+	captchaService *captcha.CaptchaService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -72,6 +75,7 @@ func NewAuthService(
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
 		EmailService:    emailService,
+		CaptchaService:  captchaService,
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
@@ -82,7 +86,7 @@ func NewAuthService(
 }
 
 // setAuthCookies sets the authentication cookies in the response
-func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+func (s *AuthService) SetAuthCookies(c *gin.Context, accessToken, refreshToken string) {
 	c.SetCookie(
 		"access_token",
 		accessToken,
@@ -105,9 +109,28 @@ func (s *AuthService) setAuthCookies(c *gin.Context, accessToken, refreshToken s
 }
 
 // SignUp registers a new user
-func (s *AuthService) SignUp(user *models.User) error {
+func (s *AuthService) SignUp(user *models.User, captchaToken string) error {
 	log.Printf("Starting SignUp process for user: %s", user.Username)
 
+	// 1. Vérifier le captcha en premier
+	if err := s.CaptchaService.VerifyToken(captchaToken); err != nil {
+		log.Printf("Captcha verification failed for user %s: %v", user.Username, err)
+		return fmt.Errorf("captcha verification failed: %w", err)
+	}
+
+	// 2. Vérifier si l'utilisateur existe déjà (username ou email)
+	var existingUser models.User
+	if err := s.DB.Where("email = ? OR username = ?", user.Email, user.Username).First(&existingUser).Error; err == nil {
+		if existingUser.Email == user.Email {
+			log.Printf("User already exists with email: %s", user.Email)
+			return fmt.Errorf("user with this email already exists")
+		} else {
+			log.Printf("User already exists with username: %s", user.Username)
+			return fmt.Errorf("user with this username already exists")
+		}
+	}
+
+	// 3. Hacher le mot de passe
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Failed to hash password: %v", err)
@@ -116,6 +139,7 @@ func (s *AuthService) SignUp(user *models.User) error {
 
 	user.Password = string(hashedPassword)
 
+	// 4. Créer l'utilisateur dans la base de données
 	if err := s.DB.Create(user).Error; err != nil {
 		log.Printf("Failed to create user in database: %v", err)
 		return fmt.Errorf("failed to create user: %w", err)
@@ -136,17 +160,17 @@ func (s *AuthService) Login(c *gin.Context, email, password string) error {
 		return ErrInvalidCredentials
 	}
 
-	accessToken, err := s.generateToken(user.ID, s.TokenExpiration)
+	accessToken, err := s.GenerateToken(user.ID, s.TokenExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshToken, err := s.generateRefreshToken(user.ID)
+	refreshToken, err := s.GenerateRefreshToken(user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	s.setAuthCookies(c, accessToken, refreshToken)
+	s.SetAuthCookies(c, accessToken, refreshToken)
 	return nil
 }
 
@@ -213,8 +237,8 @@ func (s *AuthService) IsTokenBlacklisted(token string) (bool, error) {
 	return true, nil
 }
 
-// generateToken creates a new JWT token
-func (s *AuthService) generateToken(userID uint, expiration time.Duration) (string, error) {
+// GenerateToken creates a new JWT token
+func (s *AuthService) GenerateToken(userID uint, expiration time.Duration) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -228,7 +252,7 @@ func (s *AuthService) generateToken(userID uint, expiration time.Duration) (stri
 }
 
 // generateRefreshToken creates a new refresh token
-func (s *AuthService) generateRefreshToken(userID uint) (string, error) {
+func (s *AuthService) GenerateRefreshToken(userID uint) (string, error) {
 	ctx := context.Background()
 	refreshToken := fmt.Sprintf("%d", time.Now().UnixNano())
 	err := s.RedisClient.Set(ctx, fmt.Sprintf("refresh_token:%s", refreshToken), userID, RefreshTokenDuration).Err()
@@ -274,19 +298,19 @@ func (s *AuthService) RefreshToken(c *gin.Context) error {
 	}
 
 	// Generate new access token
-	newAccessToken, err := s.generateToken(uint(userID), s.TokenExpiration)
+	newAccessToken, err := s.GenerateToken(uint(userID), s.TokenExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
 	// Generate new refresh token
-	newRefreshToken, err := s.generateRefreshToken(uint(userID))
+	newRefreshToken, err := s.GenerateRefreshToken(uint(userID))
 	if err != nil {
 		return fmt.Errorf("failed to generate new refresh token: %w", err)
 	}
 
 	// Set new cookie
-	s.setAuthCookies(c, newAccessToken, newRefreshToken)
+	s.SetAuthCookies(c, newAccessToken, newRefreshToken)
 
 	// Delete old refresh token
 	err = s.RedisClient.Del(ctx, fmt.Sprintf("refresh_token:%s", refreshToken)).Err()

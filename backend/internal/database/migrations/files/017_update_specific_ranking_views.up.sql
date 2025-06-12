@@ -19,7 +19,7 @@ WITH SpecPlayerScores AS (
         name,
         server_name,
         server_region,
-        ROUND(SUM(score), 2) AS total_score,
+        CAST(SUM(score) AS numeric(10,2)) AS total_score,
         MIN(role) AS role -- Role should be consistent for a spec
     FROM player_rankings
     WHERE deleted_at IS NULL
@@ -30,7 +30,7 @@ SpecAverages AS (
     SELECT 
         class,
         spec,
-        ROUND(AVG(total_score), 2) AS avg_global_score,
+        CAST(AVG(total_score) AS numeric(10,2)) AS avg_global_score,
         COUNT(*) AS player_count,
         MIN(role) AS role
     FROM SpecPlayerScores
@@ -58,7 +58,7 @@ WITH SpecPlayerScores AS (
         name,
         server_name,
         server_region,
-        ROUND(SUM(score), 2) AS total_score
+        CAST(SUM(score) AS numeric(10,2)) AS total_score
     FROM player_rankings
     WHERE deleted_at IS NULL 
     AND server_region <> 'CN' -- Filter CN players early to get complete top 10

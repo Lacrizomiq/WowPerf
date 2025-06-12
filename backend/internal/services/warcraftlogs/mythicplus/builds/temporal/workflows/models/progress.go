@@ -7,9 +7,12 @@ import "time"
 type Phase string
 
 const (
-	PhaseRankings Phase = "rankings"
-	PhaseReports  Phase = "reports"
-	PhaseBuilds   Phase = "builds"
+	PhaseRankings          Phase = "rankings"
+	PhaseReports           Phase = "reports"
+	PhaseBuilds            Phase = "builds"
+	PhaseEquipmentAnalysis Phase = "equipment_analysis"
+	PhaseTalentAnalysis    Phase = "talent_analysis"
+	PhaseStatAnalysis      Phase = "stat_analysis"
 )
 
 // WorkflowProgress tracks the overall progress of a workflow

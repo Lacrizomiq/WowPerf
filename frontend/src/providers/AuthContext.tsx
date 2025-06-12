@@ -8,10 +8,16 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { authService, AuthError, AuthErrorCode } from "@/libs/authService";
+import {
+  authService,
+  AuthError,
+  AuthErrorCode,
+  AuthMethod,
+} from "@/libs/authService";
 import { useRouter } from "next/navigation";
 import { resetCSRFToken, preloadCSRFToken } from "@/libs/api";
 import { usePathname } from "next/navigation";
+import { googleAuthService } from "@/libs/googleAuthService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -19,12 +25,21 @@ interface AuthContextType {
   user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
+  signup: (
+    username: string,
+    email: string,
+    password: string,
+    captchaToken?: string
+  ) => Promise<void>;
+  checkAuth: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
 }
 
 interface UserData {
   username: string;
   email?: string;
+  authMethod?: AuthMethod;
+  hasGoogleLinked?: boolean;
 }
 
 interface AuthState {
@@ -101,6 +116,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             return "Username already exists";
           case AuthErrorCode.EMAIL_EXISTS:
             return "Email already exists";
+          case AuthErrorCode.CAPTCHA_REQUIRED:
+            return "Please complete the captcha verification";
+          case AuthErrorCode.CAPTCHA_INVALID:
+            return "Captcha verification failed. Please try again.";
           case AuthErrorCode.NETWORK_ERROR:
             return "Connection error. Please check your internet connection.";
           case AuthErrorCode.UNAUTHORIZED:
@@ -180,12 +199,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [router, updateState]);
 
   const signup = useCallback(
-    async (username: string, email: string, password: string) => {
+    async (
+      username: string,
+      email: string,
+      password: string,
+      captchaToken?: string
+    ) => {
       try {
         const signupResponse = await authService.signup(
           username,
           email,
-          password
+          password,
+          captchaToken
         );
 
         updateState({
@@ -207,6 +232,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [router, handleAuthError, updateState]
   );
 
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      await googleAuthService.initiateGoogleLogin();
+      // Le backend redirige automatiquement vers Google
+    } catch (error) {
+      console.error("Failed to initiate Google login:", error);
+      const errorMessage = await handleAuthError(error);
+      throw new Error(errorMessage);
+    }
+  }, [handleAuthError]);
+
   const value = {
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
@@ -214,6 +250,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     login,
     logout,
     signup,
+    checkAuth,
+    loginWithGoogle,
   };
 
   if (state.isLoading) {
