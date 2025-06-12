@@ -80,7 +80,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
   return (
     <div className="space-y-6">
       {/* Header avec compteur et boutons */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Users className="w-5 h-5" />
@@ -100,7 +100,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
         </div>
 
         {/* Boutons d'action */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Rate limit indicator */}
           {ui.showRateLimit && (
             <div className="text-sm text-orange-400 flex items-center gap-2">
