@@ -1,4 +1,4 @@
-// Profile.tsx - Version HTML native complète sans shadcn/ui
+// Profile.tsx - Version HTML native complète sans restriction navigation
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -18,9 +18,6 @@ import ConnectionsTab from "./ConnectionsTab";
 const Profile: React.FC = () => {
   // State for active tab navigation
   const [activeTab, setActiveTab] = useState("account");
-
-  // Ref to track if Battle.net warning was already shown
-  const battleNetWarningShown = useRef(false);
 
   // Authentication and routing
   const { isAuthenticated } = useAuth();
@@ -45,28 +42,6 @@ const Profile: React.FC = () => {
       router.push("/login");
     }
   }, [isAuthenticated, router]);
-
-  // Check if the user can access the Characters tab - ONE TIME useEffect
-  useEffect(() => {
-    if (
-      activeTab === "characters" &&
-      !linkStatus?.linked &&
-      !battleNetWarningShown.current
-    ) {
-      battleNetWarningShown.current = true;
-      setActiveTab("connections");
-
-      // Use the centralized function with ID
-      showError(
-        "You must link your Battle.net account to access your characters",
-        TOAST_IDS.BATTLENET_LINKING
-      );
-
-      setTimeout(() => {
-        battleNetWarningShown.current = false;
-      }, 2000);
-    }
-  }, [activeTab, linkStatus]);
 
   // Loading state
   if (isLoading) {
@@ -101,10 +76,8 @@ const Profile: React.FC = () => {
   const handleBattleNetUnlink = async () => {
     try {
       await unlinkAccount();
-      // If in the Characters tab, redirect to Connections after disconnection
-      if (activeTab === "characters") {
-        setActiveTab("connections");
-      }
+      // Si on est dans l'onglet Characters, on peut y rester
+      // L'onglet affichera les personnages sauvegardés avec un warning
     } catch (error) {
       console.error("Failed to unlink Battle.net:", error);
     }
@@ -119,15 +92,9 @@ const Profile: React.FC = () => {
     }
   };
 
-  // Handle tab navigation
+  // Navigation libre vers tous les onglets
   const handleNavigate = (tab: string) => {
-    // Check if the user can access the Characters tab
-    if (tab === "characters" && !linkStatus?.linked) {
-      // The notification will be handled by the useEffect, no need to put it here
-      setActiveTab("connections"); // Redirect to the Connections tab
-    } else {
-      setActiveTab(tab);
-    }
+    setActiveTab(tab);
   };
 
   return (
@@ -147,36 +114,19 @@ const Profile: React.FC = () => {
           {/* Account Tab */}
           <AccountTab profile={profile} isActive={activeTab === "account"} />
 
-          {/* Characters Tab - only if Battle.net is linked */}
-          {activeTab === "characters" && linkStatus?.linked && (
-            <CharactersTab isActive={true} />
-          )}
-
-          {/* Show connections tab if trying to access characters without link */}
-          {activeTab === "characters" && !linkStatus?.linked && (
-            <ConnectionsTab
-              profile={profile}
-              linkStatus={linkStatus}
-              isLinkLoading={isLinkLoading}
-              isUnlinking={isUnlinking}
-              onBattleNetLink={handleBattleNetLink}
-              onBattleNetUnlink={handleBattleNetUnlink}
-              isActive={true}
-            />
-          )}
+          {/* Characters Tab - TOUJOURS accessible */}
+          <CharactersTab isActive={activeTab === "characters"} />
 
           {/* Connections Tab */}
-          {activeTab === "connections" && (
-            <ConnectionsTab
-              profile={profile}
-              linkStatus={linkStatus}
-              isLinkLoading={isLinkLoading}
-              isUnlinking={isUnlinking}
-              onBattleNetLink={handleBattleNetLink}
-              onBattleNetUnlink={handleBattleNetUnlink}
-              isActive={true}
-            />
-          )}
+          <ConnectionsTab
+            profile={profile}
+            linkStatus={linkStatus}
+            isLinkLoading={isLinkLoading}
+            isUnlinking={isUnlinking}
+            onBattleNetLink={handleBattleNetLink}
+            onBattleNetUnlink={handleBattleNetUnlink}
+            isActive={activeTab === "connections"}
+          />
         </div>
       </main>
     </div>

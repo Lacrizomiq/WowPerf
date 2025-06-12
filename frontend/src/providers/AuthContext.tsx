@@ -25,7 +25,12 @@ interface AuthContextType {
   user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
+  signup: (
+    username: string,
+    email: string,
+    password: string,
+    captchaToken?: string
+  ) => Promise<void>;
   checkAuth: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
 }
@@ -111,6 +116,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             return "Username already exists";
           case AuthErrorCode.EMAIL_EXISTS:
             return "Email already exists";
+          case AuthErrorCode.CAPTCHA_REQUIRED:
+            return "Please complete the captcha verification";
+          case AuthErrorCode.CAPTCHA_INVALID:
+            return "Captcha verification failed. Please try again.";
           case AuthErrorCode.NETWORK_ERROR:
             return "Connection error. Please check your internet connection.";
           case AuthErrorCode.UNAUTHORIZED:
@@ -190,12 +199,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [router, updateState]);
 
   const signup = useCallback(
-    async (username: string, email: string, password: string) => {
+    async (
+      username: string,
+      email: string,
+      password: string,
+      captchaToken?: string
+    ) => {
       try {
         const signupResponse = await authService.signup(
           username,
           email,
-          password
+          password,
+          captchaToken
         );
 
         updateState({

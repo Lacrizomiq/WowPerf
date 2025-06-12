@@ -58,10 +58,16 @@ export class BattleNetError extends Error {
 }
 
 export const battleNetService = {
-  // Initiates the Battle.net OAuth flow
-  async initiateLinking(): Promise<{ url: string }> {
+  // Support du paramètre autoRelink
+  async initiateLinking(autoRelink: boolean = false): Promise<{ url: string }> {
     try {
+      const params: Record<string, string> = {};
+      if (autoRelink) {
+        params.auto_relink = "true";
+      }
+
       const response = await api.get<{ url: string }>("/auth/battle-net/link", {
+        params,
         withCredentials: true,
       });
       return response.data;

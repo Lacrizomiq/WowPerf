@@ -50,6 +50,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
 
     restart: unless-stopped
 
@@ -79,6 +80,9 @@ services:
       - MAILTRAP_PASS=${MAILTRAP_PASS}
       - DOMAIN=${DOMAIN}
       - BACKEND_URL=${BACKEND_URL}
+      - HCAPTCHA_ENABLED=${HCAPTCHA_ENABLED}
+      - HCAPTCHA_SECRET_KEY=${HCAPTCHA_SECRET_KEY}
+      - HCAPTCHA_SITE_KEY=${HCAPTCHA_SITE_KEY}
     networks:
       - traefik
       - internal

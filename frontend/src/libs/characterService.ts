@@ -15,22 +15,7 @@ import { extractWaitTime } from "@/utils/character/character";
 // GESTION D'ERREURS
 // ============================================================================
 
-/**
- * Gestion centralisée des erreurs avec support spécialisé rate limiting
- *
- * Erreurs gérées:
- * - HTTP 429: Rate limit avec extraction du temps d'attente
- * - HTTP 401: Authentication requise
- * - HTTP 403: Ownership (personnage n'appartient pas à l'utilisateur)
- * - HTTP 404: Personnage non trouvé
- * - HTTP 5xx: Erreurs serveur
- *
- * @param error - Erreur originale (Axios ou autre)
- * @param defaultMessage - Message par défaut si erreur non reconnue
- * @throws CharacterError avec code spécialisé et waitTime pour rate limiting
- */
 function handleApiError(error: unknown, defaultMessage: string): never {
-  // Erreurs Axios (HTTP)
   if (axios.isAxiosError(error)) {
     const err = error as AxiosError<APIError | RateLimitError>;
 
@@ -42,6 +27,15 @@ function handleApiError(error: unknown, defaultMessage: string): never {
         );
 
       case 403:
+        // 🔥 NOUVEAU: Détecter spécifiquement "account_not_linked"
+        const errorData = err.response?.data as any;
+        if (errorData?.code === "account_not_linked") {
+          throw new CharacterError(
+            CharacterErrorCode.UNAUTHORIZED, // 🔥 Mapper vers UNAUTHORIZED pour déclencher auto-relink
+            "Battle.net account not linked. Please connect your account."
+          );
+        }
+
         throw new CharacterError(
           CharacterErrorCode.FORBIDDEN,
           "Access denied. Character may not belong to this user."
@@ -54,7 +48,6 @@ function handleApiError(error: unknown, defaultMessage: string): never {
         );
 
       case 429:
-        // Rate limit spécifique avec extraction du temps d'attente
         const rateLimitData = err.response?.data as RateLimitError;
         const waitTime = rateLimitData?.error
           ? extractWaitTime(rateLimitData.error)
@@ -78,7 +71,6 @@ function handleApiError(error: unknown, defaultMessage: string): never {
         );
     }
 
-    // Autres codes HTTP avec message personnalisé
     if (err.response?.data?.error) {
       throw new CharacterError(
         CharacterErrorCode.NETWORK_ERROR,
@@ -88,7 +80,6 @@ function handleApiError(error: unknown, defaultMessage: string): never {
     }
   }
 
-  // Erreurs non-Axios (réseau, JavaScript, etc.)
   throw new CharacterError(
     CharacterErrorCode.NETWORK_ERROR,
     defaultMessage,
@@ -100,24 +91,34 @@ function handleApiError(error: unknown, defaultMessage: string): never {
 // SERVICE PRINCIPAL POUR LES PERSONNAGES ENRICHIS
 // ============================================================================
 
-/**
- * Service pour gérer les personnages enrichis via le nouveau système orchestré
- *
- * Architecture:
- * - syncAndEnrich: Première sync après OAuth (modal onboarding)
- * - refreshAndEnrich: Bouton refresh quotidien
- * - getCharacters: Affichage instantané depuis BDD
- * - enrichCharacter: Mise à jour individuelle
- */
 export const characterService = {
   /**
+   * 🔥 SIMPLIFIÉ: Récupère TOUJOURS les personnages depuis la BDD
+   * Fonctionne même si le token Battle.net est expiré
+   * Le backend doit retourner les personnages stockés en base
+   */
+  async getCharacters(): Promise<EnrichedUserCharacter[]> {
+    try {
+      const response = await api.get<GetCharactersResponse>("/characters", {
+        headers: {
+          Accept: "application/json",
+        },
+        withCredentials: true,
+      });
+      return response.data.characters;
+    } catch (error) {
+      // Si erreur, retourner tableau vide au lieu de throw
+      // L'utilisateur verra "aucun personnage" au lieu d'une erreur
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        return []; // Pas encore de personnages synchronisés
+      }
+      throw handleApiError(error, "Failed to get characters");
+    }
+  },
+
+  /**
    * Synchronise et enrichit tous les personnages d'un compte Battle.net
-   *
-   * Usage: Première utilisation après liaison OAuth
-   * Flux: Battle.net API → Sync BDD → Enrichissement → Sauvegarde
-   *
-   * @param region - Région Battle.net (eu, us, kr, tw)
-   * @returns Résultat avec compteurs et erreurs éventuelles
+   * Usage: Première utilisation après liaison OAuth OU re-sync après token expiré
    */
   async syncAndEnrich(region: string = "eu"): Promise<SyncAndEnrichResult> {
     try {
@@ -140,12 +141,7 @@ export const characterService = {
 
   /**
    * Rafraîchit et enrichit les personnages existants
-   *
    * Usage: Bouton "Refresh" pour mises à jour régulières
-   * Flux: BDD existante → API Blizzard → Enrichissement → Update BDD
-   *
-   * @param region - Région Battle.net (eu, us, kr, tw)
-   * @returns Résultat avec compteurs et erreurs éventuelles
    */
   async refreshAndEnrich(
     region: string = "eu"
@@ -169,35 +165,8 @@ export const characterService = {
   },
 
   /**
-   * Récupère tous les personnages enrichis de l'utilisateur
-   *
-   * Usage: Affichage principal - données instantanées depuis BDD
-   * Avantages: Pas d'appel API Blizzard, données enrichies disponibles
-   *
-   * @returns Liste des personnages avec toutes les données enrichies
-   */
-  async getCharacters(): Promise<EnrichedUserCharacter[]> {
-    try {
-      const response = await api.get<GetCharactersResponse>("/characters", {
-        headers: {
-          Accept: "application/json",
-        },
-        withCredentials: true,
-      });
-      return response.data.characters;
-    } catch (error) {
-      throw handleApiError(error, "Failed to get characters");
-    }
-  },
-
-  /**
    * Enrichit un personnage spécifique
-   *
    * Usage: Bouton "Update" sur un personnage individuel
-   * Flux: Character ID → API Blizzard → Enrichissement → Update BDD
-   *
-   * @param characterId - ID du personnage à enrichir
-   * @returns Message de confirmation
    */
   async enrichCharacter(characterId: number): Promise<{ message: string }> {
     try {
