@@ -30,6 +30,10 @@ export enum AuthErrorCode {
   INVALID_CSRF_TOKEN = "INVALID_CSRF_TOKEN",
   UNAUTHORIZED = "unauthorized",
 
+  // Captcha errors
+  CAPTCHA_REQUIRED = "captcha_required",
+  CAPTCHA_INVALID = "captcha_invalid",
+
   // Technical errors
   NETWORK_ERROR = "network_error",
   SERVER_ERROR = "server_error",
@@ -74,13 +78,15 @@ export const authService = {
   async signup(
     username: string,
     email: string,
-    password: string
+    password: string,
+    captchaToken?: string
   ): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>("/auth/signup", {
         username,
         email,
         password,
+        captcha_token: captchaToken,
       });
 
       return response.data;
@@ -104,6 +110,16 @@ export const authService = {
             throw new AuthError(
               AuthErrorCode.INVALID_INPUT,
               err.response?.data?.error || "Invalid input data"
+            );
+          case "captcha_required":
+            throw new AuthError(
+              AuthErrorCode.CAPTCHA_REQUIRED,
+              "Please complete the captcha verification"
+            );
+          case "captcha_invalid":
+            throw new AuthError(
+              AuthErrorCode.CAPTCHA_INVALID,
+              "Captcha verification failed"
             );
           default:
             throw new AuthError(

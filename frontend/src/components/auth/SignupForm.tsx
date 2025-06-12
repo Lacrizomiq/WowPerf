@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "@/providers/AuthContext";
 import Link from "next/link";
 import { AuthError, AuthErrorCode } from "@/libs/authService";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import GoogleLoginButton from "@/components/Shared/GoogleLoginButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,13 +37,46 @@ const SignupForm: React.FC = () => {
 
   const { signup } = useAuth();
 
+  // ← NOUVEAUX STATES POUR HCAPTCHA
+  const [captchaToken, setCaptchaToken] = useState<string>("");
+  const captchaRef = useRef<HCaptcha>(null);
+
+  // Vérifier si hCaptcha est activé (présence de la clé dans l'env)
+  const captchaEnabled = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
+
+  const onCaptchaVerify = (token: string) => {
+    console.log("[CAPTCHA] Token verified:", token);
+    setCaptchaToken(token);
+  };
+
+  const onCaptchaExpire = () => {
+    console.log("[CAPTCHA] Token expired");
+    setCaptchaToken("");
+  };
+
+  const onCaptchaError = (err: string) => {
+    console.error("[CAPTCHA] Error:", err);
+    setCaptchaToken("");
+  };
+
+  const resetCaptcha = () => {
+    if (captchaRef.current) {
+      captchaRef.current.resetCaptcha();
+      setCaptchaToken("");
+    }
+  };
+
   // Form submission handler using React Hook Form
   const onSubmit = async (data: SignupFormData) => {
     try {
-      await signup(data.username, data.email, data.password);
+      await signup(data.username, data.email, data.password, captchaToken);
       // Redirection is handled in AuthContext
     } catch (err) {
       console.error("Signup error:", err);
+
+      if (captchaEnabled) {
+        resetCaptcha();
+      }
 
       if (err instanceof AuthError) {
         switch (err.code) {
@@ -56,6 +90,18 @@ const SignupForm: React.FC = () => {
             setError("email", {
               type: "custom",
               message: "This email is already registered",
+            });
+            break;
+          case AuthErrorCode.CAPTCHA_REQUIRED:
+            setError("root", {
+              type: "custom",
+              message: "Please complete the captcha verification",
+            });
+            break;
+          case AuthErrorCode.CAPTCHA_INVALID:
+            setError("root", {
+              type: "custom",
+              message: "Captcha verification failed. Please try again.",
             });
             break;
           case AuthErrorCode.INVALID_INPUT:
@@ -107,6 +153,8 @@ const SignupForm: React.FC = () => {
       }
     }
   };
+
+  const isFormValid = captchaEnabled ? captchaToken !== "" : true;
 
   return (
     <div className="w-full space-y-6">
@@ -245,6 +293,30 @@ const SignupForm: React.FC = () => {
           </p>
         </div>
 
+        {/* HCAPTCHA */}
+        {captchaEnabled && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Security Verification
+            </label>
+            <div className="flex justify-center">
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+                onVerify={onCaptchaVerify}
+                onExpire={onCaptchaExpire}
+                onError={onCaptchaError}
+                theme="dark"
+              />
+            </div>
+            {captchaEnabled && !captchaToken && (
+              <p className="text-xs text-muted-foreground text-center">
+                Please complete the security verification above
+              </p>
+            )}
+          </div>
+        )}
+
         {errors.root && (
           <Alert variant="destructive">
             <AlertDescription>{errors.root.message}</AlertDescription>
@@ -252,7 +324,11 @@ const SignupForm: React.FC = () => {
         )}
 
         <div>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting || !isFormValid}
+            className="w-full"
+          >
             {isSubmitting ? "Creating account..." : "Sign Up"}
           </Button>
         </div>

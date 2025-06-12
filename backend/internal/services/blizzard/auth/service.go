@@ -109,10 +109,10 @@ func (s *BattleNetAuthService) getAndValidateOAuthState(ctx context.Context, sta
 	return state, nil
 }
 
-// InitiateAuth starts the OAuth2 flow by generating the authorization URL
-func (s *BattleNetAuthService) InitiateAuth(ctx context.Context, userID uint) (string, error) {
-	// Generate a new OAuth state
-	state, err := NewOAuthState(userID)
+// 🔥 NOUVEAU: InitiateAuthWithOptions avec support auto_relink
+func (s *BattleNetAuthService) InitiateAuthWithOptions(ctx context.Context, userID uint, autoRelink bool) (string, error) {
+	// Generate a new OAuth state with auto_relink flag
+	state, err := NewOAuthState(userID, autoRelink)
 	if err != nil {
 		return "", fmt.Errorf("failed to create OAuth state: %w", err)
 	}
@@ -126,21 +126,34 @@ func (s *BattleNetAuthService) InitiateAuth(ctx context.Context, userID uint) (s
 	return s.oauthConfig.AuthCodeURL(state.State), nil
 }
 
-// ExchangeCodeForToken exchanges an authorization code for access and refresh tokens
-func (s *BattleNetAuthService) ExchangeCodeForToken(ctx context.Context, code, stateParam string) (*oauth2.Token, uint, error) {
+// InitiateAuth starts the OAuth2 flow by generating the authorization URL
+// 🔥 MODIFIÉ: Délègue à InitiateAuthWithOptions pour compatibilité
+func (s *BattleNetAuthService) InitiateAuth(ctx context.Context, userID uint) (string, error) {
+	return s.InitiateAuthWithOptions(ctx, userID, false)
+}
+
+// 🔥 NOUVEAU: ExchangeCodeForTokenWithOptions avec support auto_relink
+func (s *BattleNetAuthService) ExchangeCodeForTokenWithOptions(ctx context.Context, code, stateParam string) (*oauth2.Token, uint, bool, error) {
 	// Verify and get the state
 	state, err := s.getAndValidateOAuthState(ctx, stateParam)
 	if err != nil {
-		return nil, 0, fmt.Errorf("invalid OAuth state: %w", err)
+		return nil, 0, false, fmt.Errorf("invalid OAuth state: %w", err)
 	}
 
 	// Exchange code for token
 	token, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to exchange code for token: %w", err)
+		return nil, 0, false, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
 
-	return token, state.UserID, nil
+	return token, state.UserID, state.AutoRelink, nil
+}
+
+// ExchangeCodeForToken exchanges an authorization code for access and refresh tokens
+// 🔥 MODIFIÉ: Délègue à ExchangeCodeForTokenWithOptions pour compatibilité
+func (s *BattleNetAuthService) ExchangeCodeForToken(ctx context.Context, code, stateParam string) (*oauth2.Token, uint, error) {
+	token, userID, _, err := s.ExchangeCodeForTokenWithOptions(ctx, code, stateParam)
+	return token, userID, err
 }
 
 // GetUserInfo retrieves the user's Battle.net profile information

@@ -50,7 +50,7 @@ func (h *BattleNetAuthHandler) RegisterRoutes(r *gin.Engine, requireAuth gin.Han
 	}
 }
 
-// InitiateAuth starts the Battle.net OAuth flow
+// 🔥 MODIFIÉ: InitiateAuth avec support auto_relink
 func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 	// Get user ID from context
 	userID := c.GetUint("user_id")
@@ -62,8 +62,11 @@ func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 		return
 	}
 
-	// Initiate the OAuth flow with the user ID
-	authURL, err := h.BattleNetAuthService.InitiateAuth(c.Request.Context(), userID)
+	// 🔥 NOUVEAU: Vérifier le paramètre auto_relink
+	autoRelink := c.Query("auto_relink") == "true"
+
+	// Initiate the OAuth flow with the user ID and auto_relink flag
+	authURL, err := h.BattleNetAuthService.InitiateAuthWithOptions(c.Request.Context(), userID, autoRelink)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to initiate Battle.net authentication",
@@ -79,7 +82,7 @@ func (h *BattleNetAuthHandler) InitiateAuth(c *gin.Context) {
 	})
 }
 
-// HandleCallback processes the Battle.net OAuth callback
+// 🔥 MODIFIÉ: HandleCallback avec support auto_relink
 func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 	log.Printf("Starting OAuth callback process")
 
@@ -104,8 +107,8 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	// 3. Échanger le code et VALIDER que l'état correspond à l'utilisateur authentifié
-	token, stateUserID, err := h.BattleNetAuthService.ExchangeCodeForToken(c.Request.Context(), code, state)
+	// 3. 🔥 NOUVEAU: Échanger le code et récupérer les infos du state (incluant auto_relink)
+	token, stateUserID, autoRelink, err := h.BattleNetAuthService.ExchangeCodeForTokenWithOptions(c.Request.Context(), code, state)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Failed to exchange code for token",
@@ -126,8 +129,8 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Token exchange successful: userID=%d, token_type=%s, expires=%v",
-		stateUserID, token.TokenType, token.Expiry)
+	log.Printf("Token exchange successful: userID=%d, token_type=%s, expires=%v, auto_relink=%t",
+		stateUserID, token.TokenType, token.Expiry, autoRelink)
 
 	// 5. Lier le compte Battle.net à l'utilisateur (userID déjà validé)
 	if err := h.BattleNetAuthService.LinkUserAccount(c.Request.Context(), token, stateUserID); err != nil {
@@ -145,18 +148,20 @@ func (h *BattleNetAuthHandler) HandleCallback(c *gin.Context) {
 	if err != nil {
 		// Le linking a réussi mais impossible de récupérer les infos
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Battle.net authentication successful",
-			"code":    "auth_successful",
-			"linked":  true,
+			"message":     "Battle.net authentication successful",
+			"code":        "auth_successful",
+			"linked":      true,
+			"auto_relink": autoRelink, // 🔥 Inclure l'info auto_relink
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "Battle.net authentication successful",
-		"code":      "auth_successful",
-		"battleTag": userInfo.BattleTag,
-		"linked":    true,
+		"message":     "Battle.net authentication successful",
+		"code":        "auth_successful",
+		"battleTag":   userInfo.BattleTag,
+		"linked":      true,
+		"auto_relink": autoRelink, // 🔥 Inclure l'info auto_relink
 	})
 }
 

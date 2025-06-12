@@ -15,26 +15,18 @@ export function BattleNetCallbackHandler() {
   const callbackProcessed = useRef(false);
   const queryClient = useQueryClient();
 
-  // State for onboarding modal
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  // State for the flow
   const [linkSuccess, setLinkSuccess] = useState(false);
+  const [autoSyncTriggered, setAutoSyncTriggered] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
-  // Check if user has characters to determine if we should show modal
-  const { characters, region, isAuthenticated } = useCharacters();
+  // Hook pour la sync
+  const { characters, actions, isLoading } = useCharacters();
 
-  // Debug logs pour comprendre le problème
-  console.log("BattleNetCallback Debug:", {
-    showOnboardingModal,
-    linkSuccess,
-    characters,
-    charactersLength: characters?.length,
-    isAuthenticated,
-    region,
-    shouldShow:
-      showOnboardingModal &&
-      linkSuccess &&
-      (!characters || characters.length === 0),
-  });
+  // 🔥 Détection si on vient d'un auto-relink (URL param OU réponse backend)
+  const [isAutoRelink, setIsAutoRelink] = useState(
+    searchParams.get("auto_relink") === "true"
+  );
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -54,17 +46,18 @@ export function BattleNetCallbackHandler() {
         }
 
         const response = await api.get("/auth/battle-net/callback", {
-          params: {
-            code,
-            state,
-          },
+          params: { code, state },
           withCredentials: true,
         });
 
-        console.log("Battle.net callback response:", response.data);
-
         if (response.data.linked) {
-          // Invalidate both queries
+          // Détecter auto_relink depuis la réponse backend aussi
+          const autoRelinkFromResponse = response.data.auto_relink === true;
+          if (autoRelinkFromResponse) {
+            setIsAutoRelink(true);
+          }
+
+          // Invalider les queries
           await Promise.all([
             queryClient.invalidateQueries({
               queryKey: ["battleNetLinkStatus"],
@@ -79,11 +72,27 @@ export function BattleNetCallbackHandler() {
 
           setLinkSuccess(true);
 
-          // Wait a bit for queries to invalidate, then check characters
-          setTimeout(() => {
-            console.log("Checking characters after delay...");
-            setShowOnboardingModal(true);
-          }, 2000); // Increased delay to 2 seconds
+          // 🔥 LOGIQUE SIMPLIFIÉE
+          if (isAutoRelink || autoRelinkFromResponse) {
+            // Auto-relink depuis un click sync → lancer la sync automatiquement
+            toast.success("Now syncing your characters...", { duration: 2000 });
+
+            // Attendre un peu que les queries se mettent à jour
+            setTimeout(() => {
+              actions.syncAndEnrich();
+              setAutoSyncTriggered(true);
+
+              // Rediriger après la sync
+              setTimeout(() => {
+                router.push("/profile?tab=characters&success=auto_sync");
+              }, 2000);
+            }, 1000);
+          } else {
+            // Link normal → montrer le modal d'onboarding pour les nouveaux utilisateurs
+            setTimeout(() => {
+              setShowOnboardingModal(true);
+            }, 1500);
+          }
         } else {
           throw new Error(response.data.error || "Failed to link account");
         }
@@ -98,7 +107,7 @@ export function BattleNetCallbackHandler() {
           toast.error(errorMessage, { id: toastId });
           router.push(`/profile?error=${errorCode}`);
         } else {
-          toast.error("An unexpected error occurred", { id: toastId });
+          toast.error("An unexpected error occurred");
           router.push("/profile?error=unknown");
         }
       }
@@ -107,25 +116,14 @@ export function BattleNetCallbackHandler() {
     if (searchParams.get("code")) {
       handleCallback();
     }
-  }, [router, searchParams, queryClient]);
+  }, [router, searchParams, queryClient, isAutoRelink, actions]);
 
-  // Handle onboarding modal completion - no callbacks needed
-  // Modal will handle its own navigation internally
-
-  // Show onboarding modal when:
-  // 1. Link was successful
-  // 2. Modal should be shown (after timeout)
-  // Note: We'll let the modal itself handle the character checking
-  const shouldShowModal = showOnboardingModal && linkSuccess;
-
-  console.log("shouldShowModal:", shouldShowModal, {
-    showOnboardingModal,
-    linkSuccess,
-  });
+  // Affichage conditionnel selon le type de flow
+  const shouldShowModal = showOnboardingModal && linkSuccess && !isAutoRelink;
 
   return (
     <>
-      {/* Loading screen */}
+      {/* Loading screen adaptatif */}
       <div className="flex items-center justify-center min-h-screen bg-gradient-dark">
         <div className="text-center max-w-md mx-auto px-4">
           {linkSuccess ? (
@@ -148,11 +146,30 @@ export function BattleNetCallbackHandler() {
               <h2 className="text-xl font-bold mb-4 text-green-500">
                 Battle.net Account Linked!
               </h2>
-              <p className="text-sm text-gray-400">
-                Preparing your character sync...
-              </p>
+
+              {isAutoRelink && autoSyncTriggered ? (
+                /* Auto-sync en cours */
+                <>
+                  <div className="mb-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    {isLoading.sync
+                      ? "Syncing your characters..."
+                      : "Redirecting to your profile..."}
+                  </p>
+                </>
+              ) : (
+                /* Préparation onboarding */
+                <p className="text-sm text-gray-400">
+                  {isAutoRelink
+                    ? "Starting character sync..."
+                    : "Preparing your character sync..."}
+                </p>
+              )}
             </>
           ) : (
+            /* État de linking */
             <>
               <h2 className="text-xl font-bold mb-4">
                 Linking your Battle.net account...
@@ -170,7 +187,7 @@ export function BattleNetCallbackHandler() {
         </div>
       </div>
 
-      {/* Onboarding Modal */}
+      {/* Onboarding Modal - seulement pour les nouveaux utilisateurs */}
       <OnboardingModal isOpen={shouldShowModal} />
     </>
   );

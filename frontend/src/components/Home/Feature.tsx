@@ -36,7 +36,7 @@ export default function Feature() {
           </h2>
           <p className="text-slate-400 text-base max-w-2xl mx-auto">
             Experience a preview of our analytical tools designed to enhance
-            your World of Warcraft gameplay.
+            your World of Warcraft optimization.
           </p>
         </div>
 

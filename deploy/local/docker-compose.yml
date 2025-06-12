@@ -36,12 +36,13 @@ services:
       - NEXT_PUBLIC_APP_URL=${FRONTEND_URL}
       - WATCHPACK_POLLING=${WATCHPACK_POLLING}
       - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      - NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
     networks:
       - traefik
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/temporal`) && !PathPrefix(`/adminer`) && !PathPrefix(`/traefik`) && !PathPrefix(`/grafana`) && !PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/temporal`) && !PathPrefix(`/adminer`) && !PathPrefix(`/traefik`) && !PathPrefix(`/mailhog`) && !PathPrefix(`/prometheus`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
@@ -80,6 +81,9 @@ services:
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
       - SMTP_FROM=noreply@localhost
+      - HCAPTCHA_ENABLED=false
+      - HCAPTCHA_SECRET_KEY=${HCAPTCHA_SECRET_KEY}
+      - HCAPTCHA_SITE_KEY=${HCAPTCHA_SITE_KEY}
     networks:
       - traefik
       - internal
