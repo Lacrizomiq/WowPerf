@@ -5,13 +5,14 @@ import {
 } from "@/types/warcraftlogs/builds/classSpec";
 import EnchantGemsContent from "@/components/BuildsAnalysis/mythicplus/enchants-gems/EnchantGemsContent";
 
-export default function BuildEnchantsGemsPage({
+export default async function BuildEnchantsGemsPage({
   params,
 }: {
-  params: { class: string; spec: string };
+  params: Promise<{ class: string; spec: string }>;
 }) {
-  const className = params.class as WowClassParam;
-  const spec = params.spec as WowSpecParam;
+  const resolvedParams = await params;
+  const className = resolvedParams.class as WowClassParam;
+  const spec = resolvedParams.spec as WowSpecParam;
 
   return <EnchantGemsContent className={className} spec={spec} />;
 }
