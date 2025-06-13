@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, use } from "react";
 import CharacterSummary from "@/components/Character/CharacterSummary";
 import { useWowheadTooltips } from "@/hooks/useWowheadTooltips";
 import CharacterTalent from "@/components/Character/CharacterTalent";
@@ -11,10 +11,10 @@ import { Shield, ScrollText, Sword, Hourglass } from "lucide-react";
 import { useGetBlizzardCharacterProfile } from "@/hooks/useBlizzardApi";
 import "@/app/globals.css";
 
-export default function CharacterLayout({
+export default function CharacterPage({
   params,
 }: {
-  params: {
+  params: Promise<{
     region: string;
     realm: string;
     name: string;
@@ -22,9 +22,12 @@ export default function CharacterLayout({
     expansion?: string;
     namespace: string;
     locale: string;
-  };
+  }>;
 }) {
-  const { region, realm, name, seasonSlug, expansion } = params;
+  // Utilisation deuse() pour résoudre la Promise dans un Client Component
+  const resolvedParams = use(params);
+  const { region, realm, name, seasonSlug, expansion } = resolvedParams;
+
   const [selectedTab, setSelectedTab] = useState<string>("gear");
   const {
     data: characterProfile,
