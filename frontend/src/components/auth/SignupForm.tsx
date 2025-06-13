@@ -37,7 +37,7 @@ const SignupForm: React.FC = () => {
 
   const { signup } = useAuth();
 
-  // ← NOUVEAUX STATES POUR HCAPTCHA
+  // States for HCAPTCHA
   const [captchaToken, setCaptchaToken] = useState<string>("");
   const captchaRef = useRef<HCaptcha>(null);
 
@@ -45,12 +45,10 @@ const SignupForm: React.FC = () => {
   const captchaEnabled = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   const onCaptchaVerify = (token: string) => {
-    console.log("[CAPTCHA] Token verified:", token);
     setCaptchaToken(token);
   };
 
   const onCaptchaExpire = () => {
-    console.log("[CAPTCHA] Token expired");
     setCaptchaToken("");
   };
 

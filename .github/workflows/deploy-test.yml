@@ -26,13 +26,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract HCAPTCHA variable
+        run: |
+          HCAPTCHA_VALUE=$(echo "${{ vars.ENV_TEST }}" | grep "^NEXT_PUBLIC_HCAPTCHA_SITE_KEY=" | cut -d'=' -f2)
+          echo "NEXT_PUBLIC_HCAPTCHA_SITE_KEY=$HCAPTCHA_VALUE" >> $GITHUB_ENV
+          echo "Extracted HCAPTCHA: $HCAPTCHA_VALUE"
+
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
           tags: ${{ env.FRONTEND_IMAGE }}:test
-          target: production # Specify the stage to use
+          target: production
+          build-args: |
+            NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY }}
           cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:test
           cache-to: type=inline
 
@@ -42,7 +50,7 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ env.BACKEND_IMAGE }}:test
-          target: production # Specify the stage to use
+          target: production
           cache-from: type=registry,ref=${{ env.BACKEND_IMAGE }}:test
           cache-to: type=inline
 
