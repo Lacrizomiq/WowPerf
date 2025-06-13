@@ -12,7 +12,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export default function Statistics() {
+export default function Features() {
   return (
     <section className="py-2 pb-8 bg-[#1A1D21]">
       <div className="container mx-auto px-4">
@@ -114,20 +114,26 @@ function FeatureCard({
               ? "border-purple-700/50 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200"
               : "bg-purple-600 hover:bg-purple-700"
           }`}
-          asChild
+          disabled={comingSoon}
+          {...(!comingSoon && { asChild: true })}
         >
-          <Link href={link}>
-            {comingSoon && (
+          {comingSoon ? (
+            <>
               <Badge
                 variant="outline"
                 className="mr-2 border-purple-600 text-purple-400"
               >
                 Coming Soon
               </Badge>
-            )}
-            {linkText}
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+              {linkText}
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </>
+          ) : (
+            <Link href={link}>
+              {linkText}
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          )}
         </Button>
       </div>
     </div>
