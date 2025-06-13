@@ -37,7 +37,7 @@ const SignupForm: React.FC = () => {
 
   const { signup } = useAuth();
 
-  // ← NOUVEAUX STATES POUR HCAPTCHA
+  // States for HCAPTCHA
   const [captchaToken, setCaptchaToken] = useState<string>("");
   const captchaRef = useRef<HCaptcha>(null);
 
