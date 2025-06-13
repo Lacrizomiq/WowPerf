@@ -30,6 +30,7 @@ import (
 	googleauthService "wowperf/internal/services/auth/google"
 	serviceBlizzard "wowperf/internal/services/blizzard"
 	bnetAuth "wowperf/internal/services/blizzard/auth"
+	captchaService "wowperf/internal/services/captcha"
 	characterService "wowperf/internal/services/character"
 	email "wowperf/internal/services/email"
 	serviceRaiderio "wowperf/internal/services/raiderio"
@@ -120,12 +121,18 @@ func initializeServices(db *gorm.DB, cacheService cache.CacheService, cacheManag
 		return nil, fmt.Errorf("failed to initialize email service: %w", err)
 	}
 
+	captchaService := captchaService.NewCaptchaService()
+	if err := captchaService.ValidateConfig(); err != nil {
+		return nil, fmt.Errorf("captcha configuration error: %w", err)
+	}
+
 	// Main authentication service
 	authService := auth.NewAuthService(
 		db,
 		os.Getenv("JWT_SECRET"),
 		redisClient,
 		emailService,
+		captchaService,
 	)
 
 	// Google OAuth authentication service

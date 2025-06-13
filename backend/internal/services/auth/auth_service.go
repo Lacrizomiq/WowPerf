@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"wowperf/internal/models"
+	"wowperf/internal/services/captcha"
 	"wowperf/internal/services/email"
 
 	"github.com/dgrijalva/jwt-go"
@@ -51,6 +52,7 @@ type AuthService struct {
 	TokenExpiration time.Duration
 	CookieConfig    CookieConfig
 	EmailService    *email.EmailService
+	CaptchaService  *captcha.CaptchaService
 }
 
 // NewAuthService creates a new instance of AuthService
@@ -59,6 +61,7 @@ func NewAuthService(
 	jwtSecret string,
 	redisClient *redis.Client,
 	emailService *email.EmailService,
+	captchaService *captcha.CaptchaService,
 ) *AuthService {
 
 	domain := os.Getenv("DOMAIN")
@@ -72,6 +75,7 @@ func NewAuthService(
 		RedisClient:     redisClient,
 		TokenExpiration: AccessTokenDuration,
 		EmailService:    emailService,
+		CaptchaService:  captchaService,
 		CookieConfig: CookieConfig{
 			Domain:   domain,
 			Path:     "/",
@@ -105,9 +109,28 @@ func (s *AuthService) SetAuthCookies(c *gin.Context, accessToken, refreshToken s
 }
 
 // SignUp registers a new user
-func (s *AuthService) SignUp(user *models.User) error {
+func (s *AuthService) SignUp(user *models.User, captchaToken string) error {
 	log.Printf("Starting SignUp process for user: %s", user.Username)
 
+	// 1. Vérifier le captcha en premier
+	if err := s.CaptchaService.VerifyToken(captchaToken); err != nil {
+		log.Printf("Captcha verification failed for user %s: %v", user.Username, err)
+		return fmt.Errorf("captcha verification failed: %w", err)
+	}
+
+	// 2. Vérifier si l'utilisateur existe déjà (username ou email)
+	var existingUser models.User
+	if err := s.DB.Where("email = ? OR username = ?", user.Email, user.Username).First(&existingUser).Error; err == nil {
+		if existingUser.Email == user.Email {
+			log.Printf("User already exists with email: %s", user.Email)
+			return fmt.Errorf("user with this email already exists")
+		} else {
+			log.Printf("User already exists with username: %s", user.Username)
+			return fmt.Errorf("user with this username already exists")
+		}
+	}
+
+	// 3. Hacher le mot de passe
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Failed to hash password: %v", err)
@@ -116,6 +139,7 @@ func (s *AuthService) SignUp(user *models.User) error {
 
 	user.Password = string(hashedPassword)
 
+	// 4. Créer l'utilisateur dans la base de données
 	if err := s.DB.Create(user).Error; err != nil {
 		log.Printf("Failed to create user in database: %v", err)
 		return fmt.Errorf("failed to create user: %w", err)

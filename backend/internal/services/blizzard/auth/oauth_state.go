@@ -11,9 +11,10 @@ import (
 
 // OAuthState represents the state of an OAuth request
 type OAuthState struct {
-	State     string    `json:"state"`      // Random state string
-	UserID    uint      `json:"user_id"`    // User ID
-	ExpiresAt time.Time `json:"expires_at"` // Expiration time
+	State      string    `json:"state"`       // Random state string
+	UserID     uint      `json:"user_id"`     // User ID
+	AutoRelink bool      `json:"auto_relink"` // 🔥 NOUVEAU: Flag pour auto-relink
+	ExpiresAt  time.Time `json:"expires_at"`  // Expiration time
 }
 
 // GenerateRandomState generates a random state string
@@ -25,8 +26,8 @@ func generateRandomState(length int) (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }
 
-// NewOAuthState creates a new OAuthState instance
-func NewOAuthState(userID uint) (*OAuthState, error) {
+// 🔥 MODIFIÉ: NewOAuthState avec support AutoRelink
+func NewOAuthState(userID uint, autoRelink bool) (*OAuthState, error) {
 	// Generate random state string
 	state, err := generateRandomState(32)
 	if err != nil {
@@ -34,9 +35,10 @@ func NewOAuthState(userID uint) (*OAuthState, error) {
 	}
 
 	return &OAuthState{
-		State:     state,
-		UserID:    userID,
-		ExpiresAt: time.Now().Add(15 * time.Minute), // State expires in 15 minutes
+		State:      state,
+		UserID:     userID,
+		AutoRelink: autoRelink,                       // 🔥 NOUVEAU
+		ExpiresAt:  time.Now().Add(15 * time.Minute), // State expires in 15 minutes
 	}, nil
 }
 

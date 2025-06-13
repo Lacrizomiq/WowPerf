@@ -124,7 +124,7 @@ func (h *CharactersHandler) RefreshAndEnrichCharacters(c *gin.Context) {
 	})
 }
 
-// GetUserCharacters - Récupère tous les personnages enrichis
+// 🔥 MODIFIÉ: GetUserCharacters - Récupère TOUJOURS les personnages BDD (même si token expiré)
 func (h *CharactersHandler) GetUserCharacters(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	if userID == 0 {
@@ -132,6 +132,8 @@ func (h *CharactersHandler) GetUserCharacters(c *gin.Context) {
 		return
 	}
 
+	// 🔥 SUPPRIMÉ: Plus de vérification du token Battle.net
+	// Récupérer TOUJOURS depuis la BDD, peu importe le token Battle.net
 	characters, err := h.orchestrator.GetUserCharacters(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

@@ -1,4 +1,4 @@
-// CharactersTab.tsx - Nouveau tab characters avec table style V0
+// CharactersTab.tsx - Version simplifiée avec auto-relink
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,11 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertCircle, Clock, UserPlus } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Clock, UserPlus, RefreshCw, Users } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCharacters } from "@/hooks/useCharacters";
+import { useBattleNetLink } from "@/hooks/useBattleNetLink";
 import { EnrichedUserCharacter } from "@/types/character/character";
 import { getClassIcon } from "@/utils/classandspecicons";
 
@@ -23,8 +23,10 @@ interface CharactersTabProps {
 
 const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
   const router = useRouter();
+  const { linkStatus } = useBattleNetLink();
   const {
-    characters,
+    characters: charactersData,
+    hasCharacters,
     isLoadingCharacters,
     actions,
     isLoading,
@@ -33,14 +35,11 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
     region,
   } = useCharacters();
 
-  const charactersArray: EnrichedUserCharacter[] = characters || [];
-  const hasCharacters =
-    Array.isArray(charactersArray) && charactersArray.length > 0;
+  // Type assertion pour être sûr du type
+  const characters: EnrichedUserCharacter[] = charactersData || [];
 
-  // Ne rien afficher si le tab n'est pas actif
   if (!isActive) return null;
 
-  // Handle character click (navigate to profile)
   const handleCharacterClick = (character: EnrichedUserCharacter) => {
     const characterName = character.name.toLowerCase();
     const realmSlug = character.realm;
@@ -48,7 +47,6 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
     router.push(`/character/${safeRegion}/${realmSlug}/${characterName}`);
   };
 
-  // Get class color for styling (vraies couleurs WoW)
   const getClassColor = (className: string) => {
     const classColors: Record<string, string> = {
       "death knight": "text-red-400",
@@ -65,9 +63,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
       warlock: "text-indigo-400",
       warrior: "text-amber-600",
     };
-
-    const normalizedClass = className.toLowerCase();
-    return classColors[normalizedClass] || "text-slate-300";
+    return classColors[className.toLowerCase()] || "text-slate-300";
   };
 
   // Loading state
@@ -82,32 +78,75 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
   }
 
   return (
-    <div className="space-y-6 ">
-      {/* Header with sync/refresh buttons */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Characters linked to your account</h2>
-        {hasCharacters && (
-          <div className="flex items-center gap-3">
-            {/* Rate limit indicator */}
-            {ui.showRateLimit && (
-              <div className="text-sm text-orange-400 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {rateLimitState.formattedTime}
-              </div>
+    <div className="space-y-6">
+      {/* Header avec compteur et boutons */}
+      <div className="flex justify-between items-center flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            My Characters
+            {hasCharacters && (
+              <span className="text-sm text-slate-400 font-normal">
+                ({characters.length} character
+                {characters.length !== 1 ? "s" : ""})
+              </span>
             )}
+          </h2>
+          <p className="text-sm text-slate-400 mt-1">
+            {hasCharacters
+              ? "Characters synchronized from your Battle.net account"
+              : "Sync your characters to get started"}
+          </p>
+        </div>
 
+        {/* Boutons d'action */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Rate limit indicator */}
+          {ui.showRateLimit && (
+            <div className="text-sm text-orange-400 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              {rateLimitState.formattedTime}
+            </div>
+          )}
+
+          {/* Sync Button - TOUJOURS DISPONIBLE (auto-relink si nécessaire) */}
+          <Button
+            onClick={actions.syncAndEnrich}
+            disabled={ui.isDisabled.sync}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            {isLoading.sync
+              ? "Syncing..."
+              : hasCharacters
+              ? "Sync Characters"
+              : "Import Characters"}
+          </Button>
+
+          {/* Refresh Button - seulement si connecté ET a des personnages */}
+          {hasCharacters && linkStatus?.linked && (
             <Button
               onClick={actions.refreshAndEnrich}
               disabled={ui.isDisabled.refresh}
-              className="bg-purple-600 hover:bg-purple-700"
+              variant="outline"
+              className="border-blue-600 bg-blue-400 text-white hover:bg-blue-600"
             >
-              {isLoading.refresh ? "Refreshing..." : "Synchronize"}
+              <Image
+                src="https://cdn.raiderio.net/assets/img/battlenet-icon-e75d33039b37cf7cd82eff67d292f478.png"
+                alt="Battle.net"
+                width={20}
+                height={20}
+                className="mr-2"
+              />
+              {isLoading.refresh
+                ? "Refreshing..."
+                : "Refresh Blizzard Account Data "}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Rate limit message (detailed) */}
+      {/* Rate limit message */}
       {ui.showRateLimit && (
         <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-4">
           <div className="flex items-start gap-3">
@@ -124,8 +163,9 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
         </div>
       )}
 
-      {/* No characters - show sync button */}
+      {/* AFFICHAGE CONDITIONNEL SIMPLIFIÉ */}
       {!hasCharacters ? (
+        /* Aucun personnage - Invitation à la sync */
         <div className="text-center py-12">
           <div className="mb-6">
             <svg
@@ -142,46 +182,59 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
               />
             </svg>
 
-            <p className="text-gray-400 mb-4">
-              {isLoading.sync
-                ? "Synchronizing your characters..."
-                : "Sync not done, click sync button to display your characters"}
-            </p>
+            <h3 className="text-xl font-semibold mb-2">No Characters Yet</h3>
 
-            {isLoading.sync && (
-              <div className="text-sm text-gray-500 space-y-1">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
-                  <span>Connecting to Battle.net</span>
+            {isLoading.sync ? (
+              /* Loading state */
+              <>
+                <p className="text-gray-400 mb-4">
+                  Importing your characters from Battle.net...
+                </p>
+                <div className="text-sm text-gray-500 space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
+                    <span>Connecting to Battle.net</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
+                    <span>Fetching character data</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
+                    <span>Enriching character information</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
-                  <span>Fetching character data</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-pulse h-2 w-2 bg-purple-500 rounded-full"></div>
-                  <span>Enriching character information</span>
-                </div>
-              </div>
+              </>
+            ) : (
+              /* Normal state */
+              <>
+                <p className="text-gray-400 mb-6">
+                  Import your World of Warcraft characters from Battle.net to
+                  get started.
+                  {!linkStatus?.linked &&
+                    " If your Battle.net account isn't linked, we'll guide you through the process."}
+                </p>
+
+                <Button
+                  onClick={actions.syncAndEnrich}
+                  disabled={ui.isDisabled.sync}
+                  className="bg-purple-600 hover:bg-purple-700 min-w-[200px]"
+                  size="lg"
+                >
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  Import My Characters
+                </Button>
+              </>
             )}
           </div>
-
-          <Button
-            onClick={actions.syncAndEnrich}
-            disabled={ui.isDisabled.sync}
-            className="bg-purple-600 hover:bg-purple-700 min-w-[200px]"
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            {isLoading.sync ? "Synchronizing..." : "Sync Characters"}
-          </Button>
         </div>
       ) : (
-        /* Characters table */
+        /* PERSONNAGES TOUJOURS AFFICHÉS */
         <div className="bg-slate-800/30 border border-slate-700 rounded-lg">
           <Table>
             <TableHeader>
               <TableRow className="border-slate-700">
-                <TableHead className="w-12"></TableHead> {/* Avatar */}
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden md:table-cell">Class</TableHead>
                 <TableHead className="hidden md:table-cell">Realm</TableHead>
@@ -192,7 +245,7 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {charactersArray.map((character) => {
+              {characters.map((character: EnrichedUserCharacter) => {
                 const normalizedClass = character.class.replace(/\s+/g, "");
                 const classIcon = getClassIcon(normalizedClass);
                 const avatarUrl = character.avatar_url || classIcon;
@@ -203,7 +256,6 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
                     className="border-slate-700 cursor-pointer hover:bg-slate-800/50"
                     onClick={() => handleCharacterClick(character)}
                   >
-                    {/* Avatar */}
                     <TableCell>
                       <Image
                         src={avatarUrl}
@@ -217,11 +269,9 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
                       />
                     </TableCell>
 
-                    {/* Name */}
                     <TableCell className="font-medium">
                       <div>
                         <div>{character.name}</div>
-                        {/* On mobile, show class info here */}
                         <div className="md:hidden text-sm text-slate-400">
                           {character.active_spec_name
                             ? `${character.active_spec_name} ${character.class}`
@@ -230,7 +280,6 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
                       </div>
                     </TableCell>
 
-                    {/* Class (hidden on mobile) */}
                     <TableCell
                       className={`hidden md:table-cell ${getClassColor(
                         character.class
@@ -241,19 +290,16 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
                         : character.class}
                     </TableCell>
 
-                    {/* Realm (hidden on mobile) */}
                     <TableCell className="hidden md:table-cell">
                       {character.realm.charAt(0).toUpperCase() +
                         character.realm.slice(1)}{" "}
                       - {character.region.toUpperCase()}
                     </TableCell>
 
-                    {/* Level (hidden on mobile) */}
                     <TableCell className="hidden md:table-cell">
                       {character.level}
                     </TableCell>
 
-                    {/* Last Update (hidden on mobile) */}
                     <TableCell className="hidden md:table-cell">
                       {character.last_api_update
                         ? new Date(
@@ -269,15 +315,38 @@ const CharactersTab: React.FC<CharactersTabProps> = ({ isActive }) => {
         </div>
       )}
 
-      {/* Tip */}
+      {/* Tips informatifs */}
+      {!linkStatus?.linked && hasCharacters && (
+        <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-4 w-4 mt-0.5 text-amber-400" />
+            <div>
+              <h4 className="font-semibold text-amber-400 mb-1">
+                Battle.net Connection
+              </h4>
+              <p className="text-sm text-amber-300">
+                Your Battle.net connection appears to be expired or not linked.
+                You can still view your saved characters, but clicking
+                &quot;Sync Characters&quot; will reconnect your account
+                automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!hasCharacters && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-4 w-4 mt-0.5 text-blue-400" />
             <div>
-              <h4 className="font-semibold text-blue-400 mb-1">Tip</h4>
+              <h4 className="font-semibold text-blue-400 mb-1">
+                Getting Started
+              </h4>
               <p className="text-sm text-slate-400">
-                Link your Battle.net account to synchronize all your characters.
+                Import your characters to access detailed statistics, track your
+                progress, and get personalized recommendations for your
+                gameplay.
               </p>
             </div>
           </div>

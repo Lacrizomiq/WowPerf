@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"wowperf/internal/models"
 	auth "wowperf/internal/services/auth"
 	csrfMiddleware "wowperf/pkg/middleware"
@@ -112,12 +113,31 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		Password: userCreate.Password,
 	}
 
-	if err := h.authService.SignUp(&user); err != nil {
+	// Message d'erreur spécifique pour le captcha, username ou email déjà existant
+	if err := h.authService.SignUp(&user, userCreate.CaptchaToken); err != nil {
 		log.Printf("Failed to create user: %v", err)
+
+		// Messages d'erreur spécifiques
+		if strings.Contains(err.Error(), "captcha verification failed") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Please complete the captcha verification",
+				"code":  "captcha_required",
+			})
+			return
+		}
+
+		if strings.Contains(err.Error(), "already exists") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(), // "user with this email already exists"
+				"code":  "user_exists",
+			})
+			return
+		}
+
+		// Erreur générique
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to create user",
-			"code":    "server_error",
-			"details": err.Error(),
+			"error": "Failed to create user",
+			"code":  "server_error",
 		})
 		return
 	}

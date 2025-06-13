@@ -9,13 +9,14 @@ import {
   formatDisplaySpecName,
 } from "@/utils/classandspecicons";
 
-export const generateMetadata = ({
+export const generateMetadata = async ({
   params,
 }: {
-  params: { class: string; spec: string };
-}): Metadata => {
-  const className = params.class as WowClassParam;
-  const spec = params.spec as WowSpecParam;
+  params: Promise<{ class: string; spec: string }>;
+}): Promise<Metadata> => {
+  const resolvedParams = await params;
+  const className = resolvedParams.class as WowClassParam;
+  const spec = resolvedParams.spec as WowSpecParam;
 
   const displayClassName = formatDisplayClassName(className);
   const displaySpecName = formatDisplaySpecName(spec);
@@ -39,13 +40,14 @@ export const generateMetadata = ({
   };
 };
 
-export default function BuildPage({
+export default async function BuildPage({
   params,
 }: {
-  params: { class: string; spec: string };
+  params: Promise<{ class: string; spec: string }>;
 }) {
-  const className = params.class as WowClassParam;
-  const spec = params.spec as WowSpecParam;
+  const resolvedParams = await params;
+  const className = resolvedParams.class as WowClassParam;
+  const spec = resolvedParams.spec as WowSpecParam;
 
   return <BuildsContent className={className} spec={spec} />;
 }

@@ -45,9 +45,10 @@ type User struct {
 
 // UserCreate is the struct for creating a new user
 type UserCreate struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+	Username     string `json:"username" validate:"required,min=3,max=14"`
+	Email        string `json:"email" validate:"required,email"`
+	Password     string `json:"password" validate:"required,min=8"`
+	CaptchaToken string `json:"captcha_token"`
 }
 
 // Token management methods
