@@ -44,28 +44,11 @@ const SignupForm: React.FC = () => {
   // Vérifier si hCaptcha est activé (présence de la clé dans l'env)
   const captchaEnabled = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
-  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
-  console.log("HCAPTCHA Debug:", {
-    preview: siteKey ? `[${siteKey.substring(0, 5)}...]` : "[undefined]",
-    length: siteKey?.length || 0,
-    hasQuotes: siteKey
-      ? {
-          startsWithQuote: siteKey.startsWith('"'),
-          endsWithQuote: siteKey.endsWith('"'),
-          firstChar: `[${siteKey.charAt(0)}]`,
-          lastChar: `[${siteKey.charAt(siteKey.length - 1)}]`,
-        }
-      : null,
-    captchaEnabled,
-  });
-
   const onCaptchaVerify = (token: string) => {
-    console.log("[CAPTCHA] Token verified:", token);
     setCaptchaToken(token);
   };
 
   const onCaptchaExpire = () => {
-    console.log("[CAPTCHA] Token expired");
     setCaptchaToken("");
   };
 
