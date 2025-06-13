@@ -60,7 +60,7 @@ func (sm *MythicPlusRunsScheduleManager) CreateMythicPlusRunsSchedule(ctx contex
 
 	// Définir le CRON pour une exécution quotidienne à l'heure spécifiée
 	// Format: minute heure * * *
-	cronExpression := fmt.Sprintf("%d %d %d * *", config.Minute, config.Hour, config.Day)
+	cronExpression := fmt.Sprintf("%d %d * * %d", config.Minute, config.Hour, config.Day)
 
 	workflowID := fmt.Sprintf("mythicplus-runs-%s", time.Now().UTC().Format("2006-01-02"))
 
@@ -155,7 +155,7 @@ func (sm *MythicPlusRunsScheduleManager) CleanupMythicPlusRunsWorkflows(ctx cont
 
 	// Récupérer les workflows de ce type
 	resp, err := sm.client.ListWorkflow(ctx, &workflowservice.ListWorkflowExecutionsRequest{
-		Namespace: "default", // Utilisez votre namespace si différent
+		Namespace: "default",
 		Query:     query,
 	})
 
