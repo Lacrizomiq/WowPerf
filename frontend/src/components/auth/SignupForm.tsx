@@ -60,12 +60,10 @@ const SignupForm: React.FC = () => {
   });
 
   const onCaptchaVerify = (token: string) => {
-    console.log("[CAPTCHA] Token verified:", token);
     setCaptchaToken(token);
   };
 
   const onCaptchaExpire = () => {
-    console.log("[CAPTCHA] Token expired");
     setCaptchaToken("");
   };
 
