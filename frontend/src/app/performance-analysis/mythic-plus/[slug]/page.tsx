@@ -1,11 +1,12 @@
 import SpecDetailView from "@/components/PerformanceStatistics/mythicplus/specdetails/SpecDetailView";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function SpecAnalysisPage({ params }: PageProps) {
-  return <SpecDetailView slug={params.slug} />;
+export default async function SpecAnalysisPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  return <SpecDetailView slug={resolvedParams.slug} />;
 }
