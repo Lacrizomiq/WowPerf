@@ -1,4 +1,4 @@
-// BuildLayout.tsx - Version complète harmonisée
+// BuildLayout.tsx
 "use client";
 
 import {
@@ -19,25 +19,28 @@ export default function BuildLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { class: string; spec: string };
+  params: Promise<{ class: string; spec: string }>;
 }) {
-  const className = params.class as WowClassParam;
-  const spec = params.spec as WowSpecParam;
+  const [className, setClassName] = useState<WowClassParam | null>(null);
+  const [spec, setSpec] = useState<WowSpecParam | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Determine if the active tab is "builds"
-  const isBuildsTab =
-    !pathname.includes("talents") && !pathname.includes("gear");
-
-  const isTalentsTab = pathname.includes("talents");
-  const isGearTab = pathname.includes("gear");
 
   // Fetch dungeons data for mapping slugs to encounter IDs
   const season = "season-tww-2";
   const { data: dungeonData } = useGetBlizzardMythicDungeonPerSeason(season);
   const [dungeonId, setDungeonId] = useState<string>("all");
+
+  // Resolve params asynchronously
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setClassName(resolvedParams.class as WowClassParam);
+      setSpec(resolvedParams.spec as WowSpecParam);
+    };
+    resolveParams();
+  }, [params]);
 
   // Update dungeonId from URL on initial load and when URL changes
   useEffect(() => {
@@ -58,6 +61,22 @@ export default function BuildLayout({
       setDungeonId("all");
     }
   }, [searchParams, dungeonData]);
+
+  // Early return while params are resolving (after all hooks)
+  if (!className || !spec) {
+    return (
+      <div className="w-full text-slate-100 min-h-screen bg-[#1A1D21] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // Determine if the active tab is "builds"
+  const isBuildsTab =
+    !pathname.includes("talents") && !pathname.includes("gear");
+
+  const isTalentsTab = pathname.includes("talents");
+  const isGearTab = pathname.includes("gear");
 
   // Handle dungeon change
   const handleDungeonChange = (value: string) => {
